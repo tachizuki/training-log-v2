@@ -2321,15 +2321,25 @@ if (absDiff < 0.15) {
 
   // 前回コピー
   function gymCopyPrev() {
+    // 日付部分だけ抽出して比較（旧形式YYYY-MM-DD_部位も対応）
     const keys = Object.keys(gymData)
-      .filter(k => k < gymDate && gymData[k].exercises?.length > 0)
-      .sort().reverse();
+      .filter(k => {
+        const date = k.split('_')[0];
+        return date < gymDate && gymData[k].exercises?.length > 0;
+      })
+      .sort((a,b) => b.split('_')[0].localeCompare(a.split('_')[0]));
     if (keys.length === 0) { showToast('前回のデータがありません'); return; }
-    const prev = gymData[keys[0]];
-    gymExercises = JSON.parse(JSON.stringify(prev.exercises || []));
+    // 同じ日付のキーが複数あれば全部マージ
+    const prevDate = keys[0].split('_')[0];
+    const sameDay = keys.filter(k => k.split('_')[0] === prevDate);
+    let allExercises = [];
+    sameDay.forEach(k => {
+      allExercises = allExercises.concat(gymData[k].exercises || []);
+    });
+    gymExercises = JSON.parse(JSON.stringify(allExercises));
     gymExercises.forEach(ex => ex.sets.forEach(s => { s.memo = ''; }));
     renderGymExercises();
-    showToast(`${keys[0]}の記録をコピーしました`, false);
+    showToast(`${prevDate}の記録をコピーしました`, false);
   }
 
   // PICKER
@@ -2771,9 +2781,9 @@ if (absDiff < 0.15) {
   // SHARE (Canvas)
   // ==================
   function gymShare() {
-    if (gymExercises.length === 0 && !Object.keys(gymData).some(k => k.startsWith(gymDate+'_') && gymData[k].exercises?.length > 0)) {
-      showToast('この日の記録がありません'); return;
-    }
+    const hasGymData = gymExercises.length > 0 ||
+      Object.keys(gymData).some(k => k.split('_')[0] === gymDate && gymData[k].exercises?.length > 0);
+    if (!hasGymData) { showToast('この日の記録がありません'); return; }
     // シェア前に現在のデータを自動保存
     if (gymExercises.length > 0) {
       const key = getGymKey();
@@ -2892,6 +2902,46 @@ if (absDiff < 0.15) {
     ctx.fillStyle = '#333';
     ctx.font = '12px sans-serif';
     ctx.fillText('TrainingLog', W - padding - 80, H - 16);
+  }
+
+  function shareImage() {
+    const canvas = document.getElementById('share-canvas');
+    const filename = `training_${gymDate}.jpg`;
+
+    canvas.toBlob(async (blob) => {
+      // Web Share API（Twitter・LINE等に共有）
+      if (navigator.share) {
+        try {
+          const file = new File([blob], filename, {type: 'image/jpeg'});
+          const shareData = {files: [file], title: 'TrainingLog'};
+          if (navigator.canShare && navigator.canShare(shareData)) {
+            await navigator.share(shareData);
+          } else {
+            // ファイル共有非対応の場合はテキストのみ
+            await navigator.share({title: 'TrainingLog', text: `${gymDate} 筋トレ記録`});
+          }
+          document.getElementById('share-overlay').classList.remove('open');
+          showScreen(null);
+          return;
+        } catch(e) {
+          if (e.name === 'AbortError') return; // キャンセル
+        }
+      }
+      // フォールバック：AndroidBridgeで保存
+      if (typeof AndroidBridge !== 'undefined') {
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+        const base64 = dataUrl.replace('data:image/jpeg;base64,', '');
+        const CHUNK = 500000;
+        const total = Math.ceil(base64.length / CHUNK);
+        AndroidBridge.saveStart(filename, total);
+        for (let i = 0; i < total; i++) {
+          AndroidBridge.saveChunk(i, base64.substring(i*CHUNK, (i+1)*CHUNK));
+        }
+        AndroidBridge.saveDone();
+        document.getElementById('share-overlay').classList.remove('open');
+        showScreen(null);
+      }
+    }, 'image/jpeg', 0.85);
   }
 
   function downloadShareImage() {
