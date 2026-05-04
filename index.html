@@ -2907,41 +2907,30 @@ if (absDiff < 0.15) {
   function shareImage() {
     const canvas = document.getElementById('share-canvas');
     const filename = `training_${gymDate}.jpg`;
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+    const base64 = dataUrl.replace('data:image/jpeg;base64,', '');
 
-    canvas.toBlob(async (blob) => {
-      // Web Share API（Twitter・LINE等に共有）
-      if (navigator.share) {
-        try {
-          const file = new File([blob], filename, {type: 'image/jpeg'});
-          const shareData = {files: [file], title: 'TrainingLog'};
-          if (navigator.canShare && navigator.canShare(shareData)) {
-            await navigator.share(shareData);
-          } else {
-            // ファイル共有非対応の場合はテキストのみ
-            await navigator.share({title: 'TrainingLog', text: `${gymDate} 筋トレ記録`});
-          }
-          document.getElementById('share-overlay').classList.remove('open');
-          showScreen(null);
-          return;
-        } catch(e) {
-          if (e.name === 'AbortError') return; // キャンセル
-        }
+    if (typeof AndroidBridge !== 'undefined') {
+      // AndroidBridge経由でKotlin側のシェアシートを起動
+      const CHUNK = 500000;
+      const total = Math.ceil(base64.length / CHUNK);
+      AndroidBridge.saveStart(filename, total);
+      for (let i = 0; i < total; i++) {
+        AndroidBridge.saveChunk(i, base64.substring(i*CHUNK, (i+1)*CHUNK));
       }
-      // フォールバック：AndroidBridgeで保存
-      if (typeof AndroidBridge !== 'undefined') {
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
-        const base64 = dataUrl.replace('data:image/jpeg;base64,', '');
-        const CHUNK = 500000;
-        const total = Math.ceil(base64.length / CHUNK);
-        AndroidBridge.saveStart(filename, total);
-        for (let i = 0; i < total; i++) {
-          AndroidBridge.saveChunk(i, base64.substring(i*CHUNK, (i+1)*CHUNK));
-        }
-        AndroidBridge.saveDone();
-        document.getElementById('share-overlay').classList.remove('open');
-        showScreen(null);
-      }
-    }, 'image/jpeg', 0.85);
+      AndroidBridge.saveDone();
+      document.getElementById('share-overlay').classList.remove('open');
+      showScreen(null);
+      return;
+    }
+
+    // PCブラウザ用フォールバック
+    const link = document.createElement('a');
+    link.download = filename;
+    link.href = dataUrl;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   }
 
   function downloadShareImage() {
