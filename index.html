@@ -2321,6 +2321,7 @@ if (absDiff < 0.15) {
 
   // 前回コピー
   function gymCopyPrev() {
+    showToast('検索中... keys:' + Object.keys(gymData).length + ' date:' + gymDate, false);
     // 日付部分だけ抽出して比較（旧形式YYYY-MM-DD_部位も対応）
     const keys = Object.keys(gymData)
       .filter(k => {
@@ -2328,7 +2329,7 @@ if (absDiff < 0.15) {
         return date < gymDate && gymData[k].exercises?.length > 0;
       })
       .sort((a,b) => b.split('_')[0].localeCompare(a.split('_')[0]));
-    if (keys.length === 0) { showToast('前回のデータがありません'); return; }
+    if (keys.length === 0) { showToast('前回のデータがありません keys:' + JSON.stringify(Object.keys(gymData).slice(0,3))); return; }
     // 同じ日付のキーが複数あれば全部マージ
     const prevDate = keys[0].split('_')[0];
     const sameDay = keys.filter(k => k.split('_')[0] === prevDate);
