@@ -1818,15 +1818,16 @@ if (absDiff < 0.15) {
 
   // 種目ごとの前回記録を取得
   function getPrevExerciseData(exerciseName) {
+    // 旧形式（YYYY-MM-DD_部位）・新形式（YYYY-MM-DD）両対応
     const keys = Object.keys(gymData)
-      .filter(k => k < gymDate)
-      .sort().reverse();
+      .filter(k => k.split('_')[0] < gymDate)
+      .sort((a,b) => b.split('_')[0].localeCompare(a.split('_')[0]));
     for (const key of keys) {
       const data = gymData[key];
       if (!data.exercises) continue;
       const ex = data.exercises.find(e => e.name === exerciseName);
       if (ex && ex.sets && ex.sets.length > 0) {
-        return { date: key, sets: ex.sets };
+        return { date: key.split('_')[0], sets: ex.sets };
       }
     }
     return null;
