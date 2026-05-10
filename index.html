@@ -1927,67 +1927,46 @@ if (absDiff < 0.15) {
 
   function renderGymExercises() {
     const list = document.getElementById('gym-exercise-list');
-
     if (gymExercises.length === 0) {
       list.innerHTML = '<div class="empty-state" style="padding:20px 0;"><div class="empty-state-icon">🏋️</div><div class="empty-state-text">種目を追加してください</div></div>';
       return;
     }
-
-    const exerciseCards = gymExercises.map((ex, ei) => {
-      const headerRow = `
-        <div class="gym-set-header">
-          <span class="gym-set-header-label">SET</span>
-          <span class="gym-set-header-label">重量kg</span>
-          <span class="gym-set-header-label">回数</span>
-          <span class="gym-set-header-label">1RM</span>
-          <span class="gym-set-header-label">補</span>
-        </div>`;
-      const setsHTML = ex.sets.map((s, si) => {
+    let html = '';
+    gymExercises.forEach((ex, ei) => {
+      let setsHtml = '';
+      ex.sets.forEach((s, si) => {
         const rm = calcRM(s.weight, s.reps, ex.name);
-        const rmText = rm ? rm+'kg' : '—';
+        const rmText = rm ? rm + 'kg' : '—';
         const assistClass = s.assist ? 'on' : '';
-        return `
-          <div class="gym-set-row">
-            <span class="gym-set-label">${si+1}</span>
-            <input type="number" class="gym-set-input" placeholder="kg" value="${s.weight||''}" step="0.5"
-              inputmode="decimal" enterkeyhint="next"
-              id="gs-${ei}-${si}-w"
-              onchange="gymUpdateSet(${ei},${si},'weight',this.value)"
-              onfocus="this.select()"
-              onkeydown="if(event.key==='Enter'||event.key==='Tab'){event.preventDefault();const n=document.getElementById('gs-${ei}-${si}-r');if(n){n.focus();n.select();}}">
-            <input type="number" class="gym-set-input" placeholder="rep" value="${s.reps||''}"
-              inputmode="numeric" enterkeyhint="done"
-              id="gs-${ei}-${si}-r"
-              onchange="gymUpdateSet(${ei},${si},'reps',this.value)"
-              onfocus="this.select()"
-              onkeydown="if(event.key==='Enter'){event.preventDefault();gymAddSet(${ei});}">
-            <span class="gym-set-rm" id="gs-${ei}-${si}-rm">${rmText}</span>
-            <div class="gym-set-assist">
-              <div class="gym-assist-check ${assistClass}" onclick="gymToggleAssist(${ei},${si})"></div>
-            </div>
-          </div>
-          <div style="display:flex;align-items:center;gap:8px;margin-top:2px;">
-            <input type="text" class="gym-set-memo" placeholder="メモ（空欄可）" value="${s.memo||''}"
-              onchange="gymUpdateSet(${ei},${si},'memo',this.value)" style="flex:1;">
-            <button class="gym-set-copy-btn" onclick="gymCopySet(${ei},${si})" style="flex-shrink:0;">⧉</button>
-            <button class="gym-set-del" onclick="gymDelSet(${ei},${si})" style="flex-shrink:0;">✕</button>
-          </div>`;
-      }).join('');
-      return `
-        <div class="gym-exercise-card">
-          <div class="gym-exercise-header">
-            <span class="gym-drag-handle" onpointerdown="gymDragStart(event,${ei})" style="padding:12px 12px 12px 0;font-size:20px;">☰</span>
-            <span class="gym-exercise-name">${ex.name}</span>
-            <button class="gym-prev-btn" onclick="showPrevExercise(${ei})">前回</button>
-            <button class="gym-exercise-del" onclick="gymDelExercise(${ei})">✕</button>
-          </div>
-          ${headerRow}
-          ${setsHTML}
-          <button class="gym-add-set-btn" onclick="gymAddSet(${ei})">＋ セットを追加</button>
-        </div>`;
+        const wVal = s.weight || '';
+        const rVal = s.reps || '';
+        const mVal = (s.memo || '').replace(/"/g, '&quot;');
+        setsHtml += '<div class="gym-set-row">';
+        setsHtml += '<span class="gym-set-label">' + (si+1) + '</span>';
+        setsHtml += '<input type="number" class="gym-set-input" placeholder="kg" value="' + wVal + '" step="0.5" inputmode="decimal" id="gs-' + ei + '-' + si + '-w" onchange="gymUpdateSet(' + ei + ',' + si + ',0,this.value)" onfocus="this.select()">';
+        setsHtml += '<input type="number" class="gym-set-input" placeholder="rep" value="' + rVal + '" inputmode="numeric" id="gs-' + ei + '-' + si + '-r" onchange="gymUpdateSet(' + ei + ',' + si + ',1,this.value)" onfocus="this.select()">';
+        setsHtml += '<span class="gym-set-rm" id="gs-' + ei + '-' + si + '-rm">' + rmText + '</span>';
+        setsHtml += '<div class="gym-set-assist"><div class="gym-assist-check ' + assistClass + '" onclick="gymToggleAssist(' + ei + ',' + si + ')"></div></div>';
+        setsHtml += '</div>';
+        setsHtml += '<div style="display:flex;align-items:center;gap:8px;margin-top:2px;">';
+        setsHtml += '<input type="text" class="gym-set-memo" placeholder="メモ（空欄可）" value="' + mVal + '" onchange="gymUpdateSet(' + ei + ',' + si + ',2,this.value)" style="flex:1;">';
+        setsHtml += '<button class="gym-set-copy-btn" onclick="gymCopySet(' + ei + ',' + si + ')" style="flex-shrink:0;">⧉</button>';
+        setsHtml += '<button class="gym-set-del" onclick="gymDelSet(' + ei + ',' + si + ')" style="flex-shrink:0;">✕</button>';
+        setsHtml += '</div>';
+      });
+      html += '<div class="gym-exercise-card">';
+      html += '<div class="gym-exercise-header">';
+      html += '<span class="gym-drag-handle" onpointerdown="gymDragStart(event,' + ei + ')" style="padding:12px 12px 12px 0;font-size:20px;">☰</span>';
+      html += '<span class="gym-exercise-name">' + ex.name + '</span>';
+      html += '<button class="gym-prev-btn" onclick="showPrevExercise(' + ei + ')">前回</button>';
+      html += '<button class="gym-exercise-del" onclick="gymDelExercise(' + ei + ')">✕</button>';
+      html += '</div>';
+      html += '<div class="gym-set-header"><span class="gym-set-header-label">SET</span><span class="gym-set-header-label">重量kg</span><span class="gym-set-header-label">回数</span><span class="gym-set-header-label">1RM</span><span class="gym-set-header-label">補</span></div>';
+      html += setsHtml;
+      html += '<button class="gym-add-set-btn" onclick="gymAddSet(' + ei + ')">＋ セットを追加</button>';
+      html += '</div>';
     });
-
-    list.innerHTML = exerciseCards.join('');
+    list.innerHTML = html;
   }
 
   function gymUpdateSet(ei, si, field, val) {
