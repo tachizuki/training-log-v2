@@ -1935,7 +1935,7 @@ if (absDiff < 0.15) {
     gymExercises.forEach((ex, ei) => {
       let setsHtml = '';
       ex.sets.forEach((s, si) => {
-        const rm = calcRM(s.weight, s.reps, ex.name);
+        const rm = calcRM(s.weight, s.reps, name);
         const rmText = rm ? rm + 'kg' : '—';
         const assistClass = s.assist ? 'on' : '';
         const wVal = s.weight || '';
@@ -1977,7 +1977,7 @@ if (absDiff < 0.15) {
     }
     if (field === 'weight' || field === 'reps') {
       const s = gymExercises[ei].sets[si];
-      const rm = calcRM(s.weight, s.reps, ex.name);
+      const rm = calcRM(s.weight, s.reps, name);
       const rmEl = document.getElementById(`gs-${ei}-${si}-rm`);
       if (rmEl) rmEl.textContent = rm ? rm+'kg' : '—';
     }
@@ -2328,12 +2328,10 @@ if (absDiff < 0.15) {
   let prevExerciseIdx = null;
 
   function showPrevExercise(ei) {
-    alert('前回ボタン押された ei=' + ei + ' name=' + (gymExercises[ei]?.name||'undefined'));
     const name = gymExercises[ei].name;
-    const allKeys = Object.keys(gymData);
     const prev = getPrevExerciseData(name);
     if (!prev) { 
-      alert('前回なし keys=' + allKeys.length + ' date=' + gymDate);
+      showToast(name + 'の前回記録がありません');
       return; 
     }
 
@@ -2345,7 +2343,7 @@ if (absDiff < 0.15) {
 
     const setsEl = document.getElementById('gym-prev-sets');
     setsEl.innerHTML = prev.sets.map((s, i) => {
-      const rm = calcRM(s.weight, s.reps, ex.name);
+      const rm = calcRM(s.weight, s.reps, name);
       return `<div class="gym-prev-set-row">
         <span class="gym-prev-set-num">${i+1}</span>
         <span class="gym-prev-set-val">${s.weight||'—'}kg × ${s.reps||'—'}rep</span>
@@ -2878,7 +2876,7 @@ if (absDiff < 0.15) {
       y += lineH * 0.8;
 
       (ex.sets || []).forEach((s, si) => {
-        const rm = calcRM(s.weight, s.reps, ex.name);
+        const rm = calcRM(s.weight, s.reps, name);
         ctx.fillStyle = '#f0f0f0';
         ctx.font = '16px sans-serif';
         ctx.fillText(`${si + 1}`, padding + 10, y + 16);
