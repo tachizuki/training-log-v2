@@ -2350,8 +2350,12 @@ if (absDiff < 0.15) {
 
   function showPrevExercise(ei) {
     const name = gymExercises[ei].name;
+    const allKeys = Object.keys(gymData);
     const prev = getPrevExerciseData(name);
-    if (!prev) { showToast(`${name}の前回記録がありません`); return; }
+    if (!prev) { 
+      showToast(`前回なし: keys=${allKeys.length} date=${gymDate} name=${name}`);
+      return; 
+    }
 
     prevExerciseData = prev;
     prevExerciseIdx = ei;
@@ -2602,6 +2606,14 @@ if (absDiff < 0.15) {
     }
 
     el.innerHTML = html;
+
+    // カスタム追加の部位セレクトを更新
+    const catSel = document.getElementById('gym-custom-cat');
+    if (catSel) {
+      const currentVal = catSel.value;
+      catSel.innerHTML = '<option value="">部位を選択</option>' +
+        cats.map(c => `<option value="${c}" ${c===currentVal?'selected':''}>${c}</option>`).join('');
+    }
   }
 
   function setGymPickerCat(cat) {
@@ -2683,11 +2695,23 @@ if (absDiff < 0.15) {
 
   function addCustomGymExercise() {
     const name = document.getElementById('gym-picker-search').value.trim();
+    const cat = document.getElementById('gym-custom-cat')?.value;
     if (!name) { showToast('種目名を入力してください'); return; }
-    // カスタム種目を記憶
-    if (!customGymExercises.includes(name)) {
-      customGymExercises.push(name);
-      localStorage.setItem('custom_gym_exercises', JSON.stringify(customGymExercises));
+    
+    // 部位が選択されていればプリセットに追加
+    if (cat) {
+      gymPresets = gymPresets || JSON.parse(JSON.stringify(GYM_PRESETS));
+      if (!gymPresets[cat]) gymPresets[cat] = [];
+      if (!gymPresets[cat].includes(name)) {
+        gymPresets[cat].push(name);
+        localStorage.setItem('gym_presets', JSON.stringify(gymPresets));
+      }
+    } else {
+      // 部位なしはマイ種目へ
+      if (!customGymExercises.includes(name)) {
+        customGymExercises.push(name);
+        localStorage.setItem('custom_gym_exercises', JSON.stringify(customGymExercises));
+      }
     }
     gymAddExercise(name);
   }
