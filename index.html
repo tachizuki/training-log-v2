@@ -2675,21 +2675,12 @@ if (absDiff < 0.15) {
     const name = document.getElementById('gym-picker-search').value.trim();
     const cat = document.getElementById('gym-custom-cat')?.value;
     if (!name) { showToast('種目名を入力してください'); return; }
-    
-    // 部位が選択されていればプリセットに追加
-    if (cat) {
-      gymPresets = gymPresets || JSON.parse(JSON.stringify(GYM_PRESETS));
-      if (!gymPresets[cat]) gymPresets[cat] = [];
-      if (!gymPresets[cat].includes(name)) {
-        gymPresets[cat].push(name);
-        localStorage.setItem('gym_presets', JSON.stringify(gymPresets));
-      }
-    } else {
-      // 部位なしはマイ種目へ
-      if (!customGymExercises.includes(name)) {
-        customGymExercises.push(name);
-        localStorage.setItem('custom_gym_exercises', JSON.stringify(customGymExercises));
-      }
+    if (!cat) { showToast('部位を選択してください'); return; }
+    gymPresets = gymPresets || JSON.parse(JSON.stringify(GYM_PRESETS));
+    if (!gymPresets[cat]) gymPresets[cat] = [];
+    if (!gymPresets[cat].includes(name)) {
+      gymPresets[cat].push(name);
+      localStorage.setItem('gym_presets', JSON.stringify(gymPresets));
     }
     gymAddExercise(name);
   }
@@ -2978,6 +2969,7 @@ if (absDiff < 0.15) {
       {name:'ウォーキング（速歩）', met:4.5},
       {name:'ジョギング', met:7.0},
       {name:'ランニング', met:9.0},
+      {name:'トレッドミル', met:8.0, hasDetail:true},
     ]},
     {cat:'自転車', icon:'🚴', items:[
       {name:'自転車（ゆっくり）', met:4.0},
@@ -3015,17 +3007,39 @@ if (absDiff < 0.15) {
     el.innerHTML = recActivities.map((a, i) => {
       const kcal = a.met ? calcActivityKcal(a.met, a.minutes||0, weight) : (a.kcalPerMin ? Math.round(a.kcalPerMin*(a.minutes||0)) : 0);
       a.kcal = kcal;
-      return `<div class="activity-item">
-        <span class="activity-item-icon" style="cursor:pointer;" onclick="openActivityIconPicker(${i},'rec')">${a.icon||'🏃'}</span>
-        <div class="activity-item-body">
-          <div class="activity-item-name" onclick="openActivityNameEdit(${i},'rec')" style="cursor:pointer;">${a.name} <span style="font-size:10px;color:var(--text-muted);">✎</span></div>
-          <div class="activity-item-kcal">${kcal ? kcal+'kcal' : '分を入力してください'}</div>
+      const detailHtml = a.hasDetail ? `
+        <div style="display:flex;gap:6px;margin-top:4px;flex-wrap:wrap;">
+          <div style="display:flex;align-items:center;gap:3px;"><span style="font-size:10px;color:var(--text-muted);">傾斜</span><input type="number" value="${a.incline||''}" placeholder="%" step="0.5" style="width:48px;" class="activity-item-min" onchange="updateActivityDetail(${i},'incline',this.value,'rec')"></div>
+          <div style="display:flex;align-items:center;gap:3px;"><span style="font-size:10px;color:var(--text-muted);">時速</span><input type="number" value="${a.speed||''}" placeholder="km/h" step="0.1" style="width:56px;" class="activity-item-min" onchange="updateActivityDetail(${i},'speed',this.value,'rec')"></div>
+          <div style="display:flex;align-items:center;gap:3px;"><span style="font-size:10px;color:var(--text-muted);">距離</span><input type="number" value="${a.distance||''}" placeholder="km" step="0.1" style="width:52px;" class="activity-item-min" onchange="updateActivityDetail(${i},'distance',this.value,'rec')"></div>
+        </div>` : '';
+      return `<div class="activity-item" style="flex-direction:column;align-items:stretch;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span class="activity-item-icon" style="cursor:pointer;" onclick="openActivityIconPicker(${i},'rec')">${a.icon||'🏃'}</span>
+          <div class="activity-item-body">
+            <div class="activity-item-name">${a.name}</div>
+            <div class="activity-item-kcal">${kcal ? kcal+'kcal' : '分を入力してください'}</div>
+          </div>
+          <input type="number" class="activity-item-min" value="${a.minutes||''}" placeholder="分"
+            onchange="updateActivityMin(${i}, this.value)">
+          <button class="activity-item-del" onclick="delActivity(${i})">✕</button>
         </div>
-        <input type="number" class="activity-item-min" value="${a.minutes||''}" placeholder="分"
-          onchange="updateActivityMin(${i}, this.value)">
-        <button class="activity-item-del" onclick="delActivity(${i})">✕</button>
+        ${detailHtml}
       </div>`;
     }).join('');
+  }
+
+  function updateActivityDetail(i, field, val, mode) {
+    const list = mode === 'rec' ? recActivities : editActivities;
+    if (list[i]) {
+      list[i][field] = parseFloat(val) || null;
+      // 距離と時間からkcalを再計算
+      if (list[i].speed && list[i].minutes) {
+        list[i].distance = Math.round(list[i].speed * list[i].minutes / 60 * 10) / 10;
+      }
+    }
+    if (mode === 'rec') renderActivityList();
+    else renderEditActivityList();
   }
 
   function updateActivityMin(i, val) {
@@ -3063,7 +3077,7 @@ if (absDiff < 0.15) {
       if (filtered.length === 0) continue;
       html += `<div class="activity-picker-category">${cat.icon} ${cat.cat}</div>`;
       filtered.forEach(it => {
-        html += `<div class="activity-picker-item" onclick="addActivityFromPreset('${it.name.replace(/'/g,"\'")}',${it.met||0},'${it.icon||cat.icon}')">
+        html += `<div class="activity-picker-item" onclick="addActivityFromPreset('${it.name.replace(/'/g,"\'")}',${it.met||0},'${it.icon||cat.icon}',${!!it.hasDetail})">
           <div class="activity-picker-item-left">
             <span class="activity-picker-item-icon">${it.icon||cat.icon}</span>
             <span class="activity-picker-item-name">${it.name}</span>
@@ -3137,14 +3151,14 @@ if (absDiff < 0.15) {
   // addActivityFromPreset・addCustomActivityを編集モードに対応
   const _origAddFromPreset = window.addActivityFromPreset;
 
-  function addActivityFromPreset(name, met, icon) {
+  function addActivityFromPreset(name, met, icon, hasDetail) {
     if (window._editActivityMode) {
-      editActivities.push({name, met, icon, minutes:null, kcal:0});
+      editActivities.push({name, met, icon, minutes:null, kcal:0, hasDetail:!!hasDetail});
       renderEditActivityList();
       document.getElementById('activity-picker').classList.remove('open');
       window._editActivityMode = false;
     } else {
-      recActivities.push({name, met, icon, minutes:null, kcal:0});
+      recActivities.push({name, met, icon, minutes:null, kcal:0, hasDetail:!!hasDetail});
       renderActivityList();
       document.getElementById('activity-picker').classList.remove('open');
     }
