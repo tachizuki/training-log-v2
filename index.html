@@ -319,6 +319,10 @@
   .gym-assist-check.on { background: #ff8c42; border-color: #ff8c42; }
   .gym-assist-check.on::after { content: '補'; color: white; font-size: 8px; font-weight: bold; }
   .gym-set-del { background: none; border: none; color: var(--text-muted); font-size: 13px; cursor: pointer; text-align: center; }
+  .gym-cardio-row { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 6px; margin-bottom: 6px; }
+  .gym-cardio-input { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 7px 4px; color: var(--text); font-size: 12px; text-align: center; outline: none; width: 100%; }
+  .gym-cardio-input:focus { border-color: var(--accent2); }
+  .gym-cardio-label { font-size: 9px; color: var(--text-muted); text-align: center; margin-top: 2px; }
   .gym-set-copy-btn { background: none; border: none; color: var(--accent2); font-size: 14px; cursor: pointer; text-align: center; }
   .gym-set-memo { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 5px 8px; color: var(--text); font-size: 12px; outline: none; margin-top: 4px; }
   .gym-set-memo:focus { border-color: var(--accent); }
@@ -1932,29 +1936,49 @@ if (absDiff < 0.15) {
       list.innerHTML = '<div class="empty-state" style="padding:20px 0;"><div class="empty-state-icon">🏋️</div><div class="empty-state-text">種目を追加してください</div></div>';
       return;
     }
+    const CARDIO = ['ランニング','ウォーキング','自転車','トレッドミル','縄跳び','水泳','エアロバイク','有酸素','ジョギング'];
     let html = '';
     gymExercises.forEach((ex, ei) => {
+      const isCardio = CARDIO.some(function(kw){ return ex.name.indexOf(kw) >= 0; });
       let setsHtml = '';
-      ex.sets.forEach((s, si) => {
-        const rm = calcRM(s.weight, s.reps, name);
-        const rmText = rm ? rm + 'kg' : '—';
-        const assistClass = s.assist ? 'on' : '';
-        const wVal = s.weight || '';
-        const rVal = s.reps || '';
-        const mVal = (s.memo || '').replace(/"/g, '&quot;');
-        setsHtml += '<div class="gym-set-row">';
-        setsHtml += '<span class="gym-set-label">' + (si+1) + '</span>';
-        setsHtml += '<input type="number" class="gym-set-input" placeholder="kg" value="' + wVal + '" step="0.5" inputmode="decimal" id="gs-' + ei + '-' + si + '-w" onchange="gymUpdateSet(' + ei + ',' + si + ',0,this.value)" onfocus="this.select()">';
-        setsHtml += '<input type="number" class="gym-set-input" placeholder="rep" value="' + rVal + '" inputmode="numeric" id="gs-' + ei + '-' + si + '-r" onchange="gymUpdateSet(' + ei + ',' + si + ',1,this.value)" onfocus="this.select()">';
-        setsHtml += '<span class="gym-set-rm" id="gs-' + ei + '-' + si + '-rm">' + rmText + '</span>';
-        setsHtml += '<div class="gym-set-assist"><div class="gym-assist-check ' + assistClass + '" onclick="gymToggleAssist(' + ei + ',' + si + ')"></div></div>';
-        setsHtml += '</div>';
-        setsHtml += '<div style="display:flex;align-items:center;gap:8px;margin-top:2px;">';
-        setsHtml += '<input type="text" class="gym-set-memo" placeholder="メモ（空欄可）" value="' + mVal + '" onchange="gymUpdateSet(' + ei + ',' + si + ',2,this.value)" style="flex:1;">';
-        setsHtml += '<button class="gym-set-copy-btn" onclick="gymCopySet(' + ei + ',' + si + ')" style="flex-shrink:0;">⧉</button>';
-        setsHtml += '<button class="gym-set-del" onclick="gymDelSet(' + ei + ',' + si + ')" style="flex-shrink:0;">✕</button>';
-        setsHtml += '</div>';
-      });
+      if (isCardio) {
+        ex.sets.forEach((s, si) => {
+          const mVal = (s.memo || '').replace(/"/g, '&quot;');
+          setsHtml += '<div style="background:var(--surface2);border-radius:8px;padding:8px;margin-bottom:6px;">';
+          setsHtml += '<div style="font-size:10px;color:var(--text-muted);margin-bottom:6px;">セット ' + (si+1) + '</div>';
+          setsHtml += '<div class="gym-cardio-row">';
+          setsHtml += '<div><input type="number" class="gym-cardio-input" placeholder="—" value="' + (s.incline||'') + '" step="0.5" data-ei="' + ei + '" data-si="' + si + '" data-field="incline" onchange="gymUpdateCardio(this)"><div class="gym-cardio-label">傾斜(%)</div></div>';
+          setsHtml += '<div><input type="number" class="gym-cardio-input" placeholder="—" value="' + (s.speed||'') + '" step="0.1" data-ei="' + ei + '" data-si="' + si + '" data-field="speed" onchange="gymUpdateCardio(this)"><div class="gym-cardio-label">時速(km/h)</div></div>';
+          setsHtml += '<div><input type="number" class="gym-cardio-input" placeholder="—" value="' + (s.distance||'') + '" step="0.1" data-ei="' + ei + '" data-si="' + si + '" data-field="distance" onchange="gymUpdateCardio(this)"><div class="gym-cardio-label">距離(km)</div></div>';
+          setsHtml += '<div><input type="number" class="gym-cardio-input" placeholder="—" value="' + (s.duration||'') + '" step="1" data-ei="' + ei + '" data-si="' + si + '" data-field="duration" onchange="gymUpdateCardio(this)"><div class="gym-cardio-label">時間(分)</div></div>';
+          setsHtml += '</div>';
+          setsHtml += '<div style="display:flex;gap:8px;margin-top:6px;">';
+          setsHtml += '<input type="text" class="gym-set-memo" placeholder="メモ（空欄可）" value="' + mVal + '" data-ei="' + ei + '" data-si="' + si + '" onchange="gymUpdateSet(+this.dataset.ei,+this.dataset.si,2,this.value)" style="flex:1;">';
+          setsHtml += '<button class="gym-set-del" onclick="gymDelSet(' + ei + ',' + si + ')" style="flex-shrink:0;">✕</button>';
+          setsHtml += '</div></div>';
+        });
+      } else {
+        ex.sets.forEach((s, si) => {
+          const rm = calcRM(s.weight, s.reps, ex.name);
+          const rmText = rm ? rm + 'kg' : '—';
+          const assistClass = s.assist ? 'on' : '';
+          const wVal = s.weight || '';
+          const rVal = s.reps || '';
+          const mVal = (s.memo || '').replace(/"/g, '&quot;');
+          setsHtml += '<div class="gym-set-row">';
+          setsHtml += '<span class="gym-set-label">' + (si+1) + '</span>';
+          setsHtml += '<input type="number" class="gym-set-input" placeholder="kg" value="' + wVal + '" step="0.5" inputmode="decimal" id="gs-' + ei + '-' + si + '-w" data-ei="' + ei + '" data-si="' + si + '" onchange="gymUpdateSet(+this.dataset.ei,+this.dataset.si,0,this.value)" onfocus="this.select()">';
+          setsHtml += '<input type="number" class="gym-set-input" placeholder="rep" value="' + rVal + '" inputmode="numeric" id="gs-' + ei + '-' + si + '-r" data-ei="' + ei + '" data-si="' + si + '" onchange="gymUpdateSet(+this.dataset.ei,+this.dataset.si,1,this.value)" onfocus="this.select()">';
+          setsHtml += '<span class="gym-set-rm" id="gs-' + ei + '-' + si + '-rm">' + rmText + '</span>';
+          setsHtml += '<div class="gym-set-assist"><div class="gym-assist-check ' + assistClass + '" onclick="gymToggleAssist(' + ei + ',' + si + ')"></div></div>';
+          setsHtml += '</div>';
+          setsHtml += '<div style="display:flex;align-items:center;gap:8px;margin-top:2px;">';
+          setsHtml += '<input type="text" class="gym-set-memo" placeholder="メモ（空欄可）" value="' + mVal + '" data-ei="' + ei + '" data-si="' + si + '" onchange="gymUpdateSet(+this.dataset.ei,+this.dataset.si,2,this.value)" style="flex:1;">';
+          setsHtml += '<button class="gym-set-copy-btn" onclick="gymCopySet(' + ei + ',' + si + ')" style="flex-shrink:0;">⧉</button>';
+          setsHtml += '<button class="gym-set-del" onclick="gymDelSet(' + ei + ',' + si + ')" style="flex-shrink:0;">✕</button>';
+          setsHtml += '</div>';
+        });
+      }
       html += '<div class="gym-exercise-card">';
       html += '<div class="gym-exercise-header">';
       html += '<span class="gym-drag-handle" onpointerdown="gymDragStart(event,' + ei + ')" style="padding:12px 12px 12px 0;font-size:20px;">☰</span>';
@@ -1962,12 +1986,20 @@ if (absDiff < 0.15) {
       html += '<button class="gym-prev-btn" onclick="showPrevExercise(' + ei + ')">前回</button>';
       html += '<button class="gym-exercise-del" onclick="gymDelExercise(' + ei + ')">✕</button>';
       html += '</div>';
-      html += '<div class="gym-set-header"><span class="gym-set-header-label">SET</span><span class="gym-set-header-label">重量kg</span><span class="gym-set-header-label">回数</span><span class="gym-set-header-label">1RM</span><span class="gym-set-header-label">補</span></div>';
+      if (!isCardio) html += '<div class="gym-set-header"><span class="gym-set-header-label">SET</span><span class="gym-set-header-label">重量kg</span><span class="gym-set-header-label">回数</span><span class="gym-set-header-label">1RM</span><span class="gym-set-header-label">補</span></div>';
       html += setsHtml;
       html += '<button class="gym-add-set-btn" onclick="gymAddSet(' + ei + ')">＋ セットを追加</button>';
       html += '</div>';
     });
     list.innerHTML = html;
+  }
+
+  function gymUpdateCardio(el) {
+    const ei = +el.dataset.ei;
+    const si = +el.dataset.si;
+    const field = el.dataset.field;
+    gymExercises[ei].sets[si][field] = parseFloat(el.value) || null;
+    autoSaveGym();
   }
 
   function gymUpdateSet(ei, si, field, val) {
