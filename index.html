@@ -1814,6 +1814,7 @@ if (absDiff < 0.15) {
     '腕': ['バーベルカール','ダンベルカール','ハンマーカール','スカルクラッシャー','トライセプスプッシュダウン','クローズグリップベンチ','インクラインカール'],
     '足': ['バーベルスクワット','ハックスクワット','レッグプレス','ブルガリアンスクワット','レッグエクステンション','レッグカール','アウターサイ','ルーマニアンデッドリフト'],
     '腹筋': ['クランチ','レッグレイズ','プランク','ロシアンツイスト','アブローラー','ハンギングレッグレイズ'],
+    '有酸素': ['ランニング','ウォーキング','自転車','トレッドミル','縄跳び','水泳','エアロバイク'],
   };
 
   // 種目ごとの前回記録を取得
@@ -2455,6 +2456,8 @@ if (absDiff < 0.15) {
 
   // 種目プリセット管理（カスタマイズ可能）
   let gymPresets = JSON.parse(localStorage.getItem('gym_presets') || 'null') || JSON.parse(JSON.stringify(GYM_PRESETS));
+
+
   let presetEditorPart = '胸';
   let editingPresetIdx = null;
 
@@ -2557,17 +2560,7 @@ if (absDiff < 0.15) {
     });
     html += '</div>';
 
-    // カスタム種目
-    if (!gymPickerCatFilter) {
-      const fc = customGymExercises.filter(p => !q || p.toLowerCase().includes(q));
-      if (fc.length > 0) {
-        html += '<div style="padding:10px 16px 6px;font-size:11px;color:var(--accent);letter-spacing:0.15em;font-weight:700;">⭐ マイ種目</div>';
-        fc.forEach(p => {
-          html += `<button class="gym-picker-item" onclick="gymAddExercise('${p.replace(/'/g,"\'")}')"><span>${p}</span></button>`;
-        });
-      }
-    }
-
+    
     // カテゴリ別プリセット
     const displayCats = gymPickerCatFilter ? [gymPickerCatFilter] : cats;
     displayCats.forEach((cat, ci) => {
@@ -2961,6 +2954,19 @@ if (absDiff < 0.15) {
   let recActivities = [];
   let customActivities = JSON.parse(localStorage.getItem('custom_activities') || '[]');
   let customGymExercises = JSON.parse(localStorage.getItem('custom_gym_exercises') || '[]');
+
+  // マイ種目を自動でプリセットに移行
+  (function() {
+    if (customGymExercises.length === 0) return;
+    gymPresets = gymPresets || JSON.parse(JSON.stringify(GYM_PRESETS));
+    if (!gymPresets['マイ種目']) gymPresets['マイ種目'] = [];
+    let migrated = false;
+    customGymExercises.forEach(name => {
+      const exists = Object.values(gymPresets).some(items => Array.isArray(items) && items.includes(name));
+      if (!exists) { gymPresets['マイ種目'].push(name); migrated = true; }
+    });
+    if (migrated) localStorage.setItem('gym_presets', JSON.stringify(gymPresets));
+  })();
 
   // METデータ（カテゴリ：種目：MET値）
   const ACTIVITY_PRESETS = [
