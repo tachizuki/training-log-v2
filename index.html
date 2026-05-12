@@ -2,6 +2,9 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>TrainingLog</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
@@ -975,6 +978,33 @@
 <div class="toast" id="toast"></div>
 
 <script>
+  const APP_VERSION = '20260512_002';
+  const REMOTE_URL = 'https://tachizuki.github.io/training-log-android/index.html';
+
+  // 起動時に最新版をチェックして自動更新
+  (function selfUpdate() {
+    const stored = localStorage.getItem('app_version');
+    if (stored === APP_VERSION) return; // すでに最新
+    // 最新版をフェッチしてページを置き換え（localStorageは保持）
+    fetch(REMOTE_URL + '?nocache=' + Date.now())
+      .then(function(r) { return r.text(); })
+      .then(function(html) {
+        // バージョンが違う場合のみ更新
+        if (html.indexOf(APP_VERSION) < 0) {
+          // 新バージョンのHTMLで画面を置き換え
+          document.open();
+          document.write(html);
+          document.close();
+        } else {
+          localStorage.setItem('app_version', APP_VERSION);
+        }
+      })
+      .catch(function() {
+        // ネット失敗時は現在のバージョンで続行
+        localStorage.setItem('app_version', APP_VERSION);
+      });
+  })();
+
   let records = JSON.parse(localStorage.getItem('training_records') || '[]');
   let weekWeightGoal = parseFloat(localStorage.getItem('week_weight_goal') || '0');
   let waterData = JSON.parse(localStorage.getItem('water_data') || '{}');
