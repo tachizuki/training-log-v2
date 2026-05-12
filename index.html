@@ -453,6 +453,7 @@
     <button class="profile-btn" onclick="openProfile()">⚙</button>
     <div class="app-title">TRAINING<br>LOG</div>
     <div class="app-subtitle">フィジーク大会対策 記録アプリ</div>
+  <div style="text-align:center;font-size:9px;color:var(--text-muted);opacity:0.5;">v2-20260512</div>
     <div class="today-summary">
       <div class="today-date" id="today-date-label"></div>
       <div class="today-stats">
@@ -972,6 +973,12 @@
       <div class="profile-bmr-label">推定基礎代謝 (kcal/日)</div>
     </div>
     <button class="btn-submit" onclick="saveProfile()">保存する</button>
+    <div style="margin-top:20px;border-top:1px solid var(--border);padding-top:16px;">
+      <div style="font-size:11px;color:var(--text-muted);letter-spacing:0.1em;margin-bottom:10px;">データバックアップ</div>
+      <button onclick="exportData()" style="width:100%;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;cursor:pointer;margin-bottom:8px;">📤 データをエクスポート</button>
+      <button onclick="document.getElementById('import-file').click()" style="width:100%;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;cursor:pointer;">📥 データをインポート</button>
+      <input type="file" id="import-file" accept=".json" style="display:none;" onchange="importData(this)">
+    </div>
   </div>
 </div>
 
@@ -979,7 +986,19 @@
 
 <script>
   const APP_VERSION = '20260512_002';
-  const REMOTE_URL = 'https://tachizuki.github.io/training-log-android/index.html';
+  const REMOTE_URL = 'https://tachizuki.github.io/training-log-v2/index.html';
+
+  // AndroidBridgeからストレージデータを受け取る
+  function receiveStorageData(json) {
+    try {
+      const data = JSON.parse(json);
+      Object.keys(data).forEach(k => {
+        if (!localStorage.getItem(k)) { // 既存データは上書きしない
+          localStorage.setItem(k, data[k]);
+        }
+      });
+    } catch(e) {}
+  }
 
   // 起動時に最新版をチェックして自動更新
   (function selfUpdate() {
@@ -2532,6 +2551,19 @@ if (absDiff < 0.15) {
   // 種目プリセット管理（カスタマイズ可能）
   let gymPresets = JSON.parse(localStorage.getItem('gym_presets') || 'null') || JSON.parse(JSON.stringify(GYM_PRESETS));
 
+  // GYM_PRESETSに新しいカテゴリが追加された場合、既存のgymPresetsにもマージする
+  (function mergeNewCategories() {
+    if (!gymPresets) return;
+    let updated = false;
+    Object.keys(GYM_PRESETS).forEach(cat => {
+      if (!gymPresets[cat]) {
+        gymPresets[cat] = JSON.parse(JSON.stringify(GYM_PRESETS[cat]));
+        updated = true;
+      }
+    });
+    if (updated) localStorage.setItem('gym_presets', JSON.stringify(gymPresets));
+  })();
+
 
   let presetEditorPart = '胸';
   let editingPresetIdx = null;
@@ -3324,6 +3356,56 @@ if (absDiff < 0.15) {
     const w = rec?.weight || 63;
     const bmr = h&&a ? calcBMR(h, w, a, userProfile.sex) : null;
     document.getElementById('prof-bmr-val').textContent = bmr ? bmr.toLocaleString() : '—';
+  }
+
+  function exportData() {
+    const data = {};
+    const keys = ['training_records','gym_data','water_data','user_profile',
+                  'gym_presets','water_quick_btns','activity_presets','custom_gym_exercises'];
+    keys.forEach(k => {
+      const v = localStorage.getItem(k);
+      if (v) data[k] = v;
+    });
+    const json = JSON.stringify(data, null, 2);
+    const blob = new Blob([json], {type: 'application/json'});
+    const filename = 'traininglog_backup_' + formatDate(new Date()) + '.json';
+
+    if (typeof AndroidBridge !== 'undefined') {
+      // Android: チャンクで送信
+      const base64 = btoa(unescape(encodeURIComponent(json)));
+      const CHUNK = 500000;
+      const total = Math.ceil(base64.length / CHUNK);
+      AndroidBridge.saveStart(filename.replace('.json', '.txt'), total);
+      for (let i = 0; i < total; i++) {
+        AndroidBridge.saveChunk(i, base64.substring(i*CHUNK, (i+1)*CHUNK));
+      }
+      AndroidBridge.saveDone();
+      showToast('バックアップを保存しました', false);
+    } else {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = filename;
+      document.body.appendChild(a); a.click();
+      document.body.removeChild(a);
+    }
+  }
+
+  function importData(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        const data = JSON.parse(e.target.result);
+        Object.keys(data).forEach(k => localStorage.setItem(k, data[k]));
+        showToast('インポート完了。再起動します...', false);
+        setTimeout(() => location.reload(), 1500);
+      } catch(err) {
+        showToast('インポートに失敗しました');
+      }
+    };
+    reader.readAsText(file);
+    input.value = '';
   }
 
   function saveProfile() {
