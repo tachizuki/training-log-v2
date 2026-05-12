@@ -2028,16 +2028,21 @@ if (absDiff < 0.15) {
   }
 
   function gymUpdateSet(ei, si, field, val) {
-    if (field === 'weight' || field === 'reps') {
-      gymExercises[ei].sets[si][field] = parseFloat(val) || null;
-    } else {
-      gymExercises[ei].sets[si][field] = val;
-    }
-    if (field === 'weight' || field === 'reps') {
+    // field: 0=weight, 1=reps, 2=memo
+    if (field === 0) {
+      gymExercises[ei].sets[si].weight = parseFloat(val) || null;
       const s = gymExercises[ei].sets[si];
-      const rm = calcRM(s.weight, s.reps, name);
-      const rmEl = document.getElementById(`gs-${ei}-${si}-rm`);
-      if (rmEl) rmEl.textContent = rm ? rm+'kg' : '—';
+      const rm = calcRM(s.weight, s.reps, gymExercises[ei].name);
+      const rmEl = document.getElementById('gs-' + ei + '-' + si + '-rm');
+      if (rmEl) rmEl.textContent = rm ? rm + 'kg' : '—';
+    } else if (field === 1) {
+      gymExercises[ei].sets[si].reps = parseFloat(val) || null;
+      const s = gymExercises[ei].sets[si];
+      const rm = calcRM(s.weight, s.reps, gymExercises[ei].name);
+      const rmEl = document.getElementById('gs-' + ei + '-' + si + '-rm');
+      if (rmEl) rmEl.textContent = rm ? rm + 'kg' : '—';
+    } else {
+      gymExercises[ei].sets[si].memo = val;
     }
     autoSaveGym();
   }
