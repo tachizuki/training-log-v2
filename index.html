@@ -2023,9 +2023,28 @@ if (absDiff < 0.15) {
     autoSaveGym();
   }
 
+  function syncInputsToExercises() {
+    // DOM上の現在の入力値をgymExercisesに同期
+    gymExercises.forEach((ex, ei) => {
+      ex.sets.forEach((s, si) => {
+        const w = document.getElementById('gs-' + ei + '-' + si + '-w');
+        const r = document.getElementById('gs-' + ei + '-' + si + '-r');
+        if (w) s.weight = parseFloat(w.value) || null;
+        if (r) s.reps = parseFloat(r.value) || null;
+      });
+    });
+  }
+
   function gymAddSet(ei) {
-    gymExercises[ei].sets.push({weight:null,reps:null,assist:false,memo:''});
+    syncInputsToExercises();
+    const isCardio = ['ランニング','ウォーキング','自転車','トレッドミル','縄跳び','水泳','エアロバイク','有酸素','ジョギング'].some(kw => gymExercises[ei].name.indexOf(kw) >= 0);
+    if (isCardio) {
+      gymExercises[ei].sets.push({incline:null,speed:null,distance:null,duration:null,memo:''});
+    } else {
+      gymExercises[ei].sets.push({weight:null,reps:null,assist:false,memo:''});
+    }
     renderGymExercises();
+    autoSaveGym();
   }
 
   // ==================
@@ -3442,7 +3461,6 @@ if (absDiff < 0.15) {
   }
 
   // DOM読み込み完了後に確実に初期化
-  // test
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
   } else {
