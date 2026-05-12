@@ -656,12 +656,6 @@
     </div>
     <!-- 部位タブ -->
     <div style="display:flex;gap:6px;overflow-x:auto;margin-bottom:14px;padding-bottom:4px;" id="preset-editor-parts">
-      <button class="gym-part-btn active" onclick="selectPresetEditorPart('胸',this)">胸</button>
-      <button class="gym-part-btn" onclick="selectPresetEditorPart('背中',this)">背中</button>
-      <button class="gym-part-btn" onclick="selectPresetEditorPart('肩',this)">肩</button>
-      <button class="gym-part-btn" onclick="selectPresetEditorPart('腕',this)">腕</button>
-      <button class="gym-part-btn" onclick="selectPresetEditorPart('足',this)">足</button>
-      <button class="gym-part-btn" onclick="selectPresetEditorPart('腹筋',this)">腹筋</button>
     </div>
     <div id="preset-editor-list"></div>
     <div class="gym-preset-add-row">
@@ -2513,11 +2507,16 @@ if (absDiff < 0.15) {
   let editingPresetIdx = null;
 
   function openGymPresetEditor() {
+    const presets = gymPresets || GYM_PRESETS;
+    const cats = Object.keys(presets);
+    if (!presetEditorPart || !cats.includes(presetEditorPart)) presetEditorPart = cats[0];
+    // タブを動的生成（マイ種目・有酸素も含む）
+    const partsEl = document.getElementById('preset-editor-parts');
+    partsEl.innerHTML = cats.map(function(c) {
+      var act = c === presetEditorPart ? ' active' : '';
+      return '<button class="gym-part-btn' + act + '" onclick="selectPresetEditorPart(\'' + c + '\',this)">' + c + '</button>';
+    }).join('');
     document.getElementById('gym-preset-editor').classList.add('open');
-    presetEditorPart = gymParts[0] || '胸';
-    document.querySelectorAll('#preset-editor-parts .gym-part-btn').forEach(b => {
-      b.classList.toggle('active', b.textContent.trim() === presetEditorPart);
-    });
     renderPresetEditorList();
   }
 
@@ -2541,7 +2540,8 @@ if (absDiff < 0.15) {
 
   function renderPresetEditorList() {
     const el = document.getElementById('preset-editor-list');
-    const items = gymPresets[presetEditorPart] || [];
+    const presets = gymPresets || GYM_PRESETS;
+    const items = (presets[presetEditorPart] || []);
     el.innerHTML = items.map((name, i) => {
       if (editingPresetIdx === i) {
         return `<div class="gym-preset-item">
