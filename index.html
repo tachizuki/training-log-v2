@@ -443,6 +443,28 @@
   .stat-goal-row { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; }
   .stat-goal-edit { background: none; border: 1px solid var(--border); color: var(--text-muted); border-radius: 6px; padding: 2px 8px; font-size: 11px; cursor: pointer; }
   .stat-divider { height: 1px; background: var(--border); margin: 16px 0; }
+
+  /* カレンダービュー */
+  .cal-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 0 8px; }
+  .cal-header-title { font-family: 'Bebas Neue', sans-serif; font-size: 20px; color: var(--accent); }
+  .cal-nav-btn { background: none; border: none; color: var(--text-muted); font-size: 22px; cursor: pointer; padding: 4px 10px; }
+  .cal-week-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 8px; }
+  .cal-day-label { text-align: center; font-size: 10px; color: var(--text-muted); letter-spacing: 0.05em; padding: 4px 0; }
+  .cal-day { text-align: center; padding: 6px 2px; border-radius: 8px; min-height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
+  .cal-day.today { background: rgba(232,255,0,0.08); border: 1px solid rgba(232,255,0,0.3); }
+  .cal-day-num { font-size: 12px; color: var(--text-muted); }
+  .cal-day-weight { font-family: 'Bebas Neue', sans-serif; font-size: 16px; color: var(--accent); line-height: 1; }
+  .cal-day-weight.over { color: var(--danger); }
+  .cal-day-weight.under { color: var(--success); }
+  .cal-day-trained { font-size: 8px; color: var(--text-muted); }
+  .cal-goal-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-top: 1px solid var(--border); margin-top: 4px; }
+  .cal-goal-label { font-size: 12px; color: var(--text-muted); }
+  .cal-goal-val { font-family: 'Bebas Neue', sans-serif; font-size: 18px; color: var(--text); }
+  .cal-goal-edit { background: none; border: 1px solid var(--border); color: var(--text-muted); border-radius: 6px; padding: 3px 10px; font-size: 11px; cursor: pointer; }
+  .cal-week-row { margin-bottom: 16px; }
+  .cal-week-header { font-size: 11px; color: var(--text-muted); letter-spacing: 0.1em; margin-bottom: 4px; display: flex; align-items: center; justify-content: space-between; }
+  .cal-avg { font-size: 11px; color: var(--accent2); }
+  .cal-month-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
 </style>
 </head>
 <body>
@@ -720,43 +742,11 @@
   <div id="tab-list" class="tab-content active">
     <div class="tab-list-body">
       <div class="stats-section" id="stats-week" style="display:none;">
-        <div class="stats-section-title">📊 今週の統計</div>
-        <div class="stats-grid">
-          <div class="stat-card">
-            <div class="stat-card-label">週平均体重</div>
-            <div class="stat-card-value accent" id="sw-avg">—</div>
-            <div class="stat-card-sub">kg</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-card-label">目標平均体重</div>
-            <div class="stat-card-value" id="sw-goal-val">—</div>
-            <div class="stat-goal-row">
-              <div class="stat-card-sub">kg</div>
-              <button class="stat-goal-edit" onclick="openWeightGoalModal()">設定</button>
-            </div>
-          </div>
-          <div class="stat-card full" id="sw-diff-card">
-            <div class="stat-card-label">目標との差分</div>
-            <div class="stat-card-value" id="sw-diff">—</div>
-            <div class="stat-card-sub" id="sw-diff-sub"></div>
-          </div>
-        </div>
+        <div id="week-calendar-view"></div>
         <div class="stat-divider"></div>
       </div>
       <div class="stats-section" id="stats-month" style="display:none;">
-        <div class="stats-section-title">📊 今月の統計</div>
-        <div class="stats-grid">
-          <div class="stat-card">
-            <div class="stat-card-label">月平均体重</div>
-            <div class="stat-card-value accent" id="sm-avg">—</div>
-            <div class="stat-card-sub">kg</div>
-          </div>
-          <div class="stat-card" id="sm-vs-card">
-            <div class="stat-card-label">先月同日比</div>
-            <div class="stat-card-value" id="sm-vs-last">—</div>
-            <div class="stat-card-sub" id="sm-vs-last-sub">kg変化</div>
-          </div>
-        </div>
+        <div id="month-calendar-view"></div>
         <div class="stat-divider"></div>
       </div>
       <div id="records-list"></div>
@@ -987,7 +977,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-  const APP_VERSION = 'v1778599308';
+  const APP_VERSION = 'v1778737450';
   const REMOTE_URL = 'https://tachizuki.github.io/training-log-v2/index.html';
 
   // AndroidBridgeからストレージデータを受け取る
@@ -1006,6 +996,35 @@
 
   let records = JSON.parse(localStorage.getItem('training_records') || '[]');
   let weekWeightGoal = parseFloat(localStorage.getItem('week_weight_goal') || '0');
+  // 週ごとの目標体重を管理 { 'YYYY-Www': weight }
+  let weeklyGoals = JSON.parse(localStorage.getItem('weekly_goals') || '{}');
+  // 旧データを移行
+  if (weekWeightGoal > 0 && Object.keys(weeklyGoals).length === 0) {
+    const wk = getWeekKey(new Date());
+    weeklyGoals[wk] = weekWeightGoal;
+    localStorage.setItem('weekly_goals', JSON.stringify(weeklyGoals));
+  }
+
+  function getWeekKey(date) {
+    const d = new Date(date);
+    d.setHours(0,0,0,0);
+    d.setDate(d.getDate() - d.getDay() + 1); // 月曜始まり
+    return formatDate(d);
+  }
+
+  function getWeekGoal(date) {
+    const key = getWeekKey(date);
+    return weeklyGoals[key] || 0;
+  }
+
+  function setWeekGoal(date, weight) {
+    const key = getWeekKey(date);
+    weeklyGoals[key] = weight;
+    localStorage.setItem('weekly_goals', JSON.stringify(weeklyGoals));
+    // 旧データも更新
+    weekWeightGoal = weight;
+    localStorage.setItem('week_weight_goal', weight);
+  }
   let waterData = JSON.parse(localStorage.getItem('water_data') || '{}');
   const DEFAULT_WATER_BTNS = [100, 200, 350, 500, 1000];
   let waterQuickBtns = JSON.parse(localStorage.getItem('water_quick_btns') ||
@@ -1358,91 +1377,187 @@
 
   function renderView() { renderList(); renderStats(); }
 
+  // 週カレンダー表示用の現在週オフセット
+  let weekCalOffset = 0;
+  let monthCalOffset = 0;
+
   function renderStats() {
+    if (currentFilter === 'week') renderWeekCalendar();
+    if (currentFilter === 'month') renderMonthCalendar();
+  }
+
+  function renderWeekCalendar() {
+    const el = document.getElementById('week-calendar-view');
+    if (!el) return;
     const now = new Date();
+    // weekCalOffsetの週の月曜を計算
+    const base = new Date(now);
+    base.setDate(now.getDate() - now.getDay() + 1 + weekCalOffset * 7);
+    const weekStart = new Date(base);
+    const weekEnd = new Date(base);
+    weekEnd.setDate(weekStart.getDate() + 6);
+    const todayStr = formatDate(now);
+    const weekGoal = getWeekGoal(weekStart);
 
-    // WEEK STATS
-    const weekAgo = new Date(now); weekAgo.setDate(now.getDate()-7);
-    const weekRecs = records.filter(r=>r.weight&&new Date(r.date+'T00:00:00')>=weekAgo);
-    const weekAvg = weekRecs.length>0 ? (weekRecs.reduce((s,r)=>s+r.weight,0)/weekRecs.length) : null;
+    // 7日分のデータ
+    const days = [];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(weekStart);
+      d.setDate(weekStart.getDate() + i);
+      const ds = formatDate(d);
+      const rec = records.find(r => r.date === ds);
+      days.push({date: d, ds, rec});
+    }
 
-    document.getElementById('sw-avg').textContent = weekAvg ? weekAvg.toFixed(2) : '—';
+    // 週平均
+    const weights = days.filter(d => d.rec?.weight).map(d => d.rec.weight);
+    const avg = weights.length > 0 ? (weights.reduce((s,w)=>s+w,0)/weights.length).toFixed(2) : null;
 
-    if (weekWeightGoal > 0) {
-      document.getElementById('sw-goal-val').textContent = weekWeightGoal.toFixed(1);
-      if (weekAvg !== null) {
-        const diff = weekAvg - weekWeightGoal;
-        const diffEl = document.getElementById('sw-diff');
-        const subEl = document.getElementById('sw-diff-sub');
-        const diffCard = document.getElementById('sw-diff-card');
-        diffEl.textContent = (diff>0?'+':'')+diff.toFixed(2)+' kg';
-        if (diff > 0) {
-          diffEl.className = 'stat-card-value red';
-          subEl.textContent = '目標より重い';
-          diffCard.className = 'stat-card full highlight-bad';
-        } else if (diff < 0) {
-          diffEl.className = 'stat-card-value green';
-          subEl.textContent = '目標より軽い';
-          diffCard.className = 'stat-card full highlight-good';
-        } else {
-          diffEl.className = 'stat-card-value accent';
-          subEl.textContent = '目標通り！';
-          diffCard.className = 'stat-card full highlight';
-        }
-      } else {
-        document.getElementById('sw-diff').textContent = '—';
-        document.getElementById('sw-diff-sub').textContent = '体重データなし';
+    const dayNames = ['月','火','水','木','金','土','日'];
+    const monthStr = (weekStart.getMonth()+1) + '/' + weekStart.getDate() + ' 〜 ' + (weekEnd.getMonth()+1) + '/' + weekEnd.getDate();
+
+    let html = '';
+    html += '<div class="cal-header">';
+    html += '<button class="cal-nav-btn" onclick="weekCalOffset--;renderWeekCalendar()">‹</button>';
+    html += '<div class="cal-header-title">' + monthStr + '</div>';
+    html += '<button class="cal-nav-btn" onclick="weekCalOffset++;renderWeekCalendar()">›</button>';
+    html += '</div>';
+
+    // 週平均・差分サマリーカード
+    if (avg) {
+      const diff = weekGoal > 0 ? (parseFloat(avg) - weekGoal) : null;
+      const diffFixed = diff !== null ? diff.toFixed(2) : null;
+      const diffStr = diffFixed !== null ? (diff > 0 ? '+' + diffFixed : diffFixed) + 'kg' : null;
+      const diffColor = diff > 0 ? 'var(--danger)' : diff < 0 ? 'var(--success)' : 'var(--text-muted)';
+      const diffBg = diff > 0 ? 'rgba(255,68,68,0.08)' : diff < 0 ? 'rgba(0,255,136,0.08)' : 'var(--surface)';
+      const diffLabel = diff > 0 ? '目標より重い' : diff < 0 ? '目標より軽い' : '目標通り';
+
+      html += '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 16px;margin-bottom:10px;">';
+      html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">';
+      html += '<span style="font-size:10px;color:var(--text-muted);letter-spacing:0.15em;">週平均体重</span>';
+      if (weekGoal > 0) html += '<span style="font-size:10px;color:var(--text-muted);">目標 ' + weekGoal + 'kg</span>';
+      html += '</div>';
+      html += '<div style="display:flex;align-items:baseline;gap:10px;">';
+      html += '<span style="font-size:28px;font-weight:bold;color:var(--accent2);">' + avg + '</span>';
+      html += '<span style="font-size:14px;color:var(--text-muted);">kg</span>';
+      if (diffStr) {
+        html += '<div style="margin-left:auto;background:' + diffBg + ';border-radius:8px;padding:4px 12px;text-align:center;">';
+        html += '<div style="font-size:18px;font-weight:bold;color:' + diffColor + ';">' + diffStr + '</div>';
+        html += '<div style="font-size:10px;color:' + diffColor + ';">' + diffLabel + '</div>';
+        html += '</div>';
       }
+      html += '</div>';
+      if (weekGoal === 0) {
+        html += '<div style="font-size:11px;color:var(--text-muted);margin-top:6px;">目標を設定すると差分が表示されます</div>';
+      }
+      html += '</div>';
     } else {
-      document.getElementById('sw-goal-val').textContent = '未設定';
-      document.getElementById('sw-diff').textContent = '—';
-      document.getElementById('sw-diff-sub').textContent = '目標を設定してください';
+      html += '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 16px;margin-bottom:10px;color:var(--text-muted);font-size:13px;">この週の体重記録がありません</div>';
     }
 
-    // MONTH STATS
-    const monthAgo = new Date(now); monthAgo.setDate(now.getDate()-30);
-    const monthRecs = records.filter(r=>r.weight&&new Date(r.date+'T00:00:00')>=monthAgo);
-    const monthAvg = monthRecs.length>0 ? (monthRecs.reduce((s,r)=>s+r.weight,0)/monthRecs.length) : null;
-    document.getElementById('sm-avg').textContent = monthAvg ? monthAvg.toFixed(2) : '—';
+    // 7日グリッド
+    html += '<div class="cal-week-grid">';
+    dayNames.forEach(n => { html += '<div class="cal-day-label">' + n + '</div>'; });
+    days.forEach(({date, ds, rec}) => {
+      const isToday = ds === todayStr;
+      const w = rec?.weight;
+      const trained = rec?.trained;
+      let weightClass = '';
+      if (w && weekGoal > 0) weightClass = w > weekGoal ? ' over' : ' under';
+      html += '<div class="cal-day' + (isToday ? ' today' : '') + '">';
+      html += '<span class="cal-day-num">' + date.getDate() + '</span>';
+      if (w) html += '<span class="cal-day-weight' + weightClass + '">' + w + '</span>';
+      if (trained) html += '<span class="cal-day-trained">💪</span>';
+      html += '</div>';
+    });
+    html += '</div>';
 
-    // vs last month same day
-    const lastMonthDate = new Date(now);
-    lastMonthDate.setMonth(now.getMonth()-1);
-    const lmKey = formatDate(lastMonthDate);
-    const lmRec = records.find(r=>r.date===lmKey&&r.weight);
-    const todayRec = records.find(r=>r.date===formatDate(now)&&r.weight);
-    const vsEl = document.getElementById('sm-vs-last');
-    const vsSubEl = document.getElementById('sm-vs-last-sub');
-    const vsCard = document.getElementById('sm-vs-card');
+    // 週目標設定
+    html += '<div class="cal-goal-row">';
+    html += '<span class="cal-goal-label">この週の目標体重</span>';
+    html += '<div style="display:flex;align-items:center;gap:8px;">';
+    html += '<span class="cal-goal-val">' + (weekGoal > 0 ? weekGoal + 'kg' : '未設定') + '</span>';
+    html += '<button class="cal-goal-edit" onclick="openWeightGoalModal()">設定</button>';
+    html += '</div></div>';
 
-    if (lmRec && todayRec) {
-      const d = todayRec.weight - lmRec.weight;
-      vsEl.textContent = (d>0?'+':'')+d.toFixed(2)+' kg';
-      vsSubEl.textContent = `先月${lastMonthDate.getMonth()+1}/${lastMonthDate.getDate()} (${lmRec.weight}kg) 比`;
-      if (d < 0) { vsEl.className='stat-card-value green'; vsCard.className='stat-card highlight-good'; }
-      else if (d > 0) { vsEl.className='stat-card-value red'; vsCard.className='stat-card highlight-bad'; }
-      else { vsEl.className='stat-card-value accent'; vsCard.className='stat-card highlight'; }
-    } else if (!lmRec) {
-      vsEl.textContent = '—'; vsEl.className='stat-card-value';
-      vsSubEl.textContent = '先月同日のデータなし';
-      vsCard.className='stat-card';
-    } else {
-      vsEl.textContent = '—'; vsEl.className='stat-card-value';
-      vsSubEl.textContent = '今日の体重未記録';
-      vsCard.className='stat-card';
+    el.innerHTML = html;
+  }
+
+  function renderMonthCalendar() {
+    const el = document.getElementById('month-calendar-view');
+    if (!el) return;
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = now.getMonth() + monthCalOffset;
+    const targetDate = new Date(y, m, 1);
+    const year = targetDate.getFullYear();
+    const month = targetDate.getMonth();
+    const todayStr = formatDate(now);
+    const dayNames = ['月','火','水','木','金','土','日'];
+
+    // 月の日数
+    const daysInMonth = new Date(year, month+1, 0).getDate();
+    // 月初の曜日（月曜始まり）
+    const firstDay = new Date(year, month, 1).getDay();
+    const startOffset = firstDay === 0 ? 6 : firstDay - 1;
+
+    let html = '';
+    html += '<div class="cal-header">';
+    html += '<button class="cal-nav-btn" onclick="monthCalOffset--;renderMonthCalendar()">‹</button>';
+    html += '<div class="cal-header-title">' + year + '年' + (month+1) + '月</div>';
+    html += '<button class="cal-nav-btn" onclick="monthCalOffset++;renderMonthCalendar()">›</button>';
+    html += '</div>';
+
+    // 月平均
+    const monthRecs = records.filter(r => {
+      const [ry,rm] = r.date.split('-').map(Number);
+      return ry === year && rm === month+1 && r.weight;
+    });
+    const avg = monthRecs.length > 0 ? (monthRecs.reduce((s,r)=>s+r.weight,0)/monthRecs.length).toFixed(2) : null;
+    if (avg) {
+      html += '<div style="padding:4px 0 8px;font-size:13px;color:var(--text-muted);">月平均: <span style="color:var(--accent2);font-size:18px;font-weight:bold;">' + avg + 'kg</span></div>';
     }
+
+    // 曜日ヘッダー
+    html += '<div class="cal-month-grid">';
+    dayNames.forEach(n => { html += '<div class="cal-day-label">' + n + '</div>'; });
+
+    // 空白
+    for (let i = 0; i < startOffset; i++) html += '<div></div>';
+
+    // 日付
+    for (let d = 1; d <= daysInMonth; d++) {
+      const ds = year + '-' + String(month+1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+      const rec = records.find(r => r.date === ds);
+      const w = rec?.weight;
+      const isToday = ds === todayStr;
+      html += '<div class="cal-day' + (isToday ? ' today' : '') + '" style="min-height:44px;">';
+      html += '<span class="cal-day-num">' + d + '</span>';
+      if (w) html += '<span class="cal-day-weight">' + w + '</span>';
+      if (rec?.trained) html += '<span class="cal-day-trained">💪</span>';
+      html += '</div>';
+    }
+    html += '</div>';
+    el.innerHTML = html;
   }
 
   function openWeightGoalModal() {
+    const now = new Date();
+    const base = new Date(now);
+    base.setDate(now.getDate() - now.getDay() + 1 + weekCalOffset * 7);
+    const current = getWeekGoal(base);
     document.getElementById('wgoal-modal').classList.add('open');
-    document.getElementById('wgoal-input').value = weekWeightGoal > 0 ? weekWeightGoal : '';
+    document.getElementById('wgoal-input').value = current > 0 ? current : '';
   }
   function closeWeightGoalModal() { document.getElementById('wgoal-modal').classList.remove('open'); }
   function handleWGoalOverlay(e) { if(e.target===document.getElementById('wgoal-modal')) closeWeightGoalModal(); }
   function confirmWeightGoal() {
     const v = parseFloat(document.getElementById('wgoal-input').value);
     if(!v||v<=0) return;
-    weekWeightGoal=v; localStorage.setItem('week_weight_goal',v);
+    const now = new Date();
+    const base = new Date(now);
+    base.setDate(now.getDate() - now.getDay() + 1 + weekCalOffset * 7);
+    setWeekGoal(base, v);
     closeWeightGoalModal();
     renderStats();
     showToast('目標体重を設定しました ✓', false);
