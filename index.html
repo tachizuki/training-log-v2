@@ -977,7 +977,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-  const APP_VERSION = 'v1778737450';
+  const APP_VERSION = 'v1778738881';
   const REMOTE_URL = 'https://tachizuki.github.io/training-log-v2/index.html';
 
   // AndroidBridgeからストレージデータを受け取る
@@ -1359,13 +1359,16 @@
 
   function setFilter(filter, btn) {
     currentFilter=filter;
+    weekCalOffset=0;
+    monthCalOffset=0;
     document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
     btn.classList.add('active');
-    // show/hide stats panels
     document.getElementById('stats-week').style.display = filter==='week' ? 'block' : 'none';
     document.getElementById('stats-month').style.display = filter==='month' ? 'block' : 'none';
     renderList();
     if(filter==='week'||filter==='month') renderStats();
+    // グラフが表示中なら更新
+    if (document.getElementById('tab-graph').classList.contains('active')) renderCharts();
   }
 
   function getFilteredRecords() {
@@ -1380,6 +1383,17 @@
   // 週カレンダー表示用の現在週オフセット
   let weekCalOffset = 0;
   let monthCalOffset = 0;
+
+  function weekCalNav(delta) {
+    weekCalOffset += delta;
+    renderWeekCalendar();
+    if (document.getElementById('tab-graph').classList.contains('active')) renderCharts();
+  }
+  function monthCalNav(delta) {
+    monthCalOffset += delta;
+    renderMonthCalendar();
+    if (document.getElementById('tab-graph').classList.contains('active')) renderCharts();
+  }
 
   function renderStats() {
     if (currentFilter === 'week') renderWeekCalendar();
@@ -1418,9 +1432,9 @@
 
     let html = '';
     html += '<div class="cal-header">';
-    html += '<button class="cal-nav-btn" onclick="weekCalOffset--;renderWeekCalendar()">‹</button>';
+    html += '<button class="cal-nav-btn" onclick="weekCalNav(-1)">‹</button>';
     html += '<div class="cal-header-title">' + monthStr + '</div>';
-    html += '<button class="cal-nav-btn" onclick="weekCalOffset++;renderWeekCalendar()">›</button>';
+    html += '<button class="cal-nav-btn" onclick="weekCalNav(1)">›</button>';
     html += '</div>';
 
     // 週平均・差分サマリーカード
@@ -1503,9 +1517,9 @@
 
     let html = '';
     html += '<div class="cal-header">';
-    html += '<button class="cal-nav-btn" onclick="monthCalOffset--;renderMonthCalendar()">‹</button>';
+    html += '<button class="cal-nav-btn" onclick="monthCalNav(-1)">‹</button>';
     html += '<div class="cal-header-title">' + year + '年' + (month+1) + '月</div>';
-    html += '<button class="cal-nav-btn" onclick="monthCalOffset++;renderMonthCalendar()">›</button>';
+    html += '<button class="cal-nav-btn" onclick="monthCalNav(1)">›</button>';
     html += '</div>';
 
     // 月平均
@@ -1833,7 +1847,23 @@ if (absDiff < 0.15) {
   }
 
   function renderCharts() {
-    const sorted=[...records].sort((a,b)=>a.date.localeCompare(b.date)).slice(-30);
+    const now = new Date();
+    let filtered;
+    if (currentFilter === 'week') {
+      const base = new Date(now);
+      base.setDate(now.getDate() - now.getDay() + 1 + weekCalOffset * 7);
+      const weekEnd = new Date(base); weekEnd.setDate(base.getDate() + 6);
+      const s = formatDate(base), e = formatDate(weekEnd);
+      filtered = records.filter(r => r.date >= s && r.date <= e);
+    } else if (currentFilter === 'month') {
+      const y = now.getFullYear(), m = now.getMonth() + monthCalOffset;
+      const target = new Date(y, m, 1);
+      const ym = target.getFullYear() + '-' + String(target.getMonth()+1).padStart(2,'0');
+      filtered = records.filter(r => r.date.startsWith(ym));
+    } else {
+      filtered = records.slice(-30);
+    }
+    const sorted = [...filtered].sort((a,b) => a.date.localeCompare(b.date));
     const labels=sorted.map(r=>{const d=new Date(r.date+'T00:00:00');return `${d.getMonth()+1}/${d.getDate()}`;});
     const cd={responsive:true,plugins:{legend:{labels:{color:'#888',font:{size:11}}}},scales:{x:{ticks:{color:'#666',font:{size:10}},grid:{color:'#1a1a26'}},y:{ticks:{color:'#666',font:{size:10}},grid:{color:'#1a1a26'}}}};
 
