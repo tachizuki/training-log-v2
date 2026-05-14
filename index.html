@@ -977,7 +977,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-  const APP_VERSION = 'v1778738881';
+  const APP_VERSION = 'v1778741550';
   const REMOTE_URL = 'https://tachizuki.github.io/training-log-v2/index.html';
 
   // AndroidBridgeからストレージデータを受け取る
@@ -1861,7 +1861,8 @@ if (absDiff < 0.15) {
       const ym = target.getFullYear() + '-' + String(target.getMonth()+1).padStart(2,'0');
       filtered = records.filter(r => r.date.startsWith(ym));
     } else {
-      filtered = records.slice(-30);
+      // 昇順ソート後に最新30件
+      filtered = [...records].sort((a,b)=>a.date.localeCompare(b.date)).slice(-30);
     }
     const sorted = [...filtered].sort((a,b) => a.date.localeCompare(b.date));
     const labels=sorted.map(r=>{const d=new Date(r.date+'T00:00:00');return `${d.getMonth()+1}/${d.getDate()}`;});
