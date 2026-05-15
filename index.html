@@ -8,6 +8,52 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>TrainingLog</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script type="module">
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+  import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+  import { getFirestore, doc, setDoc, getDoc, collection, getDocs } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyA81R9NwUI81cQO-m1mUjWFwSsXYeZ3J90",
+    authDomain: "training-log-ccea0.firebaseapp.com",
+    projectId: "training-log-ccea0",
+    storageBucket: "training-log-ccea0.firebasestorage.app",
+    messagingSenderId: "211414940177",
+    appId: "1:211414940177:android:06a74f52370271254fcfb0"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+  const provider = new GoogleAuthProvider();
+
+  // グローバルに公開
+  window._fbAuth = auth;
+  window._fbDb = db;
+  window._fbProvider = provider;
+  window._fbSignInWithPopup = signInWithPopup;
+  window._fbSignInWithRedirect = signInWithRedirect;
+  window._fbGetRedirectResult = getRedirectResult;
+  window._fbOnAuthStateChanged = onAuthStateChanged;
+  window._fbSignOut = signOut;
+  window._fbDoc = doc;
+  window._fbSetDoc = setDoc;
+  window._fbGetDoc = getDoc;
+  window._fbCollection = collection;
+  window._fbGetDocs = getDocs;
+
+  // 認証状態の監視
+  onAuthStateChanged(auth, (user) => {
+    if (window._onAuthStateChanged) window._onAuthStateChanged(user);
+  });
+
+  // リダイレクト結果の確認（Android用）
+  getRedirectResult(auth).then((result) => {
+    if (result?.user && window._onAuthStateChanged) {
+      window._onAuthStateChanged(result.user);
+    }
+  }).catch(() => {});
+</script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+JP:wght@300;400;500;700&display=swap');
 
@@ -942,6 +988,14 @@
 <div class="profile-modal-overlay" id="profile-modal" onclick="handleProfileOverlay(event)">
   <div class="profile-modal-sheet">
     <div class="profile-modal-title">⚙ プロフィール設定</div>
+    <!-- Firebase認証UI -->
+    <div style="background:var(--surface2);border-radius:12px;padding:12px 14px;margin-bottom:16px;">
+      <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;">アカウント</div>
+      <div id="auth-info" style="font-size:12px;color:var(--text);margin-bottom:8px;">ログインするとデータが同期されます</div>
+      <button id="auth-btn" onclick="firebaseSignIn()" style="width:100%;padding:10px;background:var(--accent);color:var(--bg);border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;">Googleでログイン</button>
+    </div>
+    <!-- クラウド同期ボタン -->
+    <button onclick="currentUser?syncToCloud(currentUser.uid):showToast('先にログインしてください')" style="width:100%;padding:10px;background:rgba(0,212,255,0.1);border:1px solid rgba(0,212,255,0.3);border-radius:8px;color:var(--accent2);font-size:13px;cursor:pointer;margin-bottom:16px;">☁️ クラウドに保存</button>
     <div class="profile-grid">
       <div class="profile-group">
         <label class="profile-label">身長 (cm)</label>
@@ -975,7 +1029,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-  const APP_VERSION = 'v1778836891';
+  const APP_VERSION = 'v1778842055';
   const REMOTE_URL = 'https://tachizuki.github.io/training-log-v2/index.html';
 
   // AndroidBridgeからストレージデータを受け取る
@@ -1040,6 +1094,101 @@
   function getTodayWater() { return waterData[todayKey()] || { total: 0, log: [] }; }
   function formatDate(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
   function formatDateJP(d) { return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`; }
+
+  // ==================
+  // FIREBASE AUTH & SYNC
+  // ==================
+  let currentUser = null;
+  const STORAGE_KEYS = ['training_records','gym_data','water_data','user_profile',
+                        'gym_presets','water_quick_btns','activity_presets','weekly_goals'];
+
+  // 認証状態変化ハンドラ
+  window._onAuthStateChanged = function(user) {
+    currentUser = user;
+    updateAuthUI(user);
+    if (user) {
+      syncFromCloud(user.uid);
+    }
+  };
+
+  function updateAuthUI(user) {
+    const btn = document.getElementById('auth-btn');
+    const info = document.getElementById('auth-info');
+    if (!btn) return;
+    if (user) {
+      btn.textContent = 'ログアウト';
+      btn.onclick = firebaseSignOut;
+      if (info) info.textContent = user.displayName || user.email || '';
+    } else {
+      btn.textContent = 'Googleでログイン';
+      btn.onclick = firebaseSignIn;
+      if (info) info.textContent = 'ログインするとデータが同期されます';
+    }
+  }
+
+  function firebaseSignIn() {
+    if (!window._fbAuth) { showToast('Firebase未初期化'); return; }
+    // Android WebViewはpopupが使えないのでredirectを使う
+    if (typeof AndroidBridge !== 'undefined') {
+      window._fbSignInWithRedirect(window._fbAuth, window._fbProvider)
+        .catch(e => showToast('ログインエラー: ' + e.message));
+    } else {
+      window._fbSignInWithPopup(window._fbAuth, window._fbProvider)
+        .catch(e => showToast('ログインエラー: ' + e.message));
+    }
+  }
+
+  function firebaseSignOut() {
+    if (!window._fbAuth) return;
+    window._fbSignOut(window._fbAuth).then(() => {
+      currentUser = null;
+      updateAuthUI(null);
+      showToast('ログアウトしました', false);
+    });
+  }
+
+  async function syncToCloud(uid) {
+    if (!uid || !window._fbDb) return;
+    try {
+      const data = {};
+      STORAGE_KEYS.forEach(k => {
+        const v = localStorage.getItem(k);
+        if (v) data[k] = v;
+      });
+      await window._fbSetDoc(
+        window._fbDoc(window._fbDb, 'users', uid),
+        { data, updatedAt: new Date().toISOString() },
+        { merge: true }
+      );
+      showToast('クラウドに保存しました ✓', false);
+    } catch(e) {
+      showToast('同期エラー: ' + e.message);
+    }
+  }
+
+  async function syncFromCloud(uid) {
+    if (!uid || !window._fbDb) return;
+    try {
+      const docRef = window._fbDoc(window._fbDb, 'users', uid);
+      const snap = await window._fbGetDoc(docRef);
+      if (snap.exists()) {
+        const cloudData = snap.data().data || {};
+        // クラウドのデータをlocalStorageにマージ（クラウド優先）
+        Object.keys(cloudData).forEach(k => {
+          localStorage.setItem(k, cloudData[k]);
+        });
+        // データを再読み込み
+        records = JSON.parse(localStorage.getItem('training_records') || '[]');
+        waterData = JSON.parse(localStorage.getItem('water_data') || '{}');
+        gymData = JSON.parse(localStorage.getItem('gym_data') || '{}');
+        userProfile = JSON.parse(localStorage.getItem('user_profile') || '{"height":168,"age":25,"sex":"male"}');
+        updateTodaySummary();
+        showToast('データを同期しました ✓', false);
+      }
+    } catch(e) {
+      console.error('syncFromCloud error:', e);
+    }
+  }
 
   function init() {
     const verEl = document.getElementById('app-ver-display');
@@ -1162,6 +1311,7 @@
     records.sort((a,b)=>b.date.localeCompare(a.date));
     localStorage.setItem('training_records', JSON.stringify(records));
     showToast('保存しました ✓', false);
+    if (currentUser) syncToCloud(currentUser.uid);
     resetForm();
     setTimeout(()=>showScreen(null), 800);
   }
