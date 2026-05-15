@@ -968,8 +968,10 @@
       <div style="font-size:11px;color:var(--text-muted);letter-spacing:0.1em;margin-bottom:10px;">データバックアップ</div>
       <button onclick="resetGymPresets()" style="width:100%;padding:12px;background:rgba(232,255,0,0.08);border:1px solid rgba(232,255,0,0.3);border-radius:10px;color:var(--accent);font-size:14px;cursor:pointer;margin-bottom:8px;">🔄 種目プリセットをリセット（有酸素追加）</button>
     <button onclick="exportData()" style="width:100%;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;cursor:pointer;margin-bottom:8px;">📤 データをエクスポート</button>
-      <button onclick="document.getElementById('import-file').click()" style="width:100%;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;cursor:pointer;">📥 データをインポート</button>
-      <input type="file" id="import-file" accept=".json" style="display:none;" onchange="importData(this)">
+      <label style="display:block;width:100%;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;cursor:pointer;text-align:center;box-sizing:border-box;">
+        📥 データをインポート
+        <input type="file" accept=".json" style="display:none;" onchange="importData(this)">
+      </label>
     </div>
   </div>
 </div>
@@ -977,7 +979,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-  const APP_VERSION = 'v1778821286';
+  const APP_VERSION = 'v1778827414';
   const REMOTE_URL = 'https://tachizuki.github.io/training-log-v2/index.html';
 
   // AndroidBridgeからストレージデータを受け取る
