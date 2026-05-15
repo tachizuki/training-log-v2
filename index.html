@@ -975,7 +975,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-  const APP_VERSION = 'v1778832462';
+  const APP_VERSION = 'v1778836891';
   const REMOTE_URL = 'https://tachizuki.github.io/training-log-v2/index.html';
 
   // AndroidBridgeからストレージデータを受け取る
@@ -3520,6 +3520,283 @@ if (absDiff < 0.15) {
 
   function closeActivityNameEdit() {
     document.getElementById('activity-name-editor').classList.remove('open');
+  }
+
+
+  // ==================
+  // PROFILE & BMR
+  // ==================
+  let userProfile = JSON.parse(localStorage.getItem('user_profile') || '{"height":168,"age":25,"sex":"male"}');
+
+  function calcBMR(height, weight, age, sex) {
+    if (!height || !age) return null;
+    const w = weight || 63;
+    if (sex === 'male') {
+      return Math.round(88.362 + 13.397*w + 4.799*height - 5.677*age);
+    } else {
+      return Math.round(447.593 + 9.247*w + 3.098*height - 4.330*age);
+    }
+  }
+
+  function getUserBMR() {
+    const today = formatDate(new Date());
+    const rec = records.find(r=>r.date===today);
+    const weight = rec?.weight || null;
+    return calcBMR(userProfile.height, weight, userProfile.age, userProfile.sex);
+  }
+
+  function openProfile() {
+    document.getElementById('profile-modal').classList.add('open');
+    document.getElementById('prof-height').value = userProfile.height||'';
+    document.getElementById('prof-age').value = userProfile.age||'';
+    selectSex(userProfile.sex||'male');
+    updateBMRPreview();
+  }
+
+  function handleProfileOverlay(e) {
+    if(e.target===document.getElementById('profile-modal'))
+      document.getElementById('profile-modal').classList.remove('open');
+  }
+
+  function selectSex(sex) {
+    userProfile.sex = sex;
+    document.getElementById('sex-male').classList.toggle('selected', sex==='male');
+    document.getElementById('sex-female').classList.toggle('selected', sex==='female');
+    updateBMRPreview();
+  }
+
+  function updateBMRPreview() {
+    const h = parseFloat(document.getElementById('prof-height').value)||0;
+    const a = parseInt(document.getElementById('prof-age').value)||0;
+    const today = formatDate(new Date());
+    const rec = records.find(r=>r.date===today);
+    const w = rec?.weight || 63;
+    const bmr = h&&a ? calcBMR(h, w, a, userProfile.sex) : null;
+    document.getElementById('prof-bmr-val').textContent = bmr ? bmr.toLocaleString() : '—';
+  }
+
+  function saveProfile() {
+    userProfile.height = parseFloat(document.getElementById('prof-height').value)||null;
+    userProfile.age = parseInt(document.getElementById('prof-age').value)||null;
+    localStorage.setItem('user_profile', JSON.stringify(userProfile));
+    document.getElementById('profile-modal').classList.remove('open');
+    showToast('プロフィールを保存しました ✓', false);
+  }
+
+
+  function resetGymPresets() {
+    localStorage.removeItem('gym_presets');
+    gymPresets = JSON.parse(JSON.stringify(GYM_PRESETS));
+    showToast('種目プリセットをリセットしました', false);
+  }
+
+  function exportData() {
+    const data = {};
+    const keys = ['training_records','gym_data','water_data','user_profile',
+                  'gym_presets','water_quick_btns','activity_presets','custom_gym_exercises'];
+    keys.forEach(k => {
+      const v = localStorage.getItem(k);
+      if (v) data[k] = v;
+    });
+    const json = JSON.stringify(data, null, 2);
+    const filename = 'traininglog_backup_' + formatDate(new Date()) + '.json';
+    if (typeof AndroidBridge !== 'undefined' && AndroidBridge.saveJson) {
+      AndroidBridge.saveJson(filename, json);
+    } else {
+      const blob = new Blob([json], {type: 'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = filename;
+      document.body.appendChild(a); a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('エクスポートしました ✓', false);
+    }
+  }
+
+  function openImportPicker() {
+    if (typeof AndroidBridge !== 'undefined' && AndroidBridge.openFilePicker) {
+      AndroidBridge.openFilePicker();
+    } else {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.json';
+      input.onchange = function() { importData(this); };
+      input.click();
+    }
+  }
+
+  function receiveImportData(jsonStr) {
+    try {
+      const data = JSON.parse(jsonStr);
+      Object.keys(data).forEach(k => localStorage.setItem(k, data[k]));
+      showToast('インポート完了。再起動します...', false);
+      setTimeout(() => location.reload(), 1500);
+    } catch(e) {
+      showToast('インポートに失敗しました');
+    }
+  }
+
+  function importData(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        const data = JSON.parse(e.target.result);
+        Object.keys(data).forEach(k => localStorage.setItem(k, data[k]));
+        showToast('インポート完了。再起動します...', false);
+        setTimeout(() => location.reload(), 1500);
+      } catch(err) {
+        showToast('インポートに失敗しました');
+      }
+    };
+    reader.readAsText(file);
+    input.value = '';
+  }
+
+  // ==================
+  // 運動プリセット編集
+  // ==================
+  let actEditorCatIdx = 0;
+
+  function openActivityPresetEditor() {
+    document.getElementById('activity-preset-editor').classList.add('open');
+    renderActivityEditorCats();
+    renderActivityEditorList();
+  }
+
+  function closeActivityPresetEditor() {
+    document.getElementById('activity-preset-editor').classList.remove('open');
+    filterActivityPicker();
+  }
+
+  function renderActivityEditorCats() {
+    const el = document.getElementById('activity-editor-cats');
+    el.innerHTML = activityPresets.map((cat, i) => `
+      <button class="gym-part-btn ${i===actEditorCatIdx?'active':''}" onclick="selectActivityEditorCat(${i})">${cat.icon} ${cat.cat}</button>
+    `).join('');
+  }
+
+  function selectActivityEditorCat(i) {
+    actEditorCatIdx = i;
+    renderActivityEditorCats();
+    renderActivityEditorList();
+  }
+
+  function renderActivityEditorList() {
+    const el = document.getElementById('activity-editor-list');
+    const cat = activityPresets[actEditorCatIdx];
+    if (!cat) { el.innerHTML = ''; return; }
+    el.innerHTML = cat.items.map((item, i) => `
+      <div class="gym-preset-item">
+        <span style="font-size:18px;margin-right:6px;">${item.icon||cat.icon}</span>
+        <span class="gym-preset-item-name">${item.name}</span>
+        <span style="font-size:11px;color:var(--text-muted);margin-right:8px;">${item.met?'MET '+item.met:(item.kcalPerMin||0)+'kcal/分'}</span>
+        <button class="gym-preset-del-btn" onclick="delActivityPresetItem(${i})">✕</button>
+      </div>
+    `).join('') || '<div style="color:var(--text-muted);font-size:13px;padding:12px 0;">種目がありません</div>';
+    el.innerHTML += `<button onclick="delActivityPresetCat(${actEditorCatIdx})" style="margin-top:8px;width:100%;padding:8px;background:transparent;border:1px dashed var(--danger);border-radius:8px;color:var(--danger);font-size:12px;cursor:pointer;">このカテゴリを削除</button>`;
+  }
+
+  function delActivityPresetItem(itemIdx) {
+    activityPresets[actEditorCatIdx].items.splice(itemIdx, 1);
+    localStorage.setItem('activity_presets', JSON.stringify(activityPresets));
+    renderActivityEditorList();
+  }
+
+  function delActivityPresetCat(catIdx) {
+    if (activityPresets.length <= 1) { showToast('最低1つのカテゴリが必要です'); return; }
+    activityPresets.splice(catIdx, 1);
+    actEditorCatIdx = Math.min(actEditorCatIdx, activityPresets.length-1);
+    localStorage.setItem('activity_presets', JSON.stringify(activityPresets));
+    renderActivityEditorCats();
+    renderActivityEditorList();
+  }
+
+  function addActivityPresetItem() {
+    const icon = document.getElementById('act-editor-icon').value.trim() || activityPresets[actEditorCatIdx].icon;
+    const name = document.getElementById('act-editor-name').value.trim();
+    const met = parseFloat(document.getElementById('act-editor-met').value) || null;
+    if (!name) { showToast('種目名を入力してください'); return; }
+    activityPresets[actEditorCatIdx].items.push({name, icon, met, kcalPerMin: met ? null : 0});
+    localStorage.setItem('activity_presets', JSON.stringify(activityPresets));
+    document.getElementById('act-editor-icon').value = '';
+    document.getElementById('act-editor-name').value = '';
+    document.getElementById('act-editor-met').value = '';
+    renderActivityEditorList();
+  }
+
+  function addActivityPresetCat() {
+    const name = document.getElementById('act-editor-cat-name').value.trim();
+    if (!name) { showToast('カテゴリ名を入力してください'); return; }
+    activityPresets.push({cat: name, icon: '🏃', items: []});
+    actEditorCatIdx = activityPresets.length - 1;
+    localStorage.setItem('activity_presets', JSON.stringify(activityPresets));
+    document.getElementById('act-editor-cat-name').value = '';
+    renderActivityEditorCats();
+    renderActivityEditorList();
+  }
+
+  function resetActivityPresets() {
+    activityPresets = JSON.parse(JSON.stringify(ACTIVITY_PRESETS));
+    localStorage.removeItem('activity_presets');
+    actEditorCatIdx = 0;
+    renderActivityEditorCats();
+    renderActivityEditorList();
+    showToast('デフォルトに戻しました', false);
+  }
+
+    function openActivityIconPicker(i, mode) {
+    iconPickerIdx = i;
+    iconPickerMode = mode;
+    const grid = document.getElementById('activity-icon-grid');
+    const list = mode === 'rec' ? recActivities : editActivities;
+    const current = list[i]?.icon || '🏃';
+    grid.innerHTML = ACTIVITY_ICONS.map(ic => `
+      <button onclick="selectActivityIcon('${ic}')" style="font-size:24px;background:${ic===current?'rgba(0,255,136,0.2)':'var(--surface2)'};border:${ic===current?'1px solid var(--success)':'1px solid var(--border)'};border-radius:8px;padding:8px;cursor:pointer;">${ic}</button>
+    `).join('');
+    document.getElementById('activity-icon-picker').classList.add('open');
+  }
+
+  function selectActivityIcon(icon) {
+    const list = iconPickerMode === 'rec' ? recActivities : editActivities;
+    if (list[iconPickerIdx]) list[iconPickerIdx].icon = icon;
+    closeActivityIconPicker();
+    if (iconPickerMode === 'rec') renderActivityList();
+    else renderEditActivityList();
+  }
+
+  function closeActivityIconPicker() {
+    document.getElementById('activity-icon-picker').classList.remove('open');
+  }
+
+  function openActivityNameEdit(i, mode) {
+    nameEditIdx = i;
+    nameEditMode = mode;
+    const list = mode === 'rec' ? recActivities : editActivities;
+    document.getElementById('activity-name-input').value = list[i]?.name || '';
+    document.getElementById('activity-name-editor').classList.add('open');
+    setTimeout(() => document.getElementById('activity-name-input').focus(), 300);
+  }
+
+  function saveActivityName() {
+    const name = document.getElementById('activity-name-input').value.trim();
+    if (!name) return;
+    const list = nameEditMode === 'rec' ? recActivities : editActivities;
+    if (list[nameEditIdx]) list[nameEditIdx].name = name;
+    closeActivityNameEdit();
+    if (nameEditMode === 'rec') renderActivityList();
+    else renderEditActivityList();
+  }
+
+  function closeActivityNameEdit() {
+    document.getElementById('activity-name-editor').classList.remove('open');
+  }
+
+  function delEditActivity(i) {
+    editActivities.splice(i,1);
+    renderEditActivityList();
   }
 
   function showToast(msg, blue=false) {
