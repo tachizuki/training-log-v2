@@ -977,7 +977,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-  const APP_VERSION = 'v1778741550';
+  const APP_VERSION = 'v1778821286';
   const REMOTE_URL = 'https://tachizuki.github.io/training-log-v2/index.html';
 
   // AndroidBridgeからストレージデータを受け取る
@@ -2118,10 +2118,10 @@ if (absDiff < 0.15) {
           setsHtml += '<div style="background:var(--surface2);border-radius:8px;padding:8px;margin-bottom:6px;">';
           setsHtml += '<div style="font-size:10px;color:var(--text-muted);margin-bottom:6px;">セット ' + (si+1) + '</div>';
           setsHtml += '<div class="gym-cardio-row">';
-          setsHtml += '<div><input type="number" class="gym-cardio-input" placeholder="—" value="' + (s.incline||'') + '" step="0.5" data-ei="' + ei + '" data-si="' + si + '" data-field="incline" onchange="gymUpdateCardio(this)"><div class="gym-cardio-label">傾斜(%)</div></div>';
-          setsHtml += '<div><input type="number" class="gym-cardio-input" placeholder="—" value="' + (s.speed||'') + '" step="0.1" data-ei="' + ei + '" data-si="' + si + '" data-field="speed" onchange="gymUpdateCardio(this)"><div class="gym-cardio-label">時速(km/h)</div></div>';
-          setsHtml += '<div><input type="number" class="gym-cardio-input" placeholder="—" value="' + (s.distance||'') + '" step="0.1" data-ei="' + ei + '" data-si="' + si + '" data-field="distance" onchange="gymUpdateCardio(this)"><div class="gym-cardio-label">距離(km)</div></div>';
-          setsHtml += '<div><input type="number" class="gym-cardio-input" placeholder="—" value="' + (s.duration||'') + '" step="1" data-ei="' + ei + '" data-si="' + si + '" data-field="duration" onchange="gymUpdateCardio(this)"><div class="gym-cardio-label">時間(分)</div></div>';
+          setsHtml += '<div><input type="number" class="gym-cardio-input" placeholder="—" value="' + (s.incline||'') + '" step="0.5" data-ei="' + ei + '" data-si="' + si + '" data-field="incline" oninput="gymUpdateCardio(this)"><div class="gym-cardio-label">傾斜(%)</div></div>';
+          setsHtml += '<div><input type="number" class="gym-cardio-input" placeholder="—" value="' + (s.speed||'') + '" step="0.1" data-ei="' + ei + '" data-si="' + si + '" data-field="speed" oninput="gymUpdateCardio(this)"><div class="gym-cardio-label">時速(km/h)</div></div>';
+          setsHtml += '<div><input type="number" class="gym-cardio-input" placeholder="—" value="' + (s.distance||'') + '" step="0.1" data-ei="' + ei + '" data-si="' + si + '" data-field="distance" oninput="gymUpdateCardio(this)"><div class="gym-cardio-label">距離(km)</div></div>';
+          setsHtml += '<div><input type="number" class="gym-cardio-input" placeholder="—" value="' + (s.duration||'') + '" step="1" data-ei="' + ei + '" data-si="' + si + '" data-field="duration" oninput="gymUpdateCardio(this)"><div class="gym-cardio-label">時間(分)</div></div>';
           setsHtml += '</div>';
           setsHtml += '<div style="display:flex;gap:8px;margin-top:6px;">';
           setsHtml += '<input type="text" class="gym-set-memo" placeholder="メモ（空欄可）" value="' + mVal + '" data-ei="' + ei + '" data-si="' + si + '" oninput="gymUpdateSet(+this.dataset.ei,+this.dataset.si,2,this.value)" style="flex:1;">';
@@ -2169,7 +2169,8 @@ if (absDiff < 0.15) {
     const ei = +el.dataset.ei;
     const si = +el.dataset.si;
     const field = el.dataset.field;
-    gymExercises[ei].sets[si][field] = parseFloat(el.value) || null;
+    const val = el.value.trim();
+    gymExercises[ei].sets[si][field] = val === '' ? null : parseFloat(val);
     autoSaveGym();
   }
 
@@ -2299,16 +2300,15 @@ if (absDiff < 0.15) {
 
   function gymDragStart(e, ei) {
     e.preventDefault();
-    const handle = e.currentTarget;
-    const card = handle.closest('.gym-exercise-card');
     const startX = e.clientX;
     const startY = e.clientY;
 
     longPressTimer = setTimeout(() => {
       document.removeEventListener('pointermove', checkMove);
       document.removeEventListener('pointerup', cancelLong);
-      startDrag(e, ei, card);
-    }, 300);
+      const card = document.querySelectorAll('#gym-exercise-list .gym-exercise-card')[ei];
+      if (card) startDrag(e, ei, card);
+    }, 600); // 長押し600ms
 
     function checkMove(ev) {
       if (Math.abs(ev.clientX - startX) > 10 || Math.abs(ev.clientY - startY) > 10) cancelLong();
@@ -2325,19 +2325,15 @@ if (absDiff < 0.15) {
   function startDrag(e, ei, card) {
     if (navigator.vibrate) navigator.vibrate(40);
     const rect = card.getBoundingClientRect();
-    const clientY = e.clientY;
 
-    dragState = { srcIdx: ei, curIdx: ei, offsetY: clientY - rect.top };
+    dragState = { srcIdx: ei, curIdx: ei, offsetY: e.clientY - rect.top };
 
-    // フローティングクローン
     floatingEl = card.cloneNode(true);
     floatingEl.classList.add('drag-floating');
     floatingEl.style.cssText = `width:${rect.width}px;left:${rect.left}px;top:${rect.top}px;margin:0;`;
     document.body.appendChild(floatingEl);
-
     card.classList.add('drag-active');
 
-    // 透明オーバーレイ（タッチイベント吸収用）
     overlayEl = document.createElement('div');
     overlayEl.className = 'gym-drag-overlay';
     document.body.appendChild(overlayEl);
@@ -2353,41 +2349,21 @@ if (absDiff < 0.15) {
 
     floatingEl.style.top = (y - dragState.offsetY) + 'px';
 
-    // drag-floatingとdrag-activeを除いたカードリスト
-    const cards = [...document.querySelectorAll('#gym-exercise-list .gym-exercise-card')]
-      .filter(c => !c.classList.contains('drag-floating') && !c.classList.contains('drag-active'));
-
-    // 全カードのdrag-overをリセット
-    document.querySelectorAll('.gym-exercise-card').forEach(c => c.classList.remove('drag-over'));
-
-    // どのカードの上にいるか判定（中心Y座標で比較）
-    let newIdx = dragState.curIdx;
-    cards.forEach((c, i) => {
-      const rect = c.getBoundingClientRect();
-      const centerY = rect.top + rect.height / 2;
-      // ドラッグ中カードのインデックスを考慮した実際のインデックス
-      const realIdx = i >= dragState.srcIdx ? i + 1 : i;
-      if (y < centerY && i === 0 && dragState.srcIdx !== 0) {
-        newIdx = 0;
-      } else if (y >= rect.top && y <= rect.bottom) {
-        newIdx = realIdx;
-      }
-    });
-
-    // より単純な判定：Y座標でカードを順に比較
+    // drag-active以外のカードでY座標を判定
     const allCards = [...document.querySelectorAll('#gym-exercise-list .gym-exercise-card')]
       .filter(c => !c.classList.contains('drag-floating'));
+
+    allCards.forEach(c => c.classList.remove('drag-over'));
 
     let targetIdx = dragState.srcIdx;
     allCards.forEach((c, i) => {
       if (c.classList.contains('drag-active')) return;
-      const rect = c.getBoundingClientRect();
-      if (y >= rect.top && y <= rect.bottom) {
+      const r = c.getBoundingClientRect();
+      if (y >= r.top && y <= r.bottom) {
         targetIdx = i;
         c.classList.add('drag-over');
       }
     });
-
     dragState.curIdx = targetIdx;
   }
 
@@ -2411,8 +2387,10 @@ if (absDiff < 0.15) {
       const item = gymExercises.splice(src, 1)[0];
       gymExercises.splice(dst, 0, item);
       renderGymExercises();
+      autoSaveGym();
     }
   }
+
 
 
   function gymCopySet(ei, si) {
@@ -3111,7 +3089,10 @@ if (absDiff < 0.15) {
     ctx.fillRect(padding, y, W - padding * 2, 1);
     y += 16;
 
+    const CARDIO_KW = ['ランニング','ウォーキング','自転車','トレッドミル','縄跳び','水泳','エアロバイク','有酸素','ジョギング'];
     allExercises.forEach(ex => {
+      const isCardio = CARDIO_KW.some(kw => ex.name.indexOf(kw) >= 0);
+
       ctx.fillStyle = '#f0f0f0';
       ctx.font = 'bold 20px sans-serif';
       ctx.fillText(ex.name, padding + 10, y + 18);
@@ -3119,26 +3100,47 @@ if (absDiff < 0.15) {
 
       ctx.fillStyle = '#444';
       ctx.font = '13px sans-serif';
-      ctx.fillText('SET', padding + 10, y + 14);
-      ctx.fillText('重量(kg)', padding + 80, y + 14);
-      ctx.fillText('回数', padding + 200, y + 14);
-      ctx.fillText('1RM', padding + 300, y + 14);
-      ctx.fillText('補助', padding + 400, y + 14);
+
+      if (isCardio) {
+        // 有酸素専用ヘッダー
+        ctx.fillText('SET', padding + 10, y + 14);
+        ctx.fillText('傾斜(%)', padding + 80, y + 14);
+        ctx.fillText('時速(km/h)', padding + 200, y + 14);
+        ctx.fillText('距離(km)', padding + 320, y + 14);
+        ctx.fillText('時間(分)', padding + 440, y + 14);
+      } else {
+        ctx.fillText('SET', padding + 10, y + 14);
+        ctx.fillText('重量(kg)', padding + 80, y + 14);
+        ctx.fillText('回数', padding + 200, y + 14);
+        ctx.fillText('1RM', padding + 300, y + 14);
+        ctx.fillText('補助', padding + 400, y + 14);
+      }
       y += lineH * 0.8;
 
       (ex.sets || []).forEach((s, si) => {
-        const rm = calcRM(s.weight, s.reps, name);
         ctx.fillStyle = '#f0f0f0';
         ctx.font = '16px sans-serif';
-        ctx.fillText(`${si + 1}`, padding + 10, y + 16);
-        ctx.fillStyle = '#00d4ff';
-        ctx.fillText(s.weight ? s.weight + 'kg' : '—', padding + 80, y + 16);
-        ctx.fillStyle = '#f0f0f0';
-        ctx.fillText(s.reps ? s.reps + 'rep' : '—', padding + 200, y + 16);
-        ctx.fillStyle = '#e8ff00';
-        ctx.fillText(rm ? rm + 'kg' : '—', padding + 300, y + 16);
-        ctx.fillStyle = s.assist ? '#ff8c42' : '#444';
-        ctx.fillText(s.assist ? '✓補助' : '—', padding + 400, y + 16);
+        ctx.fillText((si + 1) + '', padding + 10, y + 16);
+
+        if (isCardio) {
+          ctx.fillStyle = '#00d4ff';
+          ctx.fillText(s.incline != null ? s.incline + '%' : '—', padding + 80, y + 16);
+          ctx.fillText(s.speed != null ? s.speed + '' : '—', padding + 200, y + 16);
+          ctx.fillStyle = '#e8ff00';
+          ctx.fillText(s.distance != null ? s.distance + 'km' : '—', padding + 320, y + 16);
+          ctx.fillStyle = '#f0f0f0';
+          ctx.fillText(s.duration != null ? s.duration + '分' : '—', padding + 440, y + 16);
+        } else {
+          const rm = calcRM(s.weight, s.reps, ex.name);
+          ctx.fillStyle = '#00d4ff';
+          ctx.fillText(s.weight ? s.weight + 'kg' : '—', padding + 80, y + 16);
+          ctx.fillStyle = '#f0f0f0';
+          ctx.fillText(s.reps ? s.reps + 'rep' : '—', padding + 200, y + 16);
+          ctx.fillStyle = '#e8ff00';
+          ctx.fillText(rm ? rm + 'kg' : '—', padding + 300, y + 16);
+          ctx.fillStyle = s.assist ? '#ff8c42' : '#444';
+          ctx.fillText(s.assist ? '✓補助' : '—', padding + 400, y + 16);
+        }
         y += lineH;
 
         if (s.memo) {
@@ -3522,26 +3524,30 @@ if (absDiff < 0.15) {
       if (v) data[k] = v;
     });
     const json = JSON.stringify(data, null, 2);
-    const blob = new Blob([json], {type: 'application/json'});
     const filename = 'traininglog_backup_' + formatDate(new Date()) + '.json';
 
-    if (typeof AndroidBridge !== 'undefined') {
-      // Android: チャンクで送信
-      const base64 = btoa(unescape(encodeURIComponent(json)));
-      const CHUNK = 500000;
-      const total = Math.ceil(base64.length / CHUNK);
-      AndroidBridge.saveStart(filename.replace('.json', '.txt'), total);
-      for (let i = 0; i < total; i++) {
-        AndroidBridge.saveChunk(i, base64.substring(i*CHUNK, (i+1)*CHUNK));
-      }
-      AndroidBridge.saveDone();
-      showToast('バックアップを保存しました', false);
-    } else {
+    // AndroidでもブラウザでもBlobダウンロードで統一
+    try {
+      const blob = new Blob([json], {type: 'application/json'});
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = url; a.download = filename;
-      document.body.appendChild(a); a.click();
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
       document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('エクスポートしました ✓', false);
+    } catch(e) {
+      // Blob未対応の場合はデータURIで試行
+      const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(json);
+      const a = document.createElement('a');
+      a.href = dataUri;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      showToast('エクスポートしました ✓', false);
     }
   }
 
