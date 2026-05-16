@@ -617,7 +617,7 @@
     <button class="gym-date-nav" onclick="gymChangeDate(1)">›</button>
   </div>
   <div class="gym-action-bar">
-    <button class="gym-action-btn accent" onclick="gymCopyPrev()">📋 前回をコピー</button>
+    <button class="gym-action-btn accent" onclick="openMySetModal()">📋 マイセット</button>
     <button class="gym-action-btn" onclick="openTimer()">⏱ タイマー</button>
     <button class="gym-action-btn" onclick="gymShare()">📷 シェア</button>
   </div>
@@ -709,6 +709,20 @@
   <div class="timer-btns">
     <button class="timer-btn start" id="timer-start-btn" onclick="toggleTimer()">スタート</button>
     <button class="timer-btn close-btn" onclick="closeTimer()">閉じる</button>
+  </div>
+</div>
+
+<!-- MY SET MODAL -->
+<div class="activity-picker-overlay" id="myset-modal" onclick="if(event.target===this)closeMySetModal()" style="z-index:110;">
+  <div class="activity-picker-sheet" style="max-height:85vh;overflow-y:auto;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--accent);">マイセット</div>
+      <button onclick="closeMySetModal()" style="background:none;border:none;color:var(--text-muted);font-size:22px;cursor:pointer;">✕</button>
+    </div>
+    <div id="myset-list"></div>
+    <div style="margin-top:12px;border-top:1px solid var(--border);padding-top:12px;">
+      <button onclick="saveAsMySet()" style="width:100%;padding:12px;background:var(--accent);color:var(--bg);border:none;border-radius:10px;font-family:'Bebas Neue',sans-serif;font-size:18px;cursor:pointer;">今日のメニューを登録</button>
+    </div>
   </div>
 </div>
 
@@ -980,7 +994,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-  const APP_VERSION = 'v1778933850';
+  const APP_VERSION = 'v1778935223';
   const REMOTE_URL = 'https://tachizuki.github.io/training-log-v2/index.html';
 
   // AndroidBridgeからストレージデータを受け取る
@@ -2220,29 +2234,36 @@ if (absDiff < 0.15) {
         });
       } else {
         ex.sets.forEach((s, si) => {
-          const rm = calcRM(s.weight, s.reps, ex.name);
+          const rm = (s.weight === '自重') ? null : calcRM(s.weight, s.reps, ex.name);
           const rmText = rm ? rm + 'kg' : '—';
           const assistClass = s.assist ? 'on' : '';
           const wVal = s.weight || '';
           const rVal = s.reps || '';
           const mVal = (s.memo || '').replace(/"/g, '&quot;');
+          if (['チンニング','懸垂','プルアップ'].some(function(kw){return ex.name.indexOf(kw)>=0;}) && si===0) {
+            const aType = ex.assistType || 'assist';
+            setsHtml += '<div style="display:flex;gap:8px;margin-bottom:6px;align-items:center;">';
+            setsHtml += '<span style="font-size:11px;color:var(--text-muted);">タイプ</span>';
+            setsHtml += '<select onchange="gymSetChinningType(' + ei + ',this.value)" style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;padding:6px 8px;">';
+            setsHtml += '<option value="assist"' + (aType==='assist'?' selected':'') + '>補助</option>';
+            setsHtml += '<option value="weight"' + (aType==='weight'?' selected':'') + '>加重</option>';
+            setsHtml += '</select></div>';
+          }
+          const isChinningEx = ['チンニング','懸垂','プルアップ'].some(function(kw){return ex.name.indexOf(kw)>=0;});
           setsHtml += '<div class="gym-set-row">';
           setsHtml += '<span class="gym-set-label">' + (si+1) + '</span>';
-          setsHtml += '<input type="number" class="gym-set-input" placeholder="kg" value="' + wVal + '" step="0.5" inputmode="decimal" id="gs-' + ei + '-' + si + '-w" data-ei="' + ei + '" data-si="' + si + '" oninput="gymUpdateSet(+this.dataset.ei,+this.dataset.si,0,this.value)" onfocus="this.select()">';
+          if (isChinningEx) {
+            // チンニングは自重ボタン付きテキスト入力
+            setsHtml += '<div style="display:flex;flex-direction:column;gap:2px;flex:1;">';
+            setsHtml += '<input type="text" class="gym-set-input" placeholder="kg/自重" value="' + wVal + '" inputmode="decimal" id="gs-' + ei + '-' + si + '-w" data-ei="' + ei + '" data-si="' + si + '" oninput="gymUpdateSet(+this.dataset.ei,+this.dataset.si,0,this.value)" onfocus="this.select()">';
+            setsHtml += '<button onclick="gymSetBodyweight(' + ei + ',' + si + ')" style="font-size:9px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text-muted);padding:1px 4px;cursor:pointer;width:100%;">自重</button>';
+            setsHtml += '</div>';
+          } else {
+            setsHtml += '<input type="number" class="gym-set-input" placeholder="kg" value="' + wVal + '" step="0.5" inputmode="decimal" id="gs-' + ei + '-' + si + '-w" data-ei="' + ei + '" data-si="' + si + '" oninput="gymUpdateSet(+this.dataset.ei,+this.dataset.si,0,this.value)" onfocus="this.select()">';
+          }
           setsHtml += '<input type="number" class="gym-set-input" placeholder="rep" value="' + rVal + '" inputmode="numeric" id="gs-' + ei + '-' + si + '-r" data-ei="' + ei + '" data-si="' + si + '" oninput="gymUpdateSet(+this.dataset.ei,+this.dataset.si,1,this.value)" onfocus="this.select()">';
           setsHtml += '<span class="gym-set-rm" id="gs-' + ei + '-' + si + '-rm">' + rmText + '</span>';
-          // チンニングの場合は補助タイプ選択
-          const isChinning = ['チンニング','懸垂','プルアップ'].some(kw => ex.name.indexOf(kw) >= 0);
-          if (isChinning) {
-            const aType = s.assistType || 'none';
-            setsHtml += '<div class="gym-set-assist"><select onchange="gymSetAssistType(' + ei + ',' + si + ',this.value)" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:10px;padding:2px 4px;width:100%;">' +
-              '<option value="none"' + (aType==='none'?' selected':'') + '>自体重</option>' +
-              '<option value="assist"' + (aType==='assist'?' selected':'') + '>補助</option>' +
-              '<option value="weight"' + (aType==='weight'?' selected':'') + '>加重</option>' +
-              '</select></div>';
-          } else {
-            setsHtml += '<div class="gym-set-assist"><div class="gym-assist-check ' + assistClass + '" onclick="gymToggleAssist(' + ei + ',' + si + ')"></div></div>';
-          }
+          setsHtml += '<div class="gym-set-assist"><div class="gym-assist-check ' + assistClass + '" onclick="gymToggleAssist(' + ei + ',' + si + ')"></div></div>';
           setsHtml += '</div>';
           setsHtml += '<div style="display:flex;align-items:center;gap:8px;margin-top:2px;">';
           setsHtml += '<input type="text" class="gym-set-memo" placeholder="メモ（空欄可）" value="' + mVal + '" data-ei="' + ei + '" data-si="' + si + '" oninput="gymUpdateSet(+this.dataset.ei,+this.dataset.si,2,this.value)" style="flex:1;">';
@@ -2278,7 +2299,8 @@ if (absDiff < 0.15) {
   function gymUpdateSet(ei, si, field, val) {
     // field: 0=weight, 1=reps, 2=memo
     if (field === 0) {
-      gymExercises[ei].sets[si].weight = parseFloat(val) || null;
+      // 「自重」は文字列のまま保存、数値の場合はparseFloat
+      gymExercises[ei].sets[si].weight = (val === '自重') ? '自重' : (parseFloat(val) || null);
       const s = gymExercises[ei].sets[si];
       const rm = calcRM(s.weight, s.reps, gymExercises[ei].name);
       const rmEl = document.getElementById('gs-' + ei + '-' + si + '-rm');
@@ -2293,6 +2315,19 @@ if (absDiff < 0.15) {
       gymExercises[ei].sets[si].memo = val;
     }
     autoSaveGym();
+  }
+
+  function gymSetBodyweight(ei, si) {
+    gymExercises[ei].sets[si].weight = '自重';
+    const el = document.getElementById('gs-' + ei + '-' + si + '-w');
+    if (el) el.value = '自重';
+    autoSaveGym();
+  }
+
+  function gymSetChinningType(ei, type) {
+    gymExercises[ei].assistType = type;
+    autoSaveGym();
+    renderGymExercises();
   }
 
   function gymToggleAssist(ei, si) {
@@ -2432,12 +2467,11 @@ if (absDiff < 0.15) {
   function startDrag(e, ei, card) {
     if (navigator.vibrate) navigator.vibrate(40);
     const rect = card.getBoundingClientRect();
-
     dragState = { srcIdx: ei, curIdx: ei, offsetY: e.clientY - rect.top };
 
     floatingEl = card.cloneNode(true);
     floatingEl.classList.add('drag-floating');
-    floatingEl.style.cssText = `width:${rect.width}px;left:${rect.left}px;top:${rect.top}px;margin:0;`;
+    floatingEl.style.cssText = 'width:' + rect.width + 'px;left:' + rect.left + 'px;top:' + rect.top + 'px;margin:0;';
     document.body.appendChild(floatingEl);
     card.classList.add('drag-active');
 
@@ -2453,48 +2487,51 @@ if (absDiff < 0.15) {
     if (!dragState || !floatingEl) return;
     e.preventDefault();
     const y = e.clientY;
-
     floatingEl.style.top = (y - dragState.offsetY) + 'px';
 
-    const allCards = [...document.querySelectorAll('#gym-exercise-list .gym-exercise-card')]
-      .filter(c => !c.classList.contains('drag-floating'));
+    // drag-active以外の全カード
+    const cards = [...document.querySelectorAll('#gym-exercise-list .gym-exercise-card')]
+      .filter(c => !c.classList.contains('drag-floating') && !c.classList.contains('drag-active'));
 
-    allCards.forEach(c => c.classList.remove('drag-over'));
+    cards.forEach(c => { c.classList.remove('drag-over'); c.style.borderTop = ''; c.style.borderBottom = ''; });
 
-    // 各カードの中心Y座標と比較してターゲットを決定
+    if (cards.length === 0) return;
+
+    // Y座標でどのカードとカードの間にいるか判定
     let targetIdx = dragState.srcIdx;
-    const nonActive = allCards.filter(c => !c.classList.contains('drag-active'));
 
-    if (nonActive.length === 0) return;
-
-    // 一番上のカードより上にいる場合
-    const firstRect = nonActive[0].getBoundingClientRect();
-    if (y < firstRect.top + firstRect.height / 2) {
+    // 最初のカードより上
+    const firstRect = cards[0].getBoundingClientRect();
+    if (y < firstRect.top + firstRect.height * 0.5) {
       targetIdx = 0;
-      nonActive[0].classList.add('drag-over');
+      cards[0].style.borderTop = '3px solid var(--accent)';
     } else {
-      // 各カードの中心と比較
-      for (let i = 0; i < nonActive.length; i++) {
-        const r = nonActive[i].getBoundingClientRect();
-        const center = r.top + r.height / 2;
-        const nextCenter = i < nonActive.length - 1
-          ? nonActive[i+1].getBoundingClientRect().top + nonActive[i+1].getBoundingClientRect().height / 2
-          : Infinity;
-        if (y >= center && y < nextCenter) {
-          // allCardsでのインデックスを取得
-          targetIdx = allCards.indexOf(nonActive[i]);
-          nonActive[i].classList.add('drag-over');
+      let found = false;
+      for (let i = 0; i < cards.length; i++) {
+        const r = cards[i].getBoundingClientRect();
+        if (y >= r.top && y <= r.bottom) {
+          if (y < r.top + r.height * 0.5) {
+            // カードの上半分 → このカードの前に挿入
+            targetIdx = i < dragState.srcIdx ? i : i;
+            cards[i].style.borderTop = '3px solid var(--accent)';
+          } else {
+            // カードの下半分 → このカードの後に挿入
+            targetIdx = i < dragState.srcIdx ? i + 1 : i + 1;
+            cards[i].style.borderBottom = '3px solid var(--accent)';
+          }
+          found = true;
           break;
         }
       }
-      // 一番下のカードより下にいる場合
-      const lastRect = nonActive[nonActive.length-1].getBoundingClientRect();
-      if (y >= lastRect.top + lastRect.height / 2) {
-        targetIdx = allCards.length - 1;
-        nonActive[nonActive.length-1].classList.add('drag-over');
+      if (!found) {
+        // 最後のカードより下
+        const lastRect = cards[cards.length-1].getBoundingClientRect();
+        if (y > lastRect.bottom - lastRect.height * 0.5) {
+          targetIdx = cards.length;
+          cards[cards.length-1].style.borderBottom = '3px solid var(--accent)';
+        }
       }
     }
-
     dragState.curIdx = targetIdx;
   }
 
@@ -2508,15 +2545,19 @@ if (absDiff < 0.15) {
     if (floatingEl) { floatingEl.remove(); floatingEl = null; }
     if (overlayEl) { overlayEl.remove(); overlayEl = null; }
 
-    document.querySelectorAll('.gym-exercise-card').forEach(c => {
+    document.querySelectorAll('#gym-exercise-list .gym-exercise-card').forEach(c => {
       c.classList.remove('drag-active', 'drag-over', 'drag-floating');
+      c.style.borderTop = '';
+      c.style.borderBottom = '';
     });
 
     dragState = null;
 
     if (src !== dst) {
       const item = gymExercises.splice(src, 1)[0];
-      gymExercises.splice(dst, 0, item);
+      // dst はdrag-active除いたインデックスなので調整
+      const insertAt = dst > src ? dst - 1 : dst;
+      gymExercises.splice(insertAt, 0, item);
       renderGymExercises();
       autoSaveGym();
     }
@@ -2901,7 +2942,6 @@ if (absDiff < 0.15) {
   }
 
   function addFromPresetEditor(name) {
-    // 編集画面から直接その日のメニューに追加
     const CARDIO = ['ランニング','ウォーキング','自転車','トレッドミル','縄跳び','水泳','エアロバイク','有酸素','ジョギング'];
     const isCardio = CARDIO.some(kw => name.indexOf(kw) >= 0);
     if (isCardio) {
@@ -2910,7 +2950,10 @@ if (absDiff < 0.15) {
       gymExercises.push({name, sets:[{weight:null,reps:null,assist:false,memo:''}]});
     }
     autoSaveGym();
-    closeGymPresetEditor();
+    // 編集画面と種目選択画面を閉じて筋トレメモに遷移
+    document.getElementById('gym-preset-editor').classList.remove('open');
+    document.getElementById('gym-picker').classList.remove('open');
+    renderGymExercises();
     showToast(name + ' を追加しました', false);
   }
 
@@ -3358,8 +3401,15 @@ if (absDiff < 0.15) {
           ctx.fillText(s.reps ? s.reps + 'rep' : '—', padding + 200, y + 16);
           ctx.fillStyle = '#e8ff00';
           ctx.fillText(rm ? rm + 'kg' : '—', padding + 300, y + 16);
-          ctx.fillStyle = s.assist ? '#ff8c42' : '#444';
-          ctx.fillText(s.assist ? '✓補助' : '—', padding + 400, y + 16);
+          const isChinningCanvas = ['チンニング','懸垂','プルアップ'].some(function(kw){return ex.name.indexOf(kw)>=0;});
+          if (isChinningCanvas) {
+            const aType = ex.assistType || 'assist';
+            ctx.fillStyle = aType === 'weight' ? '#e8ff00' : '#ff8c42';
+            ctx.fillText(aType === 'weight' ? '加重' : '補助', padding + 400, y + 16);
+          } else {
+            ctx.fillStyle = s.assist ? '#ff8c42' : '#444';
+            ctx.fillText(s.assist ? '✓補助' : '—', padding + 400, y + 16);
+          }
         }
         y += lineH;
 
@@ -4020,6 +4070,69 @@ if (absDiff < 0.15) {
   function delEditActivity(i) {
     editActivities.splice(i,1);
     renderEditActivityList();
+  }
+
+  // ==================
+  // マイセット
+  // ==================
+  let mySets = JSON.parse(localStorage.getItem('my_sets') || '[]');
+
+  function openMySetModal() {
+    document.getElementById('myset-modal').classList.add('open');
+    renderMySetList();
+  }
+
+  function closeMySetModal() {
+    document.getElementById('myset-modal').classList.remove('open');
+  }
+
+  function renderMySetList() {
+    const el = document.getElementById('myset-list');
+    if (mySets.length === 0) {
+      el.innerHTML = '<div style="color:var(--text-muted);font-size:13px;padding:12px 0;">マイセットがありません。今日のメニューを登録してください。</div>';
+      return;
+    }
+    el.innerHTML = mySets.map(function(ms, i) {
+      return '<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:8px;">' +
+        '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">' +
+        '<div style="font-size:14px;font-weight:bold;color:var(--text);">' + ms.name + '</div>' +
+        '<div style="display:flex;gap:6px;">' +
+        '<button onclick="loadMySet(' + i + ')" style="padding:5px 12px;background:var(--accent);color:var(--bg);border:none;border-radius:6px;font-size:12px;cursor:pointer;">読み込む</button>' +
+        '<button onclick="deleteMySet(' + i + ')" style="padding:5px 10px;background:none;border:1px solid var(--border);border-radius:6px;color:var(--danger);font-size:12px;cursor:pointer;">削除</button>' +
+        '</div></div>' +
+        '<div style="font-size:11px;color:var(--text-muted);">' + ms.exercises.map(function(e) { return e.name; }).join('・') + '</div>' +
+        '</div>';
+    }).join('');
+  }
+
+  function saveAsMySet() {
+    if (gymExercises.length === 0) { showToast('種目がありません'); return; }
+    const name = prompt('マイセットの名前を入力してください', gymDate + 'のメニュー');
+    if (!name) return;
+    mySets.push({
+      name: name,
+      exercises: JSON.parse(JSON.stringify(gymExercises))
+    });
+    localStorage.setItem('my_sets', JSON.stringify(mySets));
+    renderMySetList();
+    showToast('マイセットに登録しました ✓', false);
+  }
+
+  function loadMySet(i) {
+    if (!confirm('現在のメニューを置き換えますか？')) return;
+    gymExercises = JSON.parse(JSON.stringify(mySets[i].exercises));
+    gymExercises.forEach(function(ex) { ex.sets.forEach(function(s) { s.memo = ''; }); });
+    renderGymExercises();
+    autoSaveGym();
+    closeMySetModal();
+    showToast(mySets[i].name + ' を読み込みました', false);
+  }
+
+  function deleteMySet(i) {
+    if (!confirm('このマイセットを削除しますか？')) return;
+    mySets.splice(i, 1);
+    localStorage.setItem('my_sets', JSON.stringify(mySets));
+    renderMySetList();
   }
 
   function showToast(msg, blue=false) {
