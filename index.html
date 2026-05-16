@@ -656,10 +656,7 @@
     </div>
     <!-- 種目リスト -->
     <div class="gym-picker-list" id="gym-picker-list"></div>
-    <!-- カスタム追加（キーボード上部に固定） -->
-    <div style="position:sticky;bottom:0;padding:12px 16px;border-top:1px solid var(--border);background:var(--surface);">
-      <button class="gym-picker-custom-btn" onclick="addCustomGymExercise()">入力した名前で追加</button>
-    </div>
+
   </div>
 </div>
 
@@ -949,8 +946,7 @@
       <div id="auth-info" style="font-size:12px;color:var(--text);margin-bottom:8px;">ログインするとデータが同期されます</div>
       <button id="auth-btn" onclick="firebaseSignIn()" style="width:100%;padding:10px;background:var(--accent);color:var(--bg);border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;">Googleでログイン</button>
     </div>
-    <!-- クラウド同期ボタン -->
-    <button onclick="currentUser?syncToCloud(currentUser.uid):showToast('先にログインしてください')" style="width:100%;padding:10px;background:rgba(0,212,255,0.1);border:1px solid rgba(0,212,255,0.3);border-radius:8px;color:var(--accent2);font-size:13px;cursor:pointer;margin-bottom:16px;">☁️ クラウドに保存</button>
+
     <div class="profile-grid">
       <div class="profile-group">
         <label class="profile-label">身長 (cm)</label>
@@ -984,7 +980,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-  const APP_VERSION = 'v1778846296';
+  const APP_VERSION = 'v1778933850';
   const REMOTE_URL = 'https://tachizuki.github.io/training-log-v2/index.html';
 
   // AndroidBridgeからストレージデータを受け取る
@@ -1301,6 +1297,7 @@
     renderWaterLog(waterData[key].log);
     updateTodaySummary();
     showToast(`+${ml}ml 追加 💧`, true);
+    if (currentUser) syncToCloud(currentUser.uid);
   }
 
   function removeWaterLog(idx) {
@@ -2234,7 +2231,18 @@ if (absDiff < 0.15) {
           setsHtml += '<input type="number" class="gym-set-input" placeholder="kg" value="' + wVal + '" step="0.5" inputmode="decimal" id="gs-' + ei + '-' + si + '-w" data-ei="' + ei + '" data-si="' + si + '" oninput="gymUpdateSet(+this.dataset.ei,+this.dataset.si,0,this.value)" onfocus="this.select()">';
           setsHtml += '<input type="number" class="gym-set-input" placeholder="rep" value="' + rVal + '" inputmode="numeric" id="gs-' + ei + '-' + si + '-r" data-ei="' + ei + '" data-si="' + si + '" oninput="gymUpdateSet(+this.dataset.ei,+this.dataset.si,1,this.value)" onfocus="this.select()">';
           setsHtml += '<span class="gym-set-rm" id="gs-' + ei + '-' + si + '-rm">' + rmText + '</span>';
-          setsHtml += '<div class="gym-set-assist"><div class="gym-assist-check ' + assistClass + '" onclick="gymToggleAssist(' + ei + ',' + si + ')"></div></div>';
+          // チンニングの場合は補助タイプ選択
+          const isChinning = ['チンニング','懸垂','プルアップ'].some(kw => ex.name.indexOf(kw) >= 0);
+          if (isChinning) {
+            const aType = s.assistType || 'none';
+            setsHtml += '<div class="gym-set-assist"><select onchange="gymSetAssistType(' + ei + ',' + si + ',this.value)" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:10px;padding:2px 4px;width:100%;">' +
+              '<option value="none"' + (aType==='none'?' selected':'') + '>自体重</option>' +
+              '<option value="assist"' + (aType==='assist'?' selected':'') + '>補助</option>' +
+              '<option value="weight"' + (aType==='weight'?' selected':'') + '>加重</option>' +
+              '</select></div>';
+          } else {
+            setsHtml += '<div class="gym-set-assist"><div class="gym-assist-check ' + assistClass + '" onclick="gymToggleAssist(' + ei + ',' + si + ')"></div></div>';
+          }
           setsHtml += '</div>';
           setsHtml += '<div style="display:flex;align-items:center;gap:8px;margin-top:2px;">';
           setsHtml += '<input type="text" class="gym-set-memo" placeholder="メモ（空欄可）" value="' + mVal + '" data-ei="' + ei + '" data-si="' + si + '" oninput="gymUpdateSet(+this.dataset.ei,+this.dataset.si,2,this.value)" style="flex:1;">';
@@ -2290,6 +2298,12 @@ if (absDiff < 0.15) {
   function gymToggleAssist(ei, si) {
     gymExercises[ei].sets[si].assist = !gymExercises[ei].sets[si].assist;
     renderGymExercises();
+    autoSaveGym();
+  }
+
+  function gymSetAssistType(ei, si, type) {
+    gymExercises[ei].sets[si].assistType = type;
+    gymExercises[ei].sets[si].assist = (type === 'assist');
     autoSaveGym();
   }
 
@@ -2401,7 +2415,7 @@ if (absDiff < 0.15) {
       document.removeEventListener('pointerup', cancelLong);
       const card = document.querySelectorAll('#gym-exercise-list .gym-exercise-card')[ei];
       if (card) startDrag(e, ei, card);
-    }, 600); // 長押し600ms
+    }, 1200); // 長押し1200ms
 
     function checkMove(ev) {
       if (Math.abs(ev.clientX - startX) > 10 || Math.abs(ev.clientY - startY) > 10) cancelLong();
@@ -2442,21 +2456,45 @@ if (absDiff < 0.15) {
 
     floatingEl.style.top = (y - dragState.offsetY) + 'px';
 
-    // drag-active以外のカードでY座標を判定
     const allCards = [...document.querySelectorAll('#gym-exercise-list .gym-exercise-card')]
       .filter(c => !c.classList.contains('drag-floating'));
 
     allCards.forEach(c => c.classList.remove('drag-over'));
 
+    // 各カードの中心Y座標と比較してターゲットを決定
     let targetIdx = dragState.srcIdx;
-    allCards.forEach((c, i) => {
-      if (c.classList.contains('drag-active')) return;
-      const r = c.getBoundingClientRect();
-      if (y >= r.top && y <= r.bottom) {
-        targetIdx = i;
-        c.classList.add('drag-over');
+    const nonActive = allCards.filter(c => !c.classList.contains('drag-active'));
+
+    if (nonActive.length === 0) return;
+
+    // 一番上のカードより上にいる場合
+    const firstRect = nonActive[0].getBoundingClientRect();
+    if (y < firstRect.top + firstRect.height / 2) {
+      targetIdx = 0;
+      nonActive[0].classList.add('drag-over');
+    } else {
+      // 各カードの中心と比較
+      for (let i = 0; i < nonActive.length; i++) {
+        const r = nonActive[i].getBoundingClientRect();
+        const center = r.top + r.height / 2;
+        const nextCenter = i < nonActive.length - 1
+          ? nonActive[i+1].getBoundingClientRect().top + nonActive[i+1].getBoundingClientRect().height / 2
+          : Infinity;
+        if (y >= center && y < nextCenter) {
+          // allCardsでのインデックスを取得
+          targetIdx = allCards.indexOf(nonActive[i]);
+          nonActive[i].classList.add('drag-over');
+          break;
+        }
       }
-    });
+      // 一番下のカードより下にいる場合
+      const lastRect = nonActive[nonActive.length-1].getBoundingClientRect();
+      if (y >= lastRect.top + lastRect.height / 2) {
+        targetIdx = allCards.length - 1;
+        nonActive[nonActive.length-1].classList.add('drag-over');
+      }
+    }
+
     dragState.curIdx = targetIdx;
   }
 
@@ -2593,6 +2631,7 @@ if (absDiff < 0.15) {
 
     // 保存後にシェア画面を起動してからトップに戻る
     showToast('保存しました ✓', false);
+    if (currentUser) syncToCloud(currentUser.uid);
     setTimeout(() => {
       gymShare();
     }, 300);
@@ -2600,26 +2639,99 @@ if (absDiff < 0.15) {
 
   // 前回コピー
   function gymCopyPrev() {
-    showToast('検索中... keys:' + Object.keys(gymData).length + ' date:' + gymDate, false);
-    // 日付部分だけ抽出して比較（旧形式YYYY-MM-DD_部位も対応）
     const keys = Object.keys(gymData)
       .filter(k => {
         const date = k.split('_')[0];
-        return date < gymDate && gymData[k].exercises?.length > 0;
+        return date < gymDate && gymData[k].exercises && gymData[k].exercises.length > 0;
       })
-      .sort((a,b) => b.split('_')[0].localeCompare(a.split('_')[0]));
-    if (keys.length === 0) { showToast('前回のデータがありません keys:' + JSON.stringify(Object.keys(gymData).slice(0,3))); return; }
-    // 同じ日付のキーが複数あれば全部マージ
+      .sort(function(a,b) { return b.split('_')[0].localeCompare(a.split('_')[0]); });
+    if (keys.length === 0) { showToast('前回のデータがありません'); return; }
+
     const prevDate = keys[0].split('_')[0];
-    const sameDay = keys.filter(k => k.split('_')[0] === prevDate);
-    let allExercises = [];
-    sameDay.forEach(k => {
+    const sameDay = keys.filter(function(k) { return k.split('_')[0] === prevDate; });
+    var allExercises = [];
+    sameDay.forEach(function(k) {
       allExercises = allExercises.concat(gymData[k].exercises || []);
     });
-    gymExercises = JSON.parse(JSON.stringify(allExercises));
+
+    const muscleMap = {
+      '胸':['ベンチプレス','フライ','ペックデック','ディップス','チェストプレス'],
+      '背中':['デッドリフト','ラットプルダウン','チンニング','ロウ','バックエクステンション','Tバー'],
+      '肩':['ショルダープレス','サイドレイズ','フロントレイズ','リアレイズ','アーノルド','フェイスプル'],
+      '腕':['カール','スカルクラッシャー','プッシュダウン','クローズグリップ'],
+      '足':['スクワット','レッグプレス','ブルガリアン','レッグエクステ','レッグカール','アウターサイ','ルーマニアン','ハック'],
+      '腹筋':['クランチ','レッグレイズ','プランク','ツイスト','アブローラー','ハンギング'],
+      '有酸素':['ランニング','ウォーキング','自転車','トレッドミル','縄跳び','水泳','エアロバイク','ジョギング'],
+    };
+    var byPart = {};
+    allExercises.forEach(function(ex) {
+      var part = 'その他';
+      var keys2 = Object.keys(muscleMap);
+      for (var i2 = 0; i2 < keys2.length; i2++) {
+        var p2 = keys2[i2];
+        if (muscleMap[p2].some(function(kw) { return ex.name.indexOf(kw) >= 0; })) {
+          part = p2; break;
+        }
+      }
+      if (!byPart[part]) byPart[part] = [];
+      byPart[part].push(ex);
+    });
+
+    var parts = Object.keys(byPart);
+    if (parts.length <= 1) {
+      gymCopyPrevExercises(allExercises, prevDate);
+      return;
+    }
+
+    window._copyPrevDate = prevDate;
+    window._copyPrevByPart = byPart;
+
+    var overlay = document.createElement('div');
+    overlay.id = 'copy-prev-overlay';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:200;display:flex;align-items:flex-end;justify-content:center;';
+    var sheet = document.createElement('div');
+    sheet.style.cssText = 'background:var(--surface);border-radius:24px 24px 0 0;padding:24px 24px 48px;width:100%;max-width:480px;';
+
+    var html = '<div style="font-size:20px;font-weight:bold;color:var(--accent);margin-bottom:16px;">部位を選択（' + prevDate + '）</div>';
+    html += '<button onclick="gymCopyPrevClose(null)" style="width:100%;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;cursor:pointer;margin-bottom:8px;">すべてコピー</button>';
+    parts.forEach(function(p) {
+      html += '<button onclick="gymCopyPrevClose(' + JSON.stringify(p) + ')" style="width:100%;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;cursor:pointer;margin-bottom:8px;">' + p + '（' + byPart[p].length + '種目）</button>';
+    });
+    html += '<button onclick="gymCopyPrevCancel()" style="width:100%;padding:12px;background:none;border:none;color:var(--text-muted);font-size:14px;cursor:pointer;margin-top:4px;">キャンセル</button>';
+    sheet.innerHTML = html;
+    overlay.appendChild(sheet);
+    document.body.appendChild(overlay);
+  }
+  function gymCopyPrevCancel() {
+    var el = document.getElementById('copy-prev-overlay');
+    if (el) el.remove();
+  }
+
+  function gymCopyPrevClose(part) {
+    const overlay = document.getElementById('copy-prev-overlay');
+    if (overlay) overlay.remove();
+    const prevDate = window._copyPrevDate;
+    const byPart = window._copyPrevByPart;
+    if (part === null) {
+      gymCopyPrevExercises(null, prevDate);
+    } else {
+      gymCopyPrevExercises(byPart[part], prevDate);
+    }
+  }
+
+  function gymCopyPrevExercises(exercises, prevDate) {
+    if (!exercises) {
+      // すべてコピー
+      const keys = Object.keys(gymData)
+        .filter(k => k.split('_')[0] === prevDate);
+      exercises = [];
+      keys.forEach(k => { exercises = exercises.concat(gymData[k].exercises || []); });
+    }
+    gymExercises = JSON.parse(JSON.stringify(exercises));
     gymExercises.forEach(ex => ex.sets.forEach(s => { s.memo = ''; }));
     renderGymExercises();
-    showToast(`${prevDate}の記録をコピーしました`, false);
+    autoSaveGym();
+    showToast(prevDate + 'の記録をコピーしました', false);
   }
 
   // PICKER
@@ -2788,10 +2900,25 @@ if (absDiff < 0.15) {
     renderPresetEditorList();
   }
 
+  function addFromPresetEditor(name) {
+    // 編集画面から直接その日のメニューに追加
+    const CARDIO = ['ランニング','ウォーキング','自転車','トレッドミル','縄跳び','水泳','エアロバイク','有酸素','ジョギング'];
+    const isCardio = CARDIO.some(kw => name.indexOf(kw) >= 0);
+    if (isCardio) {
+      gymExercises.push({name, sets:[{incline:null,speed:null,distance:null,duration:null,memo:''}]});
+    } else {
+      gymExercises.push({name, sets:[{weight:null,reps:null,assist:false,memo:''}]});
+    }
+    autoSaveGym();
+    closeGymPresetEditor();
+    showToast(name + ' を追加しました', false);
+  }
+
   function closeGymPresetEditor() {
     document.getElementById('gym-preset-editor').classList.remove('open');
     editingPresetIdx = null;
     filterGymPicker(); // ピッカーを更新
+    renderGymExercises();
   }
 
   function handleGymPresetEditorOverlay(e) {
@@ -2826,10 +2953,10 @@ if (absDiff < 0.15) {
           '<button class="gym-preset-del-btn" style="padding:10px 14px;background:rgba(255,68,68,0.15);border:1px solid rgba(255,68,68,0.3);border-radius:8px;color:var(--danger);font-size:14px;cursor:pointer;" onclick="deletePreset(' + i + ')">削除</button>' +
           '</div></div>';
       }
-      return '<div class="gym-preset-item">' +
+      return '<div class="gym-preset-item" style="cursor:pointer;" onclick="addFromPresetEditor(\'' + name + '\')">' +
         '<span class="gym-preset-item-name">' + name + '</span>' +
-        '<button class="gym-preset-edit-btn" onclick="startEditPreset(' + i + ')">編集</button>' +
-        '<button class="gym-preset-del-btn" onclick="deletePreset(' + i + ')">✕</button>' +
+        '<button class="gym-preset-edit-btn" onclick="event.stopPropagation();startEditPreset(' + i + ')">編集</button>' +
+        '<button class="gym-preset-del-btn" onclick="event.stopPropagation();deletePreset(' + i + ')">✕</button>' +
         '</div>';
     }).join('');
   }
@@ -3676,6 +3803,7 @@ if (absDiff < 0.15) {
     localStorage.setItem('user_profile', JSON.stringify(userProfile));
     document.getElementById('profile-modal').classList.remove('open');
     showToast('プロフィールを保存しました ✓', false);
+    if (currentUser) syncToCloud(currentUser.uid);
   }
 
 
