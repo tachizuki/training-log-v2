@@ -466,6 +466,125 @@
   .cal-week-header { font-size: 11px; color: var(--text-muted); letter-spacing: 0.1em; margin-bottom: 4px; display: flex; align-items: center; justify-content: space-between; }
   .cal-avg { font-size: 11px; color: var(--accent2); }
   .cal-month-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+
+  /* ===== ONBOARDING ===== */
+  #onboarding-overlay {
+    position: fixed; inset: 0; z-index: 200;
+    background: var(--bg);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: flex-end;
+    padding-bottom: max(40px, env(safe-area-inset-bottom));
+    transition: opacity 0.4s;
+  }
+  #onboarding-overlay.hidden { opacity: 0; pointer-events: none; }
+  .ob-slides-wrap {
+    flex: 1; width: 100%; overflow: hidden; position: relative;
+  }
+  .ob-slides {
+    display: flex; width: 100%; height: 100%;
+    transition: transform 0.4s cubic-bezier(0.4,0,0.2,1);
+  }
+  .ob-slide {
+    min-width: 100%; height: 100%;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: max(60px, env(safe-area-inset-top)) 32px 20px;
+    text-align: center;
+    gap: 16px;
+  }
+  .ob-icon {
+    font-size: 72px; line-height: 1;
+    filter: drop-shadow(0 0 20px rgba(232,255,0,0.3));
+  }
+  .ob-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(36px, 10vw, 52px);
+    letter-spacing: 0.05em;
+    color: var(--accent);
+    line-height: 1;
+  }
+  .ob-title.cyan { color: var(--accent2); }
+  .ob-title.green { color: var(--success); }
+  .ob-title.white { color: var(--text); }
+  .ob-desc {
+    font-size: 15px; color: var(--text-muted);
+    line-height: 1.7; max-width: 320px;
+  }
+  .ob-desc strong { color: var(--text); font-weight: 500; }
+  .ob-features {
+    display: flex; flex-direction: column; gap: 10px;
+    width: 100%; max-width: 320px; margin-top: 4px;
+  }
+  .ob-feature-row {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 12px 16px; text-align: left;
+  }
+  .ob-feature-icon { font-size: 22px; flex-shrink: 0; }
+  .ob-feature-text { font-size: 13px; color: var(--text-muted); line-height: 1.4; }
+  .ob-feature-text strong { color: var(--text); display: block; font-size: 14px; margin-bottom: 2px; }
+
+  /* Setup slide */
+  .ob-setup-form {
+    display: flex; flex-direction: column; gap: 14px;
+    width: 100%; max-width: 360px; margin-top: 8px;
+  }
+  .ob-setup-group { display: flex; flex-direction: column; gap: 6px; text-align: left; }
+  .ob-setup-label { font-size: 11px; color: var(--text-muted); letter-spacing: 0.15em; text-transform: uppercase; }
+  .ob-setup-input {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px 16px;
+    color: var(--text); font-family: 'Noto Sans JP', sans-serif;
+    font-size: 16px; outline: none; width: 100%;
+    transition: border-color 0.2s;
+  }
+  .ob-setup-input:focus { border-color: var(--accent); }
+  .ob-setup-input::placeholder { color: var(--text-muted); }
+
+  /* Bottom controls */
+  .ob-bottom {
+    width: 100%; max-width: 420px; padding: 0 24px;
+    display: flex; flex-direction: column; gap: 12px; align-items: center;
+  }
+  .ob-dots {
+    display: flex; gap: 8px; align-items: center; margin-bottom: 4px;
+  }
+  .ob-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--border); transition: all 0.3s;
+  }
+  .ob-dot.active { background: var(--accent); width: 20px; border-radius: 3px; }
+  .ob-btn-next {
+    width: 100%; padding: 17px;
+    background: var(--accent); color: var(--bg);
+    border: none; border-radius: 14px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px; letter-spacing: 0.1em;
+    cursor: pointer; transition: opacity 0.2s;
+  }
+  .ob-btn-next:active { opacity: 0.85; }
+  .ob-btn-skip {
+    background: none; border: none;
+    color: var(--text-muted); font-size: 13px;
+    cursor: pointer; padding: 4px; text-decoration: underline;
+  }
+  .ob-login-btn {
+    width: 100%; padding: 15px;
+    background: transparent;
+    border: 1px solid rgba(232,255,0,0.4);
+    border-radius: 14px;
+    color: var(--accent);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px; letter-spacing: 0.1em;
+    cursor: pointer; transition: all 0.2s;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+  }
+  .ob-login-btn:active { background: rgba(232,255,0,0.08); }
+  .ob-skip-login {
+    background: none; border: none;
+    color: var(--text-muted); font-size: 13px;
+    cursor: pointer; padding: 4px;
+  }
 </style>
 </head>
 <body>
@@ -991,10 +1110,126 @@
   </div>
 </div>
 
+<!-- ===== ONBOARDING OVERLAY ===== -->
+<div id="onboarding-overlay">
+  <div class="ob-slides-wrap">
+    <div class="ob-slides" id="ob-slides">
+
+      <!-- Slide 1: Welcome -->
+      <div class="ob-slide">
+        <div class="ob-icon">🏋️</div>
+        <div class="ob-title">TRAINING<br>LOG</div>
+        <p class="ob-desc">フィジーク大会を目指す<strong>あなたの記録パートナー</strong><br>食事・水分・トレーニングを一元管理できます</p>
+      </div>
+
+      <!-- Slide 2: 記録 -->
+      <div class="ob-slide">
+        <div class="ob-icon">📊</div>
+        <div class="ob-title cyan">毎日の<br>記録</div>
+        <div class="ob-features">
+          <div class="ob-feature-row">
+            <span class="ob-feature-icon">⚖️</span>
+            <div class="ob-feature-text"><strong>体重・栄養管理</strong>PFCバランス・カロリーを記録</div>
+          </div>
+          <div class="ob-feature-row">
+            <span class="ob-feature-icon">💧</span>
+            <div class="ob-feature-text"><strong>水分摂取</strong>目標量に対する達成率を管理</div>
+          </div>
+          <div class="ob-feature-row">
+            <span class="ob-feature-icon">😴</span>
+            <div class="ob-feature-text"><strong>睡眠・歩数</strong>コンディションも記録に残せる</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 3: ジム -->
+      <div class="ob-slide">
+        <div class="ob-icon">💪</div>
+        <div class="ob-title green">ジム<br>ログ</div>
+        <div class="ob-features">
+          <div class="ob-feature-row">
+            <span class="ob-feature-icon">🗓️</span>
+            <div class="ob-feature-text"><strong>日付別に管理</strong>種目・セット・レップ数を記録</div>
+          </div>
+          <div class="ob-feature-row">
+            <span class="ob-feature-icon">📈</span>
+            <div class="ob-feature-text"><strong>前回記録を参照</strong>重量の進捗を確認しながらトレーニング</div>
+          </div>
+          <div class="ob-feature-row">
+            <span class="ob-feature-icon">🎯</span>
+            <div class="ob-feature-text"><strong>部位別フィルター</strong>胸・背中・脚など部位で絞り込み</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 4: 振り返り -->
+      <div class="ob-slide">
+        <div class="ob-icon">📉</div>
+        <div class="ob-title white">グラフで<br>振り返る</div>
+        <div class="ob-features">
+          <div class="ob-feature-row">
+            <span class="ob-feature-icon">📅</span>
+            <div class="ob-feature-text"><strong>カレンダービュー</strong>記録した日を一覧で確認</div>
+          </div>
+          <div class="ob-feature-row">
+            <span class="ob-feature-icon">📊</span>
+            <div class="ob-feature-text"><strong>体重グラフ</strong>週ごとの目標と実績を比較</div>
+          </div>
+          <div class="ob-feature-row">
+            <span class="ob-feature-icon">☁️</span>
+            <div class="ob-feature-text"><strong>クラウド同期</strong>Googleアカウントでデータを保護</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 5: セットアップ -->
+      <div class="ob-slide" style="justify-content:flex-start;padding-top:max(80px, env(safe-area-inset-top))">
+        <div class="ob-icon" style="font-size:48px;">⚙️</div>
+        <div class="ob-title" style="font-size:36px;">はじめの設定</div>
+        <div class="ob-setup-form">
+          <div class="ob-setup-group">
+            <label class="ob-setup-label">ニックネーム</label>
+            <input class="ob-setup-input" id="ob-nickname" type="text" placeholder="例：もやき" maxlength="20">
+          </div>
+          <div class="ob-setup-group">
+            <label class="ob-setup-label">目標体重 (kg)</label>
+            <input class="ob-setup-input" id="ob-goal-weight" type="number" placeholder="例：72" step="0.1" min="30" max="200">
+          </div>
+          <div class="ob-setup-group">
+            <label class="ob-setup-label">現在の体重 (kg)</label>
+            <input class="ob-setup-input" id="ob-current-weight" type="number" placeholder="例：78.5" step="0.1" min="30" max="300">
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="ob-bottom">
+    <div class="ob-dots" id="ob-dots">
+      <div class="ob-dot active"></div>
+      <div class="ob-dot"></div>
+      <div class="ob-dot"></div>
+      <div class="ob-dot"></div>
+      <div class="ob-dot"></div>
+    </div>
+    <!-- 通常の次へボタン（スライド1〜4） -->
+    <button class="ob-btn-next" id="ob-btn-next" onclick="obNext()">次へ</button>
+    <!-- セットアップ完了ボタン（スライド5のみ） -->
+    <button class="ob-btn-next" id="ob-btn-finish" onclick="obFinish()" style="display:none;">はじめる</button>
+    <!-- Googleログインボタン（スライド5のみ） -->
+    <button class="ob-login-btn" id="ob-login-btn" onclick="obLoginAndFinish()" style="display:none;">
+      <span>🔑</span> Googleでログイン（任意）
+    </button>
+    <!-- スキップ -->
+    <button class="ob-btn-skip" id="ob-btn-skip" onclick="obSkip()">スキップ</button>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
-  const APP_VERSION = 'v1778935223';
+  const APP_VERSION = 'v20260517';
   const REMOTE_URL = 'https://tachizuki.github.io/training-log-v2/index.html';
 
   // AndroidBridgeからストレージデータを受け取る
@@ -1145,12 +1380,108 @@
     }
   }
 
+  // ==================
+  // ONBOARDING
+  // ==================
+  let obCurrentSlide = 0;
+  const OB_TOTAL = 5;
+
+  function obUpdateUI() {
+    const slidesEl = document.getElementById('ob-slides');
+    slidesEl.style.transform = `translateX(-${obCurrentSlide * 100}%)`;
+    // dots
+    document.querySelectorAll('.ob-dot').forEach((d, i) => {
+      d.classList.toggle('active', i === obCurrentSlide);
+    });
+    const isLast = obCurrentSlide === OB_TOTAL - 1;
+    document.getElementById('ob-btn-next').style.display = isLast ? 'none' : '';
+    document.getElementById('ob-btn-finish').style.display = isLast ? '' : 'none';
+    document.getElementById('ob-login-btn').style.display = isLast ? '' : 'none';
+    document.getElementById('ob-btn-skip').textContent = isLast ? '' : 'スキップ';
+    document.getElementById('ob-btn-skip').style.display = isLast ? 'none' : '';
+  }
+
+  function obNext() {
+    if (obCurrentSlide < OB_TOTAL - 1) {
+      obCurrentSlide++;
+      obUpdateUI();
+    }
+  }
+
+  function obSkip() {
+    obCompleteSetup(false);
+  }
+
+  function obFinish() {
+    obCompleteSetup(false);
+  }
+
+  function obLoginAndFinish() {
+    obCompleteSetup(true);
+  }
+
+  function obCompleteSetup(doLogin) {
+    // ニックネーム・目標体重を保存
+    const nickname = (document.getElementById('ob-nickname')?.value || '').trim();
+    const goalWeight = parseFloat(document.getElementById('ob-goal-weight')?.value || '0');
+    const currentWeight = parseFloat(document.getElementById('ob-current-weight')?.value || '0');
+
+    if (nickname) {
+      const profile = JSON.parse(localStorage.getItem('user_profile') || '{"height":168,"age":25,"sex":"male"}');
+      profile.nickname = nickname;
+      localStorage.setItem('user_profile', JSON.stringify(profile));
+    }
+
+    if (goalWeight > 0) {
+      setWeekGoal(new Date(), goalWeight);
+    }
+
+    // 現在の体重を今日の記録に保存
+    if (currentWeight > 0) {
+      const today = formatDate(new Date());
+      const existingIdx = records.findIndex(r => r.date === today);
+      if (existingIdx >= 0) {
+        if (!records[existingIdx].weight) records[existingIdx].weight = currentWeight;
+      } else {
+        records.unshift({ date: today, weight: currentWeight });
+      }
+      localStorage.setItem('training_records', JSON.stringify(records));
+    }
+
+    localStorage.setItem('onboarding_done', '1');
+
+    // オーバーレイを消す
+    const overlay = document.getElementById('onboarding-overlay');
+    overlay.classList.add('hidden');
+    setTimeout(() => { overlay.style.display = 'none'; }, 400);
+
+    if (doLogin) {
+      firebaseSignIn();
+    } else {
+      showToast('ようこそ！記録を始めましょう 🏋️', false);
+    }
+
+    updateTodaySummary();
+  }
+
+  function checkOnboarding() {
+    if (!localStorage.getItem('onboarding_done')) {
+      const overlay = document.getElementById('onboarding-overlay');
+      overlay.style.display = 'flex';
+      obUpdateUI();
+    } else {
+      const overlay = document.getElementById('onboarding-overlay');
+      if (overlay) overlay.style.display = 'none';
+    }
+  }
+
   function init() {
     const verEl = document.getElementById('app-ver-display');
     if (verEl) verEl.textContent = APP_VERSION;
     document.getElementById('rec-date').value = formatDate(new Date());
     document.getElementById('today-date-label').textContent = formatDateJP(new Date());
     updateTodaySummary();
+    checkOnboarding();
   }
 
   function updateTodaySummary() {

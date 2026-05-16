@@ -2,9 +2,13 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>TrainingLog</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+JP:wght@300;400;500;700&display=swap');
 
@@ -50,6 +54,24 @@
   .top-content { position: relative; z-index: 1; text-align: center; width: 100%; max-width: 400px; }
   .app-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(56px,16vw,80px); letter-spacing: 0.05em; line-height: 0.9; color: var(--accent); text-shadow: 0 0 40px rgba(232,255,0,0.3); margin-bottom: 8px; }
   .app-subtitle { font-size: 11px; letter-spacing: 0.3em; color: var(--text-muted); text-transform: uppercase; margin-bottom: 48px; }
+  .profile-btn { position: absolute; top: max(20px, env(safe-area-inset-top)); right: 20px; background: none; border: 1px solid var(--border); border-radius: 10px; color: var(--text-muted); font-size: 18px; padding: 6px 10px; cursor: pointer; z-index: 2; }
+  .profile-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 70; display: flex; align-items: flex-end; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.25s; }
+  .profile-modal-overlay.open { opacity: 1; pointer-events: all; }
+  .profile-modal-sheet { background: var(--surface); border-radius: 24px 24px 0 0; padding: 24px 24px 48px; width: 100%; max-width: 480px; transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1); }
+  .profile-modal-overlay.open .profile-modal-sheet { transform: translateY(0); }
+  .profile-modal-title { font-family: "Bebas Neue", sans-serif; font-size: 24px; color: var(--accent); margin-bottom: 20px; }
+  .profile-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+  .profile-group { display: flex; flex-direction: column; gap: 6px; }
+  .profile-group.full { grid-column: 1/-1; }
+  .profile-label { font-size: 11px; color: var(--text-muted); letter-spacing: 0.1em; }
+  .profile-input { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; color: var(--text); font-size: 15px; outline: none; width: 100%; }
+  .profile-input:focus { border-color: var(--accent); }
+  .profile-sex-row { display: flex; gap: 8px; }
+  .profile-sex-btn { flex: 1; padding: 12px; border-radius: 10px; border: 1px solid var(--border); background: transparent; color: var(--text-muted); font-size: 14px; cursor: pointer; transition: all 0.15s; }
+  .profile-sex-btn.selected { background: var(--accent); border-color: var(--accent); color: var(--bg); font-weight: 700; }
+  .profile-bmr-display { background: var(--surface2); border-radius: 12px; padding: 14px; margin-bottom: 16px; text-align: center; }
+  .profile-bmr-value { font-family: "Bebas Neue", sans-serif; font-size: 36px; color: var(--accent); }
+  .profile-bmr-label { font-size: 11px; color: var(--text-muted); letter-spacing: 0.1em; }
 
   .today-summary { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 20px; margin-bottom: 32px; text-align: left; }
   .today-date { font-size: 11px; letter-spacing: 0.2em; color: var(--text-muted); text-transform: uppercase; margin-bottom: 12px; }
@@ -67,6 +89,7 @@
   .btn-main:active::after { opacity: 1; }
   .btn-record { background: var(--accent); color: var(--bg); }
   .btn-water { background: rgba(0,212,255,0.12); color: var(--accent2); border: 1px solid rgba(0,212,255,0.4); }
+  .btn-gym { background: rgba(232,255,0,0.08); color: var(--accent); border: 1px solid rgba(232,255,0,0.3); }
   .btn-view { background: transparent; color: var(--text-muted); border: 1px solid var(--border); }
 
   .screen { display: none; min-height: 100vh; padding: 0 0 80px 0; }
@@ -191,6 +214,35 @@
   .tag-sleep { background: rgba(150,100,255,0.1); color: #b88aff; border: 1px solid rgba(150,100,255,0.2); }
   .tag-salon { background: rgba(255,140,66,0.1); color: #ff8c42; border: 1px solid rgba(255,140,66,0.2); }
   .tag-salt { background: rgba(255,68,68,0.1); color: #ff6b6b; border: 1px solid rgba(255,68,68,0.2); }
+  .tag-steps { background: rgba(0,255,136,0.08); color: var(--success); border: 1px solid rgba(0,255,136,0.2); }
+  .activity-add-btn { width: 100%; padding: 12px; background: rgba(0,255,136,0.06); border: 1px dashed rgba(0,255,136,0.3); border-radius: 12px; color: var(--success); font-size: 14px; cursor: pointer; }
+  .activity-item { display: flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; margin-bottom: 8px; }
+  .activity-item-icon { font-size: 20px; flex-shrink: 0; }
+  .activity-item-body { flex: 1; min-width: 0; }
+  .activity-item-name { font-size: 13px; font-weight: 700; color: var(--text); }
+  .activity-item-kcal { font-size: 11px; color: var(--success); }
+  .activity-item-min { width: 60px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 6px 4px; color: var(--text); font-size: 13px; text-align: center; outline: none; flex-shrink: 0; }
+  .activity-item-min:focus { border-color: var(--accent); }
+  .activity-item-del { background: none; border: none; color: var(--text-muted); font-size: 16px; cursor: pointer; flex-shrink: 0; }
+  .activity-picker-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 80; display: flex; align-items: flex-end; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.25s; }
+  .activity-picker-overlay.open { opacity: 1; pointer-events: all; }
+  .activity-picker-sheet { background: var(--surface); border-radius: 24px 24px 0 0; padding: 20px 20px 44px; width: 100%; max-width: 480px; transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1); max-height: 80vh; overflow-y: auto; }
+  .activity-picker-overlay.open .activity-picker-sheet { transform: translateY(0); }
+  .activity-picker-title { font-family: 'Bebas Neue', sans-serif; font-size: 20px; color: var(--success); margin-bottom: 12px; }
+  .activity-picker-search { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 11px 14px; color: var(--text); font-size: 14px; outline: none; margin-bottom: 12px; }
+  .activity-picker-search:focus { border-color: var(--success); }
+  .activity-picker-category { font-size: 10px; color: var(--text-muted); letter-spacing: 0.2em; text-transform: uppercase; margin: 12px 0 6px; }
+  .activity-picker-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border-radius: 10px; cursor: pointer; transition: background 0.15s; margin-bottom: 4px; }
+  .activity-picker-item:active { background: var(--surface2); }
+  .activity-picker-item-left { display: flex; align-items: center; gap: 10px; }
+  .activity-picker-item-icon { font-size: 18px; }
+  .activity-picker-item-name { font-size: 13px; color: var(--text); }
+  .activity-picker-item-met { font-size: 11px; color: var(--text-muted); }
+  .activity-picker-custom-row { display: flex; gap: 8px; margin-top: 12px; }
+  .activity-picker-custom-input { flex: 1; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 11px 14px; color: var(--text); font-size: 14px; outline: none; }
+  .activity-picker-custom-kcal { width: 90px; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 11px 10px; color: var(--text); font-size: 14px; text-align: center; outline: none; }
+  .activity-picker-add-btn { padding: 11px 16px; background: var(--success); color: var(--bg); border: none; border-radius: 10px; font-family: 'Bebas Neue', sans-serif; font-size: 16px; cursor: pointer; }
+  .tag-cardio { background: rgba(255,140,66,0.1); color: #ff8c42; border: 1px solid rgba(255,140,66,0.2); }
   .record-memo { font-size: 12px; color: var(--text-muted); font-style: italic; border-top: 1px solid var(--border); padding-top: 8px; margin-top: 8px; }
 
   .chart-container { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px; margin-bottom: 16px; }
@@ -223,6 +275,122 @@
   .record-edit-btn { background: none; border: 1px solid var(--border); border-radius: 8px; padding: 4px 10px; color: var(--text-muted); font-size: 11px; cursor: pointer; float: right; margin-top: -2px; }
   .record-edit-btn:active { background: var(--surface2); }
 
+  /* GYM SCREEN */
+  .gym-date-bar { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; border-bottom: 1px solid var(--border); }
+  .gym-date-nav { background: none; border: none; color: var(--text-muted); font-size: 22px; cursor: pointer; padding: 4px 10px; }
+  .gym-date-label { font-family: 'Bebas Neue', sans-serif; font-size: 20px; color: var(--text); letter-spacing: 0.05em; }
+  .gym-action-bar { display: flex; gap: 8px; padding: 10px 20px; border-bottom: 1px solid var(--border); }
+  .gym-action-btn { flex: 1; padding: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; color: var(--text-muted); font-size: 12px; cursor: pointer; text-align: center; transition: all 0.15s; }
+  .gym-action-btn:active { background: var(--surface2); }
+  .gym-action-btn.accent { color: var(--accent); border-color: rgba(232,255,0,0.3); }
+  .gym-part-bar { display: flex; gap: 8px; padding: 12px 20px; overflow-x: auto; border-bottom: 1px solid var(--border); }
+  .gym-part-btn { padding: 7px 16px; border-radius: 20px; border: 1px solid var(--border); background: transparent; color: var(--text-muted); font-size: 13px; cursor: pointer; white-space: nowrap; transition: all 0.15s; flex-shrink: 0; }
+  .gym-part-btn.active { background: var(--accent); border-color: var(--accent); color: var(--bg); font-weight: 700; }
+  .gym-body { padding: 16px 20px; }
+  .gym-exercise-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px; margin-bottom: 10px; }
+  .gym-exercise-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .gym-exercise-name { font-size: 14px; font-weight: 700; color: var(--text); }
+  .gym-exercise-del { background: none; border: none; color: var(--text-muted); font-size: 16px; cursor: pointer; }
+  .gym-prev-btn { background: transparent; border: 1px solid rgba(0,212,255,0.4); border-radius: 8px; color: var(--accent2); font-size: 11px; padding: 3px 8px; cursor: pointer; }
+  .gym-prev-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 120; display: flex; align-items: flex-end; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.25s; }
+  .gym-prev-modal.open { opacity: 1; pointer-events: all; }
+  .gym-prev-sheet { background: var(--surface); border-radius: 24px 24px 0 0; padding: 20px 20px 44px; width: 100%; max-width: 480px; transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1); }
+  .gym-prev-modal.open .gym-prev-sheet { transform: translateY(0); }
+  .gym-prev-title { font-family: 'Bebas Neue', sans-serif; font-size: 20px; color: var(--accent2); margin-bottom: 4px; }
+  .gym-prev-date { font-size: 11px; color: var(--text-muted); margin-bottom: 14px; letter-spacing: 0.1em; }
+  .gym-prev-set-row { display: flex; gap: 12px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); }
+  .gym-prev-set-num { font-size: 11px; color: var(--text-muted); width: 28px; }
+  .gym-prev-set-val { font-size: 15px; color: var(--text); flex: 1; }
+  .gym-prev-set-rm { font-size: 11px; color: var(--accent); }
+  .gym-prev-set-assist { font-size: 10px; color: #ff8c42; }
+  .gym-prev-apply-btn { width: 100%; padding: 14px; background: var(--accent2); color: var(--bg); border: none; border-radius: 12px; font-family: 'Bebas Neue', sans-serif; font-size: 20px; cursor: pointer; margin-top: 16px; }
+  .gym-prev-apply-btn.partial { background: var(--surface2); color: var(--text-muted); border: 1px solid var(--border); margin-top: 8px; font-size: 16px; }
+  .gym-drag-handle { color: var(--text-muted); font-size: 18px; cursor: grab; padding: 0 8px 0 0; touch-action: none; user-select: none; transition: color 0.2s; }
+  .gym-exercise-card { transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s; position: relative; }
+  .gym-exercise-card.drag-active { opacity: 0.35; border: 1px dashed var(--accent); transform: scale(0.97); }
+  .gym-exercise-card.drag-floating { opacity: 0.97; border: 1px solid var(--accent); box-shadow: 0 16px 48px rgba(0,0,0,0.7), 0 0 0 2px var(--accent); transform: scale(1.03) rotate(1deg); z-index: 50; pointer-events: none; position: fixed; }
+  .gym-exercise-card.drag-over { border: 2px solid var(--accent); background: rgba(232,255,0,0.07); transform: scale(1.01); }
+  .gym-drag-overlay { position: fixed; inset: 0; z-index: 49; touch-action: none; }
+  .gym-set-header { display: grid; grid-template-columns: 28px 1fr 1fr 50px 24px; gap: 4px; margin-bottom: 4px; }
+  .gym-set-header-label { font-size: 9px; color: var(--text-muted); text-align: center; letter-spacing: 0.05em; }
+  .gym-set-row { display: grid; grid-template-columns: 28px 1fr 1fr 50px 24px; gap: 4px; align-items: center; margin-bottom: 5px; }
+  .gym-set-label { font-size: 11px; color: var(--text-muted); text-align: center; }
+  .gym-set-input { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 7px 2px; color: var(--text); font-size: 12px; text-align: center; outline: none; width: 100%; }
+  .gym-set-input:focus { border-color: var(--accent); }
+  .gym-set-rm { font-size: 10px; color: var(--accent2); text-align: center; line-height: 1.2; }
+  .gym-set-assist { display: flex; align-items: center; justify-content: center; }
+  .gym-assist-check { width: 20px; height: 20px; border: 1px solid var(--border); border-radius: 5px; background: var(--surface2); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.15s; flex-shrink: 0; }
+  .gym-assist-check.on { background: #ff8c42; border-color: #ff8c42; }
+  .gym-assist-check.on::after { content: '補'; color: white; font-size: 8px; font-weight: bold; }
+  .gym-set-del { background: none; border: none; color: var(--text-muted); font-size: 13px; cursor: pointer; text-align: center; }
+  .gym-cardio-row { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 6px; margin-bottom: 6px; }
+  .gym-cardio-input { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 7px 4px; color: var(--text); font-size: 12px; text-align: center; outline: none; width: 100%; }
+  .gym-cardio-input:focus { border-color: var(--accent2); }
+  .gym-cardio-label { font-size: 9px; color: var(--text-muted); text-align: center; margin-top: 2px; }
+  .gym-set-copy-btn { background: none; border: none; color: var(--accent2); font-size: 14px; cursor: pointer; text-align: center; }
+  .gym-set-memo { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 5px 8px; color: var(--text); font-size: 12px; outline: none; margin-top: 4px; }
+  .gym-set-memo:focus { border-color: var(--accent); }
+  .gym-add-set-btn { width: 100%; padding: 7px; background: transparent; border: 1px dashed var(--border); border-radius: 8px; color: var(--text-muted); font-size: 12px; cursor: pointer; margin-top: 6px; }
+  .gym-add-exercise-btn { width: 100%; padding: 14px; background: rgba(232,255,0,0.06); border: 1px dashed rgba(232,255,0,0.3); border-radius: 12px; color: var(--accent); font-size: 14px; cursor: pointer; margin-bottom: 16px; }
+  .gym-save-btn { width: 100%; padding: 16px; background: var(--accent); color: var(--bg); border: none; border-radius: 12px; font-family: 'Bebas Neue', sans-serif; font-size: 22px; cursor: pointer; margin-top: 8px; }
+  .gym-stopwatch { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; margin-bottom: 12px; }
+  .gym-stopwatch-time { font-family: 'Bebas Neue', sans-serif; font-size: 48px; color: var(--accent); text-align: center; line-height: 1; letter-spacing: 0.05em; }
+  .gym-stopwatch-time.running { color: var(--success); }
+  .gym-stopwatch-sub { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); margin-top: 4px; letter-spacing: 0.05em; }
+  .gym-stopwatch-btns { display: flex; gap: 8px; margin-top: 12px; }
+  .gym-sw-btn { flex: 1; padding: 12px; border: none; border-radius: 10px; font-family: 'Bebas Neue', sans-serif; font-size: 18px; cursor: pointer; transition: opacity 0.2s; }
+  .gym-sw-btn.start { background: var(--success); color: var(--bg); }
+  .gym-sw-btn.stop { background: var(--danger); color: white; }
+  .gym-sw-btn.reset { background: var(--surface2); color: var(--text-muted); }
+  .gym-exercise-picker { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--bg); z-index: 100; display: flex; flex-direction: column; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+  .gym-exercise-picker.open { opacity: 1; pointer-events: all; }
+  .gym-picker-sheet { display: flex; flex-direction: column; width: 100%; height: 100%; padding: 0; overflow: hidden; }
+  .gym-picker-title { font-family: 'Bebas Neue', sans-serif; font-size: 20px; color: var(--accent); margin-bottom: 14px; }
+  .gym-picker-input { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; color: var(--text); font-size: 15px; outline: none; margin-bottom: 12px; }
+  .gym-picker-input:focus { border-color: var(--accent); }
+  .gym-picker-list { flex: 1; overflow-y: auto; padding-bottom: 80px; }
+  .gym-picker-item { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 16px; cursor: pointer; width: 100%; text-align: left; border-radius: 0; border-left: none; border-right: none; border-top: none; }
+  .gym-picker-item:active { background: var(--surface); }
+  .gym-picker-item-drag { color: var(--text-muted); font-size: 20px; cursor: grab; padding: 4px 12px; touch-action: none; user-select: none; }
+  .gym-picker-custom-btn { width: 100%; padding: 12px; background: var(--accent); color: var(--bg); border: none; border-radius: 10px; font-family: 'Bebas Neue', sans-serif; font-size: 18px; cursor: pointer; margin-top: 12px; }
+  .gym-preset-item { display: flex; align-items: center; gap: 8px; padding: 10px 4px; border-bottom: 1px solid var(--border); }
+  .gym-preset-item-name { flex: 1; font-size: 14px; color: var(--text); }
+  .gym-preset-edit-btn { background: none; border: 1px solid var(--border); border-radius: 6px; color: var(--text-muted); font-size: 12px; padding: 4px 8px; cursor: pointer; }
+  .gym-preset-del-btn { background: none; border: none; color: var(--danger); font-size: 16px; cursor: pointer; padding: 0 4px; }
+  .gym-preset-add-row { display: flex; gap: 8px; margin-top: 12px; }
+  .gym-preset-add-input { flex: 1; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; color: var(--text); font-size: 14px; outline: none; }
+  .gym-preset-add-input:focus { border-color: var(--accent); }
+  .gym-preset-add-btn { padding: 10px 16px; background: var(--accent); color: var(--bg); border: none; border-radius: 10px; font-family: 'Bebas Neue', sans-serif; font-size: 16px; cursor: pointer; }
+  .gym-edit-name-row { display: flex; gap: 8px; margin-bottom: 8px; }
+  .gym-edit-name-input { flex: 1; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; color: var(--text); font-size: 14px; outline: none; }
+  .gym-edit-name-input:focus { border-color: var(--accent); }
+  /* TIMER */
+  .timer-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 80; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+  .timer-overlay.open { opacity: 1; pointer-events: all; }
+  .timer-display { font-family: 'Bebas Neue', sans-serif; font-size: 96px; color: var(--accent); line-height: 1; margin-bottom: 8px; letter-spacing: 0.05em; }
+  .timer-display.done { color: var(--danger); }
+  .timer-label { font-size: 13px; color: var(--text-muted); letter-spacing: 0.2em; margin-bottom: 32px; }
+  .timer-presets { display: flex; gap: 10px; margin-bottom: 24px; flex-wrap: wrap; justify-content: center; }
+  .timer-preset-btn { padding: 8px 18px; border-radius: 20px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font-size: 13px; cursor: pointer; transition: all 0.15s; }
+  .timer-preset-btn.active { background: var(--accent); border-color: var(--accent); color: var(--bg); font-weight: 700; }
+  .timer-custom-row { display: flex; gap: 8px; align-items: center; margin-bottom: 28px; }
+  .timer-custom-input { width: 80px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px; color: var(--text); font-size: 20px; font-family: 'Bebas Neue', sans-serif; text-align: center; outline: none; }
+  .timer-custom-input:focus { border-color: var(--accent); }
+  .timer-custom-label { font-size: 13px; color: var(--text-muted); }
+  .timer-btns { display: flex; gap: 12px; }
+  .timer-btn { padding: 14px 28px; border: none; border-radius: 12px; font-family: 'Bebas Neue', sans-serif; font-size: 20px; cursor: pointer; transition: opacity 0.2s; }
+  .timer-btn.start { background: var(--accent); color: var(--bg); }
+  .timer-btn.stop { background: var(--danger); color: white; }
+  .timer-btn.close-btn { background: var(--surface); color: var(--text-muted); }
+  /* SHARE CANVAS */
+  .share-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 80; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.2s; padding: 20px; }
+  .share-overlay.open { opacity: 1; pointer-events: all; }
+  .share-canvas-wrap { border-radius: 12px; overflow: hidden; margin-bottom: 16px; max-width: 100%; }
+  .share-btns { display: flex; gap: 10px; }
+  .share-btn { padding: 12px 24px; border: none; border-radius: 12px; font-family: 'Bebas Neue', sans-serif; font-size: 18px; cursor: pointer; }
+  .share-btn.download { background: var(--accent); color: var(--bg); }
+  .share-btn.cancel { background: var(--surface); color: var(--text-muted); }
+
   .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px); background: var(--accent); color: var(--bg); padding: 12px 24px; border-radius: 30px; font-weight: 700; font-size: 13px; letter-spacing: 0.05em; z-index: 100; transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1); white-space: nowrap; }
   .toast.show { transform: translateX(-50%) translateY(0); }
   .toast.blue { background: var(--accent2); }
@@ -240,6 +408,7 @@
   .analysis-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; cursor: pointer; }
   .analysis-title { font-size: 12px; font-weight: 700; letter-spacing: 0.05em; color: var(--text-muted); }
   .analysis-toggle { font-size: 18px; color: var(--text-muted); transition: transform 0.2s; }
+  .analysis-date-badge { display: inline-block; margin-left: 8px; padding: 2px 8px; background: rgba(232,255,0,0.1); border: 1px solid rgba(232,255,0,0.3); border-radius: 10px; font-size: 11px; color: var(--accent); font-weight: 700; vertical-align: middle; }
   .analysis-toggle.open { transform: rotate(180deg); }
   .analysis-body { display: none; }
   .analysis-body.open { display: block; }
@@ -275,6 +444,136 @@
   .stat-goal-row { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; }
   .stat-goal-edit { background: none; border: 1px solid var(--border); color: var(--text-muted); border-radius: 6px; padding: 2px 8px; font-size: 11px; cursor: pointer; }
   .stat-divider { height: 1px; background: var(--border); margin: 16px 0; }
+
+  /* カレンダービュー */
+  .cal-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 0 8px; }
+  .cal-header-title { font-family: 'Bebas Neue', sans-serif; font-size: 20px; color: var(--accent); }
+  .cal-nav-btn { background: none; border: none; color: var(--text-muted); font-size: 22px; cursor: pointer; padding: 4px 10px; }
+  .cal-week-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 8px; }
+  .cal-day-label { text-align: center; font-size: 10px; color: var(--text-muted); letter-spacing: 0.05em; padding: 4px 0; }
+  .cal-day { text-align: center; padding: 6px 2px; border-radius: 8px; min-height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
+  .cal-day.today { background: rgba(232,255,0,0.08); border: 1px solid rgba(232,255,0,0.3); }
+  .cal-day-num { font-size: 12px; color: var(--text-muted); }
+  .cal-day-weight { font-family: 'Bebas Neue', sans-serif; font-size: 16px; color: var(--accent); line-height: 1; }
+  .cal-day-weight.over { color: var(--danger); }
+  .cal-day-weight.under { color: var(--success); }
+  .cal-day-trained { font-size: 8px; color: var(--text-muted); }
+  .cal-goal-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-top: 1px solid var(--border); margin-top: 4px; }
+  .cal-goal-label { font-size: 12px; color: var(--text-muted); }
+  .cal-goal-val { font-family: 'Bebas Neue', sans-serif; font-size: 18px; color: var(--text); }
+  .cal-goal-edit { background: none; border: 1px solid var(--border); color: var(--text-muted); border-radius: 6px; padding: 3px 10px; font-size: 11px; cursor: pointer; }
+  .cal-week-row { margin-bottom: 16px; }
+  .cal-week-header { font-size: 11px; color: var(--text-muted); letter-spacing: 0.1em; margin-bottom: 4px; display: flex; align-items: center; justify-content: space-between; }
+  .cal-avg { font-size: 11px; color: var(--accent2); }
+  .cal-month-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+
+  /* ===== ONBOARDING ===== */
+  #onboarding-overlay {
+    position: fixed; inset: 0; z-index: 200;
+    background: var(--bg);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: flex-end;
+    padding-bottom: max(40px, env(safe-area-inset-bottom));
+    transition: opacity 0.4s;
+  }
+  #onboarding-overlay.hidden { opacity: 0; pointer-events: none; }
+  .ob-slides-wrap {
+    flex: 1; width: 100%; overflow: hidden; position: relative;
+  }
+  .ob-slides {
+    display: flex; width: 100%; height: 100%;
+    transition: transform 0.4s cubic-bezier(0.4,0,0.2,1);
+  }
+  .ob-slide {
+    min-width: 100%; height: 100%;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: max(60px, env(safe-area-inset-top)) 32px 20px;
+    text-align: center;
+    gap: 16px;
+  }
+  .ob-icon {
+    font-size: 72px; line-height: 1;
+    filter: drop-shadow(0 0 20px rgba(232,255,0,0.3));
+  }
+  .ob-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(36px, 10vw, 52px);
+    letter-spacing: 0.05em;
+    color: var(--accent);
+    line-height: 1;
+  }
+  .ob-title.cyan { color: var(--accent2); }
+  .ob-title.green { color: var(--success); }
+  .ob-title.white { color: var(--text); }
+  .ob-desc {
+    font-size: 15px; color: var(--text-muted);
+    line-height: 1.7; max-width: 320px;
+  }
+  .ob-desc strong { color: var(--text); font-weight: 500; }
+  .ob-features {
+    display: flex; flex-direction: column; gap: 10px;
+    width: 100%; max-width: 320px; margin-top: 4px;
+  }
+  .ob-feature-row {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 12px 16px; text-align: left;
+  }
+  .ob-feature-icon { font-size: 22px; flex-shrink: 0; }
+  .ob-feature-text { font-size: 13px; color: var(--text-muted); line-height: 1.4; }
+  .ob-feature-text strong { color: var(--text); display: block; font-size: 14px; margin-bottom: 2px; }
+  .ob-setup-form {
+    display: flex; flex-direction: column; gap: 14px;
+    width: 100%; max-width: 360px; margin-top: 8px;
+  }
+  .ob-setup-group { display: flex; flex-direction: column; gap: 6px; text-align: left; }
+  .ob-setup-label { font-size: 11px; color: var(--text-muted); letter-spacing: 0.15em; text-transform: uppercase; }
+  .ob-setup-input {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px 16px;
+    color: var(--text); font-family: 'Noto Sans JP', sans-serif;
+    font-size: 16px; outline: none; width: 100%;
+    transition: border-color 0.2s;
+  }
+  .ob-setup-input:focus { border-color: var(--accent); }
+  .ob-setup-input::placeholder { color: var(--text-muted); }
+  .ob-bottom {
+    width: 100%; max-width: 420px; padding: 0 24px;
+    display: flex; flex-direction: column; gap: 12px; align-items: center;
+  }
+  .ob-dots { display: flex; gap: 8px; align-items: center; margin-bottom: 4px; }
+  .ob-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--border); transition: all 0.3s;
+  }
+  .ob-dot.active { background: var(--accent); width: 20px; border-radius: 3px; }
+  .ob-btn-next {
+    width: 100%; padding: 17px;
+    background: var(--accent); color: var(--bg);
+    border: none; border-radius: 14px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px; letter-spacing: 0.1em;
+    cursor: pointer; transition: opacity 0.2s;
+  }
+  .ob-btn-next:active { opacity: 0.85; }
+  .ob-btn-skip {
+    background: none; border: none;
+    color: var(--text-muted); font-size: 13px;
+    cursor: pointer; padding: 4px; text-decoration: underline;
+  }
+  .ob-login-btn {
+    width: 100%; padding: 15px;
+    background: transparent;
+    border: 1px solid rgba(232,255,0,0.4);
+    border-radius: 14px;
+    color: var(--accent);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px; letter-spacing: 0.1em;
+    cursor: pointer; transition: all 0.2s;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+  }
+  .ob-login-btn:active { background: rgba(232,255,0,0.08); }
 </style>
 </head>
 <body>
@@ -282,8 +581,11 @@
 <!-- TOP -->
 <div id="top-screen">
   <div class="top-content">
+    <button class="profile-btn" onclick="openProfile()">⚙</button>
     <div class="app-title">TRAINING<br>LOG</div>
     <div class="app-subtitle">フィジーク大会対策 記録アプリ</div>
+  <div style="text-align:center;font-size:9px;color:var(--text-muted);opacity:0.5;" id="app-ver-display"></div>
+  <div style="text-align:center;font-size:9px;color:var(--text-muted);opacity:0.5;">v2-20260512</div>
     <div class="today-summary">
       <div class="today-date" id="today-date-label"></div>
       <div class="today-stats">
@@ -296,6 +598,7 @@
     <div class="main-buttons">
       <button class="btn-main btn-record" onclick="showScreen('record-screen')">記録する</button>
       <button class="btn-main btn-water" onclick="showScreen('water-screen'); renderWater()">💧 水分を記録する</button>
+      <button class="btn-main btn-gym" onclick="showScreen('gym-screen'); renderGym()">💪 筋トレメモ</button>
       <button class="btn-main btn-view" onclick="showScreen('view-screen'); renderView()">表示する</button>
 
     </div>
@@ -311,7 +614,7 @@
   <div class="screen-body">
     <div class="form-section">
       <div class="form-section-title">📅 日付</div>
-      <div class="form-group"><input type="date" class="form-input" id="rec-date"></div>
+      <div class="form-group"><input type="date" class="form-input" id="rec-date" onchange="loadRecordByDate(this.value)"></div>
     </div>
     <div class="form-section">
       <div class="form-section-title">⚖️ 体重・睡眠</div>
@@ -332,6 +635,15 @@
     <div class="form-section">
       <div class="form-section-title">🧂 塩分</div>
       <div class="form-group"><label class="form-label">塩分 (g)</label><input type="number" class="form-input" id="rec-salt" placeholder="5.0" step="0.1"></div>
+    </div>
+    <div class="form-section">
+      <div class="form-section-title">🚶 活動・運動</div>
+      <div class="form-group" style="margin-bottom:10px;">
+        <label class="form-label">歩数</label>
+        <input type="number" class="form-input" id="rec-steps" placeholder="8000">
+      </div>
+      <div id="activity-list" style="margin-bottom:10px;"></div>
+      <button class="activity-add-btn" onclick="openActivityPicker()">＋ 運動を追加</button>
     </div>
     <div class="form-section">
       <div class="form-section-title">🌞 日サロ</div>
@@ -388,22 +700,11 @@
     <div class="water-pct" id="water-pct-text">0%</div>
   </div>
 
-  <div class="water-section-title">クイック追加</div>
-  <div class="water-quick-grid">
-    <button class="water-quick-btn" onclick="addWater(100)"><span class="btn-ml">100</span><span class="btn-unit">ml</span></button>
-    <button class="water-quick-btn" onclick="addWater(200)"><span class="btn-ml">200</span><span class="btn-unit">ml</span></button>
-    <button class="water-quick-btn" onclick="addWater(350)"><span class="btn-ml">350</span><span class="btn-unit">ml</span></button>
-    <button class="water-quick-btn" onclick="addWater(500)"><span class="btn-ml">500</span><span class="btn-unit">ml</span></button>
-    <button class="water-quick-btn" onclick="addWater(1000)"><span class="btn-ml">1000</span><span class="btn-unit">ml</span></button>
-    <button class="water-quick-btn custom-btn" onclick="openCustomModal()">
-      <span class="custom-icon">＋</span><span style="font-size:12px;">カスタム</span>
-    </button>
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:0 20px;">
+    <div class="water-section-title" style="margin:0;">クイック追加</div>
+    <button onclick="openWaterBtnEditor()" style="background:none;border:1px solid var(--border);border-radius:8px;color:var(--text-muted);font-size:12px;padding:4px 10px;cursor:pointer;">✏️ 編集</button>
   </div>
-
-  <div id="saved-customs-wrap" style="display:none;">
-    <div class="water-section-title" style="margin-top:14px;">マイボタン</div>
-    <div class="water-custom-saved" id="saved-customs"></div>
-  </div>
+  <div class="water-quick-grid" id="water-quick-grid"></div>
 
   <div class="water-section-title" style="margin-top:18px;">今日のログ</div>
   <div class="water-log" id="water-log-list"></div>
@@ -412,6 +713,125 @@
   </div>
 </div>
 
+<!-- GYM SCREEN -->
+<div id="gym-screen" class="screen">
+  <div class="screen-header">
+    <button class="btn-back" onclick="showScreen(null)">←</button>
+    <div class="screen-title">💪 筋トレメモ</div>
+  </div>
+  <div class="gym-date-bar">
+    <button class="gym-date-nav" onclick="gymChangeDate(-1)">‹</button>
+    <span class="gym-date-label" id="gym-date-label"></span>
+    <button class="gym-date-nav" onclick="gymChangeDate(1)">›</button>
+  </div>
+  <div class="gym-action-bar">
+    <button class="gym-action-btn accent" onclick="gymCopyPrev()">📋 前回をコピー</button>
+    <button class="gym-action-btn" onclick="openTimer()">⏱ タイマー</button>
+    <button class="gym-action-btn" onclick="gymShare()">📷 シェア</button>
+  </div>
+
+  <div class="gym-body">
+    <div class="gym-stopwatch">
+      <div class="gym-stopwatch-time" id="sw-display">00:00:00</div>
+      <div class="gym-stopwatch-sub">
+        <span id="sw-start-label">開始: —</span>
+        <span id="sw-end-label">終了: —</span>
+      </div>
+      <div class="gym-stopwatch-btns">
+        <button class="gym-sw-btn start" id="sw-btn-start" onclick="swStart()">スタート</button>
+        <button class="gym-sw-btn stop" id="sw-btn-stop" onclick="swStop()" style="display:none;">ストップ</button>
+        <button class="gym-sw-btn reset" onclick="swReset()">リセット</button>
+      </div>
+    </div>
+    <div id="gym-exercise-list"></div>
+    <button class="gym-add-exercise-btn" onclick="openGymPicker()">＋ 種目を追加</button>
+    <button class="gym-save-btn" onclick="saveGym()">← 戻る（自動保存済み）</button>
+  </div>
+</div>
+
+<!-- GYM PICKER -->
+<div class="gym-exercise-picker" id="gym-picker">
+  <div class="gym-picker-sheet">
+    <!-- ヘッダー -->
+    <div style="display:flex;align-items:center;padding-top:max(48px,env(safe-area-inset-top));padding-right:20px;padding-bottom:16px;padding-left:20px;background:var(--accent);gap:12px;">
+      <button onclick="closeGymPicker()" style="background:none;border:none;color:var(--bg);font-size:22px;cursor:pointer;padding:0;line-height:1;font-weight:bold;">←</button>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--bg);flex:1;letter-spacing:0.05em;">種目を選択</div>
+      <button onclick="openGymPresetEditor()" style="background:none;border:1px solid rgba(0,0,0,0.3);border-radius:8px;color:var(--bg);font-size:13px;padding:5px 12px;cursor:pointer;">編集</button>
+    </div>
+    <!-- 検索 -->
+    <div style="padding:10px 16px;background:var(--surface);border-bottom:1px solid var(--border);">
+      <input type="text" class="gym-picker-input" id="gym-picker-search" placeholder="種目を検索..." oninput="filterGymPicker()" onfocus="this.scrollIntoView({behavior:'smooth'})" style="margin:0;">
+    </div>
+    <!-- 種目リスト -->
+    <div class="gym-picker-list" id="gym-picker-list"></div>
+    <!-- カスタム追加（キーボード上部に固定） -->
+    <div style="position:sticky;bottom:0;padding:12px 16px;border-top:1px solid var(--border);background:var(--surface);">
+      <button class="gym-picker-custom-btn" onclick="addCustomGymExercise()">入力した名前で追加</button>
+    </div>
+  </div>
+</div>
+
+<!-- GYM PREV EXERCISE MODAL -->
+<div class="gym-prev-modal" id="gym-prev-modal" onclick="if(event.target===this)closeGymPrevModal()">
+  <div class="gym-prev-sheet">
+    <div class="gym-prev-title" id="gym-prev-name">—</div>
+    <div class="gym-prev-date" id="gym-prev-date">—</div>
+    <div id="gym-prev-sets"></div>
+    <button class="gym-prev-apply-btn" onclick="applyPrevExercise()">そのままコピーする</button>
+    <button class="gym-prev-apply-btn partial" onclick="applyPrevWeightOnly()">重量だけコピーする</button>
+    <button onclick="closeGymPrevModal()" style="width:100%;padding:12px;background:none;border:none;color:var(--text-muted);font-size:14px;cursor:pointer;margin-top:4px;">閉じる</button>
+  </div>
+</div>
+
+<!-- GYM PRESET EDITOR -->
+<div class="activity-picker-overlay" id="gym-preset-editor" onclick="handleGymPresetEditorOverlay(event)" style="z-index:110;">
+  <div class="activity-picker-sheet" style="max-height:85vh;overflow-y:auto;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+      <div class="gym-picker-title" style="margin:0;">種目を編集</div>
+      <button onclick="closeGymPresetEditor()" style="background:none;border:none;color:var(--text-muted);font-size:22px;cursor:pointer;">✕</button>
+    </div>
+    <!-- 部位タブ -->
+    <div style="display:flex;gap:6px;overflow-x:auto;margin-bottom:14px;padding-bottom:4px;" id="preset-editor-parts">
+    </div>
+    <div id="preset-editor-list"></div>
+    <div class="gym-preset-add-row">
+      <input type="text" class="gym-preset-add-input" id="preset-add-input" placeholder="新しい種目名を入力">
+      <button class="gym-preset-add-btn" onclick="addGymPreset()">追加</button>
+    </div>
+  </div>
+</div>
+
+<!-- TIMER -->
+<div class="timer-overlay" id="timer-overlay">
+  <div class="timer-display" id="timer-display">00:00</div>
+  <div class="timer-label" id="timer-label">REST TIMER</div>
+  <div class="timer-presets">
+    <button class="timer-preset-btn" onclick="setTimerSec(30)">30秒</button>
+    <button class="timer-preset-btn" onclick="setTimerSec(60)">1分</button>
+    <button class="timer-preset-btn active" onclick="setTimerSec(90)">90秒</button>
+    <button class="timer-preset-btn" onclick="setTimerSec(120)">2分</button>
+    <button class="timer-preset-btn" onclick="setTimerSec(180)">3分</button>
+  </div>
+  <div class="timer-custom-row">
+    <input type="number" class="timer-custom-input" id="timer-custom-input" placeholder="90" value="90">
+    <span class="timer-custom-label">秒で設定</span>
+    <button class="timer-preset-btn" onclick="setTimerSec(parseInt(document.getElementById('timer-custom-input').value)||90)">セット</button>
+  </div>
+  <div class="timer-btns">
+    <button class="timer-btn start" id="timer-start-btn" onclick="toggleTimer()">スタート</button>
+    <button class="timer-btn close-btn" onclick="closeTimer()">閉じる</button>
+  </div>
+</div>
+
+<!-- SHARE OVERLAY -->
+<div class="share-overlay" id="share-overlay">
+  <div class="share-canvas-wrap" style="max-height:60vh;overflow-y:auto;width:100%;"><canvas id="share-canvas" style="width:100%;height:auto;display:block;"></canvas></div>
+  <img id="share-img-fallback" style="display:none;max-width:100%;border-radius:8px;margin-bottom:12px;" alt="長押しで保存">
+  <div class="share-btns">
+    <button class="share-btn download" onclick="shareImage()">📤 シェアする</button>
+    <button class="share-btn cancel" onclick="document.getElementById('share-overlay').classList.remove('open');document.getElementById('share-img-fallback').style.display='none';showScreen(null);">スキップ</button>
+  </div>
+</div>
 <!-- VIEW SCREEN -->
 <div id="view-screen" class="screen">
   <div class="screen-header">
@@ -431,43 +851,11 @@
   <div id="tab-list" class="tab-content active">
     <div class="tab-list-body">
       <div class="stats-section" id="stats-week" style="display:none;">
-        <div class="stats-section-title">📊 今週の統計</div>
-        <div class="stats-grid">
-          <div class="stat-card">
-            <div class="stat-card-label">週平均体重</div>
-            <div class="stat-card-value accent" id="sw-avg">—</div>
-            <div class="stat-card-sub">kg</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-card-label">目標平均体重</div>
-            <div class="stat-card-value" id="sw-goal-val">—</div>
-            <div class="stat-goal-row">
-              <div class="stat-card-sub">kg</div>
-              <button class="stat-goal-edit" onclick="openWeightGoalModal()">設定</button>
-            </div>
-          </div>
-          <div class="stat-card full" id="sw-diff-card">
-            <div class="stat-card-label">目標との差分</div>
-            <div class="stat-card-value" id="sw-diff">—</div>
-            <div class="stat-card-sub" id="sw-diff-sub"></div>
-          </div>
-        </div>
+        <div id="week-calendar-view"></div>
         <div class="stat-divider"></div>
       </div>
       <div class="stats-section" id="stats-month" style="display:none;">
-        <div class="stats-section-title">📊 今月の統計</div>
-        <div class="stats-grid">
-          <div class="stat-card">
-            <div class="stat-card-label">月平均体重</div>
-            <div class="stat-card-value accent" id="sm-avg">—</div>
-            <div class="stat-card-sub">kg</div>
-          </div>
-          <div class="stat-card" id="sm-vs-card">
-            <div class="stat-card-label">先月同日比</div>
-            <div class="stat-card-value" id="sm-vs-last">—</div>
-            <div class="stat-card-sub" id="sm-vs-last-sub">kg変化</div>
-          </div>
-        </div>
+        <div id="month-calendar-view"></div>
         <div class="stat-divider"></div>
       </div>
       <div id="records-list"></div>
@@ -491,12 +879,74 @@
     </div>
     <div class="modal-save-check" onclick="toggleSaveCustom()">
       <div class="modal-checkbox" id="save-custom-check"></div>
-      <span class="modal-save-label">マイボタンに保存する</span>
+      <span class="modal-save-label">クイックボタンに追加する</span>
     </div>
     <div class="modal-btns">
       <button class="modal-btn cancel" onclick="closeCustomModal()">キャンセル</button>
       <button class="modal-btn confirm" onclick="confirmCustom()">追加する</button>
     </div>
+  </div>
+</div>
+
+<!-- ACTIVITY PRESET EDITOR -->
+<div class="activity-picker-overlay" id="activity-preset-editor" onclick="if(event.target===this)closeActivityPresetEditor()" style="z-index:85;">
+  <div class="activity-picker-sheet" style="max-height:85vh;overflow-y:auto;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+      <div class="activity-picker-title" style="color:var(--success);margin:0;">運動を編集</div>
+      <button onclick="closeActivityPresetEditor()" style="background:none;border:none;color:var(--text-muted);font-size:22px;cursor:pointer;">✕</button>
+    </div>
+    <!-- カテゴリタブ -->
+    <div id="activity-editor-cats" style="display:flex;gap:6px;overflow-x:auto;margin-bottom:14px;padding-bottom:4px;"></div>
+    <div id="activity-editor-list"></div>
+    <!-- 新規追加 -->
+    <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">
+      <div style="font-size:11px;color:var(--text-muted);letter-spacing:0.1em;margin-bottom:8px;">新しい種目を追加</div>
+      <div style="display:flex;gap:8px;margin-bottom:8px;">
+        <input type="text" class="activity-picker-search" id="act-editor-icon" placeholder="🏃" style="width:60px;min-width:60px;margin:0;text-align:center;font-size:20px;">
+        <input type="text" class="activity-picker-search" id="act-editor-name" placeholder="種目名" style="flex:1;margin:0;">
+        <input type="number" class="activity-picker-search" id="act-editor-met" placeholder="MET" style="width:70px;min-width:70px;margin:0;">
+      </div>
+      <button onclick="addActivityPresetItem()" style="width:100%;padding:11px;background:var(--success);color:var(--bg);border:none;border-radius:10px;font-family:'Bebas Neue',sans-serif;font-size:16px;cursor:pointer;">追加</button>
+    </div>
+    <!-- カテゴリ追加 -->
+    <div style="margin-top:8px;">
+      <div style="display:flex;gap:8px;">
+        <input type="text" class="activity-picker-search" id="act-editor-cat-name" placeholder="新しいカテゴリ名" style="flex:1;margin:0;">
+        <button onclick="addActivityPresetCat()" style="padding:11px 14px;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:10px;font-size:13px;cursor:pointer;">カテゴリ追加</button>
+      </div>
+    </div>
+    <button onclick="resetActivityPresets()" style="width:100%;margin-top:12px;padding:10px;background:transparent;border:1px solid var(--border);border-radius:10px;color:var(--text-muted);font-size:13px;cursor:pointer;">デフォルトに戻す</button>
+  </div>
+</div>
+
+<!-- ACTIVITY ICON PICKER -->
+<div class="activity-picker-overlay" id="activity-icon-picker" onclick="if(event.target===this)closeActivityIconPicker()" style="z-index:90;">
+  <div class="activity-picker-sheet">
+    <div class="activity-picker-title" style="color:var(--success);margin-bottom:12px;">アイコンを選択</div>
+    <div id="activity-icon-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-bottom:16px;"></div>
+    <button onclick="closeActivityIconPicker()" style="width:100%;padding:12px;background:var(--surface2);border:none;border-radius:10px;color:var(--text-muted);font-size:14px;cursor:pointer;">閉じる</button>
+  </div>
+</div>
+
+<!-- ACTIVITY NAME EDIT -->
+<div class="activity-picker-overlay" id="activity-name-editor" onclick="if(event.target===this)closeActivityNameEdit()" style="z-index:90;">
+  <div class="activity-picker-sheet">
+    <div class="activity-picker-title" style="color:var(--success);margin-bottom:12px;">名前を編集</div>
+    <input type="text" class="activity-picker-search" id="activity-name-input" placeholder="運動名">
+    <button onclick="saveActivityName()" style="width:100%;padding:12px;background:var(--success);color:var(--bg);border:none;border-radius:10px;font-family:'Bebas Neue',sans-serif;font-size:18px;cursor:pointer;">保存</button>
+  </div>
+</div>
+
+<!-- WATER BTN EDITOR -->
+<div class="activity-picker-overlay" id="water-btn-editor" onclick="if(event.target===this)closeWaterBtnEditor()">
+  <div class="activity-picker-sheet">
+    <div class="activity-picker-title" style="color:var(--accent2);">💧 クイックボタン編集</div>
+    <div id="water-btn-editor-list" style="margin-bottom:16px;"></div>
+    <div style="display:flex;gap:8px;">
+      <input type="number" class="activity-picker-search" id="water-btn-new-val" placeholder="追加するml数" style="margin-bottom:0;">
+      <button class="activity-picker-add-btn" onclick="addWaterQuickBtn()">追加</button>
+    </div>
+    <button onclick="resetWaterBtns()" style="width:100%;margin-top:10px;padding:10px;background:transparent;border:1px solid var(--border);border-radius:10px;color:var(--text-muted);font-size:13px;cursor:pointer;">デフォルトに戻す</button>
   </div>
 </div>
 
@@ -534,6 +984,16 @@
       <div class="edit-group"><label class="edit-label">塩分 (g)</label><input type="number" class="edit-input" id="edit-salt" step="0.1" placeholder="5.0"></div>
       <div class="edit-group"><label class="edit-label">日サロ (分)</label><input type="number" class="edit-input" id="edit-salon" placeholder="0"></div>
       <div class="edit-group full">
+        <label class="edit-label">🚶 歩数</label>
+        <input type="number" class="edit-input" id="edit-steps" placeholder="8000">
+      </div>
+      <div class="edit-group full">
+        <label class="edit-label">🏃 運動記録</label>
+        <div id="edit-activity-list" style="margin-bottom:8px;"></div>
+        <button class="activity-add-btn" style="font-size:13px;padding:10px;" onclick="openEditActivityPicker()">＋ 運動を追加</button>
+      </div>
+      <div class="edit-group full"><label class="edit-label">水分摂取量 (ml)</label><input type="number" class="edit-input" id="edit-water" placeholder="3000"></div>
+      <div class="edit-group full">
         <label class="edit-label">筋トレ部位</label>
         <div class="edit-muscle-grid">
           <button class="edit-muscle-btn" onclick="toggleEditMuscle(this)" data-muscle="胸">胸</button>
@@ -569,13 +1029,180 @@
   </div>
 </div>
 
+<!-- ACTIVITY PICKER -->
+<div class="activity-picker-overlay" id="activity-picker" onclick="handleActivityPickerOverlay(event)">
+  <div class="activity-picker-sheet">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <div class="activity-picker-title" style="margin:0;">🏃 運動を追加</div>
+      <button onclick="openActivityPresetEditor()" style="background:none;border:1px solid var(--border);border-radius:8px;color:var(--text-muted);font-size:12px;padding:4px 10px;cursor:pointer;">✏️ 編集</button>
+    </div>
+    <input type="text" class="activity-picker-search" id="activity-search" placeholder="種目を検索..." oninput="filterActivityPicker()">
+    <div id="activity-picker-list"></div>
+    <div class="activity-picker-category">カスタム追加</div>
+    <div class="activity-picker-custom-row">
+      <input type="text" class="activity-picker-custom-input" id="activity-custom-name" placeholder="種目名">
+      <input type="number" class="activity-picker-custom-kcal" id="activity-custom-kcal" placeholder="kcal/分">
+      <button class="activity-picker-add-btn" onclick="addCustomActivity()">追加</button>
+    </div>
+  </div>
+</div>
+
+<!-- PROFILE MODAL -->
+<div class="profile-modal-overlay" id="profile-modal" onclick="handleProfileOverlay(event)">
+  <div class="profile-modal-sheet">
+    <div class="profile-modal-title">⚙ プロフィール設定</div>
+    <!-- Firebase認証UI -->
+    <div style="background:var(--surface2);border-radius:12px;padding:12px 14px;margin-bottom:16px;">
+      <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;">アカウント</div>
+      <div id="auth-info" style="font-size:12px;color:var(--text);margin-bottom:8px;">ログインするとデータが同期されます</div>
+      <button id="auth-btn" onclick="firebaseSignIn()" style="width:100%;padding:10px;background:var(--accent);color:var(--bg);border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;">Googleでログイン</button>
+    </div>
+    <!-- クラウド同期ボタン -->
+    <button onclick="currentUser?syncToCloud(currentUser.uid):showToast('先にログインしてください')" style="width:100%;padding:10px;background:rgba(0,212,255,0.1);border:1px solid rgba(0,212,255,0.3);border-radius:8px;color:var(--accent2);font-size:13px;cursor:pointer;margin-bottom:16px;">☁️ クラウドに保存</button>
+    <div class="profile-grid">
+      <div class="profile-group">
+        <label class="profile-label">身長 (cm)</label>
+        <input type="number" class="profile-input" id="prof-height" placeholder="168" step="0.1" oninput="updateBMRPreview()">
+      </div>
+      <div class="profile-group">
+        <label class="profile-label">年齢</label>
+        <input type="number" class="profile-input" id="prof-age" placeholder="25" oninput="updateBMRPreview()">
+      </div>
+      <div class="profile-group full">
+        <label class="profile-label">性別</label>
+        <div class="profile-sex-row">
+          <button class="profile-sex-btn selected" id="sex-male" onclick="selectSex('male')">男性</button>
+          <button class="profile-sex-btn" id="sex-female" onclick="selectSex('female')">女性</button>
+        </div>
+      </div>
+    </div>
+    <div class="profile-bmr-display">
+      <div class="profile-bmr-value" id="prof-bmr-val">—</div>
+      <div class="profile-bmr-label">推定基礎代謝 (kcal/日)</div>
+    </div>
+    <button class="btn-submit" onclick="saveProfile()">保存する</button>
+    <div style="margin-top:20px;border-top:1px solid var(--border);padding-top:16px;">
+      <div style="font-size:11px;color:var(--text-muted);letter-spacing:0.1em;margin-bottom:10px;">データバックアップ</div>
+      <button onclick="exportData()" style="width:100%;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;cursor:pointer;margin-bottom:8px;">📤 データをエクスポート</button>
+      <button onclick="openImportPicker()" style="width:100%;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;cursor:pointer;">📥 データをインポート</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ONBOARDING OVERLAY ===== -->
+<div id="onboarding-overlay">
+  <div class="ob-slides-wrap">
+    <div class="ob-slides" id="ob-slides">
+      <div class="ob-slide">
+        <div class="ob-icon">🏋️</div>
+        <div class="ob-title">TRAINING<br>LOG</div>
+        <p class="ob-desc">フィジーク大会を目指す<strong>あなたの記録パートナー</strong><br>食事・水分・トレーニングを一元管理できます</p>
+      </div>
+      <div class="ob-slide">
+        <div class="ob-icon">📊</div>
+        <div class="ob-title cyan">毎日の<br>記録</div>
+        <div class="ob-features">
+          <div class="ob-feature-row"><span class="ob-feature-icon">⚖️</span><div class="ob-feature-text"><strong>体重・栄養管理</strong>PFCバランス・カロリーを記録</div></div>
+          <div class="ob-feature-row"><span class="ob-feature-icon">💧</span><div class="ob-feature-text"><strong>水分摂取</strong>目標量に対する達成率を管理</div></div>
+          <div class="ob-feature-row"><span class="ob-feature-icon">😴</span><div class="ob-feature-text"><strong>睡眠・歩数</strong>コンディションも記録に残せる</div></div>
+        </div>
+      </div>
+      <div class="ob-slide">
+        <div class="ob-icon">💪</div>
+        <div class="ob-title green">ジム<br>ログ</div>
+        <div class="ob-features">
+          <div class="ob-feature-row"><span class="ob-feature-icon">🗓️</span><div class="ob-feature-text"><strong>日付別に管理</strong>種目・セット・レップ数を記録</div></div>
+          <div class="ob-feature-row"><span class="ob-feature-icon">📈</span><div class="ob-feature-text"><strong>前回記録を参照</strong>重量の進捗を確認しながらトレーニング</div></div>
+          <div class="ob-feature-row"><span class="ob-feature-icon">🎯</span><div class="ob-feature-text"><strong>部位別フィルター</strong>胸・背中・脚など部位で絞り込み</div></div>
+        </div>
+      </div>
+      <div class="ob-slide">
+        <div class="ob-icon">📉</div>
+        <div class="ob-title white">グラフで<br>振り返る</div>
+        <div class="ob-features">
+          <div class="ob-feature-row"><span class="ob-feature-icon">📅</span><div class="ob-feature-text"><strong>カレンダービュー</strong>記録した日を一覧で確認</div></div>
+          <div class="ob-feature-row"><span class="ob-feature-icon">📊</span><div class="ob-feature-text"><strong>体重グラフ</strong>週ごとの目標と実績を比較</div></div>
+          <div class="ob-feature-row"><span class="ob-feature-icon">☁️</span><div class="ob-feature-text"><strong>クラウド同期</strong>Googleアカウントでデータを保護</div></div>
+        </div>
+      </div>
+      <div class="ob-slide" style="justify-content:flex-start;padding-top:max(80px, env(safe-area-inset-top))">
+        <div class="ob-icon" style="font-size:48px;">⚙️</div>
+        <div class="ob-title" style="font-size:36px;">はじめの設定</div>
+        <div class="ob-setup-form">
+          <div class="ob-setup-group"><label class="ob-setup-label">ニックネーム</label><input class="ob-setup-input" id="ob-nickname" type="text" placeholder="例：もやき" maxlength="20"></div>
+          <div class="ob-setup-group"><label class="ob-setup-label">目標体重 (kg)</label><input class="ob-setup-input" id="ob-goal-weight" type="number" placeholder="例：72" step="0.1" min="30" max="200"></div>
+          <div class="ob-setup-group"><label class="ob-setup-label">現在の体重 (kg)</label><input class="ob-setup-input" id="ob-current-weight" type="number" placeholder="例：78.5" step="0.1" min="30" max="300"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ob-bottom">
+    <div class="ob-dots" id="ob-dots">
+      <div class="ob-dot active"></div><div class="ob-dot"></div><div class="ob-dot"></div><div class="ob-dot"></div><div class="ob-dot"></div>
+    </div>
+    <button class="ob-btn-next" id="ob-btn-next" onclick="obNext()">次へ</button>
+    <button class="ob-btn-next" id="ob-btn-finish" onclick="obFinish()" style="display:none;">はじめる</button>
+    <button class="ob-login-btn" id="ob-login-btn" onclick="obLoginAndFinish()" style="display:none;"><span>🔑</span> Googleでログイン（任意）</button>
+    <button class="ob-btn-skip" id="ob-btn-skip" onclick="obSkip()">スキップ</button>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
+  const APP_VERSION = 'v20260517';
+  const REMOTE_URL = 'https://tachizuki.github.io/training-log-v2/index.html';
+
+  // AndroidBridgeからストレージデータを受け取る
+  function receiveStorageData(json) {
+    try {
+      const data = JSON.parse(json);
+      Object.keys(data).forEach(k => {
+        if (!localStorage.getItem(k)) { // 既存データは上書きしない
+          localStorage.setItem(k, data[k]);
+        }
+      });
+    } catch(e) {}
+  }
+
+
+
   let records = JSON.parse(localStorage.getItem('training_records') || '[]');
   let weekWeightGoal = parseFloat(localStorage.getItem('week_weight_goal') || '0');
+  // 週ごとの目標体重を管理 { 'YYYY-Www': weight }
+  let weeklyGoals = JSON.parse(localStorage.getItem('weekly_goals') || '{}');
+  // 旧データを移行
+  if (weekWeightGoal > 0 && Object.keys(weeklyGoals).length === 0) {
+    const wk = getWeekKey(new Date());
+    weeklyGoals[wk] = weekWeightGoal;
+    localStorage.setItem('weekly_goals', JSON.stringify(weeklyGoals));
+  }
+
+  function getWeekKey(date) {
+    const d = new Date(date);
+    d.setHours(0,0,0,0);
+    d.setDate(d.getDate() - d.getDay() + 1); // 月曜始まり
+    return formatDate(d);
+  }
+
+  function getWeekGoal(date) {
+    const key = getWeekKey(date);
+    return weeklyGoals[key] || 0;
+  }
+
+  function setWeekGoal(date, weight) {
+    const key = getWeekKey(date);
+    weeklyGoals[key] = weight;
+    localStorage.setItem('weekly_goals', JSON.stringify(weeklyGoals));
+    // 旧データも更新
+    weekWeightGoal = weight;
+    localStorage.setItem('week_weight_goal', weight);
+  }
   let waterData = JSON.parse(localStorage.getItem('water_data') || '{}');
-  let customButtons = JSON.parse(localStorage.getItem('water_custom_btns') || '[]');
+  const DEFAULT_WATER_BTNS = [100, 200, 350, 500, 1000];
+  let waterQuickBtns = JSON.parse(localStorage.getItem('water_quick_btns') ||
+    JSON.stringify(JSON.parse(localStorage.getItem('water_custom_btns') || 'null') || DEFAULT_WATER_BTNS));
+  let customButtons = waterQuickBtns;
   let waterGoal = parseInt(localStorage.getItem('water_goal') || '3000');
   let trainingOn = false;
   let selectedMuscles = [];
@@ -586,13 +1213,168 @@
 
   function todayKey() { return formatDate(new Date()); }
   function getTodayWater() { return waterData[todayKey()] || { total: 0, log: [] }; }
-  function formatDate(d) { return d.toISOString().split('T')[0]; }
+  function formatDate(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
   function formatDateJP(d) { return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`; }
 
+  // ==================
+  // FIREBASE AUTH & SYNC（Kotlin経由）
+  // ==================
+  let currentUser = null;
+  const STORAGE_KEYS = ['training_records','gym_data','water_data','user_profile',
+                        'gym_presets','water_quick_btns','activity_presets','weekly_goals'];
+
+  // Kotlinから呼ばれるコールバック
+  function onFirebaseSignIn(uid, displayName, email) {
+    currentUser = {uid, displayName, email};
+    updateAuthUI(currentUser);
+    loadFromCloud(uid);
+  }
+
+  function onFirebaseSignOut() {
+    currentUser = null;
+    updateAuthUI(null);
+    showToast('ログアウトしました', false);
+  }
+
+  function receiveFirestoreData(jsonStr) {
+    try {
+      const data = JSON.parse(jsonStr);
+      STORAGE_KEYS.forEach(k => {
+        if (data[k]) localStorage.setItem(k, data[k]);
+      });
+      records = JSON.parse(localStorage.getItem('training_records') || '[]');
+      waterData = JSON.parse(localStorage.getItem('water_data') || '{}');
+      gymData = JSON.parse(localStorage.getItem('gym_data') || '{}');
+      userProfile = JSON.parse(localStorage.getItem('user_profile') || '{"height":168,"age":25,"sex":"male"}');
+      updateTodaySummary();
+      showToast('データを同期しました ✓', false);
+    } catch(e) {
+      console.error('receiveFirestoreData error:', e);
+    }
+  }
+
+  function updateAuthUI(user) {
+    const btn = document.getElementById('auth-btn');
+    const info = document.getElementById('auth-info');
+    if (!btn) return;
+    if (user) {
+      btn.textContent = 'ログアウト';
+      btn.onclick = firebaseSignOut;
+      if (info) info.textContent = user.displayName || user.email || '';
+    } else {
+      btn.textContent = 'Googleでログイン';
+      btn.onclick = firebaseSignIn;
+      if (info) info.textContent = 'ログインするとデータが同期されます';
+    }
+  }
+
+  function firebaseSignIn() {
+    if (typeof AndroidBridge !== 'undefined') {
+      AndroidBridge.signInWithGoogle();
+    } else {
+      showToast('アプリからログインしてください');
+    }
+  }
+
+  function firebaseSignOut() {
+    if (typeof AndroidBridge !== 'undefined') {
+      AndroidBridge.signOut();
+    }
+  }
+
+  function syncToCloud(uid) {
+    if (!uid) return;
+    const data = {};
+    STORAGE_KEYS.forEach(k => {
+      const v = localStorage.getItem(k);
+      if (v) data[k] = v;
+    });
+    if (typeof AndroidBridge !== 'undefined') {
+      AndroidBridge.saveToFirestore(uid, JSON.stringify(data));
+    }
+  }
+
+  function loadFromCloud(uid) {
+    if (!uid) return;
+    if (typeof AndroidBridge !== 'undefined') {
+      AndroidBridge.loadFromFirestore(uid);
+    }
+  }
+
+  // ==================
+  // ONBOARDING
+  // ==================
+  let obCurrentSlide = 0;
+  const OB_TOTAL = 5;
+
+  function obUpdateUI() {
+    const slidesEl = document.getElementById('ob-slides');
+    slidesEl.style.transform = `translateX(-${obCurrentSlide * 100}%)`;
+    document.querySelectorAll('.ob-dot').forEach((d, i) => {
+      d.classList.toggle('active', i === obCurrentSlide);
+    });
+    const isLast = obCurrentSlide === OB_TOTAL - 1;
+    document.getElementById('ob-btn-next').style.display = isLast ? 'none' : '';
+    document.getElementById('ob-btn-finish').style.display = isLast ? '' : 'none';
+    document.getElementById('ob-login-btn').style.display = isLast ? '' : 'none';
+    document.getElementById('ob-btn-skip').style.display = isLast ? 'none' : '';
+  }
+
+  function obNext() {
+    if (obCurrentSlide < OB_TOTAL - 1) { obCurrentSlide++; obUpdateUI(); }
+  }
+
+  function obSkip() { obCompleteSetup(false); }
+  function obFinish() { obCompleteSetup(false); }
+  function obLoginAndFinish() { obCompleteSetup(true); }
+
+  function obCompleteSetup(doLogin) {
+    const nickname = (document.getElementById('ob-nickname')?.value || '').trim();
+    const goalWeight = parseFloat(document.getElementById('ob-goal-weight')?.value || '0');
+    const currentWeight = parseFloat(document.getElementById('ob-current-weight')?.value || '0');
+
+    if (nickname) {
+      const profile = JSON.parse(localStorage.getItem('user_profile') || '{"height":168,"age":25,"sex":"male"}');
+      profile.nickname = nickname;
+      localStorage.setItem('user_profile', JSON.stringify(profile));
+    }
+    if (goalWeight > 0) setWeekGoal(new Date(), goalWeight);
+    if (currentWeight > 0) {
+      const today = formatDate(new Date());
+      const existingIdx = records.findIndex(r => r.date === today);
+      if (existingIdx >= 0) { if (!records[existingIdx].weight) records[existingIdx].weight = currentWeight; }
+      else records.unshift({ date: today, weight: currentWeight });
+      localStorage.setItem('training_records', JSON.stringify(records));
+    }
+
+    localStorage.setItem('onboarding_done', '1');
+    const overlay = document.getElementById('onboarding-overlay');
+    overlay.classList.add('hidden');
+    setTimeout(() => { overlay.style.display = 'none'; }, 400);
+
+    if (doLogin) firebaseSignIn();
+    else showToast('ようこそ！記録を始めましょう 🏋️', false);
+    updateTodaySummary();
+  }
+
+  function checkOnboarding() {
+    const overlay = document.getElementById('onboarding-overlay');
+    if (!overlay) return;
+    if (!localStorage.getItem('onboarding_done')) {
+      overlay.style.display = 'flex';
+      obUpdateUI();
+    } else {
+      overlay.style.display = 'none';
+    }
+  }
+
   function init() {
+    const verEl = document.getElementById('app-ver-display');
+    if (verEl) verEl.textContent = APP_VERSION;
     document.getElementById('rec-date').value = formatDate(new Date());
     document.getElementById('today-date-label').textContent = formatDateJP(new Date());
     updateTodaySummary();
+    checkOnboarding();
   }
 
   function updateTodaySummary() {
@@ -608,8 +1390,59 @@
   function showScreen(id) {
     document.getElementById('top-screen').style.display = 'none';
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    if (!id) { document.getElementById('top-screen').style.display = 'flex'; updateTodaySummary(); }
-    else document.getElementById(id).classList.add('active');
+    if (!id) {
+      document.getElementById('top-screen').style.display = 'flex';
+      updateTodaySummary();
+    } else {
+      document.getElementById(id).classList.add('active');
+      // 記録画面を開く時に今日の既存データを読み込む
+      if (id === 'record-screen') {
+        const today = formatDate(new Date());
+        document.getElementById('rec-date').value = today;
+        loadRecordByDate(today);
+      }
+    }
+  }
+
+  function loadRecordByDate(date) {
+    if (!date) return;
+    const r = records.find(x => x.date === date);
+    // データがない日付は全フィールドをクリア
+    if (!r) {
+      ['rec-weight','rec-sleep','rec-p','rec-f','rec-c','rec-kcal','rec-salt','rec-steps','rec-salon','rec-memo'].forEach(id=>{
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+      });
+      trainingOn = false;
+      selectedMuscles = [];
+      document.getElementById('training-toggle').classList.remove('on');
+      document.getElementById('muscle-selector').style.display = 'none';
+      recActivities = [];
+      renderActivityList();
+      return;
+    }
+    // 既存データを各フィールドに流し込む
+    document.getElementById('rec-weight').value = r.weight||'';
+    document.getElementById('rec-sleep').value = r.sleep||'';
+    document.getElementById('rec-p').value = r.p||'';
+    document.getElementById('rec-f').value = r.f||'';
+    document.getElementById('rec-c').value = r.c||'';
+    document.getElementById('rec-kcal').value = r.kcal||'';
+    document.getElementById('rec-salt').value = r.salt||'';
+    document.getElementById('rec-steps').value = r.steps||'';
+    document.getElementById('rec-salon').value = r.salon||'';
+    document.getElementById('rec-memo').value = r.memo||'';
+    // 筋トレ部位
+    trainingOn = r.trained||false;
+    selectedMuscles = [...(r.muscles||[])];
+    document.getElementById('training-toggle').classList.toggle('on', trainingOn);
+    document.getElementById('muscle-selector').style.display = trainingOn ? 'block' : 'none';
+    document.querySelectorAll('.muscle-btn').forEach(b => {
+      b.classList.toggle('selected', selectedMuscles.includes(b.dataset.muscle));
+    });
+    // 運動記録
+    recActivities = JSON.parse(JSON.stringify(r.activities||[]));
+    renderActivityList();
   }
 
   function calcKcal() {
@@ -645,6 +1478,9 @@
       c: parseFloat(document.getElementById('rec-c').value)||null,
       kcal: parseInt(document.getElementById('rec-kcal').value)||null,
       salt: parseFloat(document.getElementById('rec-salt').value)||null,
+      steps: parseInt(document.getElementById('rec-steps').value)||null,
+      activities: JSON.parse(JSON.stringify(recActivities)),
+      cardioKcal: recActivities.reduce((s,a)=>s+(a.kcal||0),0) || null,
       salon: parseInt(document.getElementById('rec-salon').value)||null,
       trained: trainingOn, muscles: [...selectedMuscles],
       memo: document.getElementById('rec-memo').value.trim(),
@@ -654,12 +1490,14 @@
     records.sort((a,b)=>b.date.localeCompare(a.date));
     localStorage.setItem('training_records', JSON.stringify(records));
     showToast('保存しました ✓', false);
+    if (currentUser) syncToCloud(currentUser.uid);
     resetForm();
     setTimeout(()=>showScreen(null), 800);
   }
 
   function resetForm() {
-    ['rec-weight','rec-sleep','rec-p','rec-f','rec-c','rec-kcal','rec-salt','rec-salon','rec-memo'].forEach(id=>document.getElementById(id).value='');
+    ['rec-weight','rec-sleep','rec-p','rec-f','rec-c','rec-kcal','rec-salt','rec-steps','rec-salon','rec-memo'].forEach(id=>document.getElementById(id).value='');
+    recActivities = []; renderActivityList();
     trainingOn=false; selectedMuscles=[];
     document.getElementById('training-toggle').classList.remove('on');
     document.getElementById('muscle-selector').style.display='none';
@@ -669,10 +1507,12 @@
 
   // WATER
   function renderWater() {
-    const w = getTodayWater();
+    // 水分画面を開くたびに今日の日付にリセット
+    const todayStr = formatDate(new Date());
+    const w = waterData[todayStr] || {total:0, log:[]};
     updateRing(w.total);
     renderWaterLog(w.log);
-    renderCustomButtons();
+    renderWaterQuickBtns();
     document.getElementById('water-goal-display').textContent = waterGoal + ' ml';
   }
 
@@ -727,23 +1567,22 @@
     renderWater(); updateTodaySummary();
   }
 
-  function renderCustomButtons() {
-    const wrap = document.getElementById('saved-customs-wrap');
-    const el = document.getElementById('saved-customs');
-    if (customButtons.length===0){wrap.style.display='none';return;}
-    wrap.style.display='block';
-    el.innerHTML=customButtons.map((ml,i)=>`
-      <div class="saved-custom-btn" onclick="addWater(${ml})">
-        ${ml}ml
-        <button class="saved-custom-del" onclick="deleteCustomBtn(event,${i})">✕</button>
-      </div>`).join('');
+  function renderWaterQuickBtns() {
+    const grid = document.getElementById('water-quick-grid');
+    if (!grid) return;
+    grid.innerHTML = waterQuickBtns.map(ml => `
+      <button class="water-quick-btn" onclick="addWater(${ml})">
+        <span class="btn-ml">${ml}</span><span class="btn-unit">ml</span>
+      </button>`).join('') + `
+      <button class="water-quick-btn custom-btn" onclick="openCustomModal()">
+        <span class="custom-icon">＋</span><span style="font-size:12px;">カスタム</span>
+      </button>`;
   }
-
   function deleteCustomBtn(e,idx) {
     e.stopPropagation();
     customButtons.splice(idx,1);
     localStorage.setItem('water_custom_btns', JSON.stringify(customButtons));
-    renderCustomButtons();
+    renderWaterQuickBtns();
   }
 
   function openCustomModal() {
@@ -765,13 +1604,57 @@
   function confirmCustom() {
     const ml=parseInt(document.getElementById('custom-ml-input').value);
     if(!ml||ml<=0){showToast('ml数を入力してください');return;}
-    if(saveCustom&&!customButtons.includes(ml)){
-      customButtons.push(ml); customButtons.sort((a,b)=>a-b);
-      localStorage.setItem('water_custom_btns',JSON.stringify(customButtons));
-      renderCustomButtons();
+    if(saveCustom&&!waterQuickBtns.includes(ml)){
+      waterQuickBtns.push(ml); waterQuickBtns.sort((a,b)=>a-b);
+      localStorage.setItem('water_quick_btns',JSON.stringify(waterQuickBtns));
+      renderWaterQuickBtns();
     }
     addWater(ml);
     closeCustomModal();
+  }
+
+  function openWaterBtnEditor() {
+    document.getElementById('water-btn-editor').classList.add('open');
+    renderWaterBtnEditorList();
+  }
+
+  function closeWaterBtnEditor() {
+    document.getElementById('water-btn-editor').classList.remove('open');
+    renderWaterQuickBtns();
+  }
+
+  function renderWaterBtnEditorList() {
+    const el = document.getElementById('water-btn-editor-list');
+    el.innerHTML = waterQuickBtns.map((ml, i) => `
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--surface);border-radius:10px;margin-bottom:6px;">
+        <span style="font-size:15px;color:var(--text);">${ml}ml</span>
+        <button onclick="delWaterQuickBtn(${i})" style="background:none;border:none;color:var(--danger);font-size:16px;cursor:pointer;">✕</button>
+      </div>`).join('');
+  }
+
+  function addWaterQuickBtn() {
+    const ml = parseInt(document.getElementById('water-btn-new-val').value);
+    if (!ml || ml <= 0) { showToast('ml数を入力してください'); return; }
+    if (!waterQuickBtns.includes(ml)) {
+      waterQuickBtns.push(ml);
+      waterQuickBtns.sort((a,b)=>a-b);
+      localStorage.setItem('water_quick_btns', JSON.stringify(waterQuickBtns));
+    }
+    document.getElementById('water-btn-new-val').value = '';
+    renderWaterBtnEditorList();
+  }
+
+  function delWaterQuickBtn(i) {
+    waterQuickBtns.splice(i, 1);
+    localStorage.setItem('water_quick_btns', JSON.stringify(waterQuickBtns));
+    renderWaterBtnEditorList();
+  }
+
+  function resetWaterBtns() {
+    waterQuickBtns = [...DEFAULT_WATER_BTNS];
+    localStorage.setItem('water_quick_btns', JSON.stringify(waterQuickBtns));
+    renderWaterBtnEditorList();
+    showToast('デフォルトに戻しました', false);
   }
 
   function openGoalModal() {
@@ -803,13 +1686,16 @@
 
   function setFilter(filter, btn) {
     currentFilter=filter;
+    weekCalOffset=0;
+    monthCalOffset=0;
     document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
     btn.classList.add('active');
-    // show/hide stats panels
     document.getElementById('stats-week').style.display = filter==='week' ? 'block' : 'none';
     document.getElementById('stats-month').style.display = filter==='month' ? 'block' : 'none';
     renderList();
     if(filter==='week'||filter==='month') renderStats();
+    // グラフが表示中なら更新
+    if (document.getElementById('tab-graph').classList.contains('active')) renderCharts();
   }
 
   function getFilteredRecords() {
@@ -821,91 +1707,198 @@
 
   function renderView() { renderList(); renderStats(); }
 
+  // 週カレンダー表示用の現在週オフセット
+  let weekCalOffset = 0;
+  let monthCalOffset = 0;
+
+  function weekCalNav(delta) {
+    weekCalOffset += delta;
+    renderWeekCalendar();
+    if (document.getElementById('tab-graph').classList.contains('active')) renderCharts();
+  }
+  function monthCalNav(delta) {
+    monthCalOffset += delta;
+    renderMonthCalendar();
+    if (document.getElementById('tab-graph').classList.contains('active')) renderCharts();
+  }
+
   function renderStats() {
+    if (currentFilter === 'week') renderWeekCalendar();
+    if (currentFilter === 'month') renderMonthCalendar();
+  }
+
+  function renderWeekCalendar() {
+    const el = document.getElementById('week-calendar-view');
+    if (!el) return;
     const now = new Date();
+    // weekCalOffsetの週の月曜を計算
+    const base = new Date(now);
+    base.setDate(now.getDate() - now.getDay() + 1 + weekCalOffset * 7);
+    const weekStart = new Date(base);
+    const weekEnd = new Date(base);
+    weekEnd.setDate(weekStart.getDate() + 6);
+    const todayStr = formatDate(now);
+    const weekGoal = getWeekGoal(weekStart);
 
-    // WEEK STATS
-    const weekAgo = new Date(now); weekAgo.setDate(now.getDate()-7);
-    const weekRecs = records.filter(r=>r.weight&&new Date(r.date+'T00:00:00')>=weekAgo);
-    const weekAvg = weekRecs.length>0 ? (weekRecs.reduce((s,r)=>s+r.weight,0)/weekRecs.length) : null;
+    // 7日分のデータ
+    const days = [];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(weekStart);
+      d.setDate(weekStart.getDate() + i);
+      const ds = formatDate(d);
+      const rec = records.find(r => r.date === ds);
+      days.push({date: d, ds, rec});
+    }
 
-    document.getElementById('sw-avg').textContent = weekAvg ? weekAvg.toFixed(2) : '—';
+    // 週平均
+    const weights = days.filter(d => d.rec?.weight).map(d => d.rec.weight);
+    const avg = weights.length > 0 ? (weights.reduce((s,w)=>s+w,0)/weights.length).toFixed(2) : null;
 
-    if (weekWeightGoal > 0) {
-      document.getElementById('sw-goal-val').textContent = weekWeightGoal.toFixed(1);
-      if (weekAvg !== null) {
-        const diff = weekAvg - weekWeightGoal;
-        const diffEl = document.getElementById('sw-diff');
-        const subEl = document.getElementById('sw-diff-sub');
-        const diffCard = document.getElementById('sw-diff-card');
-        diffEl.textContent = (diff>0?'+':'')+diff.toFixed(2)+' kg';
-        if (diff > 0) {
-          diffEl.className = 'stat-card-value red';
-          subEl.textContent = '目標より重い';
-          diffCard.className = 'stat-card full highlight-bad';
-        } else if (diff < 0) {
-          diffEl.className = 'stat-card-value green';
-          subEl.textContent = '目標より軽い';
-          diffCard.className = 'stat-card full highlight-good';
-        } else {
-          diffEl.className = 'stat-card-value accent';
-          subEl.textContent = '目標通り！';
-          diffCard.className = 'stat-card full highlight';
-        }
-      } else {
-        document.getElementById('sw-diff').textContent = '—';
-        document.getElementById('sw-diff-sub').textContent = '体重データなし';
+    const dayNames = ['月','火','水','木','金','土','日'];
+    const monthStr = (weekStart.getMonth()+1) + '/' + weekStart.getDate() + ' 〜 ' + (weekEnd.getMonth()+1) + '/' + weekEnd.getDate();
+
+    let html = '';
+    html += '<div class="cal-header">';
+    html += '<button class="cal-nav-btn" onclick="weekCalNav(-1)">‹</button>';
+    html += '<div class="cal-header-title">' + monthStr + '</div>';
+    html += '<button class="cal-nav-btn" onclick="weekCalNav(1)">›</button>';
+    html += '</div>';
+
+    // 週平均・差分サマリーカード
+    if (avg) {
+      const diff = weekGoal > 0 ? (parseFloat(avg) - weekGoal) : null;
+      const diffFixed = diff !== null ? diff.toFixed(2) : null;
+      const diffStr = diffFixed !== null ? (diff > 0 ? '+' + diffFixed : diffFixed) + 'kg' : null;
+      const diffColor = diff > 0 ? 'var(--danger)' : diff < 0 ? 'var(--success)' : 'var(--text-muted)';
+      const diffBg = diff > 0 ? 'rgba(255,68,68,0.08)' : diff < 0 ? 'rgba(0,255,136,0.08)' : 'var(--surface)';
+      const diffLabel = diff > 0 ? '目標より重い' : diff < 0 ? '目標より軽い' : '目標通り';
+
+      html += '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 16px;margin-bottom:10px;">';
+      html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">';
+      html += '<span style="font-size:10px;color:var(--text-muted);letter-spacing:0.15em;">週平均体重</span>';
+      if (weekGoal > 0) html += '<span style="font-size:10px;color:var(--text-muted);">目標 ' + weekGoal + 'kg</span>';
+      html += '</div>';
+      html += '<div style="display:flex;align-items:baseline;gap:10px;">';
+      html += '<span style="font-size:28px;font-weight:bold;color:var(--accent2);">' + avg + '</span>';
+      html += '<span style="font-size:14px;color:var(--text-muted);">kg</span>';
+      if (diffStr) {
+        html += '<div style="margin-left:auto;background:' + diffBg + ';border-radius:8px;padding:4px 12px;text-align:center;">';
+        html += '<div style="font-size:18px;font-weight:bold;color:' + diffColor + ';">' + diffStr + '</div>';
+        html += '<div style="font-size:10px;color:' + diffColor + ';">' + diffLabel + '</div>';
+        html += '</div>';
       }
+      html += '</div>';
+      if (weekGoal === 0) {
+        html += '<div style="font-size:11px;color:var(--text-muted);margin-top:6px;">目標を設定すると差分が表示されます</div>';
+      }
+      html += '</div>';
     } else {
-      document.getElementById('sw-goal-val').textContent = '未設定';
-      document.getElementById('sw-diff').textContent = '—';
-      document.getElementById('sw-diff-sub').textContent = '目標を設定してください';
+      html += '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 16px;margin-bottom:10px;color:var(--text-muted);font-size:13px;">この週の体重記録がありません</div>';
     }
 
-    // MONTH STATS
-    const monthAgo = new Date(now); monthAgo.setDate(now.getDate()-30);
-    const monthRecs = records.filter(r=>r.weight&&new Date(r.date+'T00:00:00')>=monthAgo);
-    const monthAvg = monthRecs.length>0 ? (monthRecs.reduce((s,r)=>s+r.weight,0)/monthRecs.length) : null;
-    document.getElementById('sm-avg').textContent = monthAvg ? monthAvg.toFixed(2) : '—';
+    // 7日グリッド
+    html += '<div class="cal-week-grid">';
+    dayNames.forEach(n => { html += '<div class="cal-day-label">' + n + '</div>'; });
+    days.forEach(({date, ds, rec}) => {
+      const isToday = ds === todayStr;
+      const w = rec?.weight;
+      const trained = rec?.trained;
+      let weightClass = '';
+      if (w && weekGoal > 0) weightClass = w > weekGoal ? ' over' : ' under';
+      html += '<div class="cal-day' + (isToday ? ' today' : '') + '">';
+      html += '<span class="cal-day-num">' + date.getDate() + '</span>';
+      if (w) html += '<span class="cal-day-weight' + weightClass + '">' + w + '</span>';
+      if (trained) html += '<span class="cal-day-trained">💪</span>';
+      html += '</div>';
+    });
+    html += '</div>';
 
-    // vs last month same day
-    const lastMonthDate = new Date(now);
-    lastMonthDate.setMonth(now.getMonth()-1);
-    const lmKey = formatDate(lastMonthDate);
-    const lmRec = records.find(r=>r.date===lmKey&&r.weight);
-    const todayRec = records.find(r=>r.date===formatDate(now)&&r.weight);
-    const vsEl = document.getElementById('sm-vs-last');
-    const vsSubEl = document.getElementById('sm-vs-last-sub');
-    const vsCard = document.getElementById('sm-vs-card');
+    // 週目標設定
+    html += '<div class="cal-goal-row">';
+    html += '<span class="cal-goal-label">この週の目標体重</span>';
+    html += '<div style="display:flex;align-items:center;gap:8px;">';
+    html += '<span class="cal-goal-val">' + (weekGoal > 0 ? weekGoal + 'kg' : '未設定') + '</span>';
+    html += '<button class="cal-goal-edit" onclick="openWeightGoalModal()">設定</button>';
+    html += '</div></div>';
 
-    if (lmRec && todayRec) {
-      const d = todayRec.weight - lmRec.weight;
-      vsEl.textContent = (d>0?'+':'')+d.toFixed(2)+' kg';
-      vsSubEl.textContent = `先月${lastMonthDate.getMonth()+1}/${lastMonthDate.getDate()} (${lmRec.weight}kg) 比`;
-      if (d < 0) { vsEl.className='stat-card-value green'; vsCard.className='stat-card highlight-good'; }
-      else if (d > 0) { vsEl.className='stat-card-value red'; vsCard.className='stat-card highlight-bad'; }
-      else { vsEl.className='stat-card-value accent'; vsCard.className='stat-card highlight'; }
-    } else if (!lmRec) {
-      vsEl.textContent = '—'; vsEl.className='stat-card-value';
-      vsSubEl.textContent = '先月同日のデータなし';
-      vsCard.className='stat-card';
-    } else {
-      vsEl.textContent = '—'; vsEl.className='stat-card-value';
-      vsSubEl.textContent = '今日の体重未記録';
-      vsCard.className='stat-card';
+    el.innerHTML = html;
+  }
+
+  function renderMonthCalendar() {
+    const el = document.getElementById('month-calendar-view');
+    if (!el) return;
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = now.getMonth() + monthCalOffset;
+    const targetDate = new Date(y, m, 1);
+    const year = targetDate.getFullYear();
+    const month = targetDate.getMonth();
+    const todayStr = formatDate(now);
+    const dayNames = ['月','火','水','木','金','土','日'];
+
+    // 月の日数
+    const daysInMonth = new Date(year, month+1, 0).getDate();
+    // 月初の曜日（月曜始まり）
+    const firstDay = new Date(year, month, 1).getDay();
+    const startOffset = firstDay === 0 ? 6 : firstDay - 1;
+
+    let html = '';
+    html += '<div class="cal-header">';
+    html += '<button class="cal-nav-btn" onclick="monthCalNav(-1)">‹</button>';
+    html += '<div class="cal-header-title">' + year + '年' + (month+1) + '月</div>';
+    html += '<button class="cal-nav-btn" onclick="monthCalNav(1)">›</button>';
+    html += '</div>';
+
+    // 月平均
+    const monthRecs = records.filter(r => {
+      const [ry,rm] = r.date.split('-').map(Number);
+      return ry === year && rm === month+1 && r.weight;
+    });
+    const avg = monthRecs.length > 0 ? (monthRecs.reduce((s,r)=>s+r.weight,0)/monthRecs.length).toFixed(2) : null;
+    if (avg) {
+      html += '<div style="padding:4px 0 8px;font-size:13px;color:var(--text-muted);">月平均: <span style="color:var(--accent2);font-size:18px;font-weight:bold;">' + avg + 'kg</span></div>';
     }
+
+    // 曜日ヘッダー
+    html += '<div class="cal-month-grid">';
+    dayNames.forEach(n => { html += '<div class="cal-day-label">' + n + '</div>'; });
+
+    // 空白
+    for (let i = 0; i < startOffset; i++) html += '<div></div>';
+
+    // 日付
+    for (let d = 1; d <= daysInMonth; d++) {
+      const ds = year + '-' + String(month+1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+      const rec = records.find(r => r.date === ds);
+      const w = rec?.weight;
+      const isToday = ds === todayStr;
+      html += '<div class="cal-day' + (isToday ? ' today' : '') + '" style="min-height:44px;">';
+      html += '<span class="cal-day-num">' + d + '</span>';
+      if (w) html += '<span class="cal-day-weight">' + w + '</span>';
+      if (rec?.trained) html += '<span class="cal-day-trained">💪</span>';
+      html += '</div>';
+    }
+    html += '</div>';
+    el.innerHTML = html;
   }
 
   function openWeightGoalModal() {
+    const now = new Date();
+    const base = new Date(now);
+    base.setDate(now.getDate() - now.getDay() + 1 + weekCalOffset * 7);
+    const current = getWeekGoal(base);
     document.getElementById('wgoal-modal').classList.add('open');
-    document.getElementById('wgoal-input').value = weekWeightGoal > 0 ? weekWeightGoal : '';
+    document.getElementById('wgoal-input').value = current > 0 ? current : '';
   }
   function closeWeightGoalModal() { document.getElementById('wgoal-modal').classList.remove('open'); }
   function handleWGoalOverlay(e) { if(e.target===document.getElementById('wgoal-modal')) closeWeightGoalModal(); }
   function confirmWeightGoal() {
     const v = parseFloat(document.getElementById('wgoal-input').value);
     if(!v||v<=0) return;
-    weekWeightGoal=v; localStorage.setItem('week_weight_goal',v);
+    const now = new Date();
+    const base = new Date(now);
+    base.setDate(now.getDate() - now.getDay() + 1 + weekCalOffset * 7);
+    setWeekGoal(base, v);
     closeWeightGoalModal();
     renderStats();
     showToast('目標体重を設定しました ✓', false);
@@ -913,11 +1906,14 @@
 
   // ===== 体重変動分析 =====
   function analyzeWeightChange(r) {
-    const rDate = new Date(r.date+'T00:00:00');
-    const prevDate = new Date(rDate); prevDate.setDate(rDate.getDate()-1);
-    const prev2Date = new Date(rDate); prev2Date.setDate(rDate.getDate()-2);
-    const prevKey = formatDate(prevDate);
-    const prev2Key = formatDate(prev2Date);
+    // タイムゾーン問題を避けるため文字列で日付計算
+    function addDays(dateStr, days) {
+      const [y, m, d] = dateStr.split('-').map(Number);
+      const dt = new Date(y, m-1, d+days);
+      return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+    }
+    const prevKey = addDays(r.date, -1);
+    const prev2Key = addDays(r.date, -2);
     const prevRec = records.find(x=>x.date===prevKey);
     const prev2Rec = records.find(x=>x.date===prev2Key);
     const prevWater = waterData[prevKey];
@@ -1025,7 +2021,7 @@ if (absDiff < 0.15) {
       trainedDays.push({when:'2日前', muscles: prev2Rec.muscles});
     }
     for (const td of trainedDays) {
-      const bigMuscles = td.muscles.filter(m=>['脚','背中','胸'].includes(m));
+      const bigMuscles = td.muscles.filter(m=>['脚','足','背中','胸'].includes(m));
       if (bigMuscles.length > 0) {
         items.push({icon:'💪', cls:'warn', text:`<strong>${td.when}に${td.muscles.join('・')}</strong>のトレーニング。大筋群の筋損傷回復で炎症・水分保持が起きやすく、翌朝〜2日後まで体重が0.3〜0.8kg増える場合があります。`});
       } else {
@@ -1033,20 +2029,53 @@ if (absDiff < 0.15) {
       }
     }
 
-    // ⑩ 睡眠（前日）→ 成長ホルモン・コルチゾール
-    if (prevRec.sleep != null) {
-      if (prevRec.sleep < 6) {
-        items.push({icon:'😴', cls:'bad', text:`前日の睡眠 <strong>${prevRec.sleep}h</strong>（短い）。睡眠不足はコルチゾール増加→水分貯留・脂肪燃焼低下につながりやすい。`});
-      } else if (prevRec.sleep < 7) {
-        items.push({icon:'😴', cls:'warn', text:`前日の睡眠 <strong>${prevRec.sleep}h</strong>（やや短め）。7h以上確保できると回復・脂肪燃焼効率が改善。`});
+    // ⑩ 睡眠（当日）→ 成長ホルモン・コルチゾール
+    if (r.sleep != null) {
+      if (r.sleep < 6) {
+        items.push({icon:'😴', cls:'bad', text:`当日の睡眠 <strong>${r.sleep}h</strong>（短い）。睡眠不足はコルチゾール増加→水分貯留・脂肪燃焼低下につながりやすい。`});
+      } else if (r.sleep < 7) {
+        items.push({icon:'😴', cls:'warn', text:`当日の睡眠 <strong>${r.sleep}h</strong>（やや短め）。7h以上確保できると回復・脂肪燃焼効率が改善。`});
       } else {
-        items.push({icon:'😴', cls:'good', text:`前日の睡眠 <strong>${prevRec.sleep}h</strong>。十分な睡眠で成長ホルモン分泌・脂肪燃焼をサポートできています。`});
+        items.push({icon:'😴', cls:'good', text:`当日の睡眠 <strong>${r.sleep}h</strong>。十分な睡眠で成長ホルモン分泌・脂肪燃焼をサポートできています。`});
       }
     }
 
     // ⑪ 2日前の塩分・水分が今日に影響する場合（塩分の排出は24〜48h）
     if (prev2Rec && prev2Rec.salt > 9 && diff > 0.3) {
       items.push({icon:'⏱️', cls:'warn', text:`2日前の塩分 <strong>${prev2Rec.salt}g</strong>（高め）。塩分の排出には24〜48時間かかることがあり、今日の体重に遅れて影響している可能性あり。`});
+    }
+
+    // ⑪.5 歩数・有酸素
+    if (prevRec.steps) {
+      if (prevRec.steps >= 10000) {
+        items.push({icon:'🚶', cls:'good', text:`前日の歩数 <strong>${prevRec.steps.toLocaleString()}歩</strong>（活動量多め）。消費カロリーが増え減量に有利。`});
+      } else if (prevRec.steps < 5000) {
+        items.push({icon:'🚶', cls:'warn', text:`前日の歩数 <strong>${prevRec.steps.toLocaleString()}歩</strong>（少なめ）。活動量が低いと消費カロリーが減り体重が落ちにくい。`});
+      }
+    }
+    if (prevRec.cardioKcal || prevRec.steps) {
+      if (prevRec.cardioKcal >= 300) {
+        items.push({icon:'🚴', cls:'good', text:`前日の有酸素運動で <strong>${prevRec.cardioKcal}kcal</strong> 消費。脂肪燃焼に効果的。${prevRec.cardioMemo ? `（${prevRec.cardioMemo}）` : ''}`});
+      } else {
+        items.push({icon:'🚴', cls:'', text:`前日の有酸素運動で <strong>${prevRec.cardioKcal}kcal</strong> 消費。${prevRec.cardioMemo ? `（${prevRec.cardioMemo}）` : ''}`});
+      }
+      // カロリー収支計算
+      if (prevRec.kcal) {
+        const bmr = getUserBMR() || 1700;
+        const stepsKcal = prevRec.steps ? Math.round((prevRec.weight||63) * prevRec.steps * 0.000539) : 0;
+        const cardioKcal = prevRec.cardioKcal || 0;
+        const totalBurn = bmr + cardioKcal + stepsKcal;
+        const balance = prevRec.kcal - totalBurn;
+        const balanceStr = (balance > 0 ? '+' : '') + Math.round(balance);
+        const burnDetail = `基礎代謝${bmr}+有酸素${cardioKcal}+歩行${stepsKcal}`;
+        if (balance < -500) {
+          items.push({icon:'📊', cls:'good', text:`前日の推定カロリー収支 <strong>${balanceStr}kcal</strong>。十分な赤字。（${burnDetail}）`});
+        } else if (balance < 0) {
+          items.push({icon:'📊', cls:'', text:`前日の推定カロリー収支 <strong>${balanceStr}kcal</strong>。適度な赤字。（${burnDetail}）`});
+        } else {
+          items.push({icon:'📊', cls:'warn', text:`前日の推定カロリー収支 <strong>${balanceStr}kcal</strong>。黒字気味。体重増加につながりやすい。（${burnDetail}）`});
+        }
+      }
     }
 
     // ⑫ 前日のメモからキーワード検出
@@ -1075,27 +2104,34 @@ if (absDiff < 0.15) {
     return items;
   }
 
-  function buildAnalysisHTML(r, idx) {
+  function buildAnalysisHTML(r, dateKey) {
     const items = analyzeWeightChange(r);
     if (items.length === 0) return '';
+    const [_y,_m,_d] = r.date.split('-').map(Number);
+    const d = new Date(_y, _m-1, _d);
+    const dateLabel = `${d.getMonth()+1}/${d.getDate()}(${['日','月','火','水','木','金','土'][d.getDay()]})`;
     const itemsHTML = items.map(item =>
       `<div class="analysis-item"><span class="analysis-icon">${item.icon}</span><span class="analysis-text ${item.cls}">${item.text}</span></div>`
     ).join('');
+    const safeKey = dateKey.replace(/-/g,'');
     return `
       <div class="analysis-card">
-        <div class="analysis-header" onclick="toggleAnalysis(${idx})">
-          <span class="analysis-title">🔍 体重変動分析</span>
-          <span class="analysis-toggle" id="atoggle-${idx}">▼</span>
+        <div class="analysis-header" onclick="toggleAnalysis('${safeKey}')">
+          <div>
+            <span class="analysis-title">🔍 体重変動分析</span>
+            <span class="analysis-date-badge">${dateLabel}の体重変動</span>
+          </div>
+          <span class="analysis-toggle" id="atoggle-${safeKey}">▼</span>
         </div>
-        <div class="analysis-body" id="abody-${idx}">
+        <div class="analysis-body" id="abody-${safeKey}">
           ${itemsHTML}
         </div>
       </div>`;
   }
 
-  function toggleAnalysis(idx) {
-    const body = document.getElementById('abody-'+idx);
-    const toggle = document.getElementById('atoggle-'+idx);
+  function toggleAnalysis(dateKey) {
+    const body = document.getElementById('abody-'+dateKey);
+    const toggle = document.getElementById('atoggle-'+dateKey);
     body.classList.toggle('open');
     toggle.classList.toggle('open');
   }
@@ -1104,8 +2140,8 @@ if (absDiff < 0.15) {
     const list=document.getElementById('records-list');
     const filtered=getFilteredRecords();
     if(filtered.length===0){list.innerHTML='<div class="empty-state"><div class="empty-state-icon">📋</div><div class="empty-state-text">記録がありません</div></div>';return;}
-    list.innerHTML=filtered.map((r,idx)=>{
-      const d=new Date(r.date+'T00:00:00');
+    list.innerHTML=filtered.map((r)=>{
+      const [ry,rm,rd]=r.date.split('-').map(Number); const d=new Date(ry,rm-1,rd);
       const ds=`${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()} (${['日','月','火','水','木','金','土'][d.getDay()]})`;
       const tags=[];
       if(r.trained&&r.muscles.length>0) r.muscles.forEach(m=>tags.push(`<span class="tag tag-muscle">💪 ${m}</span>`));
@@ -1116,8 +2152,13 @@ if (absDiff < 0.15) {
       if(r.salt) tags.push(`<span class="tag tag-salt">🧂 塩分${r.salt}g</span>`);
       if(r.sleep) tags.push(`<span class="tag tag-sleep">😴 ${r.sleep}h</span>`);
       if(r.salon) tags.push(`<span class="tag tag-salon">🌞 ${r.salon}分</span>`);
+      if(r.steps) {
+        const stepsKcal = Math.round((r.weight||63) * r.steps * 0.000539);
+        tags.push(`<span class="tag tag-steps">🚶 ${r.steps.toLocaleString()}歩 (≈${stepsKcal}kcal)</span>`);
+      }
+      if(r.cardioKcal) tags.push(`<span class="tag tag-cardio">🔥 有酸素${r.cardioKcal}kcal</span>`);
       const memo=r.memo?`<div class="record-memo">${r.memo}</div>`:'';
-      const analysis = buildAnalysisHTML(r, idx);
+      const analysis = buildAnalysisHTML(r, r.date);
       return `<div class="record-card">
         <div class="record-date">${ds}<button class="record-edit-btn" onclick="openEditModal('${r.date}')">編集</button></div>
         <div class="record-macros">
@@ -1128,12 +2169,29 @@ if (absDiff < 0.15) {
         </div>
         ${tags.length>0?`<div class="record-tags">${tags.join('')}</div>`:''}
         ${memo}
-      </div>${analysis}`;
+      </div>`+analysis;
     }).join('');
   }
 
   function renderCharts() {
-    const sorted=[...records].sort((a,b)=>a.date.localeCompare(b.date)).slice(-30);
+    const now = new Date();
+    let filtered;
+    if (currentFilter === 'week') {
+      const base = new Date(now);
+      base.setDate(now.getDate() - now.getDay() + 1 + weekCalOffset * 7);
+      const weekEnd = new Date(base); weekEnd.setDate(base.getDate() + 6);
+      const s = formatDate(base), e = formatDate(weekEnd);
+      filtered = records.filter(r => r.date >= s && r.date <= e);
+    } else if (currentFilter === 'month') {
+      const y = now.getFullYear(), m = now.getMonth() + monthCalOffset;
+      const target = new Date(y, m, 1);
+      const ym = target.getFullYear() + '-' + String(target.getMonth()+1).padStart(2,'0');
+      filtered = records.filter(r => r.date.startsWith(ym));
+    } else {
+      // 昇順ソート後に最新30件
+      filtered = [...records].sort((a,b)=>a.date.localeCompare(b.date)).slice(-30);
+    }
+    const sorted = [...filtered].sort((a,b) => a.date.localeCompare(b.date));
     const labels=sorted.map(r=>{const d=new Date(r.date+'T00:00:00');return `${d.getMonth()+1}/${d.getDate()}`;});
     const cd={responsive:true,plugins:{legend:{labels:{color:'#888',font:{size:11}}}},scales:{x:{ticks:{color:'#666',font:{size:10}},grid:{color:'#1a1a26'}},y:{ticks:{color:'#666',font:{size:10}},grid:{color:'#1a1a26'}}}};
 
@@ -1166,6 +2224,12 @@ if (absDiff < 0.15) {
     document.getElementById('edit-salt').value = r.salt||'';
     document.getElementById('edit-salon').value = r.salon||'';
     document.getElementById('edit-memo').value = r.memo||'';
+    document.getElementById('edit-steps').value = r.steps||'';
+    editActivities = JSON.parse(JSON.stringify(r.activities||[]));
+    renderEditActivityList(r.weight);
+    // 水分データをwaterDataから読み込む
+    const wd = waterData[dateKey] || {total:0, log:[]};
+    document.getElementById('edit-water').value = wd.total > 0 ? wd.total : '';
     editMuscles = [...(r.muscles||[])];
     document.querySelectorAll('.edit-muscle-btn').forEach(b=>{
       b.classList.toggle('selected', editMuscles.includes(b.dataset.muscle));
@@ -1204,11 +2268,21 @@ if (absDiff < 0.15) {
       kcal: parseInt(document.getElementById('edit-kcal').value)||null,
       salt: parseFloat(document.getElementById('edit-salt').value)||null,
       salon: parseInt(document.getElementById('edit-salon').value)||null,
+      steps: parseInt(document.getElementById('edit-steps').value)||null,
+      activities: JSON.parse(JSON.stringify(editActivities)),
+      cardioKcal: editActivities.reduce((s,a)=>s+(a.kcal||0),0) || null,
       muscles: [...editMuscles],
       trained: editMuscles.length>0,
       memo: document.getElementById('edit-memo').value.trim(),
     };
     localStorage.setItem('training_records', JSON.stringify(records));
+    // 水分データを保存
+    const editWaterVal = parseInt(document.getElementById('edit-water').value)||0;
+    if (editWaterVal > 0) {
+      if (!waterData[dateKey]) waterData[dateKey] = {total:0, log:[]};
+      waterData[dateKey].total = editWaterVal;
+      localStorage.setItem('water_data', JSON.stringify(waterData));
+    }
     closeEditModal();
     renderList();
     if(currentFilter==='week'||currentFilter==='month') renderStats();
@@ -1227,6 +2301,1833 @@ if (absDiff < 0.15) {
     showToast('削除しました', false);
   }
 
+  // ==================
+  // GYM MEMO
+  // ==================
+  let gymData = JSON.parse(localStorage.getItem('gym_data') || '{}');
+  let gymDate = formatDate(new Date());
+  let gymPart = '胸';
+  let gymExercises = [];
+
+  const GYM_PRESETS = {
+    '胸': ['ベンチプレス','ダンベルフライ','ケーブルクロスオーバー','インクラインベンチプレス','ディップス','ペックデック','インクラインダンベルフライ'],
+    '背中': ['デッドリフト','ラットプルダウン','チンニング','ワンハンドロウ','シーテッドロウ','ベントオーバーロウ','バックエクステンション','Tバーロウ'],
+    '肩': ['ダンベルショルダープレス','サイドレイズ','フロントレイズ','リアレイズ','アーノルドプレス','フェイスプル','バーベルショルダープレス'],
+    '腕': ['バーベルカール','ダンベルカール','ハンマーカール','スカルクラッシャー','トライセプスプッシュダウン','クローズグリップベンチ','インクラインカール'],
+    '足': ['バーベルスクワット','ハックスクワット','レッグプレス','ブルガリアンスクワット','レッグエクステンション','レッグカール','アウターサイ','ルーマニアンデッドリフト'],
+    '腹筋': ['クランチ','レッグレイズ','プランク','ロシアンツイスト','アブローラー','ハンギングレッグレイズ'],
+    '有酸素': ['ランニング','ウォーキング','自転車','トレッドミル','縄跳び','水泳','エアロバイク'],
+  };
+
+  // 種目ごとの前回記録を取得
+  function getPrevExerciseData(exerciseName) {
+    // 旧形式（YYYY-MM-DD_部位）・新形式（YYYY-MM-DD）両対応
+    const keys = Object.keys(gymData)
+      .filter(k => k.split('_')[0] < gymDate)
+      .sort((a,b) => b.split('_')[0].localeCompare(a.split('_')[0]));
+    for (const key of keys) {
+      const data = gymData[key];
+      if (!data.exercises) continue;
+      const ex = data.exercises.find(e => e.name === exerciseName);
+      if (ex && ex.sets && ex.sets.length > 0) {
+        return { date: key.split('_')[0], sets: ex.sets };
+      }
+    }
+    return null;
+  }
+
+  // FWJ RM換算式
+  // ベンチプレス: 重量 × 回数 ÷ 40 + 重量
+  // スクワット・デッドリフト: 重量 × 回数 ÷ 33.3 + 重量
+  const SQUAT_DEADLIFT_KEYWORDS = ['スクワット','デッドリフト','レッグプレス','ブルガリアン','ハック','ルーマニアン'];
+
+  function calcRM(weight, reps, exerciseName) {
+    if (!weight || !reps || reps <= 0) return null;
+    if (reps === 1) return weight;
+    if (reps > 12) return null; // 換算表は12repまで
+    const isSquatDL = exerciseName &&
+      SQUAT_DEADLIFT_KEYWORDS.some(k => exerciseName.includes(k));
+    const divisor = isSquatDL ? 33.3 : 40;
+    return Math.round((weight * reps / divisor + weight) * 10) / 10;
+  }
+
+  function renderGym() {
+    gymDate = gymDate || formatDate(new Date());
+    updateGymDateLabel();
+    loadGymData();
+  }
+
+  function updateGymDateLabel() {
+    const [y,m,d] = gymDate.split('-').map(Number);
+    const dt = new Date(y,m-1,d);
+    const days = ['日','月','火','水','木','金','土'];
+    document.getElementById('gym-date-label').textContent = `${y}/${m}/${d} (${days[dt.getDay()]})`;
+  }
+
+  function gymChangeDate(delta) {
+    const [y,m,d] = gymDate.split('-').map(Number);
+    const dt = new Date(y,m-1,d+delta);
+    // タイムゾーン安全なローカル日付フォーマット
+    gymDate = `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+    updateGymDateLabel();
+    loadGymData();
+  }
+
+  let gymParts = ['胸']; // 複数選択対応
+
+  function gymSelectPart(part, btn) {
+    // 切替前に現在の入力を自動保存
+    if (gymExercises.length > 0) {
+      const key = getGymKey();
+      if (!gymData[key]) gymData[key] = {};
+      gymData[key].exercises = JSON.parse(JSON.stringify(gymExercises));
+      localStorage.setItem('gym_data', JSON.stringify(gymData));
+    }
+
+    const idx = gymParts.indexOf(part);
+    if (idx >= 0) {
+      if (gymParts.length > 1) gymParts.splice(idx, 1);
+    } else {
+      gymParts.push(part);
+    }
+
+    document.querySelectorAll('.gym-part-btn').forEach(b => {
+      b.classList.toggle('active', gymParts.includes(b.textContent.trim()));
+    });
+    loadGymData();
+  }
+
+  function getGymKey() {
+    return gymDate;
+  }
+
+  function loadGymData() {
+    const key = getGymKey();
+    let exercises = [];
+
+    // 新形式（日付のみキー）
+    if (gymData[key] && gymData[key].exercises) {
+      exercises = gymData[key].exercises;
+    } else {
+      // 旧形式（日付_部位キー）を全部マージ
+      Object.keys(gymData)
+        .filter(k => k.startsWith(gymDate + '_'))
+        .sort()
+        .forEach(k => {
+          const data = gymData[k];
+          if (data.exercises) exercises = exercises.concat(data.exercises);
+        });
+      // 旧形式データがあれば新形式に変換して保存
+      if (exercises.length > 0) {
+        gymData[key] = {exercises};
+        localStorage.setItem('gym_data', JSON.stringify(gymData));
+      }
+    }
+
+    gymExercises = JSON.parse(JSON.stringify(exercises));
+    renderGymExercises();
+  }
+
+  function renderGymExercises() {
+    const list = document.getElementById('gym-exercise-list');
+    if (gymExercises.length === 0) {
+      list.innerHTML = '<div class="empty-state" style="padding:20px 0;"><div class="empty-state-icon">🏋️</div><div class="empty-state-text">種目を追加してください</div></div>';
+      return;
+    }
+    const CARDIO = ['ランニング','ウォーキング','自転車','トレッドミル','縄跳び','水泳','エアロバイク','有酸素','ジョギング'];
+    let html = '';
+    gymExercises.forEach((ex, ei) => {
+      const isCardio = CARDIO.some(function(kw){ return ex.name.indexOf(kw) >= 0; });
+      let setsHtml = '';
+      if (isCardio) {
+        ex.sets.forEach((s, si) => {
+          const mVal = (s.memo || '').replace(/"/g, '&quot;');
+          setsHtml += '<div style="background:var(--surface2);border-radius:8px;padding:8px;margin-bottom:6px;">';
+          setsHtml += '<div style="font-size:10px;color:var(--text-muted);margin-bottom:6px;">セット ' + (si+1) + '</div>';
+          setsHtml += '<div class="gym-cardio-row">';
+          setsHtml += '<div><input type="number" class="gym-cardio-input" placeholder="—" value="' + (s.incline||'') + '" step="0.5" data-ei="' + ei + '" data-si="' + si + '" data-field="incline" oninput="gymUpdateCardio(this)"><div class="gym-cardio-label">傾斜(%)</div></div>';
+          setsHtml += '<div><input type="number" class="gym-cardio-input" placeholder="—" value="' + (s.speed||'') + '" step="0.1" data-ei="' + ei + '" data-si="' + si + '" data-field="speed" oninput="gymUpdateCardio(this)"><div class="gym-cardio-label">時速(km/h)</div></div>';
+          setsHtml += '<div><input type="number" class="gym-cardio-input" placeholder="—" value="' + (s.distance||'') + '" step="0.1" data-ei="' + ei + '" data-si="' + si + '" data-field="distance" oninput="gymUpdateCardio(this)"><div class="gym-cardio-label">距離(km)</div></div>';
+          setsHtml += '<div><input type="number" class="gym-cardio-input" placeholder="—" value="' + (s.duration||'') + '" step="1" data-ei="' + ei + '" data-si="' + si + '" data-field="duration" oninput="gymUpdateCardio(this)"><div class="gym-cardio-label">時間(分)</div></div>';
+          setsHtml += '</div>';
+          setsHtml += '<div style="display:flex;gap:8px;margin-top:6px;">';
+          setsHtml += '<input type="text" class="gym-set-memo" placeholder="メモ（空欄可）" value="' + mVal + '" data-ei="' + ei + '" data-si="' + si + '" oninput="gymUpdateSet(+this.dataset.ei,+this.dataset.si,2,this.value)" style="flex:1;">';
+          setsHtml += '<button class="gym-set-del" onclick="gymDelSet(' + ei + ',' + si + ')" style="flex-shrink:0;">✕</button>';
+          setsHtml += '</div></div>';
+        });
+      } else {
+        ex.sets.forEach((s, si) => {
+          const rm = calcRM(s.weight, s.reps, ex.name);
+          const rmText = rm ? rm + 'kg' : '—';
+          const assistClass = s.assist ? 'on' : '';
+          const wVal = s.weight || '';
+          const rVal = s.reps || '';
+          const mVal = (s.memo || '').replace(/"/g, '&quot;');
+          setsHtml += '<div class="gym-set-row">';
+          setsHtml += '<span class="gym-set-label">' + (si+1) + '</span>';
+          setsHtml += '<input type="number" class="gym-set-input" placeholder="kg" value="' + wVal + '" step="0.5" inputmode="decimal" id="gs-' + ei + '-' + si + '-w" data-ei="' + ei + '" data-si="' + si + '" oninput="gymUpdateSet(+this.dataset.ei,+this.dataset.si,0,this.value)" onfocus="this.select()">';
+          setsHtml += '<input type="number" class="gym-set-input" placeholder="rep" value="' + rVal + '" inputmode="numeric" id="gs-' + ei + '-' + si + '-r" data-ei="' + ei + '" data-si="' + si + '" oninput="gymUpdateSet(+this.dataset.ei,+this.dataset.si,1,this.value)" onfocus="this.select()">';
+          setsHtml += '<span class="gym-set-rm" id="gs-' + ei + '-' + si + '-rm">' + rmText + '</span>';
+          setsHtml += '<div class="gym-set-assist"><div class="gym-assist-check ' + assistClass + '" onclick="gymToggleAssist(' + ei + ',' + si + ')"></div></div>';
+          setsHtml += '</div>';
+          setsHtml += '<div style="display:flex;align-items:center;gap:8px;margin-top:2px;">';
+          setsHtml += '<input type="text" class="gym-set-memo" placeholder="メモ（空欄可）" value="' + mVal + '" data-ei="' + ei + '" data-si="' + si + '" oninput="gymUpdateSet(+this.dataset.ei,+this.dataset.si,2,this.value)" style="flex:1;">';
+          setsHtml += '<button class="gym-set-copy-btn" onclick="gymCopySet(' + ei + ',' + si + ')" style="flex-shrink:0;">⧉</button>';
+          setsHtml += '<button class="gym-set-del" onclick="gymDelSet(' + ei + ',' + si + ')" style="flex-shrink:0;">✕</button>';
+          setsHtml += '</div>';
+        });
+      }
+      html += '<div class="gym-exercise-card">';
+      html += '<div class="gym-exercise-header">';
+      html += '<span class="gym-drag-handle" onpointerdown="gymDragStart(event,' + ei + ')" style="padding:12px 12px 12px 0;font-size:20px;">☰</span>';
+      html += '<span class="gym-exercise-name">' + ex.name + '</span>';
+      html += '<button class="gym-prev-btn" onclick="showPrevExercise(' + ei + ')">前回</button>';
+      html += '<button class="gym-exercise-del" onclick="gymDelExercise(' + ei + ')">✕</button>';
+      html += '</div>';
+      if (!isCardio) html += '<div class="gym-set-header"><span class="gym-set-header-label">SET</span><span class="gym-set-header-label">重量kg</span><span class="gym-set-header-label">回数</span><span class="gym-set-header-label">1RM</span><span class="gym-set-header-label">補</span></div>';
+      html += setsHtml;
+      html += '<button class="gym-add-set-btn" onclick="gymAddSet(' + ei + ')">＋ セットを追加</button>';
+      html += '</div>';
+    });
+    list.innerHTML = html;
+  }
+
+  function gymUpdateCardio(el) {
+    const ei = +el.dataset.ei;
+    const si = +el.dataset.si;
+    const field = el.dataset.field;
+    const val = el.value.trim();
+    gymExercises[ei].sets[si][field] = val === '' ? null : parseFloat(val);
+    autoSaveGym();
+  }
+
+  function gymUpdateSet(ei, si, field, val) {
+    // field: 0=weight, 1=reps, 2=memo
+    if (field === 0) {
+      gymExercises[ei].sets[si].weight = parseFloat(val) || null;
+      const s = gymExercises[ei].sets[si];
+      const rm = calcRM(s.weight, s.reps, gymExercises[ei].name);
+      const rmEl = document.getElementById('gs-' + ei + '-' + si + '-rm');
+      if (rmEl) rmEl.textContent = rm ? rm + 'kg' : '—';
+    } else if (field === 1) {
+      gymExercises[ei].sets[si].reps = parseFloat(val) || null;
+      const s = gymExercises[ei].sets[si];
+      const rm = calcRM(s.weight, s.reps, gymExercises[ei].name);
+      const rmEl = document.getElementById('gs-' + ei + '-' + si + '-rm');
+      if (rmEl) rmEl.textContent = rm ? rm + 'kg' : '—';
+    } else {
+      gymExercises[ei].sets[si].memo = val;
+    }
+    autoSaveGym();
+  }
+
+  function gymToggleAssist(ei, si) {
+    gymExercises[ei].sets[si].assist = !gymExercises[ei].sets[si].assist;
+    renderGymExercises();
+    autoSaveGym();
+  }
+
+  function syncInputsToExercises() {
+    // DOM上の現在の入力値をgymExercisesに同期
+    gymExercises.forEach((ex, ei) => {
+      ex.sets.forEach((s, si) => {
+        const w = document.getElementById('gs-' + ei + '-' + si + '-w');
+        const r = document.getElementById('gs-' + ei + '-' + si + '-r');
+        if (w) s.weight = parseFloat(w.value) || null;
+        if (r) s.reps = parseFloat(r.value) || null;
+      });
+    });
+  }
+
+  function gymAddSet(ei) {
+    syncInputsToExercises();
+    const isCardio = ['ランニング','ウォーキング','自転車','トレッドミル','縄跳び','水泳','エアロバイク','有酸素','ジョギング'].some(kw => gymExercises[ei].name.indexOf(kw) >= 0);
+    if (isCardio) {
+      gymExercises[ei].sets.push({incline:null,speed:null,distance:null,duration:null,memo:''});
+    } else {
+      gymExercises[ei].sets.push({weight:null,reps:null,assist:false,memo:''});
+    }
+    renderGymExercises();
+    autoSaveGym();
+  }
+
+  // ==================
+  // STOPWATCH
+  // ==================
+  let swStartTime = null;
+  let swEndTime = null;
+  let swInterval = null;
+  let swRunning = false;
+  let swElapsed = 0; // ms
+
+  function swStart() {
+    if (swRunning) return;
+    swStartTime = swStartTime || new Date();
+    swRunning = true;
+    swInterval = setInterval(() => {
+      swElapsed = new Date() - swStartTime;
+      updateSwDisplay();
+    }, 1000);
+    document.getElementById('sw-btn-start').style.display = 'none';
+    document.getElementById('sw-btn-stop').style.display = 'flex';
+    document.getElementById('sw-display').classList.add('running');
+    const t = swStartTime;
+    document.getElementById('sw-start-label').textContent =
+      `開始: ${String(t.getHours()).padStart(2,'0')}:${String(t.getMinutes()).padStart(2,'0')}`;
+  }
+
+  function swStop() {
+    if (!swRunning) return;
+    clearInterval(swInterval);
+    swRunning = false;
+    swEndTime = new Date();
+    swElapsed = swEndTime - swStartTime;
+    updateSwDisplay();
+    document.getElementById('sw-btn-start').style.display = 'flex';
+    document.getElementById('sw-btn-stop').style.display = 'none';
+    document.getElementById('sw-display').classList.remove('running');
+    const t = swEndTime;
+    document.getElementById('sw-end-label').textContent =
+      `終了: ${String(t.getHours()).padStart(2,'0')}:${String(t.getMinutes()).padStart(2,'0')}`;
+  }
+
+  function swReset() {
+    clearInterval(swInterval);
+    swRunning = false;
+    swStartTime = null;
+    swEndTime = null;
+    swElapsed = 0;
+    document.getElementById('sw-display').textContent = '00:00:00';
+    document.getElementById('sw-display').classList.remove('running');
+    document.getElementById('sw-start-label').textContent = '開始: —';
+    document.getElementById('sw-end-label').textContent = '終了: —';
+    document.getElementById('sw-btn-start').style.display = 'flex';
+    document.getElementById('sw-btn-stop').style.display = 'none';
+  }
+
+  function updateSwDisplay() {
+    const total = Math.floor(swElapsed / 1000);
+    const h = Math.floor(total / 3600);
+    const m = Math.floor((total % 3600) / 60);
+    const s = total % 60;
+    document.getElementById('sw-display').textContent =
+      `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  }
+
+  // 画面を離れる時にストップウォッチをリセット
+  const _origShowScreen = showScreen;
+
+  // ==================
+  // DRAG & DROP (長押し)
+  // ==================
+  let dragState = null;
+  let longPressTimer = null;
+  let floatingEl = null;
+  let overlayEl = null;
+
+  function gymDragStart(e, ei) {
+    e.preventDefault();
+    const startX = e.clientX;
+    const startY = e.clientY;
+
+    longPressTimer = setTimeout(() => {
+      document.removeEventListener('pointermove', checkMove);
+      document.removeEventListener('pointerup', cancelLong);
+      const card = document.querySelectorAll('#gym-exercise-list .gym-exercise-card')[ei];
+      if (card) startDrag(e, ei, card);
+    }, 600); // 長押し600ms
+
+    function checkMove(ev) {
+      if (Math.abs(ev.clientX - startX) > 10 || Math.abs(ev.clientY - startY) > 10) cancelLong();
+    }
+    function cancelLong() {
+      clearTimeout(longPressTimer);
+      document.removeEventListener('pointermove', checkMove);
+      document.removeEventListener('pointerup', cancelLong);
+    }
+    document.addEventListener('pointermove', checkMove);
+    document.addEventListener('pointerup', cancelLong, {once:true});
+  }
+
+  function startDrag(e, ei, card) {
+    if (navigator.vibrate) navigator.vibrate(40);
+    const rect = card.getBoundingClientRect();
+
+    dragState = { srcIdx: ei, curIdx: ei, offsetY: e.clientY - rect.top };
+
+    floatingEl = card.cloneNode(true);
+    floatingEl.classList.add('drag-floating');
+    floatingEl.style.cssText = `width:${rect.width}px;left:${rect.left}px;top:${rect.top}px;margin:0;`;
+    document.body.appendChild(floatingEl);
+    card.classList.add('drag-active');
+
+    overlayEl = document.createElement('div');
+    overlayEl.className = 'gym-drag-overlay';
+    document.body.appendChild(overlayEl);
+
+    document.addEventListener('pointermove', onDragMove, {passive:false});
+    document.addEventListener('pointerup', onDragEnd, {once:true});
+  }
+
+  function onDragMove(e) {
+    if (!dragState || !floatingEl) return;
+    e.preventDefault();
+    const y = e.clientY;
+
+    floatingEl.style.top = (y - dragState.offsetY) + 'px';
+
+    // drag-active以外のカードでY座標を判定
+    const allCards = [...document.querySelectorAll('#gym-exercise-list .gym-exercise-card')]
+      .filter(c => !c.classList.contains('drag-floating'));
+
+    allCards.forEach(c => c.classList.remove('drag-over'));
+
+    let targetIdx = dragState.srcIdx;
+    allCards.forEach((c, i) => {
+      if (c.classList.contains('drag-active')) return;
+      const r = c.getBoundingClientRect();
+      if (y >= r.top && y <= r.bottom) {
+        targetIdx = i;
+        c.classList.add('drag-over');
+      }
+    });
+    dragState.curIdx = targetIdx;
+  }
+
+  function onDragEnd(e) {
+    document.removeEventListener('pointermove', onDragMove);
+    if (!dragState) return;
+
+    const src = dragState.srcIdx;
+    const dst = dragState.curIdx;
+
+    if (floatingEl) { floatingEl.remove(); floatingEl = null; }
+    if (overlayEl) { overlayEl.remove(); overlayEl = null; }
+
+    document.querySelectorAll('.gym-exercise-card').forEach(c => {
+      c.classList.remove('drag-active', 'drag-over', 'drag-floating');
+    });
+
+    dragState = null;
+
+    if (src !== dst) {
+      const item = gymExercises.splice(src, 1)[0];
+      gymExercises.splice(dst, 0, item);
+      renderGymExercises();
+      autoSaveGym();
+    }
+  }
+
+
+
+  function gymCopySet(ei, si) {
+    const src = gymExercises[ei].sets[si];
+    const copy = {weight: src.weight, reps: src.reps, assist: src.assist, memo: ''};
+    gymExercises[ei].sets.splice(si+1, 0, copy);
+    renderGymExercises();
+  }
+
+  function gymDelSet(ei, si) {
+    gymExercises[ei].sets.splice(si,1);
+    renderGymExercises();
+    autoSaveGym();
+  }
+
+  function gymDelExercise(ei) {
+    gymExercises.splice(ei,1);
+    renderGymExercises();
+    autoSaveGym();
+  }
+
+  function gymAddExercise(name) {
+    gymExercises.push({name, sets:[{weight:null,reps:null,assist:false,memo:''}]});
+    renderGymExercises();
+    autoSaveGym();
+    document.getElementById('gym-picker').classList.remove('open');
+  }
+
+  function autoSaveGym() {
+    if (gymExercises.length === 0) return;
+    const key = getGymKey();
+    if (!gymData[key]) gymData[key] = {};
+    gymData[key].exercises = JSON.parse(JSON.stringify(gymExercises));
+    localStorage.setItem('gym_data', JSON.stringify(gymData));
+  }
+
+  function saveGym() {
+    const key = getGymKey();
+    if (!gymData[key]) gymData[key] = {};
+    gymData[key].exercises = JSON.parse(JSON.stringify(gymExercises));
+    localStorage.setItem('gym_data', JSON.stringify(gymData));
+
+    // 日々記録に筋トレ情報を自動反映
+    if (gymExercises.length > 0) {
+      const recIdx = records.findIndex(r => r.date === gymDate);
+      // 種目名から部位を推定
+      const muscleMap = {
+        '胸':['ベンチプレス','フライ','ペックデック','ディップス','チェストプレス'],
+        '背中':['デッドリフト','ラットプルダウン','チンニング','ロウ','バックエクステンション','Tバー'],
+        '肩':['ショルダープレス','サイドレイズ','フロントレイズ','リアレイズ','アーノルド','フェイスプル'],
+        '腕':['カール','スカルクラッシャー','プッシュダウン','クローズグリップ'],
+        '足':['スクワット','レッグプレス','ブルガリアン','レッグエクステ','レッグカール','アウターサイ','ルーマニアン','ハック'],
+        '腹筋':['クランチ','レッグレイズ','プランク','ツイスト','アブローラー','ハンギング'],
+      };
+      const detectedMuscles = new Set();
+      gymExercises.forEach(ex => {
+        Object.entries(muscleMap).forEach(([muscle, keywords]) => {
+          if (keywords.some(kw => ex.name.includes(kw))) detectedMuscles.add(muscle);
+        });
+      });
+      const muscles = detectedMuscles.size > 0 ? [...detectedMuscles] : ['筋トレ'];
+
+      if (recIdx >= 0) {
+        records[recIdx].trained = true;
+        records[recIdx].muscles = [...new Set([...(records[recIdx].muscles||[]), ...muscles])];
+      } else {
+        records.push({
+          date: gymDate, weight:null, sleep:null, p:null, f:null, c:null,
+          kcal:null, salt:null, steps:null, activities:[], cardioKcal:null,
+          salon:null, trained:true, muscles, memo:''
+        });
+        records.sort((a,b) => b.date.localeCompare(a.date));
+      }
+      localStorage.setItem('training_records', JSON.stringify(records));
+    }
+
+    // ストップウォッチの時間から筋トレ消費カロリーを計算して運動記録に追加
+    // 時間計測がない場合は60分をデフォルトとして使用
+    const gymElapsed = swElapsed > 0 ? swElapsed : 60 * 60 * 1000;
+    if (gymExercises.length > 0) {
+      const hours = gymElapsed / 1000 / 3600;
+      const weight = records.find(r => r.date === gymDate)?.weight || 63;
+      const MET = 5.0; // 筋トレ標準MET
+      const gymKcal = Math.round(weight * MET * hours);
+
+      const recIdx2 = records.findIndex(r => r.date === gymDate);
+      if (recIdx2 >= 0) {
+        const activities = records[recIdx2].activities || [];
+        const existIdx = activities.findIndex(a => a.name === '筋トレ');
+        const gymActivity = {
+          name: '筋トレ',
+          icon: '💪',
+          met: MET,
+          minutes: Math.round(gymElapsed / 1000 / 60),
+          kcal: gymKcal
+        };
+        if (existIdx >= 0) {
+          activities[existIdx] = gymActivity;
+        } else {
+          activities.push(gymActivity);
+        }
+        records[recIdx2].activities = activities;
+        records[recIdx2].cardioKcal = activities.reduce((s,a) => s+(a.kcal||0), 0);
+        localStorage.setItem('training_records', JSON.stringify(records));
+      }
+    }
+
+    // 保存後にシェア画面を起動してからトップに戻る
+    showToast('保存しました ✓', false);
+    setTimeout(() => {
+      gymShare();
+    }, 300);
+  }
+
+  // 前回コピー
+  function gymCopyPrev() {
+    showToast('検索中... keys:' + Object.keys(gymData).length + ' date:' + gymDate, false);
+    // 日付部分だけ抽出して比較（旧形式YYYY-MM-DD_部位も対応）
+    const keys = Object.keys(gymData)
+      .filter(k => {
+        const date = k.split('_')[0];
+        return date < gymDate && gymData[k].exercises?.length > 0;
+      })
+      .sort((a,b) => b.split('_')[0].localeCompare(a.split('_')[0]));
+    if (keys.length === 0) { showToast('前回のデータがありません keys:' + JSON.stringify(Object.keys(gymData).slice(0,3))); return; }
+    // 同じ日付のキーが複数あれば全部マージ
+    const prevDate = keys[0].split('_')[0];
+    const sameDay = keys.filter(k => k.split('_')[0] === prevDate);
+    let allExercises = [];
+    sameDay.forEach(k => {
+      allExercises = allExercises.concat(gymData[k].exercises || []);
+    });
+    gymExercises = JSON.parse(JSON.stringify(allExercises));
+    gymExercises.forEach(ex => ex.sets.forEach(s => { s.memo = ''; }));
+    renderGymExercises();
+    showToast(`${prevDate}の記録をコピーしました`, false);
+  }
+
+  // PICKER
+  let prevExerciseData = null;
+  let prevExerciseIdx = null;
+
+  function showPrevExercise(ei) {
+    const name = gymExercises[ei].name;
+    const prev = getPrevExerciseData(name);
+    if (!prev) { 
+      showToast(name + 'の前回記録がありません');
+      return; 
+    }
+
+    prevExerciseData = prev;
+    prevExerciseIdx = ei;
+
+    document.getElementById('gym-prev-name').textContent = name;
+    document.getElementById('gym-prev-date').textContent = `前回: ${prev.date}`;
+
+    const setsEl = document.getElementById('gym-prev-sets');
+    setsEl.innerHTML = prev.sets.map((s, i) => {
+      const rm = calcRM(s.weight, s.reps, name);
+      return `<div class="gym-prev-set-row">
+        <span class="gym-prev-set-num">${i+1}</span>
+        <span class="gym-prev-set-val">${s.weight||'—'}kg × ${s.reps||'—'}rep</span>
+        ${rm ? `<span class="gym-prev-set-rm">1RM: ${rm}kg</span>` : ''}
+        ${s.assist ? `<span class="gym-prev-set-assist">補助</span>` : ''}
+      </div>`;
+    }).join('');
+
+    document.getElementById('gym-prev-modal').classList.add('open');
+  }
+
+  function closeGymPrevModal() {
+    document.getElementById('gym-prev-modal').classList.remove('open');
+    prevExerciseData = null;
+    prevExerciseIdx = null;
+  }
+
+  function applyPrevExercise() {
+    if (!prevExerciseData || prevExerciseIdx === null) return;
+    gymExercises[prevExerciseIdx].sets = JSON.parse(JSON.stringify(prevExerciseData.sets)).map(s => ({...s, memo:''}));
+    closeGymPrevModal();
+    renderGymExercises();
+    showToast('前回の記録をコピーしました', false);
+  }
+
+  function applyPrevWeightOnly() {
+    if (!prevExerciseData || prevExerciseIdx === null) return;
+    const currentSets = gymExercises[prevExerciseIdx].sets;
+    prevExerciseData.sets.forEach((s, i) => {
+      if (i < currentSets.length) {
+        currentSets[i].weight = s.weight;
+      } else {
+        currentSets.push({weight: s.weight, reps: null, assist: false, memo: ''});
+      }
+    });
+    closeGymPrevModal();
+    renderGymExercises();
+    showToast('前回の重量をコピーしました', false);
+  }
+
+  function openGymPicker() {
+    gymPickerCatFilter = null;
+    document.getElementById('gym-picker').classList.add('open');
+    document.getElementById('gym-picker-search').value = '';
+    filterGymPicker();
+  }
+
+  function closeGymPicker() {
+    document.getElementById('gym-picker').classList.remove('open');
+    if (window._editActivityMode) window._editActivityMode = false;
+  }
+
+  function handleGymPickerOverlay(e) {
+    if(e.target===document.getElementById('gym-picker'))
+      document.getElementById('gym-picker').classList.remove('open');
+  }
+
+  // Androidの戻るボタン処理
+  function handleAndroidBack() {
+    // モーダルが開いていれば閉じる
+    if (document.getElementById('activity-preset-editor') && document.getElementById('activity-preset-editor').classList.contains('open')) {
+      closeActivityPresetEditor(); return true;
+    }
+    if (document.getElementById('activity-icon-picker') && document.getElementById('activity-icon-picker').classList.contains('open')) {
+      closeActivityIconPicker(); return true;
+    }
+    if (document.getElementById('activity-name-editor') && document.getElementById('activity-name-editor').classList.contains('open')) {
+      closeActivityNameEdit(); return true;
+    }
+    if (document.getElementById('water-btn-editor') && document.getElementById('water-btn-editor').classList.contains('open')) {
+      closeWaterBtnEditor();
+      return true;
+    }
+    if (document.getElementById('gym-prev-modal') && document.getElementById('gym-prev-modal').classList.contains('open')) {
+      closeGymPrevModal();
+      return true;
+    }
+    if (document.getElementById('gym-preset-editor') && document.getElementById('gym-preset-editor').classList.contains('open')) {
+      closeGymPresetEditor();
+      return true;
+    }
+    if (document.getElementById('activity-picker') && document.getElementById('activity-picker').classList.contains('open')) {
+      document.getElementById('activity-picker').classList.remove('open');
+      return true;
+    }
+    if (document.getElementById('profile-modal').classList.contains('open')) {
+      document.getElementById('profile-modal').classList.remove('open');
+      return true;
+    }
+    if (document.getElementById('gym-picker').classList.contains('open')) {
+      closeGymPicker();
+      return true;
+    }
+    if (document.getElementById('timer-overlay').classList.contains('open')) {
+      closeTimer();
+      return true;
+    }
+    if (document.getElementById('share-overlay').classList.contains('open')) {
+      document.getElementById('share-overlay').classList.remove('open');
+      return true;
+    }
+    // トップ画面以外なら戻る
+    const top = document.getElementById('top-screen');
+    if (top && top.style.display !== 'flex' && top.style.display !== '') {
+      if (typeof showScreen === 'function') { showScreen(null); return true; }
+    }
+    return false;
+  }
+
+  // 種目プリセット管理（カスタマイズ可能）
+  let gymPresets = JSON.parse(localStorage.getItem('gym_presets') || 'null') || JSON.parse(JSON.stringify(GYM_PRESETS));
+
+  // GYM_PRESETSに新しいカテゴリが追加された場合、既存のgymPresetsにも自動でマージ
+  (function mergeNewCategories() {
+    if (!gymPresets) { gymPresets = JSON.parse(JSON.stringify(GYM_PRESETS)); return; }
+    let updated = false;
+    Object.keys(GYM_PRESETS).forEach(cat => {
+      if (!gymPresets[cat]) {
+        gymPresets[cat] = JSON.parse(JSON.stringify(GYM_PRESETS[cat]));
+        updated = true;
+      }
+    });
+    if (updated) {
+      localStorage.setItem('gym_presets', JSON.stringify(gymPresets));
+    }
+  })();
+
+
+  let presetEditorPart = '胸';
+  let editingPresetIdx = null;
+
+  function openGymPresetEditor() {
+    const presets = gymPresets || GYM_PRESETS;
+    const cats = Object.keys(presets);
+    if (!presetEditorPart || !cats.includes(presetEditorPart)) presetEditorPart = cats[0];
+    // タブを動的生成（マイ種目・有酸素も含む）
+    const partsEl = document.getElementById('preset-editor-parts');
+    partsEl.innerHTML = cats.map(function(c) {
+      var act = c === presetEditorPart ? ' active' : '';
+      return '<button class="gym-part-btn' + act + '" onclick="selectPresetEditorPart(\'' + c + '\',this)">' + c + '</button>';
+    }).join('');
+    document.getElementById('gym-preset-editor').classList.add('open');
+    renderPresetEditorList();
+  }
+
+  function closeGymPresetEditor() {
+    document.getElementById('gym-preset-editor').classList.remove('open');
+    editingPresetIdx = null;
+    filterGymPicker(); // ピッカーを更新
+  }
+
+  function handleGymPresetEditorOverlay(e) {
+    if (e.target === document.getElementById('gym-preset-editor')) closeGymPresetEditor();
+  }
+
+  function selectPresetEditorPart(part, btn) {
+    presetEditorPart = part;
+    document.querySelectorAll('#preset-editor-parts .gym-part-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    editingPresetIdx = null;
+    renderPresetEditorList();
+  }
+
+  function renderPresetEditorList() {
+    const el = document.getElementById('preset-editor-list');
+    const presets = gymPresets || GYM_PRESETS;
+    const items = (presets[presetEditorPart] || []);
+    const cats = Object.keys(presets);
+    el.innerHTML = items.map((name, i) => {
+      if (editingPresetIdx === i) {
+        const catOptions = cats.map(c =>
+          '<option value="' + c + '"' + (c === presetEditorPart ? ' selected' : '') + '>' + c + '</option>'
+        ).join('');
+        return '<div style="background:var(--surface2);border-radius:10px;padding:12px;margin-bottom:8px;">' +
+          '<div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;">種目名</div>' +
+          '<input type="text" class="gym-edit-name-input" id="preset-edit-input-' + i + '" value="' + name + '" style="width:100%;margin-bottom:10px;">' +
+          '<div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;">部位を移動</div>' +
+          '<select id="preset-edit-cat-' + i + '" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px;color:var(--text);font-size:14px;margin-bottom:10px;">' + catOptions + '</select>' +
+          '<div style="display:flex;gap:8px;">' +
+          '<button class="gym-preset-edit-btn" style="flex:1;padding:10px;background:var(--accent);color:var(--bg);border:none;border-radius:8px;font-size:14px;cursor:pointer;" onclick="savePresetName(' + i + ')">保存</button>' +
+          '<button class="gym-preset-del-btn" style="padding:10px 14px;background:rgba(255,68,68,0.15);border:1px solid rgba(255,68,68,0.3);border-radius:8px;color:var(--danger);font-size:14px;cursor:pointer;" onclick="deletePreset(' + i + ')">削除</button>' +
+          '</div></div>';
+      }
+      return '<div class="gym-preset-item">' +
+        '<span class="gym-preset-item-name">' + name + '</span>' +
+        '<button class="gym-preset-edit-btn" onclick="startEditPreset(' + i + ')">編集</button>' +
+        '<button class="gym-preset-del-btn" onclick="deletePreset(' + i + ')">✕</button>' +
+        '</div>';
+    }).join('');
+  }
+
+  function startEditPreset(i) {
+    editingPresetIdx = i;
+    renderPresetEditorList();
+    setTimeout(() => document.getElementById(`preset-edit-input-${i}`)?.focus(), 100);
+  }
+
+  function savePresetName(i) {
+    const input = document.getElementById('preset-edit-input-' + i);
+    const catSel = document.getElementById('preset-edit-cat-' + i);
+    const newName = input?.value.trim();
+    const newCat = catSel?.value;
+    if (!newName) return;
+    if (!gymPresets[presetEditorPart]) gymPresets[presetEditorPart] = [];
+
+    if (newCat && newCat !== presetEditorPart) {
+      // 別の部位に移動
+      gymPresets[presetEditorPart].splice(i, 1);
+      if (!gymPresets[newCat]) gymPresets[newCat] = [];
+      gymPresets[newCat].push(newName);
+    } else {
+      gymPresets[presetEditorPart][i] = newName;
+    }
+    localStorage.setItem('gym_presets', JSON.stringify(gymPresets));
+    editingPresetIdx = null;
+    renderPresetEditorList();
+    showToast('保存しました', false);
+  }
+
+  function deletePreset(i) {
+    gymPresets[presetEditorPart].splice(i, 1);
+    localStorage.setItem('gym_presets', JSON.stringify(gymPresets));
+    editingPresetIdx = null;
+    renderPresetEditorList();
+  }
+
+  function addGymPreset() {
+    const name = document.getElementById('preset-add-input').value.trim();
+    if (!name) { showToast('種目名を入力してください'); return; }
+    if (!gymPresets[presetEditorPart]) gymPresets[presetEditorPart] = [];
+    if (!gymPresets[presetEditorPart].includes(name)) {
+      gymPresets[presetEditorPart].push(name);
+      localStorage.setItem('gym_presets', JSON.stringify(gymPresets));
+    }
+    document.getElementById('preset-add-input').value = '';
+    renderPresetEditorList();
+  }
+
+  let gymPickerCatFilter = null;
+
+  function filterGymPicker() {
+    const q = document.getElementById('gym-picker-search').value.toLowerCase();
+    const el = document.getElementById('gym-picker-list');
+    const presets = gymPresets || GYM_PRESETS;
+    const cats = Object.keys(presets);
+    let html = '';
+
+    // カテゴリフィルターボタン
+    html += '<div style="display:flex;gap:6px;flex-wrap:wrap;padding:10px 16px;background:var(--surface);border-bottom:1px solid var(--border);">';
+    html += `<button onclick="setGymPickerCat(null)" style="padding:5px 12px;border-radius:14px;font-size:12px;cursor:pointer;border:1px solid ${gymPickerCatFilter===null?'var(--accent)':'var(--border)'};background:${gymPickerCatFilter===null?'var(--accent)':'transparent'};color:${gymPickerCatFilter===null?'var(--bg)':'var(--text-muted)'};">すべて</button>`;
+    cats.forEach(c => {
+      html += `<button onclick="setGymPickerCat('${c}')" style="padding:5px 12px;border-radius:14px;font-size:12px;cursor:pointer;border:1px solid ${gymPickerCatFilter===c?'var(--accent)':'var(--border)'};background:${gymPickerCatFilter===c?'var(--accent)':'transparent'};color:${gymPickerCatFilter===c?'var(--bg)':'var(--text-muted)'};">${c}</button>`;
+    });
+    html += '</div>';
+
+    
+    // カテゴリ別プリセット
+    const displayCats = gymPickerCatFilter ? [gymPickerCatFilter] : cats;
+    displayCats.forEach((cat, ci) => {
+      const items = (presets[cat] || []).filter(p => !q || p.toLowerCase().includes(q));
+      if (items.length === 0) return;
+      html += `<div style="padding:10px 16px;background:var(--accent);"><span style="font-size:13px;font-weight:700;color:var(--bg);">${cat}</span></div>`;
+      items.forEach((p, i) => {
+        html += `<button class="gym-picker-item" onclick="gymAddExercise('${p.replace(/'/g,"\'")}')"><span style="flex:1;text-align:left;">${p}</span><span class="gym-picker-item-drag" onpointerdown="pickerDragStart(event,'${cat}',${i})" onclick="event.stopPropagation()">☰</span></button>`;
+      });
+    });
+
+    if (!html.includes('gym-picker-item')) {
+      html += '<div style="color:var(--text-muted);padding:32px;text-align:center;">該当なし</div>';
+    }
+
+    el.innerHTML = html;
+
+    // カスタム追加の部位セレクトを更新
+    const catSel = document.getElementById('gym-custom-cat');
+    if (catSel) {
+      const currentVal = catSel.value;
+      catSel.innerHTML = '<option value="">部位を選択</option>' +
+        cats.map(c => `<option value="${c}" ${c===currentVal?'selected':''}>${c}</option>`).join('');
+    }
+  }
+
+  function setGymPickerCat(cat) {
+    gymPickerCatFilter = cat;
+    filterGymPicker();
+  }
+
+  // ピッカー内ドラッグ並び替え（即時・ハイライト表示）
+  function pickerDragStart(e, cat, fromIdx) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (navigator.vibrate) navigator.vibrate(20);
+
+    pickerDragState = {cat, fromIdx, curIdx: fromIdx};
+
+    // ドラッグ中の行をハイライト
+    const allItems = [...document.querySelectorAll('#gym-picker-list .gym-picker-item')];
+    const dragItem = allItems[fromIdx];
+    if (dragItem) dragItem.style.background = 'rgba(232,255,0,0.15)';
+
+    function onMove(ev) {
+      const y = ev.clientY;
+      const items = [...document.querySelectorAll('#gym-picker-list .gym-picker-item')];
+
+      // 全アイテムのハイライトをリセット
+      items.forEach((el, i) => {
+        if (i === pickerDragState.fromIdx) {
+          el.style.background = 'rgba(232,255,0,0.15)';
+          el.style.borderBottom = '';
+        } else {
+          el.style.background = '';
+          el.style.borderBottom = '';
+        }
+      });
+
+      // ターゲット行を特定してボーダーで示す
+      let targetIdx = pickerDragState.fromIdx;
+      items.forEach((el, i) => {
+        const rect = el.getBoundingClientRect();
+        if (y >= rect.top && y <= rect.bottom && i !== pickerDragState.fromIdx) {
+          targetIdx = i;
+          // 上半分なら上に、下半分なら下にボーダー
+          const mid = rect.top + rect.height / 2;
+          el.style.borderBottom = y < mid ? '' : '2px solid var(--accent)';
+          el.style.borderTop = y < mid ? '2px solid var(--accent)' : '';
+        }
+      });
+      pickerDragState.curIdx = targetIdx;
+    }
+
+    function onEnd() {
+      document.removeEventListener('pointermove', onMove);
+      document.removeEventListener('pointerup', onEnd);
+
+      // スタイルリセット
+      document.querySelectorAll('#gym-picker-list .gym-picker-item').forEach(el => {
+        el.style.background = '';
+        el.style.borderTop = '';
+        el.style.borderBottom = '';
+      });
+
+      if (pickerDragState && pickerDragState.fromIdx !== pickerDragState.curIdx) {
+        gymPresets = gymPresets || JSON.parse(JSON.stringify(GYM_PRESETS));
+        const items = gymPresets[cat];
+        if (items) {
+          const item = items.splice(pickerDragState.fromIdx, 1)[0];
+          const toIdx = Math.max(0, Math.min(pickerDragState.curIdx, items.length));
+          items.splice(toIdx, 0, item);
+          localStorage.setItem('gym_presets', JSON.stringify(gymPresets));
+          filterGymPicker();
+        }
+      }
+      pickerDragState = null;
+    }
+
+    document.addEventListener('pointermove', onMove);
+    document.addEventListener('pointerup', onEnd, {once:true});
+  }
+
+  function addCustomGymExercise() {
+    const name = document.getElementById('gym-picker-search').value.trim();
+    const cat = document.getElementById('gym-custom-cat')?.value;
+    if (!name) { showToast('種目名を入力してください'); return; }
+    if (!cat) { showToast('部位を選択してください'); return; }
+    gymPresets = gymPresets || JSON.parse(JSON.stringify(GYM_PRESETS));
+    if (!gymPresets[cat]) gymPresets[cat] = [];
+    if (!gymPresets[cat].includes(name)) {
+      gymPresets[cat].push(name);
+      localStorage.setItem('gym_presets', JSON.stringify(gymPresets));
+    }
+    gymAddExercise(name);
+  }
+
+  // ==================
+  // TIMER
+  // ==================
+  let timerSec = 90;
+  let timerRemain = 90;
+  let timerInterval = null;
+  let timerRunning = false;
+
+  function openTimer() {
+    document.getElementById('timer-overlay').classList.add('open');
+    timerRemain = timerSec;
+    updateTimerDisplay();
+  }
+
+  function closeTimer() {
+    document.getElementById('timer-overlay').classList.remove('open');
+    clearInterval(timerInterval);
+    timerRunning = false;
+    document.getElementById('timer-start-btn').textContent = 'スタート';
+    document.getElementById('timer-display').classList.remove('done');
+  }
+
+  function setTimerSec(sec) {
+    clearInterval(timerInterval);
+    timerRunning = false;
+    timerSec = sec;
+    timerRemain = sec;
+    document.getElementById('timer-custom-input').value = sec;
+    document.getElementById('timer-start-btn').textContent = 'スタート';
+    document.getElementById('timer-display').classList.remove('done');
+    document.querySelectorAll('.timer-preset-btn').forEach(b=>{
+      b.classList.toggle('active', parseInt(b.textContent)===sec || b.textContent===sec+'秒' ||
+        (sec===30&&b.textContent==='30秒')||(sec===60&&b.textContent==='1分')||
+        (sec===90&&b.textContent==='90秒')||(sec===120&&b.textContent==='2分')||(sec===180&&b.textContent==='3分'));
+    });
+    updateTimerDisplay();
+  }
+
+  function toggleTimer() {
+    if (timerRunning) {
+      clearInterval(timerInterval);
+      timerRunning = false;
+      document.getElementById('timer-start-btn').textContent = 'スタート';
+    } else {
+      if (timerRemain <= 0) { timerRemain = timerSec; document.getElementById('timer-display').classList.remove('done'); }
+      timerRunning = true;
+      document.getElementById('timer-start-btn').textContent = '停止';
+      timerInterval = setInterval(()=>{
+        timerRemain--;
+        updateTimerDisplay();
+        if (timerRemain <= 0) {
+          clearInterval(timerInterval);
+          timerRunning = false;
+          document.getElementById('timer-start-btn').textContent = 'スタート';
+          document.getElementById('timer-display').classList.add('done');
+          document.getElementById('timer-label').textContent = '完了！';
+          // バイブレーション
+          if (navigator.vibrate) navigator.vibrate([300,100,300,100,300,100,300,100,300,100,300,100,300,100,300,100,300]);
+          // ビープ音
+          try {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            [0, 0.4, 0.8, 1.2, 1.6, 2.0, 2.4, 2.8, 3.2].forEach(t => {
+              const osc = ctx.createOscillator();
+              const gain = ctx.createGain();
+              osc.connect(gain);
+              gain.connect(ctx.destination);
+              osc.type = 'sine';
+              osc.frequency.value = 880;
+              gain.gain.setValueAtTime(0.5, ctx.currentTime + t);
+              gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + t + 0.3);
+              osc.start(ctx.currentTime + t);
+              osc.stop(ctx.currentTime + t + 0.3);
+            });
+          } catch(e) {}
+        }
+      }, 1000);
+    }
+  }
+
+  function updateTimerDisplay() {
+    const m = Math.floor(timerRemain/60);
+    const s = timerRemain % 60;
+    document.getElementById('timer-display').textContent =
+      String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+    document.getElementById('timer-label').textContent = 'REST TIMER';
+  }
+
+  // ==================
+  // SHARE (Canvas)
+  // ==================
+  function gymShare() {
+    const hasGymData = gymExercises.length > 0 ||
+      Object.keys(gymData).some(k => k.split('_')[0] === gymDate && gymData[k].exercises?.length > 0);
+    if (!hasGymData) { showToast('この日の記録がありません'); return; }
+    // シェア前に現在のデータを自動保存
+    if (gymExercises.length > 0) {
+      const key = getGymKey();
+      if (!gymData[key]) gymData[key] = {};
+      gymData[key].exercises = JSON.parse(JSON.stringify(gymExercises));
+      localStorage.setItem('gym_data', JSON.stringify(gymData));
+    }
+    showToast('生成中...', false);
+    setTimeout(() => {
+      try {
+        _buildShareCanvas();
+        document.getElementById('share-overlay').classList.add('open');
+      } catch(e) {
+        showToast('生成に失敗しました');
+      }
+    }, 50);
+  }
+
+  function _buildShareCanvas() {
+    const canvas = document.getElementById('share-canvas');
+    const ctx = canvas.getContext('2d');
+
+    // gymExercisesを直接使用（保存済み・未保存問わず現在の全データ）
+    const allExercises = gymExercises;
+    const partLabel = gymParts.join('・');
+
+    const W = 720;
+    const lineH = 26;
+    const padding = 36;
+
+    // 描画と同じロジックで高さを計算
+    let calcY = padding;
+    calcY += lineH * 1.5; // タイトル
+    calcY += lineH * 1.5; // 日付・部位
+    calcY += 16;           // 区切り線
+    allExercises.forEach(ex => {
+      calcY += lineH;        // 種目名
+      calcY += lineH * 0.8;  // ヘッダー行
+      (ex.sets || []).forEach(s => {
+        calcY += lineH;
+        if (s.memo) calcY += lineH * 0.8;
+      });
+      calcY += lineH * 0.8;  // 区切り線
+    });
+    calcY += 40; // フッター余白
+
+    const H = Math.ceil(calcY);
+
+    canvas.width = W;
+    canvas.height = H;
+
+    ctx.fillStyle = '#0a0a0f';
+    ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = '#e8ff00';
+    ctx.fillRect(0, 0, 4, H);
+
+    let y = padding;
+
+    ctx.fillStyle = '#e8ff00';
+    ctx.font = 'bold 32px sans-serif';
+    ctx.fillText('TRAINING LOG', padding + 10, y + 24);
+    y += lineH * 1.5;
+
+    ctx.fillStyle = '#666';
+    ctx.font = '18px sans-serif';
+    ctx.fillText(`${gymDate}  ${partLabel}`, padding + 10, y + 18);
+    y += lineH * 1.5;
+
+    ctx.fillStyle = '#2a2a3a';
+    ctx.fillRect(padding, y, W - padding * 2, 1);
+    y += 16;
+
+    const CARDIO_KW = ['ランニング','ウォーキング','自転車','トレッドミル','縄跳び','水泳','エアロバイク','有酸素','ジョギング'];
+    allExercises.forEach(ex => {
+      const isCardio = CARDIO_KW.some(kw => ex.name.indexOf(kw) >= 0);
+
+      ctx.fillStyle = '#f0f0f0';
+      ctx.font = 'bold 20px sans-serif';
+      ctx.fillText(ex.name, padding + 10, y + 18);
+      y += lineH;
+
+      ctx.fillStyle = '#444';
+      ctx.font = '13px sans-serif';
+
+      if (isCardio) {
+        // 有酸素専用ヘッダー
+        ctx.fillText('SET', padding + 10, y + 14);
+        ctx.fillText('傾斜(%)', padding + 80, y + 14);
+        ctx.fillText('時速(km/h)', padding + 200, y + 14);
+        ctx.fillText('距離(km)', padding + 320, y + 14);
+        ctx.fillText('時間(分)', padding + 440, y + 14);
+      } else {
+        ctx.fillText('SET', padding + 10, y + 14);
+        ctx.fillText('重量(kg)', padding + 80, y + 14);
+        ctx.fillText('回数', padding + 200, y + 14);
+        ctx.fillText('1RM', padding + 300, y + 14);
+        ctx.fillText('補助', padding + 400, y + 14);
+      }
+      y += lineH * 0.8;
+
+      (ex.sets || []).forEach((s, si) => {
+        ctx.fillStyle = '#f0f0f0';
+        ctx.font = '16px sans-serif';
+        ctx.fillText((si + 1) + '', padding + 10, y + 16);
+
+        if (isCardio) {
+          ctx.fillStyle = '#00d4ff';
+          ctx.fillText(s.incline != null ? s.incline + '%' : '—', padding + 80, y + 16);
+          ctx.fillText(s.speed != null ? s.speed + '' : '—', padding + 200, y + 16);
+          ctx.fillStyle = '#e8ff00';
+          ctx.fillText(s.distance != null ? s.distance + 'km' : '—', padding + 320, y + 16);
+          ctx.fillStyle = '#f0f0f0';
+          ctx.fillText(s.duration != null ? s.duration + '分' : '—', padding + 440, y + 16);
+        } else {
+          const rm = calcRM(s.weight, s.reps, ex.name);
+          ctx.fillStyle = '#00d4ff';
+          ctx.fillText(s.weight ? s.weight + 'kg' : '—', padding + 80, y + 16);
+          ctx.fillStyle = '#f0f0f0';
+          ctx.fillText(s.reps ? s.reps + 'rep' : '—', padding + 200, y + 16);
+          ctx.fillStyle = '#e8ff00';
+          ctx.fillText(rm ? rm + 'kg' : '—', padding + 300, y + 16);
+          ctx.fillStyle = s.assist ? '#ff8c42' : '#444';
+          ctx.fillText(s.assist ? '✓補助' : '—', padding + 400, y + 16);
+        }
+        y += lineH;
+
+        if (s.memo) {
+          ctx.fillStyle = '#555';
+          ctx.font = 'italic 13px sans-serif';
+          ctx.fillText('  └ ' + s.memo, padding + 20, y + 12);
+          y += lineH * 0.8;
+        }
+      });
+
+      ctx.fillStyle = '#1a1a26';
+      ctx.fillRect(padding, y + 4, W - padding * 2, 1);
+      y += lineH * 0.8;
+    });
+
+    ctx.fillStyle = '#333';
+    ctx.font = '12px sans-serif';
+    ctx.fillText('TrainingLog', W - padding - 80, H - 16);
+  }
+
+  function shareImage() {
+    const canvas = document.getElementById('share-canvas');
+    const filename = `training_${gymDate}.jpg`;
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+    const base64 = dataUrl.replace('data:image/jpeg;base64,', '');
+
+    if (typeof AndroidBridge !== 'undefined') {
+      // AndroidBridge経由でKotlin側のシェアシートを起動
+      const CHUNK = 500000;
+      const total = Math.ceil(base64.length / CHUNK);
+      AndroidBridge.saveStart(filename, total);
+      for (let i = 0; i < total; i++) {
+        AndroidBridge.saveChunk(i, base64.substring(i*CHUNK, (i+1)*CHUNK));
+      }
+      AndroidBridge.saveDone();
+      document.getElementById('share-overlay').classList.remove('open');
+      showScreen(null);
+      return;
+    }
+
+    // PCブラウザ用フォールバック
+    const link = document.createElement('a');
+    link.download = filename;
+    link.href = dataUrl;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
+  function downloadShareImage() {
+    const canvas = document.getElementById('share-canvas');
+    const filename = `training_${gymDate}_${gymParts.join('-')}.jpg`;
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+
+    // AndroidBridge経由でURLを渡す（文字列分割して渡す）
+    if (typeof AndroidBridge !== 'undefined') {
+      const CHUNK = 500000; // 500KB単位で分割
+      const base64 = dataUrl.replace('data:image/jpeg;base64,', '');
+      const total = Math.ceil(base64.length / CHUNK);
+      AndroidBridge.saveStart(filename, total);
+      for (let i = 0; i < total; i++) {
+        AndroidBridge.saveChunk(i, base64.substring(i*CHUNK, (i+1)*CHUNK));
+      }
+      AndroidBridge.saveDone();
+      return;
+    }
+
+    // PCブラウザ用
+    const link = document.createElement('a');
+    link.download = filename;
+    link.href = dataUrl;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
+  // ==================
+  // ACTIVITY (運動記録)
+  // ==================
+  let recActivities = [];
+  let customActivities = JSON.parse(localStorage.getItem('custom_activities') || '[]');
+  let customGymExercises = JSON.parse(localStorage.getItem('custom_gym_exercises') || '[]');
+
+  // 旧マイ種目をlocalStorageから削除
+  (function() {
+    if (gymPresets && gymPresets['マイ種目']) {
+      delete gymPresets['マイ種目'];
+      localStorage.setItem('gym_presets', JSON.stringify(gymPresets));
+    }
+  })();
+
+  // METデータ（カテゴリ：種目：MET値）
+  const ACTIVITY_PRESETS = [
+    {cat:'歩行・ランニング', icon:'🚶', items:[
+      {name:'ウォーキング（普通）', met:3.5},
+      {name:'ウォーキング（速歩）', met:4.5},
+      {name:'ジョギング', met:7.0},
+      {name:'ランニング', met:9.0},
+      {name:'トレッドミル', met:8.0, hasDetail:true},
+    ]},
+    {cat:'自転車', icon:'🚴', items:[
+      {name:'自転車（ゆっくり）', met:4.0},
+      {name:'自転車（普通）', met:6.8},
+      {name:'自転車（速い）', met:10.0},
+    ]},
+    {cat:'筋トレ（自動計算）', icon:'💪', items:[
+      {name:'筋トレ（軽め）', met:3.5},
+      {name:'筋トレ（普通）', met:5.0},
+      {name:'筋トレ（高強度）', met:6.0},
+    ]},
+    {cat:'その他', icon:'🏃', items:[
+      {name:'水泳', met:8.0},
+      {name:'縄跳び', met:10.0},
+      {name:'ストレッチ', met:2.5},
+      {name:'ヨガ', met:2.5},
+      {name:'階段昇降', met:4.0},
+    ]},
+  ];
+
+  // カスタマイズ可能な運動プリセット
+  let activityPresets = JSON.parse(localStorage.getItem('activity_presets') || 'null') || 
+    JSON.parse(JSON.stringify(ACTIVITY_PRESETS));
+
+  function calcActivityKcal(met, minutes, weight) {
+    const w = weight || userProfile?.weight || 63;
+    return Math.round(met * w * (minutes / 60));
+  }
+
+  function renderActivityList() {
+    const el = document.getElementById('activity-list');
+    if (!el) return;
+    if (recActivities.length === 0) { el.innerHTML = ''; return; }
+    const weight = parseFloat(document.getElementById('rec-weight')?.value) || 63;
+    el.innerHTML = recActivities.map((a, i) => {
+      const kcal = a.met ? calcActivityKcal(a.met, a.minutes||0, weight) : (a.kcalPerMin ? Math.round(a.kcalPerMin*(a.minutes||0)) : 0);
+      a.kcal = kcal;
+      const detailHtml = a.hasDetail ? `
+        <div style="display:flex;gap:6px;margin-top:4px;flex-wrap:wrap;">
+          <div style="display:flex;align-items:center;gap:3px;"><span style="font-size:10px;color:var(--text-muted);">傾斜</span><input type="number" value="${a.incline||''}" placeholder="%" step="0.5" style="width:48px;" class="activity-item-min" onchange="updateActivityDetail(${i},'incline',this.value,'rec')"></div>
+          <div style="display:flex;align-items:center;gap:3px;"><span style="font-size:10px;color:var(--text-muted);">時速</span><input type="number" value="${a.speed||''}" placeholder="km/h" step="0.1" style="width:56px;" class="activity-item-min" onchange="updateActivityDetail(${i},'speed',this.value,'rec')"></div>
+          <div style="display:flex;align-items:center;gap:3px;"><span style="font-size:10px;color:var(--text-muted);">距離</span><input type="number" value="${a.distance||''}" placeholder="km" step="0.1" style="width:52px;" class="activity-item-min" onchange="updateActivityDetail(${i},'distance',this.value,'rec')"></div>
+        </div>` : '';
+      return `<div class="activity-item" style="flex-direction:column;align-items:stretch;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span class="activity-item-icon" style="cursor:pointer;" onclick="openActivityIconPicker(${i},'rec')">${a.icon||'🏃'}</span>
+          <div class="activity-item-body">
+            <div class="activity-item-name">${a.name}</div>
+            <div class="activity-item-kcal">${kcal ? kcal+'kcal' : '分を入力してください'}</div>
+          </div>
+          <input type="number" class="activity-item-min" value="${a.minutes||''}" placeholder="分"
+            onchange="updateActivityMin(${i}, this.value)">
+          <button class="activity-item-del" onclick="delActivity(${i})">✕</button>
+        </div>
+        ${detailHtml}
+      </div>`;
+    }).join('');
+  }
+
+  function updateActivityDetail(i, field, val, mode) {
+    const list = mode === 'rec' ? recActivities : editActivities;
+    if (list[i]) {
+      list[i][field] = parseFloat(val) || null;
+      // 距離と時間からkcalを再計算
+      if (list[i].speed && list[i].minutes) {
+        list[i].distance = Math.round(list[i].speed * list[i].minutes / 60 * 10) / 10;
+      }
+    }
+    if (mode === 'rec') renderActivityList();
+    else renderEditActivityList();
+  }
+
+  function updateActivityMin(i, val) {
+    recActivities[i].minutes = parseInt(val)||0;
+    const weight = parseFloat(document.getElementById('rec-weight')?.value) || 63;
+    const a = recActivities[i];
+    a.kcal = a.met ? calcActivityKcal(a.met, a.minutes, weight) : Math.round((a.kcalPerMin||0)*a.minutes);
+    renderActivityList();
+  }
+
+  function delActivity(i) {
+    recActivities.splice(i,1);
+    renderActivityList();
+  }
+
+  function openActivityPicker() {
+    document.getElementById('activity-picker').classList.add('open');
+    document.getElementById('activity-search').value = '';
+    document.getElementById('activity-custom-name').value = '';
+    document.getElementById('activity-custom-kcal').value = '';
+    filterActivityPicker();
+  }
+
+  function handleActivityPickerOverlay(e) {
+    if(e.target===document.getElementById('activity-picker'))
+      document.getElementById('activity-picker').classList.remove('open');
+  }
+
+  function filterActivityPicker() {
+    const q = document.getElementById('activity-search').value.toLowerCase();
+    const el = document.getElementById('activity-picker-list');
+    let html = '';
+    for (const cat of activityPresets) {
+      const filtered = q ? cat.items.filter(it=>it.name.toLowerCase().includes(q)) : cat.items;
+      if (filtered.length === 0) continue;
+      html += `<div class="activity-picker-category">${cat.icon} ${cat.cat}</div>`;
+      filtered.forEach(it => {
+        html += `<div class="activity-picker-item" onclick="addActivityFromPreset('${it.name.replace(/'/g,"\'")}',${it.met||0},'${it.icon||cat.icon}',${!!it.hasDetail})">
+          <div class="activity-picker-item-left">
+            <span class="activity-picker-item-icon">${it.icon||cat.icon}</span>
+            <span class="activity-picker-item-name">${it.name}</span>
+          </div>
+          <span class="activity-picker-item-met">${it.met ? 'MET '+it.met : (it.kcalPerMin||0)+'kcal/分'}</span>
+        </div>`;
+      });
+    }
+    el.innerHTML = html || '<div style="color:var(--text-muted);padding:20px;text-align:center;">該当なし</div>';
+  }
+
+  function addActivityFromPreset(name, met, icon) {
+    recActivities.push({name, met, icon, minutes:null, kcal:0});
+    renderActivityList();
+    document.getElementById('activity-picker').classList.remove('open');
+  }
+
+  function addCustomActivity() {
+    const name = document.getElementById('activity-custom-name').value.trim();
+    const kcalPerMin = parseFloat(document.getElementById('activity-custom-kcal').value)||0;
+    if (!name) { showToast('種目名を入力してください'); return; }
+    recActivities.push({name, kcalPerMin, icon:'🏃', minutes:null, kcal:0});
+    renderActivityList();
+    document.getElementById('activity-picker').classList.remove('open');
+  }
+
+  // handleAndroidBackにアクティビティピッカーを追加（既存のprofile-modalの前）
+  // 編集モーダル用アクティビティ
+  let editActivities = [];
+
+  function renderEditActivityList(weight) {
+    const el = document.getElementById('edit-activity-list');
+    if (!el) return;
+    const w = weight || parseFloat(document.getElementById('edit-weight')?.value) || 63;
+    if (editActivities.length === 0) { el.innerHTML = ''; return; }
+    el.innerHTML = editActivities.map((a, i) => {
+      const kcal = a.met ? calcActivityKcal(a.met, a.minutes||0, w) : Math.round((a.kcalPerMin||0)*(a.minutes||0));
+      a.kcal = kcal;
+      return `<div class="activity-item">
+        <span class="activity-item-icon" style="cursor:pointer;" onclick="openActivityIconPicker(${i},'edit')">${a.icon||'🏃'}</span>
+        <div class="activity-item-body">
+          <div class="activity-item-name" onclick="openActivityNameEdit(${i},'edit')" style="cursor:pointer;">${a.name} <span style="font-size:10px;color:var(--text-muted);">✎</span></div>
+          <div class="activity-item-kcal">${kcal ? kcal+'kcal' : '分を入力してください'}</div>
+        </div>
+        <input type="number" class="activity-item-min" value="${a.minutes||''}" placeholder="分"
+          onchange="updateEditActivityMin(${i}, this.value)">
+        <button class="activity-item-del" onclick="delEditActivity(${i})">✕</button>
+      </div>`;
+    }).join('');
+  }
+
+  function selectActivityEditorCat(i) {
+    actEditorCatIdx = i;
+    renderActivityEditorCats();
+    renderActivityEditorList();
+  }
+
+  function renderActivityEditorList() {
+    const el = document.getElementById('activity-editor-list');
+    const cat = activityPresets[actEditorCatIdx];
+    if (!cat) { el.innerHTML = ''; return; }
+    el.innerHTML = cat.items.map((item, i) => `
+      <div class="gym-preset-item">
+        <span style="font-size:18px;margin-right:6px;">${item.icon||cat.icon}</span>
+        <span class="gym-preset-item-name">${item.name}</span>
+        <span style="font-size:11px;color:var(--text-muted);margin-right:8px;">${item.met?'MET '+item.met:(item.kcalPerMin||0)+'kcal/分'}</span>
+        <button class="gym-preset-del-btn" onclick="delActivityPresetItem(${i})">✕</button>
+      </div>
+    `).join('') || '<div style="color:var(--text-muted);font-size:13px;padding:12px 0;">種目がありません</div>';
+
+    // カテゴリ削除ボタン
+    el.innerHTML += `<button onclick="delActivityPresetCat(${actEditorCatIdx})" style="margin-top:8px;width:100%;padding:8px;background:transparent;border:1px dashed var(--danger);border-radius:8px;color:var(--danger);font-size:12px;cursor:pointer;">このカテゴリを削除</button>`;
+  }
+
+  function delActivityPresetItem(itemIdx) {
+    activityPresets[actEditorCatIdx].items.splice(itemIdx, 1);
+    localStorage.setItem('activity_presets', JSON.stringify(activityPresets));
+    renderActivityEditorList();
+  }
+
+  function delActivityPresetCat(catIdx) {
+    if (activityPresets.length <= 1) { showToast('最低1つのカテゴリが必要です'); return; }
+    activityPresets.splice(catIdx, 1);
+    actEditorCatIdx = Math.min(actEditorCatIdx, activityPresets.length-1);
+    localStorage.setItem('activity_presets', JSON.stringify(activityPresets));
+    renderActivityEditorCats();
+    renderActivityEditorList();
+  }
+
+  function addActivityPresetItem() {
+    const icon = document.getElementById('act-editor-icon').value.trim() || activityPresets[actEditorCatIdx].icon;
+    const name = document.getElementById('act-editor-name').value.trim();
+    const met = parseFloat(document.getElementById('act-editor-met').value) || null;
+    if (!name) { showToast('種目名を入力してください'); return; }
+    activityPresets[actEditorCatIdx].items.push({name, icon, met, kcalPerMin: met ? null : 0});
+    localStorage.setItem('activity_presets', JSON.stringify(activityPresets));
+    document.getElementById('act-editor-icon').value = '';
+    document.getElementById('act-editor-name').value = '';
+    document.getElementById('act-editor-met').value = '';
+    renderActivityEditorList();
+  }
+
+  function addActivityPresetCat() {
+    const name = document.getElementById('act-editor-cat-name').value.trim();
+    if (!name) { showToast('カテゴリ名を入力してください'); return; }
+    activityPresets.push({cat: name, icon: '🏃', items: []});
+    actEditorCatIdx = activityPresets.length - 1;
+    localStorage.setItem('activity_presets', JSON.stringify(activityPresets));
+    document.getElementById('act-editor-cat-name').value = '';
+    renderActivityEditorCats();
+    renderActivityEditorList();
+  }
+
+  function resetActivityPresets() {
+    activityPresets = JSON.parse(JSON.stringify(ACTIVITY_PRESETS));
+    localStorage.removeItem('activity_presets');
+    actEditorCatIdx = 0;
+    renderActivityEditorCats();
+    renderActivityEditorList();
+    showToast('デフォルトに戻しました', false);
+  }
+
+  // アイコン・名前編集
+  const ACTIVITY_ICONS = ['🚶','🏃','🚴','🏊','⛹️','🤸','🧘','🏋️','🤼','🥊','🎾','⛳','🏄','🧗','🚣','🏇','🎿','🛹','🛼','🪂','🎯','🏓','🏸','🤾','🤺','🏒','🎽','🦵','💪','🔥'];
+  let iconPickerIdx = null;
+  let iconPickerMode = null;
+  let nameEditIdx = null;
+  let nameEditMode = null;
+
+  function openActivityIconPicker(i, mode) {
+    iconPickerIdx = i;
+    iconPickerMode = mode;
+    const grid = document.getElementById('activity-icon-grid');
+    const list = mode === 'rec' ? recActivities : editActivities;
+    const current = list[i]?.icon || '🏃';
+    grid.innerHTML = ACTIVITY_ICONS.map(ic => `
+      <button onclick="selectActivityIcon('${ic}')" style="font-size:24px;background:${ic===current?'rgba(0,255,136,0.2)':'var(--surface2)'};border:${ic===current?'1px solid var(--success)':'1px solid var(--border)'};border-radius:8px;padding:8px;cursor:pointer;">${ic}</button>
+    `).join('');
+    document.getElementById('activity-icon-picker').classList.add('open');
+  }
+
+  function selectActivityIcon(icon) {
+    const list = iconPickerMode === 'rec' ? recActivities : editActivities;
+    if (list[iconPickerIdx]) list[iconPickerIdx].icon = icon;
+    closeActivityIconPicker();
+    if (iconPickerMode === 'rec') renderActivityList();
+    else renderEditActivityList();
+  }
+
+  function closeActivityIconPicker() {
+    document.getElementById('activity-icon-picker').classList.remove('open');
+  }
+
+  function openActivityNameEdit(i, mode) {
+    nameEditIdx = i;
+    nameEditMode = mode;
+    const list = mode === 'rec' ? recActivities : editActivities;
+    document.getElementById('activity-name-input').value = list[i]?.name || '';
+    document.getElementById('activity-name-editor').classList.add('open');
+    setTimeout(() => document.getElementById('activity-name-input').focus(), 300);
+  }
+
+  function saveActivityName() {
+    const name = document.getElementById('activity-name-input').value.trim();
+    if (!name) return;
+    const list = nameEditMode === 'rec' ? recActivities : editActivities;
+    if (list[nameEditIdx]) list[nameEditIdx].name = name;
+    closeActivityNameEdit();
+    if (nameEditMode === 'rec') renderActivityList();
+    else renderEditActivityList();
+  }
+
+  function closeActivityNameEdit() {
+    document.getElementById('activity-name-editor').classList.remove('open');
+  }
+
+
+  // ==================
+  // PROFILE & BMR
+  // ==================
+  let userProfile = JSON.parse(localStorage.getItem('user_profile') || '{"height":168,"age":25,"sex":"male"}');
+
+  function calcBMR(height, weight, age, sex) {
+    if (!height || !age) return null;
+    const w = weight || 63;
+    if (sex === 'male') {
+      return Math.round(88.362 + 13.397*w + 4.799*height - 5.677*age);
+    } else {
+      return Math.round(447.593 + 9.247*w + 3.098*height - 4.330*age);
+    }
+  }
+
+  function getUserBMR() {
+    const today = formatDate(new Date());
+    const rec = records.find(r=>r.date===today);
+    const weight = rec?.weight || null;
+    return calcBMR(userProfile.height, weight, userProfile.age, userProfile.sex);
+  }
+
+  function openProfile() {
+    document.getElementById('profile-modal').classList.add('open');
+    document.getElementById('prof-height').value = userProfile.height||'';
+    document.getElementById('prof-age').value = userProfile.age||'';
+    selectSex(userProfile.sex||'male');
+    updateBMRPreview();
+  }
+
+  function handleProfileOverlay(e) {
+    if(e.target===document.getElementById('profile-modal'))
+      document.getElementById('profile-modal').classList.remove('open');
+  }
+
+  function selectSex(sex) {
+    userProfile.sex = sex;
+    document.getElementById('sex-male').classList.toggle('selected', sex==='male');
+    document.getElementById('sex-female').classList.toggle('selected', sex==='female');
+    updateBMRPreview();
+  }
+
+  function updateBMRPreview() {
+    const h = parseFloat(document.getElementById('prof-height').value)||0;
+    const a = parseInt(document.getElementById('prof-age').value)||0;
+    const today = formatDate(new Date());
+    const rec = records.find(r=>r.date===today);
+    const w = rec?.weight || 63;
+    const bmr = h&&a ? calcBMR(h, w, a, userProfile.sex) : null;
+    document.getElementById('prof-bmr-val').textContent = bmr ? bmr.toLocaleString() : '—';
+  }
+
+  function saveProfile() {
+    userProfile.height = parseFloat(document.getElementById('prof-height').value)||null;
+    userProfile.age = parseInt(document.getElementById('prof-age').value)||null;
+    localStorage.setItem('user_profile', JSON.stringify(userProfile));
+    document.getElementById('profile-modal').classList.remove('open');
+    showToast('プロフィールを保存しました ✓', false);
+  }
+
+
+  function resetGymPresets() {
+    localStorage.removeItem('gym_presets');
+    gymPresets = JSON.parse(JSON.stringify(GYM_PRESETS));
+    showToast('種目プリセットをリセットしました', false);
+  }
+
+  function exportData() {
+    const data = {};
+    const keys = ['training_records','gym_data','water_data','user_profile',
+                  'gym_presets','water_quick_btns','activity_presets','custom_gym_exercises'];
+    keys.forEach(k => {
+      const v = localStorage.getItem(k);
+      if (v) data[k] = v;
+    });
+    const json = JSON.stringify(data, null, 2);
+    const filename = 'traininglog_backup_' + formatDate(new Date()) + '.json';
+    if (typeof AndroidBridge !== 'undefined' && AndroidBridge.saveJson) {
+      AndroidBridge.saveJson(filename, json);
+    } else {
+      const blob = new Blob([json], {type: 'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = filename;
+      document.body.appendChild(a); a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('エクスポートしました ✓', false);
+    }
+  }
+
+  function openImportPicker() {
+    if (typeof AndroidBridge !== 'undefined' && AndroidBridge.openFilePicker) {
+      AndroidBridge.openFilePicker();
+    } else {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.json';
+      input.onchange = function() { importData(this); };
+      input.click();
+    }
+  }
+
+  function receiveImportData(jsonStr) {
+    try {
+      const data = JSON.parse(jsonStr);
+      Object.keys(data).forEach(k => localStorage.setItem(k, data[k]));
+      showToast('インポート完了。再起動します...', false);
+      setTimeout(() => location.reload(), 1500);
+    } catch(e) {
+      showToast('インポートに失敗しました');
+    }
+  }
+
+  function importData(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        const data = JSON.parse(e.target.result);
+        Object.keys(data).forEach(k => localStorage.setItem(k, data[k]));
+        showToast('インポート完了。再起動します...', false);
+        setTimeout(() => location.reload(), 1500);
+      } catch(err) {
+        showToast('インポートに失敗しました');
+      }
+    };
+    reader.readAsText(file);
+    input.value = '';
+  }
+
+  // ==================
+  // 運動プリセット編集
+  // ==================
+  let actEditorCatIdx = 0;
+
+  function openActivityPresetEditor() {
+    document.getElementById('activity-preset-editor').classList.add('open');
+    renderActivityEditorCats();
+    renderActivityEditorList();
+  }
+
+  function closeActivityPresetEditor() {
+    document.getElementById('activity-preset-editor').classList.remove('open');
+    filterActivityPicker();
+  }
+
+  function renderActivityEditorCats() {
+    const el = document.getElementById('activity-editor-cats');
+    el.innerHTML = activityPresets.map((cat, i) => `
+      <button class="gym-part-btn ${i===actEditorCatIdx?'active':''}" onclick="selectActivityEditorCat(${i})">${cat.icon} ${cat.cat}</button>
+    `).join('');
+  }
+
+  function selectActivityEditorCat(i) {
+    actEditorCatIdx = i;
+    renderActivityEditorCats();
+    renderActivityEditorList();
+  }
+
+  function renderActivityEditorList() {
+    const el = document.getElementById('activity-editor-list');
+    const cat = activityPresets[actEditorCatIdx];
+    if (!cat) { el.innerHTML = ''; return; }
+    el.innerHTML = cat.items.map((item, i) => `
+      <div class="gym-preset-item">
+        <span style="font-size:18px;margin-right:6px;">${item.icon||cat.icon}</span>
+        <span class="gym-preset-item-name">${item.name}</span>
+        <span style="font-size:11px;color:var(--text-muted);margin-right:8px;">${item.met?'MET '+item.met:(item.kcalPerMin||0)+'kcal/分'}</span>
+        <button class="gym-preset-del-btn" onclick="delActivityPresetItem(${i})">✕</button>
+      </div>
+    `).join('') || '<div style="color:var(--text-muted);font-size:13px;padding:12px 0;">種目がありません</div>';
+    el.innerHTML += `<button onclick="delActivityPresetCat(${actEditorCatIdx})" style="margin-top:8px;width:100%;padding:8px;background:transparent;border:1px dashed var(--danger);border-radius:8px;color:var(--danger);font-size:12px;cursor:pointer;">このカテゴリを削除</button>`;
+  }
+
+  function delActivityPresetItem(itemIdx) {
+    activityPresets[actEditorCatIdx].items.splice(itemIdx, 1);
+    localStorage.setItem('activity_presets', JSON.stringify(activityPresets));
+    renderActivityEditorList();
+  }
+
+  function delActivityPresetCat(catIdx) {
+    if (activityPresets.length <= 1) { showToast('最低1つのカテゴリが必要です'); return; }
+    activityPresets.splice(catIdx, 1);
+    actEditorCatIdx = Math.min(actEditorCatIdx, activityPresets.length-1);
+    localStorage.setItem('activity_presets', JSON.stringify(activityPresets));
+    renderActivityEditorCats();
+    renderActivityEditorList();
+  }
+
+  function addActivityPresetItem() {
+    const icon = document.getElementById('act-editor-icon').value.trim() || activityPresets[actEditorCatIdx].icon;
+    const name = document.getElementById('act-editor-name').value.trim();
+    const met = parseFloat(document.getElementById('act-editor-met').value) || null;
+    if (!name) { showToast('種目名を入力してください'); return; }
+    activityPresets[actEditorCatIdx].items.push({name, icon, met, kcalPerMin: met ? null : 0});
+    localStorage.setItem('activity_presets', JSON.stringify(activityPresets));
+    document.getElementById('act-editor-icon').value = '';
+    document.getElementById('act-editor-name').value = '';
+    document.getElementById('act-editor-met').value = '';
+    renderActivityEditorList();
+  }
+
+  function addActivityPresetCat() {
+    const name = document.getElementById('act-editor-cat-name').value.trim();
+    if (!name) { showToast('カテゴリ名を入力してください'); return; }
+    activityPresets.push({cat: name, icon: '🏃', items: []});
+    actEditorCatIdx = activityPresets.length - 1;
+    localStorage.setItem('activity_presets', JSON.stringify(activityPresets));
+    document.getElementById('act-editor-cat-name').value = '';
+    renderActivityEditorCats();
+    renderActivityEditorList();
+  }
+
+  function resetActivityPresets() {
+    activityPresets = JSON.parse(JSON.stringify(ACTIVITY_PRESETS));
+    localStorage.removeItem('activity_presets');
+    actEditorCatIdx = 0;
+    renderActivityEditorCats();
+    renderActivityEditorList();
+    showToast('デフォルトに戻しました', false);
+  }
+
+    function openActivityIconPicker(i, mode) {
+    iconPickerIdx = i;
+    iconPickerMode = mode;
+    const grid = document.getElementById('activity-icon-grid');
+    const list = mode === 'rec' ? recActivities : editActivities;
+    const current = list[i]?.icon || '🏃';
+    grid.innerHTML = ACTIVITY_ICONS.map(ic => `
+      <button onclick="selectActivityIcon('${ic}')" style="font-size:24px;background:${ic===current?'rgba(0,255,136,0.2)':'var(--surface2)'};border:${ic===current?'1px solid var(--success)':'1px solid var(--border)'};border-radius:8px;padding:8px;cursor:pointer;">${ic}</button>
+    `).join('');
+    document.getElementById('activity-icon-picker').classList.add('open');
+  }
+
+  function selectActivityIcon(icon) {
+    const list = iconPickerMode === 'rec' ? recActivities : editActivities;
+    if (list[iconPickerIdx]) list[iconPickerIdx].icon = icon;
+    closeActivityIconPicker();
+    if (iconPickerMode === 'rec') renderActivityList();
+    else renderEditActivityList();
+  }
+
+  function closeActivityIconPicker() {
+    document.getElementById('activity-icon-picker').classList.remove('open');
+  }
+
+  function openActivityNameEdit(i, mode) {
+    nameEditIdx = i;
+    nameEditMode = mode;
+    const list = mode === 'rec' ? recActivities : editActivities;
+    document.getElementById('activity-name-input').value = list[i]?.name || '';
+    document.getElementById('activity-name-editor').classList.add('open');
+    setTimeout(() => document.getElementById('activity-name-input').focus(), 300);
+  }
+
+  function saveActivityName() {
+    const name = document.getElementById('activity-name-input').value.trim();
+    if (!name) return;
+    const list = nameEditMode === 'rec' ? recActivities : editActivities;
+    if (list[nameEditIdx]) list[nameEditIdx].name = name;
+    closeActivityNameEdit();
+    if (nameEditMode === 'rec') renderActivityList();
+    else renderEditActivityList();
+  }
+
+  function closeActivityNameEdit() {
+    document.getElementById('activity-name-editor').classList.remove('open');
+  }
+
+  function delEditActivity(i) {
+    editActivities.splice(i,1);
+    renderEditActivityList();
+  }
+
   function showToast(msg, blue=false) {
     const t=document.getElementById('toast');
     t.textContent=msg;
@@ -1235,7 +4136,12 @@ if (absDiff < 0.15) {
     setTimeout(()=>t.classList.remove('show'),2000);
   }
 
-  init();
+  // DOM読み込み完了後に確実に初期化
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
 </script>
 </body>
 </html>
