@@ -580,11 +580,25 @@
     display: flex; align-items: center; justify-content: center; gap: 10px;
   }
   .ob-login-btn:active { background: rgba(232,255,0,0.08); }
-  .ob-skip-login {
-    background: none; border: none;
-    color: var(--text-muted); font-size: 13px;
-    cursor: pointer; padding: 4px;
+  .ob-btn-back {
+    padding: 17px 20px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    color: var(--text-muted);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    flex-shrink: 0;
   }
+  .ob-btn-back:active { opacity: 0.7; }
+  /* welcome message */
+  #top-welcome {
+    font-size: 13px; color: var(--text-muted);
+    margin-bottom: 12px; letter-spacing: 0.05em;
+  }
+  #top-welcome span { color: var(--accent); font-weight: 700; }
 </style>
 </head>
 <body>
@@ -594,9 +608,9 @@
   <div class="top-content">
     <button class="profile-btn" onclick="openProfile()">⚙</button>
     <div class="app-title">TRAINING<br>LOG</div>
-    <div class="app-subtitle">フィジーク大会対策 記録アプリ</div>
+    <div class="app-subtitle">大会競技者向け 記録アプリ</div>
+    <div id="top-welcome">ようこそ、<span id="top-welcome-name">ゲスト</span>さん 👋</div>
   <div style="text-align:center;font-size:9px;color:var(--text-muted);opacity:0.5;" id="app-ver-display"></div>
-  <div style="text-align:center;font-size:9px;color:var(--text-muted);opacity:0.5;">v2-20260512</div>
     <div class="today-summary">
       <div class="today-date" id="today-date-label"></div>
       <div class="today-stats">
@@ -1102,7 +1116,7 @@
       <div class="profile-bmr-label">推定基礎代謝 (kcal/日)</div>
     </div>
     <button class="btn-submit" onclick="saveProfile()">保存する</button>
-    <div style="margin-top:20px;border-top:1px solid var(--border);padding-top:16px;">
+    <div id="backup-section" style="margin-top:20px;border-top:1px solid var(--border);padding-top:16px;">
       <div style="font-size:11px;color:var(--text-muted);letter-spacing:0.1em;margin-bottom:10px;">データバックアップ</div>
       <button onclick="exportData()" style="width:100%;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;cursor:pointer;margin-bottom:8px;">📤 データをエクスポート</button>
       <button onclick="openImportPicker()" style="width:100%;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;cursor:pointer;">📥 データをインポート</button>
@@ -1112,124 +1126,91 @@
 
 <!-- ===== ONBOARDING OVERLAY ===== -->
 <div id="onboarding-overlay">
-  <div class="ob-slides-wrap">
-    <div class="ob-slides" id="ob-slides">
 
-      <!-- Slide 1: Welcome -->
-      <div class="ob-slide">
-        <div class="ob-icon">🏋️</div>
-        <div class="ob-title">TRAINING<br>LOG</div>
-        <p class="ob-desc">フィジーク大会を目指す<strong>あなたの記録パートナー</strong><br>食事・水分・トレーニングを一元管理できます</p>
-      </div>
+  <!-- スライドビュー -->
+  <div id="ob-slide-view" style="display:flex;flex-direction:column;width:100%;flex:1;overflow:hidden;">
+    <div class="ob-slides-wrap">
+      <div class="ob-slides" id="ob-slides">
 
-      <!-- Slide 2: 記録 -->
-      <div class="ob-slide">
-        <div class="ob-icon">📊</div>
-        <div class="ob-title cyan">毎日の<br>記録</div>
-        <div class="ob-features">
-          <div class="ob-feature-row">
-            <span class="ob-feature-icon">⚖️</span>
-            <div class="ob-feature-text"><strong>体重・栄養管理</strong>PFCバランス・カロリーを記録</div>
-          </div>
-          <div class="ob-feature-row">
-            <span class="ob-feature-icon">💧</span>
-            <div class="ob-feature-text"><strong>水分摂取</strong>目標量に対する達成率を管理</div>
-          </div>
-          <div class="ob-feature-row">
-            <span class="ob-feature-icon">😴</span>
-            <div class="ob-feature-text"><strong>睡眠・歩数</strong>コンディションも記録に残せる</div>
+        <!-- Slide 1: Welcome -->
+        <div class="ob-slide">
+          <div class="ob-icon">🏋️</div>
+          <div class="ob-title">TRAINING<br>LOG</div>
+          <p class="ob-desc">大会を目指す競技者のための<strong>記録パートナー</strong><br>食事・水分・トレーニングを一元管理できます</p>
+        </div>
+
+        <!-- Slide 2: 記録 -->
+        <div class="ob-slide">
+          <div class="ob-icon">📊</div>
+          <div class="ob-title cyan">毎日の<br>記録</div>
+          <div class="ob-features">
+            <div class="ob-feature-row"><span class="ob-feature-icon">⚖️</span><div class="ob-feature-text"><strong>体重・栄養管理</strong>PFCバランス・カロリーを記録</div></div>
+            <div class="ob-feature-row"><span class="ob-feature-icon">💧</span><div class="ob-feature-text"><strong>水分摂取</strong>目標量に対する達成率を管理</div></div>
+            <div class="ob-feature-row"><span class="ob-feature-icon">😴</span><div class="ob-feature-text"><strong>睡眠・歩数</strong>コンディションも記録に残せる</div></div>
           </div>
         </div>
-      </div>
 
-      <!-- Slide 3: ジム -->
-      <div class="ob-slide">
-        <div class="ob-icon">💪</div>
-        <div class="ob-title green">ジム<br>ログ</div>
-        <div class="ob-features">
-          <div class="ob-feature-row">
-            <span class="ob-feature-icon">🗓️</span>
-            <div class="ob-feature-text"><strong>日付別に管理</strong>種目・セット・レップ数を記録</div>
-          </div>
-          <div class="ob-feature-row">
-            <span class="ob-feature-icon">📈</span>
-            <div class="ob-feature-text"><strong>前回記録を参照</strong>重量の進捗を確認しながらトレーニング</div>
-          </div>
-          <div class="ob-feature-row">
-            <span class="ob-feature-icon">🎯</span>
-            <div class="ob-feature-text"><strong>部位別フィルター</strong>胸・背中・脚など部位で絞り込み</div>
+        <!-- Slide 3: ジム -->
+        <div class="ob-slide">
+          <div class="ob-icon">💪</div>
+          <div class="ob-title green">ジム<br>ログ</div>
+          <div class="ob-features">
+            <div class="ob-feature-row"><span class="ob-feature-icon">🗓️</span><div class="ob-feature-text"><strong>日付別に管理</strong>種目・セット・レップ数を記録</div></div>
+            <div class="ob-feature-row"><span class="ob-feature-icon">📈</span><div class="ob-feature-text"><strong>前回記録を参照</strong>重量の進捗を確認しながらトレーニング</div></div>
+            <div class="ob-feature-row"><span class="ob-feature-icon">🎯</span><div class="ob-feature-text"><strong>部位別フィルター</strong>胸・背中・脚など部位で絞り込み</div></div>
           </div>
         </div>
-      </div>
 
-      <!-- Slide 4: 振り返り -->
-      <div class="ob-slide">
-        <div class="ob-icon">📉</div>
-        <div class="ob-title white">グラフで<br>振り返る</div>
-        <div class="ob-features">
-          <div class="ob-feature-row">
-            <span class="ob-feature-icon">📅</span>
-            <div class="ob-feature-text"><strong>カレンダービュー</strong>記録した日を一覧で確認</div>
-          </div>
-          <div class="ob-feature-row">
-            <span class="ob-feature-icon">📊</span>
-            <div class="ob-feature-text"><strong>体重グラフ</strong>週ごとの目標と実績を比較</div>
-          </div>
-          <div class="ob-feature-row">
-            <span class="ob-feature-icon">☁️</span>
-            <div class="ob-feature-text"><strong>クラウド同期</strong>Googleアカウントでデータを保護</div>
+        <!-- Slide 4: 振り返り -->
+        <div class="ob-slide">
+          <div class="ob-icon">📉</div>
+          <div class="ob-title white">グラフで<br>振り返る</div>
+          <div class="ob-features">
+            <div class="ob-feature-row"><span class="ob-feature-icon">📅</span><div class="ob-feature-text"><strong>カレンダービュー</strong>記録した日を一覧で確認</div></div>
+            <div class="ob-feature-row"><span class="ob-feature-icon">📊</span><div class="ob-feature-text"><strong>体重グラフ</strong>週ごとの目標と実績を比較</div></div>
+            <div class="ob-feature-row"><span class="ob-feature-icon">☁️</span><div class="ob-feature-text"><strong>クラウド同期</strong>Googleアカウントでデータを保護</div></div>
           </div>
         </div>
-      </div>
 
-      <!-- Slide 5: セットアップ -->
-      <div class="ob-slide" style="justify-content:flex-start;padding-top:max(80px, env(safe-area-inset-top))">
-        <div class="ob-icon" style="font-size:48px;">⚙️</div>
-        <div class="ob-title" style="font-size:36px;">はじめの設定</div>
-        <div class="ob-setup-form">
-          <div class="ob-setup-group">
-            <label class="ob-setup-label">ニックネーム</label>
-            <input class="ob-setup-input" id="ob-nickname" type="text" placeholder="例：もやき" maxlength="20">
-          </div>
-          <div class="ob-setup-group">
-            <label class="ob-setup-label">目標体重 (kg)</label>
-            <input class="ob-setup-input" id="ob-goal-weight" type="number" placeholder="例：72" step="0.1" min="30" max="200">
-          </div>
-          <div class="ob-setup-group">
-            <label class="ob-setup-label">現在の体重 (kg)</label>
-            <input class="ob-setup-input" id="ob-current-weight" type="number" placeholder="例：78.5" step="0.1" min="30" max="300">
-          </div>
-        </div>
       </div>
+    </div>
 
+    <div class="ob-bottom">
+      <div class="ob-dots" id="ob-dots">
+        <div class="ob-dot active"></div>
+        <div class="ob-dot"></div>
+        <div class="ob-dot"></div>
+        <div class="ob-dot"></div>
+      </div>
+      <div style="display:flex;gap:10px;width:100%;">
+        <button class="ob-btn-back" id="ob-btn-back" onclick="obPrev()" style="display:none;">←</button>
+        <button class="ob-btn-next" id="ob-btn-next" onclick="obNext()" style="flex:1;">次へ</button>
+      </div>
+      <button class="ob-btn-skip" id="ob-btn-skip" onclick="obSkipToLogin()">スキップ</button>
     </div>
   </div>
 
-  <div class="ob-bottom">
-    <div class="ob-dots" id="ob-dots">
-      <div class="ob-dot active"></div>
-      <div class="ob-dot"></div>
-      <div class="ob-dot"></div>
-      <div class="ob-dot"></div>
-      <div class="ob-dot"></div>
+  <!-- ログイン選択画面（スライド終了後に表示） -->
+  <div id="ob-login-choice" style="display:none;flex-direction:column;align-items:center;justify-content:center;flex:1;width:100%;padding:40px 28px max(40px,env(safe-area-inset-bottom));">
+    <div style="font-size:56px;margin-bottom:16px;">🔐</div>
+    <div class="ob-title" style="margin-bottom:8px;">データを<br>守りますか？</div>
+    <p class="ob-desc" style="margin-bottom:32px;">Googleアカウントでログインすると<br>データがクラウドに自動保存されます。<br>後からでもログインできます。</p>
+    <div style="display:flex;flex-direction:column;gap:12px;width:100%;max-width:360px;">
+      <button class="ob-login-btn" onclick="obChooseLogin()">
+        <span>🔑</span> Googleでログイン
+      </button>
+      <button class="ob-btn-next" onclick="obChooseGuest()" style="background:var(--surface2);color:var(--text-muted);border:1px solid var(--border);">
+        ゲストとして使う
+      </button>
     </div>
-    <!-- 通常の次へボタン（スライド1〜4） -->
-    <button class="ob-btn-next" id="ob-btn-next" onclick="obNext()">次へ</button>
-    <!-- セットアップ完了ボタン（スライド5のみ） -->
-    <button class="ob-btn-next" id="ob-btn-finish" onclick="obFinish()" style="display:none;">はじめる</button>
-    <!-- Googleログインボタン（スライド5のみ） -->
-    <button class="ob-login-btn" id="ob-login-btn" onclick="obLoginAndFinish()" style="display:none;">
-      <span>🔑</span> Googleでログイン（任意）
-    </button>
-    <!-- スキップ -->
-    <button class="ob-btn-skip" id="ob-btn-skip" onclick="obSkip()">スキップ</button>
   </div>
+
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-  const APP_VERSION = 'v20260517';
+  const APP_VERSION = 'v20260517b';
   const REMOTE_URL = 'https://tachizuki.github.io/training-log-v2/index.html';
 
   // AndroidBridgeからストレージデータを受け取る
@@ -1345,6 +1326,8 @@
       btn.onclick = firebaseSignIn;
       if (info) info.textContent = 'ログインするとデータが同期されます';
     }
+    updateWelcome();
+    updateBackupVisibility();
   }
 
   function firebaseSignIn() {
@@ -1384,95 +1367,97 @@
   // ONBOARDING
   // ==================
   let obCurrentSlide = 0;
-  const OB_TOTAL = 5;
+  const OB_TOTAL = 4;
 
   function obUpdateUI() {
-    const slidesEl = document.getElementById('ob-slides');
-    slidesEl.style.transform = `translateX(-${obCurrentSlide * 100}%)`;
-    // dots
-    document.querySelectorAll('.ob-dot').forEach((d, i) => {
-      d.classList.toggle('active', i === obCurrentSlide);
-    });
+    document.getElementById('ob-slides').style.transform = `translateX(-${obCurrentSlide * 100}%)`;
+    document.querySelectorAll('.ob-dot').forEach((d, i) => d.classList.toggle('active', i === obCurrentSlide));
     const isLast = obCurrentSlide === OB_TOTAL - 1;
-    document.getElementById('ob-btn-next').style.display = isLast ? 'none' : '';
-    document.getElementById('ob-btn-finish').style.display = isLast ? '' : 'none';
-    document.getElementById('ob-login-btn').style.display = isLast ? '' : 'none';
-    document.getElementById('ob-btn-skip').textContent = isLast ? '' : 'スキップ';
-    document.getElementById('ob-btn-skip').style.display = isLast ? 'none' : '';
+    document.getElementById('ob-btn-next').textContent = isLast ? 'はじめる' : '次へ';
+    document.getElementById('ob-btn-back').style.display = obCurrentSlide === 0 ? 'none' : '';
   }
 
   function obNext() {
     if (obCurrentSlide < OB_TOTAL - 1) {
       obCurrentSlide++;
       obUpdateUI();
+    } else {
+      // スライド終了 → ログイン選択画面へ
+      obShowLoginChoice();
     }
   }
 
-  function obSkip() {
-    obCompleteSetup(false);
+  function obPrev() {
+    if (obCurrentSlide > 0) {
+      obCurrentSlide--;
+      obUpdateUI();
+    }
   }
 
-  function obFinish() {
-    obCompleteSetup(false);
+  function obSkipToLogin() {
+    obShowLoginChoice();
   }
 
-  function obLoginAndFinish() {
-    obCompleteSetup(true);
+  function obShowLoginChoice() {
+    document.getElementById('ob-slide-view').style.display = 'none';
+    document.getElementById('ob-login-choice').style.display = 'flex';
   }
 
-  function obCompleteSetup(doLogin) {
-    // ニックネーム・目標体重を保存
-    const nickname = (document.getElementById('ob-nickname')?.value || '').trim();
-    const goalWeight = parseFloat(document.getElementById('ob-goal-weight')?.value || '0');
-    const currentWeight = parseFloat(document.getElementById('ob-current-weight')?.value || '0');
+  function obChooseLogin() {
+    obFinishOnboarding();
+    // プロフィール設定画面を開く
+    setTimeout(() => openProfile(), 450);
+    // Googleログインも並行してトリガー
+    firebaseSignIn();
+  }
 
-    if (nickname) {
-      const profile = JSON.parse(localStorage.getItem('user_profile') || '{"height":168,"age":25,"sex":"male"}');
-      profile.nickname = nickname;
-      localStorage.setItem('user_profile', JSON.stringify(profile));
-    }
+  function obChooseGuest() {
+    obFinishOnboarding();
+    updateWelcome();
+    showToast('ようこそ！記録を始めましょう 🏋️', false);
+  }
 
-    if (goalWeight > 0) {
-      setWeekGoal(new Date(), goalWeight);
-    }
-
-    // 現在の体重を今日の記録に保存
-    if (currentWeight > 0) {
-      const today = formatDate(new Date());
-      const existingIdx = records.findIndex(r => r.date === today);
-      if (existingIdx >= 0) {
-        if (!records[existingIdx].weight) records[existingIdx].weight = currentWeight;
-      } else {
-        records.unshift({ date: today, weight: currentWeight });
-      }
-      localStorage.setItem('training_records', JSON.stringify(records));
-    }
-
+  function obFinishOnboarding() {
     localStorage.setItem('onboarding_done', '1');
-
-    // オーバーレイを消す
     const overlay = document.getElementById('onboarding-overlay');
     overlay.classList.add('hidden');
     setTimeout(() => { overlay.style.display = 'none'; }, 400);
-
-    if (doLogin) {
-      firebaseSignIn();
-    } else {
-      showToast('ようこそ！記録を始めましょう 🏋️', false);
-    }
-
     updateTodaySummary();
   }
 
   function checkOnboarding() {
+    const overlay = document.getElementById('onboarding-overlay');
+    if (!overlay) return;
     if (!localStorage.getItem('onboarding_done')) {
-      const overlay = document.getElementById('onboarding-overlay');
       overlay.style.display = 'flex';
       obUpdateUI();
     } else {
-      const overlay = document.getElementById('onboarding-overlay');
-      if (overlay) overlay.style.display = 'none';
+      overlay.style.display = 'none';
     }
+  }
+
+  // ==================
+  // WELCOME MESSAGE
+  // ==================
+  function updateWelcome() {
+    const el = document.getElementById('top-welcome-name');
+    if (!el) return;
+    if (currentUser && currentUser.displayName) {
+      el.textContent = currentUser.displayName.split(' ')[0]; // 名前の最初だけ
+    } else {
+      const profile = JSON.parse(localStorage.getItem('user_profile') || '{}');
+      el.textContent = profile.nickname || 'ゲスト';
+    }
+  }
+
+  // ==================
+  // BACKUP VISIBILITY
+  // ==================
+  function updateBackupVisibility() {
+    const section = document.getElementById('backup-section');
+    if (!section) return;
+    // ログイン中はクラウド同期があるのでバックアップ非表示
+    section.style.display = currentUser ? 'none' : '';
   }
 
   function init() {
@@ -1481,6 +1466,7 @@
     document.getElementById('rec-date').value = formatDate(new Date());
     document.getElementById('today-date-label').textContent = formatDateJP(new Date());
     updateTodaySummary();
+    updateWelcome();
     checkOnboarding();
   }
 
