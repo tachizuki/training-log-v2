@@ -1,6 +1,8 @@
 [
     {
-        "merged": "com.traininglog.app-debug-25:/layout_activity_main.xml.flat",
-        "source": "com.traininglog.app-main-27:/layout/activity_main.xml"
-    }
-]
+        "merged": "com.traininglog.app-debug-32:/mipmap-xhdpi_ic_launcher_round.png.flat",
+        "source": "com.traininglog.app-main-34:/mipmap-xhdpi/ic_launcher_round.png"
+    },
+    {
+        "merged": "com.traininglog.app-debug-32:/mipmap-xhdpi_ic_launcher.png.flat",
+        "source": "com.traininglog.app-main-3

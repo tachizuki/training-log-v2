@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "211414940177",
+    "project_id": "training-log-ccea0",
+    "storage_bucket": "training-log-ccea0.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:211414940177:android:06a74f52370271254fcfb0",
+        "android_client_info": {
+          "package_name": "com.traininglog.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "211414940177-a7bok6n7uki5kmkppo2t3jp0g4umfokj.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA81R9NwUI81cQO-m1mUjWFwSsXYeZ3J90"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "211414940177-a7bok6n7uki5kmkppo2t3jp0g4umfokj.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,6 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">TrainingLog</string>
+    <string name="default_web_client_id" translatable="false">211414940177-a7bok6n7uki5kmkppo2t3jp0g4umfokj.apps.googleusercontent.com</string>
+    <string name="gcm_defaultSenderId" translatable="false">211414940177</string>
+    <string name="google_api_key" translatable="false">AIzaSyA81R9NwUI81cQO-m1mUjWFwSsXYeZ3J90</string>
+    <string name="google_app_id" translatable="false">1:211414940177:android:06a74f52370271254fcfb0</string>
+    <string name="google_crash_reporting_api_key" translatable="false">AIzaSyA81R9NwUI81cQO-m1mUjWFwSsXYeZ3J90</string>
+    <string name="google_storage_bucket" translatable="false">training-log-ccea0.firebasestorage.app</string>
+    <string name="project_id" translatable="false">training-log-ccea0</string>
     <style name="Theme.TrainingLog" parent="Theme.AppCompat.NoActionBar">
         <item name="android:windowBackground">@android:color/black</item>
         <item name="android:statusBarColor">#0a0a0f</item>

@@ -1,10 +1,10 @@
 {
     "logs": [
         {
-            "outputFile": "com.traininglog.app-mergeDebugResources-23:/values-v22/values-v22.xml",
+            "outputFile": "com.traininglog.app-mergeDebugResources-30:/values-v22/values-v22.xml",
             "map": [
                 {
-                    "source": "C:\\Users\\tanab\\.gradle\\caches\\8.9\\transforms\\722a25ae7be68636d6dcd867bce731a1\\transformed\\appcompat-1.7.0\\res\\values-v22\\values-v22.xml",
+                    "source": "C:\\Users\\tanab\\.gradle\\caches\\8.9\\transforms\\556d890418e2bd32d68c4e2a349b7824\\transformed\\appcompat-1.7.0\\res\\values-v22\\values-v22.xml",
                     "from": {
                         "startLines": "2,3,4,9",
                         "startColumns": "4,4,4,4",

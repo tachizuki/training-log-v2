@@ -3,6 +3,10 @@ package com.traininglog.app
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
@@ -176,6 +180,38 @@ class MainActivity : AppCompatActivity() {
         }
 
         @JavascriptInterface
+        fun setNotification(enabled: Boolean, hour: Int, minute: Int) {
+            val prefs = getSharedPreferences("notif_prefs", MODE_PRIVATE)
+            prefs.edit()
+                .putBoolean("enabled", enabled)
+                .putInt("hour", hour)
+                .putInt("minute", minute)
+                .apply()
+            if (enabled) {
+                NotificationReceiver.scheduleNotification(this@MainActivity, hour, minute)
+                webView.post {
+                    webView.evaluateJavascript(
+                        "showToast('通知を設定しました（毎日 ${hour}:${minute.toString().padStart(2,'0')}）✓', false)", null
+                    )
+                }
+            } else {
+                NotificationReceiver.cancelNotification(this@MainActivity)
+                webView.post {
+                    webView.evaluateJavascript("showToast('通知をオフにしました', false)", null)
+                }
+            }
+        }
+
+        @JavascriptInterface
+        fun getNotificationSettings(): String {
+            val prefs = getSharedPreferences("notif_prefs", MODE_PRIVATE)
+            val enabled = prefs.getBoolean("enabled", false)
+            val hour = prefs.getInt("hour", 20)
+            val minute = prefs.getInt("minute", 0)
+            return """{"enabled":$enabled,"hour":$hour,"minute":$minute}"""
+        }
+
+        @JavascriptInterface
         fun openFilePicker() {
             val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
                 type = "*/*"
@@ -263,6 +299,17 @@ class MainActivity : AppCompatActivity() {
 
         auth = FirebaseAuth.getInstance()
         db = FirebaseFirestore.getInstance()
+
+        // 通知チャンネル作成 & Android 13+ の通知権限リクエスト
+        NotificationReceiver.createChannel(this)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS)
+                != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(
+                    this, arrayOf(android.Manifest.permission.POST_NOTIFICATIONS), 100
+                )
+            }
+        }
 
         webView = findViewById(R.id.webView)
         webView.clearCache(true)
