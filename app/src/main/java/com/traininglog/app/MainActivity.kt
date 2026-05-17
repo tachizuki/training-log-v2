@@ -112,7 +112,11 @@ class MainActivity : AppCompatActivity() {
                     .requestEmail()
                     .build()
                 val client = GoogleSignIn.getClient(this@MainActivity, gso)
-                googleSignInLauncher.launch(client.signInIntent)
+                // キャッシュされたアカウントをクリアしてから起動することで
+                // 毎回必ずGoogleのアカウント選択ダイアログを表示させる
+                client.signOut().addOnCompleteListener {
+                    googleSignInLauncher.launch(client.signInIntent)
+                }
             }
         }
 
