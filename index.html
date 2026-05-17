@@ -1272,7 +1272,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-  const APP_VERSION = 'v20260517e';
+  const APP_VERSION = 'v20260517f';
   const REMOTE_URL = 'https://tachizuki.github.io/training-log-v2/index.html';
 
   // AndroidBridgeからストレージデータを受け取る
@@ -1518,7 +1518,7 @@
     const today = new Date(); today.setHours(0, 0, 0, 0);
     const diff = Math.round((contest - today) / 86400000);
     if (diff < 0) { el.style.display = 'none'; return; }
-    el.style.display = '';
+    el.style.display = 'block';
     document.getElementById('contest-name-display').textContent = name;
     document.getElementById('contest-name-display').style.display = name ? '' : 'none';
     if (diff === 0) {
