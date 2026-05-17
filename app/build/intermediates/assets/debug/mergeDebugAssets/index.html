@@ -592,6 +592,36 @@
     margin-bottom: 12px; letter-spacing: 0.05em;
   }
   #top-welcome span { color: var(--accent); font-weight: 700; }
+
+  /* ===== CONTEST COUNTDOWN ===== */
+  #contest-countdown {
+    background: linear-gradient(135deg, rgba(232,255,0,0.08), rgba(232,255,0,0.04));
+    border: 1px solid rgba(232,255,0,0.3);
+    border-radius: 14px;
+    padding: 14px 20px;
+    margin-bottom: 16px;
+    text-align: center;
+    display: none;
+  }
+  .contest-days {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 48px;
+    color: var(--accent);
+    line-height: 1;
+  }
+  .contest-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+  .contest-name-disp {
+    font-size: 13px;
+    color: var(--text);
+    margin-bottom: 4px;
+    font-weight: 500;
+  }
 </style>
 </head>
 <body>
@@ -603,6 +633,11 @@
     <div class="app-title">TRAINING<br>LOG</div>
     <div class="app-subtitle">大会競技者向け 記録アプリ</div>
     <div id="top-welcome">ようこそ、<span id="top-welcome-name">ゲスト</span>さん 👋</div>
+    <div id="contest-countdown">
+      <div class="contest-name-disp" id="contest-name-display"></div>
+      <div class="contest-days" id="contest-days-num">—</div>
+      <div class="contest-label">DAYS TO CONTEST</div>
+    </div>
   <div style="text-align:center;font-size:9px;color:var(--text-muted);opacity:0.5;" id="app-ver-display"></div>
   <div style="text-align:center;font-size:9px;color:var(--text-muted);opacity:0.5;">v2-20260512</div>
     <div class="today-summary">
@@ -1099,7 +1134,32 @@
       <div class="profile-bmr-value" id="prof-bmr-val">—</div>
       <div class="profile-bmr-label">推定基礎代謝 (kcal/日)</div>
     </div>
+    <div class="profile-group full" style="margin-top:4px;">
+      <label class="profile-label">🏆 大会名</label>
+      <input type="text" class="profile-input" id="prof-contest-name" placeholder="例：東京クラシック2026" maxlength="40">
+    </div>
+    <div class="profile-group full">
+      <label class="profile-label">📅 大会日</label>
+      <input type="date" class="profile-input" id="prof-contest-date">
+    </div>
     <button class="btn-submit" onclick="saveProfile()">保存する</button>
+    <div style="margin-top:20px;border-top:1px solid var(--border);padding-top:16px;">
+      <div style="font-size:11px;color:var(--text-muted);letter-spacing:0.1em;margin-bottom:12px;">🔔 記録リマインダー通知</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <span style="font-size:14px;color:var(--text);">毎日通知</span>
+        <button class="toggle" id="notif-toggle" onclick="toggleNotif()"></button>
+      </div>
+      <div id="notif-time-row" style="display:flex;align-items:center;gap:10px;">
+        <span style="font-size:13px;color:var(--text-muted);flex:1;">通知時刻</span>
+        <input type="number" id="notif-hour" min="0" max="23" value="20"
+          style="width:52px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px;color:var(--text);font-size:16px;text-align:center;outline:none;">
+        <span style="color:var(--text-muted);">:</span>
+        <input type="number" id="notif-minute" min="0" max="59" value="0"
+          style="width:52px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px;color:var(--text);font-size:16px;text-align:center;outline:none;">
+        <button onclick="applyNotifTime()"
+          style="padding:8px 14px;background:var(--accent);color:var(--bg);border:none;border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:16px;cursor:pointer;">SET</button>
+      </div>
+    </div>
     <div id="backup-section" style="margin-top:20px;border-top:1px solid var(--border);padding-top:16px;">
       <div style="font-size:11px;color:var(--text-muted);letter-spacing:0.1em;margin-bottom:10px;">データバックアップ</div>
       <button onclick="exportData()" style="width:100%;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;cursor:pointer;margin-bottom:8px;">📤 データをエクスポート</button>
@@ -1177,7 +1237,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-  const APP_VERSION = 'v20260517c';
+  const APP_VERSION = 'v20260517f';
   const REMOTE_URL = 'https://tachizuki.github.io/training-log-v2/index.html';
 
   // AndroidBridgeからストレージデータを受け取る
@@ -1248,7 +1308,8 @@
   // ==================
   let currentUser = null;
   const STORAGE_KEYS = ['training_records','gym_data','water_data','user_profile',
-                        'gym_presets','water_quick_btns','activity_presets','weekly_goals'];
+                        'gym_presets','water_quick_btns','activity_presets','weekly_goals',
+                        'contest_date','contest_name'];
 
   // Kotlinから呼ばれるコールバック
   function onFirebaseSignIn(uid, displayName, email) {
@@ -1311,16 +1372,20 @@
     }
   }
 
-  function syncToCloud(uid) {
+  let _syncTimer = null;
+  function syncToCloud(uid, delay = 3000) {
     if (!uid) return;
-    const data = {};
-    STORAGE_KEYS.forEach(k => {
-      const v = localStorage.getItem(k);
-      if (v) data[k] = v;
-    });
-    if (typeof AndroidBridge !== 'undefined') {
-      AndroidBridge.saveToFirestore(uid, JSON.stringify(data));
-    }
+    clearTimeout(_syncTimer);
+    _syncTimer = setTimeout(() => {
+      const data = {};
+      STORAGE_KEYS.forEach(k => {
+        const v = localStorage.getItem(k);
+        if (v) data[k] = v;
+      });
+      if (typeof AndroidBridge !== 'undefined') {
+        AndroidBridge.saveToFirestore(uid, JSON.stringify(data));
+      }
+    }, delay);
   }
 
   function loadFromCloud(uid) {
@@ -1396,6 +1461,59 @@
   }
 
   // ==================
+  // CONTEST COUNTDOWN
+  // ==================
+  function updateContestCountdown() {
+    const el = document.getElementById('contest-countdown');
+    if (!el) return;
+    const dateStr = localStorage.getItem('contest_date');
+    const name = localStorage.getItem('contest_name') || '';
+    if (!dateStr) { el.style.display = 'none'; return; }
+    const [y, m, d] = dateStr.split('-').map(Number);
+    const contest = new Date(y, m - 1, d);
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const diff = Math.round((contest - today) / 86400000);
+    if (diff < 0) { el.style.display = 'none'; return; }
+    el.style.display = 'block';
+    const nameEl = document.getElementById('contest-name-display');
+    if (nameEl) { nameEl.textContent = name; nameEl.style.display = name ? '' : 'none'; }
+    const daysEl = document.getElementById('contest-days-num');
+    if (daysEl) daysEl.textContent = diff === 0 ? '🏆 TODAY' : diff;
+  }
+
+  // ==================
+  // NOTIFICATION UI
+  // ==================
+  let notifEnabled = false;
+  function loadNotifSettings() {
+    if (typeof AndroidBridge === 'undefined') return;
+    try {
+      const s = JSON.parse(AndroidBridge.getNotificationSettings());
+      notifEnabled = s.enabled;
+      document.getElementById('notif-toggle')?.classList.toggle('on', notifEnabled);
+      if (document.getElementById('notif-time-row'))
+        document.getElementById('notif-time-row').style.display = notifEnabled ? '' : 'none';
+      if (s.hour !== undefined) document.getElementById('notif-hour').value = s.hour;
+      if (s.minute !== undefined) document.getElementById('notif-minute').value = String(s.minute).padStart(2,'0');
+    } catch(e) {}
+  }
+  function toggleNotif() {
+    notifEnabled = !notifEnabled;
+    document.getElementById('notif-toggle')?.classList.toggle('on', notifEnabled);
+    if (document.getElementById('notif-time-row'))
+      document.getElementById('notif-time-row').style.display = notifEnabled ? '' : 'none';
+    const h = parseInt(document.getElementById('notif-hour')?.value||'20');
+    const m = parseInt(document.getElementById('notif-minute')?.value||'0');
+    if (typeof AndroidBridge !== 'undefined') AndroidBridge.setNotification(notifEnabled, h, m);
+  }
+  function applyNotifTime() {
+    if (!notifEnabled) return;
+    const h = parseInt(document.getElementById('notif-hour')?.value||'20');
+    const m = parseInt(document.getElementById('notif-minute')?.value||'0');
+    if (typeof AndroidBridge !== 'undefined') AndroidBridge.setNotification(true, h, m);
+  }
+
+  // ==================
   // WELCOME MESSAGE
   // ==================
   function updateWelcome() {
@@ -1425,6 +1543,7 @@
     document.getElementById('today-date-label').textContent = formatDateJP(new Date());
     updateTodaySummary();
     updateWelcome();
+    updateContestCountdown();
     checkOnboarding();
   }
 
@@ -3931,6 +4050,10 @@ if (absDiff < 0.15) {
     document.getElementById('prof-age').value = userProfile.age||'';
     selectSex(userProfile.sex||'male');
     updateBMRPreview();
+    document.getElementById('prof-contest-name').value = localStorage.getItem('contest_name') || '';
+    document.getElementById('prof-contest-date').value = localStorage.getItem('contest_date') || '';
+    loadNotifSettings();
+    updateBackupVisibility();
   }
 
   function handleProfileOverlay(e) {
@@ -3959,8 +4082,14 @@ if (absDiff < 0.15) {
     userProfile.height = parseFloat(document.getElementById('prof-height').value)||null;
     userProfile.age = parseInt(document.getElementById('prof-age').value)||null;
     localStorage.setItem('user_profile', JSON.stringify(userProfile));
+    const cName = document.getElementById('prof-contest-name')?.value.trim() || '';
+    const cDate = document.getElementById('prof-contest-date')?.value || '';
+    if (cName) localStorage.setItem('contest_name', cName); else localStorage.removeItem('contest_name');
+    if (cDate) localStorage.setItem('contest_date', cDate); else localStorage.removeItem('contest_date');
+    updateContestCountdown();
     document.getElementById('profile-modal').classList.remove('open');
     showToast('プロフィールを保存しました ✓', false);
+    if (currentUser) syncToCloud(currentUser.uid, 0);
   }
 
 

@@ -3,32 +3,32 @@
 3    package="com.traininglog.app.test" >
 4
 5    <uses-sdk
-5-->H:\projects\training-log-android\app\build\intermediates\tmp\manifest\androidTest\debug\tempFile1ProcessTestManifest15800911909782207316.xml:5:5-74
+5-->H:\projects\training-log-android\app\build\intermediates\tmp\manifest\androidTest\debug\tempFile1ProcessTestManifest1704388983041608933.xml:5:5-74
 6        android:minSdkVersion="26"
-6-->H:\projects\training-log-android\app\build\intermediates\tmp\manifest\androidTest\debug\tempFile1ProcessTestManifest15800911909782207316.xml:5:15-41
+6-->H:\projects\training-log-android\app\build\intermediates\tmp\manifest\androidTest\debug\tempFile1ProcessTestManifest1704388983041608933.xml:5:15-41
 7        android:targetSdkVersion="35" />
-7-->H:\projects\training-log-android\app\build\intermediates\tmp\manifest\androidTest\debug\tempFile1ProcessTestManifest15800911909782207316.xml:5:42-71
+7-->H:\projects\training-log-android\app\build\intermediates\tmp\manifest\androidTest\debug\tempFile1ProcessTestManifest1704388983041608933.xml:5:42-71
 8
 9    <instrumentation
-9-->H:\projects\training-log-android\app\build\intermediates\tmp\manifest\androidTest\debug\tempFile1ProcessTestManifest15800911909782207316.xml:11:5-15:69
+9-->H:\projects\training-log-android\app\build\intermediates\tmp\manifest\androidTest\debug\tempFile1ProcessTestManifest1704388983041608933.xml:11:5-15:69
 10        android:name="android.test.InstrumentationTestRunner"
-10-->H:\projects\training-log-android\app\build\intermediates\tmp\manifest\androidTest\debug\tempFile1ProcessTestManifest15800911909782207316.xml:11:22-75
+10-->H:\projects\training-log-android\app\build\intermediates\tmp\manifest\androidTest\debug\tempFile1ProcessTestManifest1704388983041608933.xml:11:22-75
 11        android:functionalTest="false"
-11-->H:\projects\training-log-android\app\build\intermediates\tmp\manifest\androidTest\debug\tempFile1ProcessTestManifest15800911909782207316.xml:14:22-52
+11-->H:\projects\training-log-android\app\build\intermediates\tmp\manifest\androidTest\debug\tempFile1ProcessTestManifest1704388983041608933.xml:14:22-52
 12        android:handleProfiling="false"
-12-->H:\projects\training-log-android\app\build\intermediates\tmp\manifest\androidTest\debug\tempFile1ProcessTestManifest15800911909782207316.xml:13:22-53
+12-->H:\projects\training-log-android\app\build\intermediates\tmp\manifest\androidTest\debug\tempFile1ProcessTestManifest1704388983041608933.xml:13:22-53
 13        android:label="Tests for com.traininglog.app"
-13-->H:\projects\training-log-android\app\build\intermediates\tmp\manifest\androidTest\debug\tempFile1ProcessTestManifest15800911909782207316.xml:15:22-67
+13-->H:\projects\training-log-android\app\build\intermediates\tmp\manifest\androidTest\debug\tempFile1ProcessTestManifest1704388983041608933.xml:15:22-67
 14        android:targetPackage="com.traininglog.app" />
-14-->H:\projects\training-log-android\app\build\intermediates\tmp\manifest\androidTest\debug\tempFile1ProcessTestManifest15800911909782207316.xml:12:22-65
+14-->H:\projects\training-log-android\app\build\intermediates\tmp\manifest\androidTest\debug\tempFile1ProcessTestManifest1704388983041608933.xml:12:22-65
 15
 16    <application
-16-->H:\projects\training-log-android\app\build\intermediates\tmp\manifest\androidTest\debug\tempFile1ProcessTestManifest15800911909782207316.xml:7:5-9:19
+16-->H:\projects\training-log-android\app\build\intermediates\tmp\manifest\androidTest\debug\tempFile1ProcessTestManifest1704388983041608933.xml:7:5-9:19
 17        android:debuggable="true"
 18        android:extractNativeLibs="false" >
 19        <uses-library android:name="android.test.runner" />
-19-->H:\projects\training-log-android\app\build\intermediates\tmp\manifest\androidTest\debug\tempFile1ProcessTestManifest15800911909782207316.xml:8:9-60
-19-->H:\projects\training-log-android\app\build\intermediates\tmp\manifest\androidTest\debug\tempFile1ProcessTestManifest15800911909782207316.xml:8:23-57
+19-->H:\projects\training-log-android\app\build\intermediates\tmp\manifest\androidTest\debug\tempFile1ProcessTestManifest1704388983041608933.xml:8:9-60
+19-->H:\projects\training-log-android\app\build\intermediates\tmp\manifest\androidTest\debug\tempFile1ProcessTestManifest1704388983041608933.xml:8:23-57
 20    </application>
 21
 22</manifest>

@@ -932,6 +932,11 @@
     </div>
   </div>
   <div id="tab-graph" class="tab-content">
+    <div class="chart-container" id="weekly-report-card"></div>
+    <div class="chart-container" id="roadmap-card">
+      <div class="chart-title">🗺 大会ロードマップ</div>
+      <div id="roadmap-chart-container"></div>
+    </div>
     <div class="chart-container"><div class="chart-title">📈 体重推移 (kg)</div><canvas id="weight-chart" height="180"></canvas></div>
     <div class="chart-container"><div class="chart-title">🔥 カロリー推移 (kcal)</div><canvas id="kcal-chart" height="180"></canvas></div>
     <div class="chart-container"><div class="chart-title">🥩 PFC推移 (g)</div><canvas id="pfc-chart" height="200"></canvas></div>
@@ -1157,6 +1162,10 @@
       <label class="profile-label">📅 大会日</label>
       <input type="date" class="profile-input" id="prof-contest-date">
     </div>
+    <div class="profile-group full">
+      <label class="profile-label">🎯 大会目標体重 (kg)</label>
+      <input type="number" class="profile-input" id="prof-contest-weight" placeholder="例：75.0" step="0.1">
+    </div>
     <button class="btn-submit" onclick="saveProfile()">保存する</button>
 
     <!-- 通知設定 -->
@@ -1272,7 +1281,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-  const APP_VERSION = 'v20260517f';
+  const APP_VERSION = 'v20260517g';
   const REMOTE_URL = 'https://tachizuki.github.io/training-log-v2/index.html';
 
   // AndroidBridgeからストレージデータを受け取る
@@ -1344,7 +1353,7 @@
   let currentUser = null;
   const STORAGE_KEYS = ['training_records','gym_data','water_data','user_profile',
                         'gym_presets','water_quick_btns','activity_presets','weekly_goals',
-                        'contest_date','contest_name'];
+                        'contest_date','contest_name','contest_weight'];
 
   // Kotlinから呼ばれるコールバック
   function onFirebaseSignIn(uid, displayName, email) {
@@ -2396,7 +2405,168 @@ if (absDiff < 0.15) {
     }).join('');
   }
 
+  // ==================
+  // 週レポート
+  // ==================
+  function renderWeeklyReport() {
+    const card = document.getElementById('weekly-report-card');
+    if (!card) return;
+    const now = new Date();
+    const sunday = new Date(now);
+    sunday.setDate(now.getDate() - now.getDay());
+    sunday.setHours(0,0,0,0);
+    const saturday = new Date(sunday);
+    saturday.setDate(sunday.getDate() + 6);
+    const weekStart = formatDate(sunday);
+    const weekEnd = formatDate(saturday);
+    const weekRecords = records.filter(r => r.date >= weekStart && r.date <= weekEnd);
+
+    const weightRecs = weekRecords.filter(r => r.weight);
+    const avgWeight = weightRecs.length ? (weightRecs.reduce((s,r)=>s+r.weight,0)/weightRecs.length).toFixed(1) : null;
+
+    const weekKey = getWeekKey(now);
+    const goals = JSON.parse(localStorage.getItem('weekly_goals')||'{}');
+    const goalWeight = goals[weekKey] || null;
+
+    const kcalRecs = weekRecords.filter(r => r.kcal);
+    const avgKcal = kcalRecs.length ? Math.round(kcalRecs.reduce((s,r)=>s+r.kcal,0)/kcalRecs.length) : null;
+
+    const pRecs = weekRecords.filter(r => r.p);
+    const avgP = pRecs.length ? Math.round(pRecs.reduce((s,r)=>s+r.p,0)/pRecs.length) : null;
+
+    const gymCount = Object.keys(gymData).filter(d => d >= weekStart && d <= weekEnd && gymData[d]?.sessions?.length > 0).length;
+
+    const waterEntries = Object.entries(waterData).filter(([d]) => d >= weekStart && d <= weekEnd);
+    const avgWater = waterEntries.length ? Math.round(waterEntries.reduce((s,[,v])=>s+(v.total||0),0)/waterEntries.length) : null;
+
+    let weightStatus = '';
+    if (goalWeight && avgWeight) {
+      const diff = (parseFloat(avgWeight) - goalWeight).toFixed(1);
+      const sign = diff > 0 ? '+' : '';
+      const col = diff <= 0 ? 'var(--success)' : 'var(--danger)';
+      weightStatus = `<div style="font-size:11px;color:var(--text-muted);margin-top:2px;">目標 ${goalWeight}kg <span style="color:${col};">${sign}${diff}kg</span></div>`;
+    } else if (goalWeight) {
+      weightStatus = `<div style="font-size:11px;color:var(--text-muted);margin-top:2px;">目標 ${goalWeight}kg</div>`;
+    }
+
+    card.innerHTML = `
+      <div class="chart-title">📊 今週のレポート</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div style="background:var(--surface2);border-radius:10px;padding:12px;text-align:center;">
+          <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px;">週平均体重</div>
+          <div style="font-size:26px;font-family:'Bebas Neue';color:var(--success);">${avgWeight ?? '—'}<span style="font-size:13px;">kg</span></div>
+          ${weightStatus}
+        </div>
+        <div style="background:var(--surface2);border-radius:10px;padding:12px;text-align:center;">
+          <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px;">ジム回数</div>
+          <div style="font-size:26px;font-family:'Bebas Neue';color:var(--accent);">${gymCount}<span style="font-size:13px;">回</span></div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">今週</div>
+        </div>
+        <div style="background:var(--surface2);border-radius:10px;padding:12px;text-align:center;">
+          <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px;">平均カロリー</div>
+          <div style="font-size:26px;font-family:'Bebas Neue';color:var(--accent2);">${avgKcal ?? '—'}<span style="font-size:13px;">kcal</span></div>
+        </div>
+        <div style="background:var(--surface2);border-radius:10px;padding:12px;text-align:center;">
+          <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px;">平均タンパク質</div>
+          <div style="font-size:26px;font-family:'Bebas Neue';color:#ff8c42;">${avgP ?? '—'}<span style="font-size:13px;">g</span></div>
+        </div>
+        <div style="background:var(--surface2);border-radius:10px;padding:12px;text-align:center;grid-column:1/-1;">
+          <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px;">平均水分摂取</div>
+          <div style="font-size:26px;font-family:'Bebas Neue';color:var(--accent2);">${avgWater ?? '—'}<span style="font-size:13px;">ml</span></div>
+        </div>
+      </div>`;
+  }
+
+  // ==================
+  // 大会ロードマップ
+  // ==================
+  function renderRoadmap() {
+    const container = document.getElementById('roadmap-chart-container');
+    if (!container) return;
+    const contestDateStr = localStorage.getItem('contest_date');
+    const contestWeight = parseFloat(localStorage.getItem('contest_weight'));
+    if (!contestDateStr) {
+      container.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:20px;font-size:13px;">プロフィールで大会日を設定してください</div>';
+      return;
+    }
+    if (!contestWeight) {
+      container.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:20px;font-size:13px;">プロフィールで大会目標体重を設定してください</div>';
+      return;
+    }
+    const [cy,cm,cd] = contestDateStr.split('-').map(Number);
+    const contestDate = new Date(cy, cm-1, cd);
+    const today = new Date(); today.setHours(0,0,0,0);
+    if (contestDate <= today) {
+      container.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:20px;font-size:13px;">大会は終了しました 🏆</div>';
+      return;
+    }
+    const totalWeeks = Math.ceil(Math.round((contestDate - today) / 86400000) / 7);
+    const sortedRecs = [...records].sort((a,b) => b.date.localeCompare(a.date));
+    const latestWeight = sortedRecs.find(r => r.weight)?.weight;
+    if (!latestWeight) {
+      container.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:20px;font-size:13px;">体重を記録してください</div>';
+      return;
+    }
+    const weekLabels = [], targetWeights = [], actualWeights = [];
+    for (let w = 0; w <= totalWeeks; w++) {
+      weekLabels.push(w === 0 ? '現在' : w === totalWeeks ? '大会' : `${w}週後`);
+      targetWeights.push(parseFloat((latestWeight - (latestWeight - contestWeight) * (w / totalWeeks)).toFixed(1)));
+      if (w === 0) {
+        actualWeights.push(latestWeight);
+      } else {
+        const wEnd = new Date(today); wEnd.setDate(today.getDate() + w * 7);
+        if (wEnd <= today) {
+          const wStart = formatDate(new Date(wEnd.getTime() - 7*86400000));
+          const wEndStr = formatDate(wEnd);
+          const wr = records.filter(r => r.date >= wStart && r.date < wEndStr && r.weight);
+          actualWeights.push(wr.length ? parseFloat((wr.reduce((s,r)=>s+r.weight,0)/wr.length).toFixed(1)) : null);
+        } else {
+          actualWeights.push(null);
+        }
+      }
+    }
+    // ラベルが多い場合は間引き
+    const step = totalWeeks > 12 ? Math.ceil(totalWeeks / 12) : 1;
+    const filteredLabels = weekLabels.filter((_,i) => i % step === 0 || i === totalWeeks);
+    const filteredTarget = targetWeights.filter((_,i) => i % step === 0 || i === totalWeeks);
+    const filteredActual = actualWeights.filter((_,i) => i % step === 0 || i === totalWeeks);
+
+    container.innerHTML = '<canvas id="roadmap-chart" height="200"></canvas>';
+    if (window._roadmapChart) window._roadmapChart.destroy();
+    const cd2 = {responsive:true,plugins:{legend:{labels:{color:'#888',font:{size:11}}}},scales:{x:{ticks:{color:'#666',font:{size:10}},grid:{color:'#1a1a26'}},y:{ticks:{color:'#666',font:{size:10}},grid:{color:'#1a1a26'}}}};
+    window._roadmapChart = new Chart(document.getElementById('roadmap-chart'), {
+      type:'line',
+      data:{
+        labels: filteredLabels,
+        datasets:[
+          {label:'目標ライン', data:filteredTarget, borderColor:'rgba(232,255,0,0.7)', borderDash:[6,3], borderWidth:2, pointRadius:3, pointBackgroundColor:'rgba(232,255,0,0.7)', fill:false, tension:0},
+          {label:'実績',       data:filteredActual, borderColor:'#00ff88', backgroundColor:'rgba(0,255,136,0.08)', borderWidth:2, pointRadius:4, pointBackgroundColor:'#00ff88', fill:true, tension:0.3, spanGaps:false}
+        ]
+      },
+      options: cd2
+    });
+    const weeklyReduction = ((latestWeight - contestWeight) / totalWeeks).toFixed(2);
+    const need = (latestWeight - contestWeight).toFixed(1);
+    const statsHtml = `<div style="margin-top:12px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+      <div style="text-align:center;background:var(--surface2);border-radius:8px;padding:8px;">
+        <div style="font-size:9px;color:var(--text-muted);">大会まで</div>
+        <div style="font-size:20px;font-family:'Bebas Neue';color:var(--accent);">${totalWeeks}<span style="font-size:11px;">週</span></div>
+      </div>
+      <div style="text-align:center;background:var(--surface2);border-radius:8px;padding:8px;">
+        <div style="font-size:9px;color:var(--text-muted);">必要減量</div>
+        <div style="font-size:20px;font-family:'Bebas Neue';color:${need > 0 ? 'var(--danger)' : 'var(--success)'};">${need}<span style="font-size:11px;">kg</span></div>
+      </div>
+      <div style="text-align:center;background:var(--surface2);border-radius:8px;padding:8px;">
+        <div style="font-size:9px;color:var(--text-muted);">週あたり</div>
+        <div style="font-size:20px;font-family:'Bebas Neue';color:var(--accent2);">${weeklyReduction}<span style="font-size:11px;">kg</span></div>
+      </div>
+    </div>`;
+    document.getElementById('roadmap-chart-container').insertAdjacentHTML('beforeend', statsHtml);
+  }
+
   function renderCharts() {
+    renderWeeklyReport();
+    renderRoadmap();
     const now = new Date();
     let filtered;
     if (currentFilter === 'week') {
@@ -4271,6 +4441,7 @@ if (absDiff < 0.15) {
     updateBMRPreview();
     document.getElementById('prof-contest-name').value = localStorage.getItem('contest_name') || '';
     document.getElementById('prof-contest-date').value = localStorage.getItem('contest_date') || '';
+    document.getElementById('prof-contest-weight').value = localStorage.getItem('contest_weight') || '';
     loadNotifSettings();
     updateBackupVisibility();
   }
@@ -4307,6 +4478,9 @@ if (absDiff < 0.15) {
     else localStorage.removeItem('contest_name');
     if (cDate) localStorage.setItem('contest_date', cDate);
     else localStorage.removeItem('contest_date');
+    const cWeight = document.getElementById('prof-contest-weight')?.value;
+    if (cWeight) localStorage.setItem('contest_weight', cWeight);
+    else localStorage.removeItem('contest_weight');
     updateContestCountdown();
     document.getElementById('profile-modal').classList.remove('open');
     showToast('プロフィールを保存しました ✓', false);

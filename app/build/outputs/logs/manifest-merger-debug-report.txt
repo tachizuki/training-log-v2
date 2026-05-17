@@ -1,20 +1,20 @@
 -- Merging decision tree log ---
 provider#androidx.core.content.FileProvider
-INJECTED from H:\projects\training-log-android\app\src\main\AndroidManifest.xml:34:9-42:20
+INJECTED from H:\projects\training-log-android\app\src\main\AndroidManifest.xml:36:9-44:20
 	android:grantUriPermissions
-		ADDED from H:\projects\training-log-android\app\src\main\AndroidManifest.xml:38:13-47
+		ADDED from H:\projects\training-log-android\app\src\main\AndroidManifest.xml:40:13-47
 	android:authorities
 		INJECTED from H:\projects\training-log-android\app\src\main\AndroidManifest.xml
-		ADDED from H:\projects\training-log-android\app\src\main\AndroidManifest.xml:36:13-60
+		ADDED from H:\projects\training-log-android\app\src\main\AndroidManifest.xml:38:13-60
 	android:exported
-		ADDED from H:\projects\training-log-android\app\src\main\AndroidManifest.xml:37:13-37
+		ADDED from H:\projects\training-log-android\app\src\main\AndroidManifest.xml:39:13-37
 	android:name
-		ADDED from H:\projects\training-log-android\app\src\main\AndroidManifest.xml:35:13-62
+		ADDED from H:\projects\training-log-android\app\src\main\AndroidManifest.xml:37:13-62
 manifest
-ADDED from H:\projects\training-log-android\app\src\main\AndroidManifest.xml:2:1-44:12
-INJECTED from H:\projects\training-log-android\app\src\main\AndroidManifest.xml:2:1-44:12
-INJECTED from H:\projects\training-log-android\app\src\main\AndroidManifest.xml:2:1-44:12
-INJECTED from H:\projects\training-log-android\app\src\main\AndroidManifest.xml:2:1-44:12
+ADDED from H:\projects\training-log-android\app\src\main\AndroidManifest.xml:2:1-46:12
+INJECTED from H:\projects\training-log-android\app\src\main\AndroidManifest.xml:2:1-46:12
+INJECTED from H:\projects\training-log-android\app\src\main\AndroidManifest.xml:2:1-46:12
+INJECTED from H:\projects\training-log-android\app\src\main\AndroidManifest.xml:2:1-46:12
 MERGED from [androidx.constraintlayout:constraintlayout:2.2.0] C:\Users\tanab\.gradle\caches\8.9\transforms\1c072365e3f6f10b77858cda3ca4d147\transformed\constraintlayout-2.2.0\AndroidManifest.xml:2:1-9:12
 MERGED from [androidx.appcompat:appcompat-resources:1.7.0] C:\Users\tanab\.gradle\caches\8.9\transforms\1e77bd3562165bb4affba7b7b221fad3\transformed\appcompat-resources-1.7.0\AndroidManifest.xml:2:1-7:12
 MERGED from [androidx.appcompat:appcompat:1.7.0] C:\Users\tanab\.gradle\caches\8.9\transforms\556d890418e2bd32d68c4e2a349b7824\transformed\appcompat-1.7.0\AndroidManifest.xml:2:1-7:12
@@ -108,8 +108,8 @@ ADDED from H:\projects\training-log-android\app\src\main\AndroidManifest.xml:9:5
 	android:name
 		ADDED from H:\projects\training-log-android\app\src\main\AndroidManifest.xml:9:22-71
 application
-ADDED from H:\projects\training-log-android\app\src\main\AndroidManifest.xml:10:5-43:19
-INJECTED from H:\projects\training-log-android\app\src\main\AndroidManifest.xml:10:5-43:19
+ADDED from H:\projects\training-log-android\app\src\main\AndroidManifest.xml:10:5-45:19
+INJECTED from H:\projects\training-log-android\app\src\main\AndroidManifest.xml:10:5-45:19
 MERGED from [androidx.constraintlayout:constraintlayout:2.2.0] C:\Users\tanab\.gradle\caches\8.9\transforms\1c072365e3f6f10b77858cda3ca4d147\transformed\constraintlayout-2.2.0\AndroidManifest.xml:7:5-20
 MERGED from [androidx.constraintlayout:constraintlayout:2.2.0] C:\Users\tanab\.gradle\caches\8.9\transforms\1c072365e3f6f10b77858cda3ca4d147\transformed\constraintlayout-2.2.0\AndroidManifest.xml:7:5-20
 MERGED from [com.google.firebase:firebase-auth-ktx:23.0.0] C:\Users\tanab\.gradle\caches\8.9\transforms\b6a76eb19906383c2518109fdc2ddabf\transformed\firebase-auth-ktx-23.0.0\AndroidManifest.xml:7:5-15:19
@@ -159,57 +159,61 @@ MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] C:\Users\ta
 	android:appComponentFactory
 		ADDED from [androidx.core:core:1.15.0] C:\Users\tanab\.gradle\caches\8.9\transforms\5240587f8d3c9f1a6b727357db4951e8\transformed\core-1.15.0\AndroidManifest.xml:28:18-86
 	android:supportsRtl
-		ADDED from H:\projects\training-log-android\app\src\main\AndroidManifest.xml:13:9-35
+		ADDED from H:\projects\training-log-android\app\src\main\AndroidManifest.xml:15:9-35
 	android:label
-		ADDED from H:\projects\training-log-android\app\src\main\AndroidManifest.xml:12:9-41
+		ADDED from H:\projects\training-log-android\app\src\main\AndroidManifest.xml:14:9-41
+	android:roundIcon
+		ADDED from H:\projects\training-log-android\app\src\main\AndroidManifest.xml:13:9-54
+	android:icon
+		ADDED from H:\projects\training-log-android\app\src\main\AndroidManifest.xml:12:9-43
 	android:allowBackup
 		ADDED from H:\projects\training-log-android\app\src\main\AndroidManifest.xml:11:9-35
 	android:theme
-		ADDED from H:\projects\training-log-android\app\src\main\AndroidManifest.xml:14:9-49
+		ADDED from H:\projects\training-log-android\app\src\main\AndroidManifest.xml:16:9-49
 	android:usesCleartextTraffic
-		ADDED from H:\projects\training-log-android\app\src\main\AndroidManifest.xml:15:9-44
+		ADDED from H:\projects\training-log-android\app\src\main\AndroidManifest.xml:17:9-44
 activity#com.traininglog.app.MainActivity
-ADDED from H:\projects\training-log-android\app\src\main\AndroidManifest.xml:16:9-25:20
+ADDED from H:\projects\training-log-android\app\src\main\AndroidManifest.xml:18:9-27:20
 	android:screenOrientation
-		ADDED from H:\projects\training-log-android\app\src\main\AndroidManifest.xml:19:13-49
+		ADDED from H:\projects\training-log-android\app\src\main\AndroidManifest.xml:21:13-49
 	android:windowSoftInputMode
-		ADDED from H:\projects\training-log-android\app\src\main\AndroidManifest.xml:20:13-55
+		ADDED from H:\projects\training-log-android\app\src\main\AndroidManifest.xml:22:13-55
 	android:exported
-		ADDED from H:\projects\training-log-android\app\src\main\AndroidManifest.xml:18:13-36
+		ADDED from H:\projects\training-log-android\app\src\main\AndroidManifest.xml:20:13-36
 	android:name
-		ADDED from H:\projects\training-log-android\app\src\main\AndroidManifest.xml:17:13-41
+		ADDED from H:\projects\training-log-android\app\src\main\AndroidManifest.xml:19:13-41
 intent-filter#action:name:android.intent.action.MAIN+category:name:android.intent.category.LAUNCHER
-ADDED from H:\projects\training-log-android\app\src\main\AndroidManifest.xml:21:13-24:29
+ADDED from H:\projects\training-log-android\app\src\main\AndroidManifest.xml:23:13-26:29
 action#android.intent.action.MAIN
-ADDED from H:\projects\training-log-android\app\src\main\AndroidManifest.xml:22:17-69
+ADDED from H:\projects\training-log-android\app\src\main\AndroidManifest.xml:24:17-69
 	android:name
-		ADDED from H:\projects\training-log-android\app\src\main\AndroidManifest.xml:22:25-66
+		ADDED from H:\projects\training-log-android\app\src\main\AndroidManifest.xml:24:25-66
 category#android.intent.category.LAUNCHER
-ADDED from H:\projects\training-log-android\app\src\main\AndroidManifest.xml:23:17-77
+ADDED from H:\projects\training-log-android\app\src\main\AndroidManifest.xml:25:17-77
 	android:name
-		ADDED from H:\projects\training-log-android\app\src\main\AndroidManifest.xml:23:27-74
+		ADDED from H:\projects\training-log-android\app\src\main\AndroidManifest.xml:25:27-74
 receiver#com.traininglog.app.NotificationReceiver
-ADDED from H:\projects\training-log-android\app\src\main\AndroidManifest.xml:26:9-33:20
+ADDED from H:\projects\training-log-android\app\src\main\AndroidManifest.xml:28:9-35:20
 	android:exported
-		ADDED from H:\projects\training-log-android\app\src\main\AndroidManifest.xml:28:13-36
+		ADDED from H:\projects\training-log-android\app\src\main\AndroidManifest.xml:30:13-36
 	android:name
-		ADDED from H:\projects\training-log-android\app\src\main\AndroidManifest.xml:27:13-49
+		ADDED from H:\projects\training-log-android\app\src\main\AndroidManifest.xml:29:13-49
 intent-filter#action:name:android.intent.action.BOOT_COMPLETED+action:name:com.traininglog.app.DAILY_NOTIFICATION
-ADDED from H:\projects\training-log-android\app\src\main\AndroidManifest.xml:29:13-32:29
+ADDED from H:\projects\training-log-android\app\src\main\AndroidManifest.xml:31:13-34:29
 action#android.intent.action.BOOT_COMPLETED
-ADDED from H:\projects\training-log-android\app\src\main\AndroidManifest.xml:30:17-79
+ADDED from H:\projects\training-log-android\app\src\main\AndroidManifest.xml:32:17-79
 	android:name
-		ADDED from H:\projects\training-log-android\app\src\main\AndroidManifest.xml:30:25-76
+		ADDED from H:\projects\training-log-android\app\src\main\AndroidManifest.xml:32:25-76
 action#com.traininglog.app.DAILY_NOTIFICATION
-ADDED from H:\projects\training-log-android\app\src\main\AndroidManifest.xml:31:17-81
+ADDED from H:\projects\training-log-android\app\src\main\AndroidManifest.xml:33:17-81
 	android:name
-		ADDED from H:\projects\training-log-android\app\src\main\AndroidManifest.xml:31:25-78
+		ADDED from H:\projects\training-log-android\app\src\main\AndroidManifest.xml:33:25-78
 meta-data#android.support.FILE_PROVIDER_PATHS
-ADDED from H:\projects\training-log-android\app\src\main\AndroidManifest.xml:39:13-41:54
+ADDED from H:\projects\training-log-android\app\src\main\AndroidManifest.xml:41:13-43:54
 	android:resource
-		ADDED from H:\projects\training-log-android\app\src\main\AndroidManifest.xml:41:17-51
+		ADDED from H:\projects\training-log-android\app\src\main\AndroidManifest.xml:43:17-51
 	android:name
-		ADDED from H:\projects\training-log-android\app\src\main\AndroidManifest.xml:40:17-67
+		ADDED from H:\projects\training-log-android\app\src\main\AndroidManifest.xml:42:17-67
 uses-sdk
 INJECTED from H:\projects\training-log-android\app\src\main\AndroidManifest.xml reason: use-sdk injection requested
 INJECTED from H:\projects\training-log-android\app\src\main\AndroidManifest.xml
