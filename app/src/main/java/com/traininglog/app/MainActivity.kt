@@ -112,9 +112,10 @@ class MainActivity : AppCompatActivity() {
                     .requestEmail()
                     .build()
                 val client = GoogleSignIn.getClient(this@MainActivity, gso)
-                // キャッシュされたアカウントをクリアしてから起動することで
-                // 毎回必ずGoogleのアカウント選択ダイアログを表示させる
-                client.signOut().addOnCompleteListener {
+                // revokeAccess() でアプリのGoogle認可を完全リセットする
+                // signOut()だけではキャッシュが残り自動選択されてしまうため、
+                // revokeAccess()で毎回ユーザーが明示的に同意操作を行う体験を保証する
+                client.revokeAccess().addOnCompleteListener {
                     googleSignInLauncher.launch(client.signInIntent)
                 }
             }
