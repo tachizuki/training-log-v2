@@ -1280,7 +1280,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-  const APP_VERSION = 'v20260517h';
+  const APP_VERSION = 'v20260518a';
   const REMOTE_URL = 'https://tachizuki.github.io/training-log-v2/index.html';
 
   // AndroidBridgeからストレージデータを受け取る
@@ -2572,67 +2572,135 @@ if (absDiff < 0.15) {
       container.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:20px;font-size:13px;">大会は終了しました 🏆</div>';
       return;
     }
-    const totalWeeks = Math.ceil(Math.round((contestDate - today) / 86400000) / 7);
+    const totalDays = Math.round((contestDate - today) / 86400000);
+    const totalWeeks = Math.ceil(totalDays / 7);
     const sortedRecs = [...records].sort((a,b) => b.date.localeCompare(a.date));
     const latestWeight = sortedRecs.find(r => r.weight)?.weight;
     if (!latestWeight) {
       container.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:20px;font-size:13px;">体重を記録してください</div>';
       return;
     }
+
+    function targetForDate(d) {
+      const days = Math.round((d - today) / 86400000);
+      const t = Math.max(0, Math.min(1, days / totalDays));
+      return parseFloat((latestWeight - (latestWeight - contestWeight) * t).toFixed(1));
+    }
+
+    const chartOpts = {responsive:true,plugins:{legend:{labels:{color:'#888',font:{size:11}}}},scales:{x:{ticks:{color:'#666',font:{size:10}},grid:{color:'#1a1a26'}},y:{ticks:{color:'#666',font:{size:10}},grid:{color:'#1a1a26'}}}};
+
+    if (currentFilter === 'week') {
+      const base = new Date(today);
+      base.setDate(today.getDate() - today.getDay() + weekCalOffset * 7);
+      const wEnd = new Date(base); wEnd.setDate(base.getDate() + 6);
+      const wMid = new Date(base); wMid.setDate(base.getDate() + 3);
+      const s = formatDate(base), e = formatDate(wEnd);
+      const weekRecs = records.filter(r => r.date >= s && r.date <= e && r.weight);
+      const actual = weekRecs.length ? parseFloat((weekRecs.reduce((sum,r)=>sum+r.weight,0)/weekRecs.length).toFixed(1)) : null;
+      const target = targetForDate(wMid);
+      const diff = actual !== null ? (actual - target).toFixed(1) : null;
+      const diffColor = diff === null ? 'var(--text-muted)' : parseFloat(diff) <= 0 ? 'var(--success)' : 'var(--danger)';
+      const diffLabel = diff === null ? '' : `<div style="font-size:11px;color:${diffColor};margin-top:3px;">${parseFloat(diff)>0?'+':''}${diff}kg</div>`;
+      container.innerHTML = `
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px;">
+          <div style="background:var(--surface2);border-radius:10px;padding:14px;text-align:center;">
+            <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px;">今週の目標</div>
+            <div style="font-size:28px;font-family:'Bebas Neue';color:rgba(232,255,0,0.85);">${target}<span style="font-size:13px;">kg</span></div>
+          </div>
+          <div style="background:var(--surface2);border-radius:10px;padding:14px;text-align:center;">
+            <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px;">週平均実績</div>
+            <div style="font-size:28px;font-family:'Bebas Neue';color:var(--success);">${actual ?? '—'}<span style="font-size:13px;">${actual?'kg':''}</span></div>
+            ${diffLabel}
+          </div>
+        </div>`;
+      return;
+    }
+
+    if (currentFilter === 'month') {
+      const now = new Date();
+      const monthStart = new Date(now.getFullYear(), now.getMonth() + monthCalOffset, 1);
+      const monthEnd = new Date(now.getFullYear(), now.getMonth() + monthCalOffset + 1, 0);
+      const weeks = [];
+      let ws = new Date(monthStart);
+      ws.setDate(monthStart.getDate() - monthStart.getDay());
+      while (ws <= monthEnd) {
+        const we = new Date(ws); we.setDate(ws.getDate() + 6);
+        const wm = new Date(ws); wm.setDate(ws.getDate() + 3);
+        if (we >= monthStart) {
+          const s = formatDate(ws), e = formatDate(we);
+          const wr = records.filter(r => r.date >= s && r.date <= e && r.weight);
+          const actual = wr.length ? parseFloat((wr.reduce((sum,r)=>sum+r.weight,0)/wr.length).toFixed(1)) : null;
+          weeks.push({ label:`${wm.getMonth()+1}/${wm.getDate()}`, target:targetForDate(wm), actual });
+        }
+        ws.setDate(ws.getDate() + 7);
+      }
+      container.innerHTML = '<canvas id="roadmap-chart" height="200"></canvas>';
+      if (window._roadmapChart) window._roadmapChart.destroy();
+      window._roadmapChart = new Chart(document.getElementById('roadmap-chart'), {
+        type:'line',
+        data:{
+          labels: weeks.map(w=>w.label),
+          datasets:[
+            {label:'目標', data:weeks.map(w=>w.target), borderColor:'rgba(232,255,0,0.7)', borderDash:[6,3], borderWidth:2, pointRadius:4, pointBackgroundColor:'rgba(232,255,0,0.7)', fill:false, tension:0},
+            {label:'実績', data:weeks.map(w=>w.actual), borderColor:'#00ff88', backgroundColor:'rgba(0,255,136,0.08)', borderWidth:2, pointRadius:5, pointBackgroundColor:'#00ff88', fill:true, tension:0.3, spanGaps:false}
+          ]
+        },
+        options: chartOpts
+      });
+      return;
+    }
+
     const weekLabels = [], targetWeights = [], actualWeights = [];
     for (let w = 0; w <= totalWeeks; w++) {
       weekLabels.push(w === 0 ? '現在' : w === totalWeeks ? '大会' : `${w}週後`);
-      targetWeights.push(parseFloat((latestWeight - (latestWeight - contestWeight) * (w / totalWeeks)).toFixed(1)));
+      const wDate = new Date(today); wDate.setDate(today.getDate() + w * 7);
+      targetWeights.push(targetForDate(wDate));
       if (w === 0) {
         actualWeights.push(latestWeight);
+      } else if (wDate <= today) {
+        const wStart = formatDate(new Date(wDate.getTime() - 7*86400000));
+        const wEndStr = formatDate(wDate);
+        const wr = records.filter(r => r.date >= wStart && r.date < wEndStr && r.weight);
+        actualWeights.push(wr.length ? parseFloat((wr.reduce((s,r)=>s+r.weight,0)/wr.length).toFixed(1)) : null);
       } else {
-        const wEnd = new Date(today); wEnd.setDate(today.getDate() + w * 7);
-        if (wEnd <= today) {
-          const wStart = formatDate(new Date(wEnd.getTime() - 7*86400000));
-          const wEndStr = formatDate(wEnd);
-          const wr = records.filter(r => r.date >= wStart && r.date < wEndStr && r.weight);
-          actualWeights.push(wr.length ? parseFloat((wr.reduce((s,r)=>s+r.weight,0)/wr.length).toFixed(1)) : null);
-        } else {
-          actualWeights.push(null);
-        }
+        actualWeights.push(null);
       }
     }
     const step = totalWeeks > 12 ? Math.ceil(totalWeeks / 12) : 1;
-    const filteredLabels = weekLabels.filter((_,i) => i % step === 0 || i === totalWeeks);
-    const filteredTarget = targetWeights.filter((_,i) => i % step === 0 || i === totalWeeks);
-    const filteredActual = actualWeights.filter((_,i) => i % step === 0 || i === totalWeeks);
-
+    const fLabels = weekLabels.filter((_,i) => i % step === 0 || i === totalWeeks);
+    const fTarget = targetWeights.filter((_,i) => i % step === 0 || i === totalWeeks);
+    const fActual = actualWeights.filter((_,i) => i % step === 0 || i === totalWeeks);
     container.innerHTML = '<canvas id="roadmap-chart" height="200"></canvas>';
     if (window._roadmapChart) window._roadmapChart.destroy();
-    const cd2 = {responsive:true,plugins:{legend:{labels:{color:'#888',font:{size:11}}}},scales:{x:{ticks:{color:'#666',font:{size:10}},grid:{color:'#1a1a26'}},y:{ticks:{color:'#666',font:{size:10}},grid:{color:'#1a1a26'}}}};
     window._roadmapChart = new Chart(document.getElementById('roadmap-chart'), {
       type:'line',
       data:{
-        labels: filteredLabels,
+        labels: fLabels,
         datasets:[
-          {label:'目標ライン', data:filteredTarget, borderColor:'rgba(232,255,0,0.7)', borderDash:[6,3], borderWidth:2, pointRadius:3, pointBackgroundColor:'rgba(232,255,0,0.7)', fill:false, tension:0},
-          {label:'実績',       data:filteredActual, borderColor:'#00ff88', backgroundColor:'rgba(0,255,136,0.08)', borderWidth:2, pointRadius:4, pointBackgroundColor:'#00ff88', fill:true, tension:0.3, spanGaps:false}
+          {label:'目標ライン', data:fTarget, borderColor:'rgba(232,255,0,0.7)', borderDash:[6,3], borderWidth:2, pointRadius:3, pointBackgroundColor:'rgba(232,255,0,0.7)', fill:false, tension:0},
+          {label:'実績',       data:fActual, borderColor:'#00ff88', backgroundColor:'rgba(0,255,136,0.08)', borderWidth:2, pointRadius:4, pointBackgroundColor:'#00ff88', fill:true, tension:0.3, spanGaps:false}
         ]
       },
-      options: cd2
+      options: chartOpts
     });
     const weeklyReduction = ((latestWeight - contestWeight) / totalWeeks).toFixed(2);
     const need = (latestWeight - contestWeight).toFixed(1);
-    const statsHtml = `<div style="margin-top:12px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
-      <div style="text-align:center;background:var(--surface2);border-radius:8px;padding:8px;">
-        <div style="font-size:9px;color:var(--text-muted);">大会まで</div>
-        <div style="font-size:20px;font-family:'Bebas Neue';color:var(--accent);">${totalWeeks}<span style="font-size:11px;">週</span></div>
-      </div>
-      <div style="text-align:center;background:var(--surface2);border-radius:8px;padding:8px;">
-        <div style="font-size:9px;color:var(--text-muted);">必要減量</div>
-        <div style="font-size:20px;font-family:'Bebas Neue';color:${need > 0 ? 'var(--danger)' : 'var(--success)'};">${need}<span style="font-size:11px;">kg</span></div>
-      </div>
-      <div style="text-align:center;background:var(--surface2);border-radius:8px;padding:8px;">
-        <div style="font-size:9px;color:var(--text-muted);">週あたり</div>
-        <div style="font-size:20px;font-family:'Bebas Neue';color:var(--accent2);">${weeklyReduction}<span style="font-size:11px;">kg</span></div>
-      </div>
-    </div>`;
-    document.getElementById('roadmap-chart-container').insertAdjacentHTML('beforeend', statsHtml);
+    document.getElementById('roadmap-chart-container').insertAdjacentHTML('beforeend',
+      `<div style="margin-top:12px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+        <div style="text-align:center;background:var(--surface2);border-radius:8px;padding:8px;">
+          <div style="font-size:9px;color:var(--text-muted);">大会まで</div>
+          <div style="font-size:20px;font-family:'Bebas Neue';color:var(--accent);">${totalWeeks}<span style="font-size:11px;">週</span></div>
+        </div>
+        <div style="text-align:center;background:var(--surface2);border-radius:8px;padding:8px;">
+          <div style="font-size:9px;color:var(--text-muted);">必要減量</div>
+          <div style="font-size:20px;font-family:'Bebas Neue';color:${parseFloat(need)>0?'var(--danger)':'var(--success)'};">${need}<span style="font-size:11px;">kg</span></div>
+        </div>
+        <div style="text-align:center;background:var(--surface2);border-radius:8px;padding:8px;">
+          <div style="font-size:9px;color:var(--text-muted);">週あたり</div>
+          <div style="font-size:20px;font-family:'Bebas Neue';color:var(--accent2);">${weeklyReduction}<span style="font-size:11px;">kg</span></div>
+        </div>
+      </div>`
+    );
   }
 
   function renderCharts() {
