@@ -212,6 +212,21 @@ class MainActivity : AppCompatActivity() {
         }
 
         @JavascriptInterface
+        fun isPremium(): Boolean {
+            // TODO: Google Play Billing連携後にサブスク状態を返す
+            val prefs = getSharedPreferences("premium_prefs", MODE_PRIVATE)
+            return prefs.getBoolean("is_premium", false)
+        }
+
+        @JavascriptInterface
+        fun purchasePremium() {
+            // TODO: Google Play Billing の購入フローを起動
+            runOnUiThread {
+                webView.evaluateJavascript("showToast('課金機能は準備中です', false)", null)
+            }
+        }
+
+        @JavascriptInterface
         fun openFilePicker() {
             val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
                 type = "*/*"

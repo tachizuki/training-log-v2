@@ -215,6 +215,14 @@
   .tag-salon { background: rgba(255,140,66,0.1); color: #ff8c42; border: 1px solid rgba(255,140,66,0.2); }
   .tag-salt { background: rgba(255,68,68,0.1); color: #ff6b6b; border: 1px solid rgba(255,68,68,0.2); }
   .tag-steps { background: rgba(0,255,136,0.08); color: var(--success); border: 1px solid rgba(0,255,136,0.2); }
+
+  /* ===== PAYWALL ===== */
+  .paywall-overlay { position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:300;display:none;align-items:flex-end;justify-content:center; }
+  .paywall-overlay.open { display:flex; }
+  .paywall-sheet { background:var(--surface);border-radius:24px 24px 0 0;padding:32px 24px calc(32px + env(safe-area-inset-bottom));width:100%;max-width:480px;text-align:center; }
+  .paywall-feature { display:flex;align-items:center;gap:10px;padding:8px 0;font-size:13px;color:var(--text);text-align:left; }
+  .paywall-list-banner { background:linear-gradient(135deg,rgba(232,255,0,0.06),rgba(0,212,255,0.04));border:1px solid rgba(232,255,0,0.2);border-radius:14px;padding:20px;text-align:center;margin-top:12px;cursor:pointer; }
+
   .activity-add-btn { width: 100%; padding: 12px; background: rgba(0,255,136,0.06); border: 1px dashed rgba(0,255,136,0.3); border-radius: 12px; color: var(--success); font-size: 14px; cursor: pointer; }
   .activity-item { display: flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; margin-bottom: 8px; }
   .activity-item-icon { font-size: 20px; flex-shrink: 0; }
@@ -928,6 +936,24 @@
   </div>
 </div>
 
+<!-- PAYWALL MODAL -->
+<div class="paywall-overlay" id="paywall-modal">
+  <div class="paywall-sheet">
+    <div style="font-size:36px;margin-bottom:10px;">🔓</div>
+    <div style="font-family:'Bebas Neue';font-size:30px;color:var(--accent);letter-spacing:0.1em;margin-bottom:6px;">PREMIUM</div>
+    <div style="font-size:15px;color:var(--text);font-weight:700;margin-bottom:6px;">全期間のデータを解放する</div>
+    <div style="font-size:13px;color:var(--text-muted);margin-bottom:20px;line-height:1.7;">無料プランは直近30日の履歴が対象です。<br>プレミアムで大会準備のすべての記録を<br>いつでも振り返れます。</div>
+    <div style="background:var(--surface2);border-radius:14px;padding:16px 20px;margin-bottom:20px;text-align:left;">
+      <div class="paywall-feature"><span>📊</span><span>無制限の履歴閲覧・分析</span></div>
+      <div class="paywall-feature"><span>☁️</span><span>複数端末のクラウド同期</span></div>
+      <div class="paywall-feature"><span>🗺</span><span>大会ロードマップ</span></div>
+      <div class="paywall-feature"><span>📋</span><span>週レポート</span></div>
+    </div>
+    <button onclick="purchasePremium()" style="width:100%;padding:16px;background:var(--accent);color:var(--bg);border:none;border-radius:14px;font-size:16px;font-weight:700;cursor:pointer;margin-bottom:10px;">¥300 / 月で始める</button>
+    <button onclick="closePaywall()" style="width:100%;padding:12px;background:none;border:1px solid var(--border);border-radius:14px;font-size:14px;color:var(--text-muted);cursor:pointer;">あとで</button>
+  </div>
+</div>
+
 <!-- CUSTOM MODAL -->
 <div class="modal-overlay" id="custom-modal" onclick="handleCustomOverlay(event)">
   <div class="modal-sheet">
@@ -1110,6 +1136,14 @@
 <div class="profile-modal-overlay" id="profile-modal" onclick="handleProfileOverlay(event)">
   <div class="profile-modal-sheet">
     <div class="profile-modal-title">⚙ プロフィール設定</div>
+    <!-- プランステータス -->
+    <div id="plan-status-bar" style="background:var(--surface2);border-radius:12px;padding:12px 14px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;">
+      <div>
+        <div style="font-size:10px;color:var(--text-muted);margin-bottom:2px;">現在のプラン</div>
+        <div id="plan-status-label" style="font-size:14px;font-weight:700;color:var(--text);">無料プラン（直近30日）</div>
+      </div>
+      <button id="plan-upgrade-btn" onclick="openPaywall()" style="padding:7px 14px;background:var(--accent);color:var(--bg);border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">アップグレード</button>
+    </div>
     <!-- Firebase認証UI -->
     <div style="background:var(--surface2);border-radius:12px;padding:12px 14px;margin-bottom:16px;">
       <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;">アカウント</div>
@@ -1246,7 +1280,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-  const APP_VERSION = 'v20260517g';
+  const APP_VERSION = 'v20260517h';
   const REMOTE_URL = 'https://tachizuki.github.io/training-log-v2/index.html';
 
   // AndroidBridgeからストレージデータを受け取る
@@ -1877,10 +1911,66 @@
     if (document.getElementById('tab-graph').classList.contains('active')) renderCharts();
   }
 
+  // ==================
+  // PREMIUM
+  // ==================
+  const PREMIUM_HISTORY_DAYS = 30;
+
+  function isPremium() {
+    if (typeof AndroidBridge !== 'undefined' && typeof AndroidBridge.isPremium === 'function') {
+      const r = AndroidBridge.isPremium();
+      return r === true || r === 'true';
+    }
+    return localStorage.getItem('is_premium') === 'true';
+  }
+
+  function getHistoryCutoff() {
+    if (isPremium()) return null;
+    const d = new Date();
+    d.setDate(d.getDate() - PREMIUM_HISTORY_DAYS);
+    d.setHours(0,0,0,0);
+    return formatDate(d);
+  }
+
+  function openPaywall() {
+    document.getElementById('paywall-modal').classList.add('open');
+  }
+
+  function closePaywall() {
+    document.getElementById('paywall-modal').classList.remove('open');
+  }
+
+  function purchasePremium() {
+    if (typeof AndroidBridge !== 'undefined' && typeof AndroidBridge.purchasePremium === 'function') {
+      AndroidBridge.purchasePremium();
+    } else {
+      showToast('課金機能は準備中です', false);
+    }
+  }
+
+  function onPremiumPurchased() {
+    localStorage.setItem('is_premium', 'true');
+    closePaywall();
+    renderView();
+    if (document.getElementById('tab-graph').classList.contains('active')) renderCharts();
+    showToast('プレミアムへようこそ！ 🎉', false);
+  }
+
+  function onPremiumRestored(active) {
+    if (active === true || active === 'true') {
+      localStorage.setItem('is_premium', 'true');
+    } else {
+      localStorage.removeItem('is_premium');
+    }
+    renderView();
+  }
+
   function getFilteredRecords() {
     const now=new Date();
+    const cutoff = getHistoryCutoff();
     if(currentFilter==='week'){const w=new Date(now);w.setDate(now.getDate()-7);return records.filter(r=>new Date(r.date)>=w);}
     if(currentFilter==='month'){const m=new Date(now);m.setDate(now.getDate()-30);return records.filter(r=>new Date(r.date)>=m);}
+    if (cutoff) return records.filter(r => r.date >= cutoff);
     return records;
   }
 
@@ -1891,12 +1981,28 @@
   let monthCalOffset = 0;
 
   function weekCalNav(delta) {
-    weekCalOffset += delta;
+    const newOffset = weekCalOffset + delta;
+    if (!isPremium() && delta < 0) {
+      const target = new Date();
+      target.setDate(target.getDate() - target.getDay() + newOffset * 7);
+      const cutoff = new Date();
+      cutoff.setDate(cutoff.getDate() - PREMIUM_HISTORY_DAYS);
+      if (target < cutoff) { openPaywall(); return; }
+    }
+    weekCalOffset = newOffset;
     renderWeekCalendar();
     if (document.getElementById('tab-graph').classList.contains('active')) renderCharts();
   }
   function monthCalNav(delta) {
-    monthCalOffset += delta;
+    const newOffset = monthCalOffset + delta;
+    if (!isPremium() && delta < 0) {
+      const now = new Date();
+      const target = new Date(now.getFullYear(), now.getMonth() + newOffset, 1);
+      const cutoff = new Date();
+      cutoff.setDate(cutoff.getDate() - PREMIUM_HISTORY_DAYS);
+      if (target < cutoff) { openPaywall(); return; }
+    }
+    monthCalOffset = newOffset;
     renderMonthCalendar();
     if (document.getElementById('tab-graph').classList.contains('active')) renderCharts();
   }
@@ -2318,7 +2424,18 @@ if (absDiff < 0.15) {
   function renderList() {
     const list=document.getElementById('records-list');
     const filtered=getFilteredRecords();
-    if(filtered.length===0){list.innerHTML='<div class="empty-state"><div class="empty-state-icon">📋</div><div class="empty-state-text">記録がありません</div></div>';return;}
+    const cutoff = getHistoryCutoff();
+    const lockedCount = cutoff ? records.filter(r => r.date < cutoff).length : 0;
+    if(filtered.length===0 && lockedCount===0){list.innerHTML='<div class="empty-state"><div class="empty-state-icon">📋</div><div class="empty-state-text">記録がありません</div></div>';return;}
+    if(filtered.length===0 && lockedCount>0){
+      list.innerHTML=`<div class="paywall-list-banner" onclick="openPaywall()">
+        <div style="font-size:28px;margin-bottom:6px;">🔒</div>
+        <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px;">${lockedCount}件の記録があります</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">プレミアムで30日以前の履歴を表示</div>
+        <div style="display:inline-block;padding:8px 24px;background:var(--accent);color:var(--bg);border-radius:20px;font-size:13px;font-weight:700;">アップグレード</div>
+      </div>`;
+      return;
+    }
     list.innerHTML=filtered.map((r)=>{
       const [ry,rm,rd]=r.date.split('-').map(Number); const d=new Date(ry,rm-1,rd);
       const ds=`${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()} (${['日','月','火','水','木','金','土'][d.getDay()]})`;
@@ -2350,6 +2467,14 @@ if (absDiff < 0.15) {
         ${memo}
       </div>`+analysis;
     }).join('');
+    if (lockedCount > 0) {
+      list.innerHTML += `<div class="paywall-list-banner" onclick="openPaywall()">
+        <div style="font-size:24px;margin-bottom:6px;">🔒</div>
+        <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px;">さらに${lockedCount}件の記録</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">プレミアムで30日以前の履歴を表示</div>
+        <div style="display:inline-block;padding:8px 24px;background:var(--accent);color:var(--bg);border-radius:20px;font-size:13px;font-weight:700;">アップグレード</div>
+      </div>`;
+    }
   }
 
   // ==================
@@ -4224,6 +4349,12 @@ if (absDiff < 0.15) {
     document.getElementById('prof-contest-weight').value = localStorage.getItem('contest_weight') || '';
     loadNotifSettings();
     updateBackupVisibility();
+    const premium = isPremium();
+    const label = document.getElementById('plan-status-label');
+    const btn = document.getElementById('plan-upgrade-btn');
+    if (label) label.textContent = premium ? 'プレミアムプラン ✨' : '無料プラン（直近30日）';
+    if (label) label.style.color = premium ? 'var(--accent)' : 'var(--text)';
+    if (btn) btn.style.display = premium ? 'none' : '';
   }
 
   function handleProfileOverlay(e) {
