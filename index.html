@@ -1343,7 +1343,8 @@
   // ==================
   let currentUser = null;
   const STORAGE_KEYS = ['training_records','gym_data','water_data','user_profile',
-                        'gym_presets','water_quick_btns','activity_presets','weekly_goals'];
+                        'gym_presets','water_quick_btns','activity_presets','weekly_goals',
+                        'contest_date','contest_name'];
 
   // Kotlinから呼ばれるコールバック
   function onFirebaseSignIn(uid, displayName, email) {
@@ -1406,16 +1407,21 @@
     }
   }
 
-  function syncToCloud(uid) {
+  // デバウンスタイマー（連続入力時の無駄な書き込みを防ぐ）
+  let _syncTimer = null;
+  function syncToCloud(uid, delay = 3000) {
     if (!uid) return;
-    const data = {};
-    STORAGE_KEYS.forEach(k => {
-      const v = localStorage.getItem(k);
-      if (v) data[k] = v;
-    });
-    if (typeof AndroidBridge !== 'undefined') {
-      AndroidBridge.saveToFirestore(uid, JSON.stringify(data));
-    }
+    clearTimeout(_syncTimer);
+    _syncTimer = setTimeout(() => {
+      const data = {};
+      STORAGE_KEYS.forEach(k => {
+        const v = localStorage.getItem(k);
+        if (v) data[k] = v;
+      });
+      if (typeof AndroidBridge !== 'undefined') {
+        AndroidBridge.saveToFirestore(uid, JSON.stringify(data));
+      }
+    }, delay);
   }
 
   function loadFromCloud(uid) {
@@ -4304,7 +4310,7 @@ if (absDiff < 0.15) {
     updateContestCountdown();
     document.getElementById('profile-modal').classList.remove('open');
     showToast('プロフィールを保存しました ✓', false);
-    if (currentUser) syncToCloud(currentUser.uid);
+    if (currentUser) syncToCloud(currentUser.uid, 0); // プロフィール保存は即時同期
   }
 
 

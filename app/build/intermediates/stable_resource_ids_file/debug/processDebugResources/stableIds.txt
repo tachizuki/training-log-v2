@@ -1868,4 +1868,5 @@ com.traininglog.app:attr/buttonBarNegativeButtonStyle = 0x7f03004c
 com.traininglog.app:attr/subtitle = 0x7f0301dc
 com.traininglog.app:style/Base.Widget.AppCompat.PopupMenu = 0x7f0f008f
 com.traininglog.app:attr/indeterminateProgressStyle = 0x7f030107
-com.tra
+com.traininglog.app:attr/telltales_tailColor = 0x7f0301e6
+com.traininglog.app:anim/abc_slide_out_bottom = 0x7f010008

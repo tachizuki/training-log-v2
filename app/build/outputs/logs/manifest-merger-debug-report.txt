@@ -606,4 +606,17 @@ intent-filter#action:name:androidx.profileinstaller.action.SKIP_FILE
 ADDED from [androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\tanab\.gradle\caches\8.9\transforms\f3db60ffe0cc5a3869eeeb4468e95eda\transformed\profileinstaller-1.4.0\AndroidManifest.xml:43:13-45:29
 action#androidx.profileinstaller.action.SKIP_FILE
 ADDED from [androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\tanab\.gradle\caches\8.9\transforms\f3db60ffe0cc5a3869eeeb4468e95eda\transformed\profileinstaller-1.4.0\AndroidManifest.xml:44:17-85
-	android:
+	android:name
+		ADDED from [androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\tanab\.gradle\caches\8.9\transforms\f3db60ffe0cc5a3869eeeb4468e95eda\transformed\profileinstaller-1.4.0\AndroidManifest.xml:44:25-82
+intent-filter#action:name:androidx.profileinstaller.action.SAVE_PROFILE
+ADDED from [androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\tanab\.gradle\caches\8.9\transforms\f3db60ffe0cc5a3869eeeb4468e95eda\transformed\profileinstaller-1.4.0\AndroidManifest.xml:46:13-48:29
+action#androidx.profileinstaller.action.SAVE_PROFILE
+ADDED from [androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\tanab\.gradle\caches\8.9\transforms\f3db60ffe0cc5a3869eeeb4468e95eda\transformed\profileinstaller-1.4.0\AndroidManifest.xml:47:17-88
+	android:name
+		ADDED from [androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\tanab\.gradle\caches\8.9\transforms\f3db60ffe0cc5a3869eeeb4468e95eda\transformed\profileinstaller-1.4.0\AndroidManifest.xml:47:25-85
+intent-filter#action:name:androidx.profileinstaller.action.BENCHMARK_OPERATION
+ADDED from [androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\tanab\.gradle\caches\8.9\transforms\f3db60ffe0cc5a3869eeeb4468e95eda\transformed\profileinstaller-1.4.0\AndroidManifest.xml:49:13-51:29
+action#androidx.profileinstaller.action.BENCHMARK_OPERATION
+ADDED from [androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\tanab\.gradle\caches\8.9\transforms\f3db60ffe0cc5a3869eeeb4468e95eda\transformed\profileinstaller-1.4.0\AndroidManifest.xml:50:17-95
+	android:name
+		ADDED from [androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\tanab\.gradle\caches\8.9\transforms\f3db60ffe0cc5a3869eeeb4468e95eda\transformed\profileinstaller-1.4.0\AndroidManifest.xml:50:25-92
