@@ -51,6 +51,7 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var auth: FirebaseAuth
     private lateinit var db: FirebaseFirestore
+    private lateinit var billing: BillingManager
 
     private val googleSignInLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
@@ -213,17 +214,30 @@ class MainActivity : AppCompatActivity() {
 
         @JavascriptInterface
         fun isPremium(): Boolean {
-            // TODO: Google Play Billing連携後にサブスク状態を返す
-            val prefs = getSharedPreferences("premium_prefs", MODE_PRIVATE)
-            return prefs.getBoolean("is_premium", false)
+            // BillingManager がストアから取得した最新状態を SharedPreferences "premium_prefs" にキャッシュしている
+            return if (::billing.isInitialized) billing.isPremium()
+            else getSharedPreferences("premium_prefs", MODE_PRIVATE).getBoolean("is_premium", false)
         }
 
         @JavascriptInterface
         fun purchasePremium() {
-            // TODO: Google Play Billing の購入フローを起動
             runOnUiThread {
-                webView.evaluateJavascript("showToast('課金機能は準備中です', false)", null)
+                if (!::billing.isInitialized) {
+                    webView.evaluateJavascript("showToast('課金機能の初期化中です。少し待って再度お試しください')", null)
+                    return@runOnUiThread
+                }
+                val launched = billing.launchPurchaseFlow(this@MainActivity)
+                if (!launched) {
+                    // 商品詳細未取得などで起動できなかった場合
+                    webView.evaluateJavascript("showToast('購入フローを起動できませんでした。ネットワークを確認してください')", null)
+                }
             }
+        }
+
+        @JavascriptInterface
+        fun restorePremium() {
+            // ユーザー操作で明示的に復元したい場合用 (今は未使用だがUI側から呼び出せる)
+            if (::billing.isInitialized) billing.restorePurchases()
         }
 
         @JavascriptInterface
@@ -314,6 +328,20 @@ class MainActivity : AppCompatActivity() {
 
         auth = FirebaseAuth.getInstance()
         db = FirebaseFirestore.getInstance()
+
+        // Google Play Billing 初期化（プレミアム状態変化時はWebViewへ通知）
+        billing = BillingManager(applicationContext) { active ->
+            runOnUiThread {
+                if (::webView.isInitialized) {
+                    if (active) {
+                        webView.evaluateJavascript("if(typeof onPremiumPurchased==='function')onPremiumPurchased();", null)
+                    } else {
+                        webView.evaluateJavascript("if(typeof onPremiumRestored==='function')onPremiumRestored(false);", null)
+                    }
+                }
+            }
+        }
+        billing.startConnection()
 
         // 通知チャンネル作成 & Android 13+ の通知権限リクエスト
         NotificationReceiver.createChannel(this)
@@ -420,5 +448,16 @@ class MainActivity : AppCompatActivity() {
     override fun onRestoreInstanceState(savedInstanceState: Bundle) {
         super.onRestoreInstanceState(savedInstanceState)
         webView.restoreState(savedInstanceState)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // ストアでの購入・キャンセル等の変更をアプリ復帰時に取り込む
+        if (::billing.isInitialized) billing.restorePurchases()
+    }
+
+    override fun onDestroy() {
+        if (::billing.isInitialized) billing.endConnection()
+        super.onDestroy()
     }
 }

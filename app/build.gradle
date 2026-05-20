@@ -47,4 +47,7 @@ dependencies {
     // Google Sign-In（ChromeCustomTabs経由）
     implementation 'com.google.android.gms:play-services-auth:21.2.0'
     implementation 'androidx.browser:browser:1.8.0'
+
+    // Google Play Billing（プレミアムサブスク）
+    implementation 'com.android.billingclient:billing-ktx:7.1.1'
 }
