@@ -1038,13 +1038,16 @@
     <div style="font-family:'Bebas Neue';font-size:30px;color:var(--accent);letter-spacing:0.1em;margin-bottom:6px;">PREMIUM</div>
     <div style="font-size:15px;color:var(--text);font-weight:700;margin-bottom:6px;" data-i18n="paywall_unlock">全期間のデータを解放する</div>
     <div style="font-size:13px;color:var(--text-muted);margin-bottom:20px;line-height:1.7;" id="paywall-desc-text">無料プランは直近30日の履歴が対象です。<br>プレミアムで大会準備のすべての記録を<br>いつでも振り返れます。</div>
-    <div style="background:var(--surface2);border-radius:14px;padding:16px 20px;margin-bottom:20px;text-align:left;">
+    <div style="background:var(--surface2);border-radius:14px;padding:16px 20px;margin-bottom:14px;text-align:left;">
       <div class="paywall-feature"><span>📊</span><span data-i18n="paywall_f1">無制限の履歴閲覧・分析</span></div>
       <div class="paywall-feature"><span>☁️</span><span data-i18n="paywall_f2">複数端末のクラウド同期</span></div>
       <div class="paywall-feature"><span>🗺</span><span data-i18n="paywall_f3">大会ロードマップ</span></div>
       <div class="paywall-feature"><span>📋</span><span data-i18n="paywall_f4">週レポート</span></div>
+      <div class="paywall-feature"><span>💪</span><span data-i18n="paywall_f5">筋トレ分析(RM・停滞検知)</span></div>
     </div>
-    <button onclick="purchasePremium()" style="width:100%;padding:16px;background:var(--accent);color:var(--bg);border:none;border-radius:14px;font-size:16px;font-weight:700;cursor:pointer;margin-bottom:10px;" data-i18n="paywall_price">¥300 / 月で始める</button>
+    <div style="background:rgba(0,255,136,0.08);border:1px solid rgba(0,255,136,0.25);border-radius:10px;padding:10px 12px;margin-bottom:14px;font-size:12px;color:var(--success);text-align:center;line-height:1.6;" data-i18n="paywall_trial">🎁 初回登録は <strong>14日間 無料</strong>。期間内のキャンセルなら課金なし</div>
+    <button onclick="purchasePremium()" style="width:100%;padding:16px;background:var(--accent);color:var(--bg);border:none;border-radius:14px;font-size:16px;font-weight:700;cursor:pointer;margin-bottom:10px;" data-i18n="paywall_price">14日間無料で試す</button>
+    <div style="font-size:11px;color:var(--text-muted);margin-bottom:10px;" data-i18n="paywall_price_note">期間後は ¥400 / 月（いつでも解約可）</div>
     <button onclick="closePaywall()" style="width:100%;padding:12px;background:none;border:1px solid var(--border);border-radius:14px;font-size:14px;color:var(--text-muted);cursor:pointer;" data-i18n="paywall_later">あとで</button>
   </div>
 </div>
@@ -1570,7 +1573,10 @@
       paywall_f2: '複数端末のクラウド同期',
       paywall_f3: '大会ロードマップ',
       paywall_f4: '週レポート',
-      paywall_price: '¥300 / 月で始める',
+      paywall_f5: '筋トレ分析(RM・停滞検知)',
+      paywall_trial: '🎁 初回登録は 14日間 無料。期間内のキャンセルなら課金なし',
+      paywall_price: '14日間無料で試す',
+      paywall_price_note: '期間後は ¥400 / 月（いつでも解約可）',
       paywall_later: 'あとで',
       // custom water modal
       water_custom_title: '💧 カスタム水分追加',
@@ -1972,7 +1978,10 @@
       paywall_f2: 'Multi-device cloud sync',
       paywall_f3: 'Contest roadmap',
       paywall_f4: 'Weekly report',
-      paywall_price: 'Start for $2.99/month',
+      paywall_f5: 'Training analytics (1RM & plateau detection)',
+      paywall_trial: '🎁 14-day free trial. Cancel anytime before charge',
+      paywall_price: 'Start 14-day free trial',
+      paywall_price_note: 'Then $2.99 / month. Cancel anytime',
       paywall_later: 'Later',
       // custom water modal
       water_custom_title: '💧 Custom Hydration Entry',

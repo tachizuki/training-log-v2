@@ -2,15 +2,39 @@
 
 ## 1. Play Console 側の準備（必須）
 
+### 1-1. サブスクリプション商品の作成
+
 1. **アプリの登録**（まだなら）。パッケージ名 `com.traininglog.app`
 2. **アプリ内アイテム → サブスクリプション → 新規作成**
    - 商品ID: `premium_monthly` （`BillingManager.PRODUCT_PREMIUM_MONTHLY` と一致）
    - 名前: PhysiqueLog プレミアム
-   - 課金期間: 月 (P1M)
-   - 価格: 日本 ¥300 / 米国 $2.99 など
-   - **状態を「有効」に**
-3. **テスター追加**: 「設定 → ライセンステスト → ライセンスをテスト」に自分のGmailを追加。これでテスト購入(課金されず購入扱い)が可能。
-4. **内部テストトラックにaabをアップ**（最初の購入テストには必須）
+   - 価格設定:
+     - 日本 ¥400 / 米国 $2.99 / 他国は Play Console の自動換算で OK
+3. **基本プラン (Base plan) の作成**
+   - 課金期間: **月次 (P1M)**
+   - 自動更新: ON
+   - 状態: 有効
+
+### 1-2. 無料体験オファーの追加 ★今回の主作業
+
+サブスクリプション商品の中の「**オファー**」タブから:
+
+1. 「**新しいオファーを作成**」
+2. オファータイプ: **無料体験 (Free trial)**
+3. 期間: **14日間 (P14D)**
+4. 適用条件:
+   - **対象**: このサブスクリプションを購入したことがない新規ユーザーのみ
+   - **資格**: デフォルトのままで OK (Play Billing が自動で「初回購入か」を判定)
+5. ターゲット国: 全国対応(または日本+米国のみ)
+6. 状態: **有効化**
+
+これで初回ユーザーが購入フローを起動すると、最初に14日間無料体験のオファーが表示され、期間内のキャンセルでは課金されない動作になります。
+
+### 1-3. テスター追加
+
+「設定 → ライセンステスト → ライセンスをテスト」に自分のGmailを追加。これでテスト購入(課金されず購入扱い)が可能。
+
+### 1-4. aab を内部テストトラックにアップ（最初の購入テストには必須）
 
 ## 2. リリースビルドの設定（次の作業）
 
@@ -62,10 +86,11 @@ keystore は `keytool -genkey -v -keystore release.keystore -keyalg RSA -keysize
 
 ## 5. 確認ポイント
 
-- ペイウォール内の価格表示（`¥300 / 月で始める`）は現状ハードコードなので、Play Console側の価格と一致させる
+- ペイウォール内の価格表示は現状ハードコード `¥400/月` 。Play Console 側の価格と一致させること
 - 国別価格を変える場合は `BillingManager` で `productDetails.subscriptionOfferDetails` から動的に表示するよう拡張する
 - 起動時に `restorePurchases()` が動くので、機種変更後の自動復元も問題なし
 - `acknowledge` を実装済みなので、3日以内のack漏れによる自動払い戻しは発生しない
+- **14日無料体験中もアプリは Premium 扱い** (`PurchaseState.PURCHASED` が返る)。期間内キャンセルで `restorePurchases` 時に Premium が外れる
 
 ## 6. もし「課金機能の初期化中です」と出る場合
 
@@ -78,3 +103,8 @@ keystore は `keytool -genkey -v -keystore release.keystore -keyalg RSA -keysize
 - 現状 `premium_monthly` 1種類のみ。年額プラン追加なら同じ仕組みで `premium_yearly` を追加し、`launchPurchaseFlow` に商品選択を渡せるように拡張
 - 価格表示の動的化（多言語/通貨対応）
 - 購入レシートのサーバー検証（Firebase Functions + Play Developer API）。現状はクライアント側のキャッシュのみのため、改ざんを完全には防げない。本気でやるなら Server-side validation を導入
+- **AI 体型・ポージング分析機能の追加課金 (将来案)**
+  - コスト変動費なので 1プラン定額には組み込まずに別建てのアドオン or 都度課金で実装する想定
+  - 案A: 月額アドオン `ai_image_pack ¥500/月`, `ai_video_pack ¥1200/月`
+  - 案B: 消費型チケット `ai_image_ticket ¥150/回`, `ai_video_ticket ¥500/回`
+  - 詳細設計は `docs/AI_BODY_ANALYSIS_DESIGN.md` を参照
