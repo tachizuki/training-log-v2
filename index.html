@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="ja" id="html-root">
 <head>
 <meta charset="UTF-8">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>TrainingLog</title>
+<title>PhysiqueLog</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 
 <style>
@@ -644,9 +644,9 @@
 <div id="top-screen">
   <div class="top-content">
     <button class="profile-btn" onclick="openProfile()">⚙</button>
-    <div class="app-title">TRAINING<br>LOG</div>
-    <div class="app-subtitle">大会競技者向け 記録アプリ</div>
-    <div id="top-welcome">ようこそ、<span id="top-welcome-name">ゲスト</span>さん 👋</div>
+    <div class="app-title" id="app-title-display">TRAINING<br>LOG</div>
+    <div class="app-subtitle" data-i18n="app_subtitle">大会競技者向け 記録アプリ</div>
+    <div id="top-welcome"><span data-i18n="welcome">ようこそ、</span><span id="top-welcome-name">ゲスト</span><span data-i18n="welcome_suffix">さん 👋</span></div>
     <div id="contest-countdown">
       <div class="contest-name" id="contest-name-display"></div>
       <div class="contest-days" id="contest-days-num">—</div>
@@ -663,10 +663,10 @@
       </div>
     </div>
     <div class="main-buttons">
-      <button class="btn-main btn-record" onclick="showScreen('record-screen')">記録する</button>
-      <button class="btn-main btn-water" onclick="showScreen('water-screen'); renderWater()">💧 水分を記録する</button>
-      <button class="btn-main btn-gym" onclick="showScreen('gym-screen'); renderGym()">💪 筋トレメモ</button>
-      <button class="btn-main btn-view" onclick="showScreen('view-screen'); renderView()">表示する</button>
+      <button class="btn-main btn-record" onclick="showScreen('record-screen')" data-i18n="btn_record">記録する</button>
+      <button class="btn-main btn-water" onclick="showScreen('water-screen'); renderWater()" data-i18n="btn_water">💧 水分を記録する</button>
+      <button class="btn-main btn-gym" onclick="showScreen('gym-screen'); renderGym()" data-i18n="btn_gym">💪 筋トレメモ</button>
+      <button class="btn-main btn-view" onclick="showScreen('view-screen'); renderView()" data-i18n="btn_view">表示する</button>
 
     </div>
   </div>
@@ -676,68 +676,68 @@
 <div id="record-screen" class="screen">
   <div class="screen-header">
     <button class="btn-back" onclick="showScreen(null)">←</button>
-    <div class="screen-title">今日の記録</div>
+    <div class="screen-title" data-i18n="screen_record">今日の記録</div>
   </div>
   <div class="screen-body">
     <div class="form-section">
-      <div class="form-section-title">📅 日付</div>
+      <div class="form-section-title" data-i18n="section_date">📅 日付</div>
       <div class="form-group"><input type="date" class="form-input" id="rec-date" onchange="loadRecordByDate(this.value)"></div>
     </div>
     <div class="form-section">
-      <div class="form-section-title">⚖️ 体重・睡眠</div>
+      <div class="form-section-title" data-i18n="section_weight_sleep">⚖️ 体重・睡眠</div>
       <div class="form-grid">
-        <div class="form-group"><label class="form-label">体重 (kg)</label><input type="number" class="form-input" id="rec-weight" placeholder="62.5" step="0.1"></div>
-        <div class="form-group"><label class="form-label">睡眠時間 (h)</label><input type="number" class="form-input" id="rec-sleep" placeholder="7.5" step="0.5"></div>
+        <div class="form-group"><label class="form-label" data-i18n="label_weight">体重 (kg)</label><input type="number" class="form-input" id="rec-weight" placeholder="62.5" step="0.1"></div>
+        <div class="form-group"><label class="form-label" data-i18n="label_sleep">睡眠時間 (h)</label><input type="number" class="form-input" id="rec-sleep" placeholder="7.5" step="0.5"></div>
       </div>
     </div>
     <div class="form-section">
-      <div class="form-section-title">🍽️ PFC</div>
+      <div class="form-section-title" data-i18n="section_pfc">🍽️ PFC</div>
       <div class="form-grid">
-        <div class="form-group"><label class="form-label">タンパク質 (g)</label><input type="number" class="form-input" id="rec-p" placeholder="180" oninput="calcKcal()"></div>
-        <div class="form-group"><label class="form-label">脂質 (g)</label><input type="number" class="form-input" id="rec-f" placeholder="40" oninput="calcKcal()"></div>
-        <div class="form-group"><label class="form-label">炭水化物 (g)</label><input type="number" class="form-input" id="rec-c" placeholder="180" oninput="calcKcal()"></div>
-        <div class="form-group"><label class="form-label">カロリー (kcal)</label><input type="number" class="form-input" id="rec-kcal" placeholder="自動計算" readonly style="opacity:0.7"></div>
+        <div class="form-group"><label class="form-label" data-i18n="label_protein">タンパク質 (g)</label><input type="number" class="form-input" id="rec-p" placeholder="180" oninput="calcKcal()"></div>
+        <div class="form-group"><label class="form-label" data-i18n="label_fat">脂質 (g)</label><input type="number" class="form-input" id="rec-f" placeholder="40" oninput="calcKcal()"></div>
+        <div class="form-group"><label class="form-label" data-i18n="label_carbs">炭水化物 (g)</label><input type="number" class="form-input" id="rec-c" placeholder="180" oninput="calcKcal()"></div>
+        <div class="form-group"><label class="form-label" data-i18n="label_kcal">カロリー (kcal)</label><input type="number" class="form-input" id="rec-kcal" data-i18n-ph="placeholder_kcal" placeholder="自動計算" readonly style="opacity:0.7"></div>
       </div>
     </div>
     <div class="form-section">
-      <div class="form-section-title">🧂 塩分</div>
-      <div class="form-group"><label class="form-label">塩分 (g)</label><input type="number" class="form-input" id="rec-salt" placeholder="5.0" step="0.1"></div>
+      <div class="form-section-title" data-i18n="section_salt">🧂 塩分</div>
+      <div class="form-group"><label class="form-label" data-i18n="label_salt">塩分 (g)</label><input type="number" class="form-input" id="rec-salt" placeholder="5.0" step="0.1"></div>
     </div>
     <div class="form-section">
-      <div class="form-section-title">🚶 活動・運動</div>
+      <div class="form-section-title" data-i18n="section_activity">🚶 活動・運動</div>
       <div class="form-group" style="margin-bottom:10px;">
-        <label class="form-label">歩数</label>
+        <label class="form-label" data-i18n="label_steps">歩数</label>
         <input type="number" class="form-input" id="rec-steps" placeholder="8000">
       </div>
       <div id="activity-list" style="margin-bottom:10px;"></div>
-      <button class="activity-add-btn" onclick="openActivityPicker()">＋ 運動を追加</button>
+      <button class="activity-add-btn" onclick="openActivityPicker()" data-i18n="btn_add_exercise">＋ 運動を追加</button>
     </div>
     <div class="form-section">
-      <div class="form-section-title">🌞 日サロ</div>
-      <div class="form-group"><label class="form-label">日サロ時間 (分)</label><input type="number" class="form-input" id="rec-salon" placeholder="0"></div>
+      <div class="form-section-title" data-i18n="section_salon">🌞 日サロ</div>
+      <div class="form-group"><label class="form-label" data-i18n="label_salon">日サロ時間 (分)</label><input type="number" class="form-input" id="rec-salon" placeholder="0"></div>
     </div>
     <div class="form-section">
-      <div class="form-section-title">💪 筋トレ部位</div>
+      <div class="form-section-title" data-i18n="section_training">💪 筋トレ部位</div>
       <div class="toggle-row">
-        <span class="toggle-label">筋トレした</span>
+        <span class="toggle-label" data-i18n="label_trained">筋トレした</span>
         <button class="toggle" id="training-toggle" onclick="toggleTraining()"></button>
       </div>
       <div id="muscle-selector" style="margin-top:14px;display:none;">
         <div class="muscle-grid">
-          <button class="muscle-btn" onclick="toggleMuscle(this)" data-muscle="胸">胸</button>
-          <button class="muscle-btn" onclick="toggleMuscle(this)" data-muscle="背中">背中</button>
-          <button class="muscle-btn" onclick="toggleMuscle(this)" data-muscle="肩">肩</button>
-          <button class="muscle-btn" onclick="toggleMuscle(this)" data-muscle="腕">腕</button>
-          <button class="muscle-btn" onclick="toggleMuscle(this)" data-muscle="足">足</button>
-          <button class="muscle-btn" onclick="toggleMuscle(this)" data-muscle="腹筋">腹筋</button>
+          <button class="muscle-btn" onclick="toggleMuscle(this)" data-muscle="胸" data-i18n="muscle_chest">胸</button>
+          <button class="muscle-btn" onclick="toggleMuscle(this)" data-muscle="背中" data-i18n="muscle_back">背中</button>
+          <button class="muscle-btn" onclick="toggleMuscle(this)" data-muscle="肩" data-i18n="muscle_shoulder">肩</button>
+          <button class="muscle-btn" onclick="toggleMuscle(this)" data-muscle="腕" data-i18n="muscle_arm">腕</button>
+          <button class="muscle-btn" onclick="toggleMuscle(this)" data-muscle="足" data-i18n="muscle_leg">足</button>
+          <button class="muscle-btn" onclick="toggleMuscle(this)" data-muscle="腹筋" data-i18n="muscle_abs">腹筋</button>
         </div>
       </div>
     </div>
     <div class="form-section">
-      <div class="form-section-title">📝 メモ</div>
-      <div class="form-group full"><textarea class="form-input" id="rec-memo" placeholder="体調・気づきなど（空欄可）"></textarea></div>
+      <div class="form-section-title" data-i18n="section_memo">📝 メモ</div>
+      <div class="form-group full"><textarea class="form-input" id="rec-memo" data-i18n-ph="placeholder_memo" placeholder="体調・気づきなど（空欄可）"></textarea></div>
     </div>
-    <button class="btn-submit" onclick="saveRecord()">保存する</button>
+    <button class="btn-submit" onclick="saveRecord()" data-i18n="btn_save">保存する</button>
   </div>
 </div>
 
@@ -745,7 +745,7 @@
 <div id="water-screen" class="screen">
   <div class="screen-header">
     <button class="btn-back" onclick="showScreen(null)">←</button>
-    <div class="screen-title cyan">水分記録</div>
+    <div class="screen-title cyan" data-i18n="screen_water">水分記録</div>
   </div>
 
   <div class="water-hero">
@@ -760,23 +760,23 @@
       </div>
     </div>
     <div class="water-goal-row">
-      <span class="water-goal-label">目標</span>
+      <span class="water-goal-label" data-i18n="water_goal_label">目標</span>
       <span class="water-goal-val" id="water-goal-display">3000 ml</span>
-      <button class="water-goal-edit" onclick="openGoalModal()">変更</button>
+      <button class="water-goal-edit" onclick="openGoalModal()" data-i18n="water_goal_edit">変更</button>
     </div>
     <div class="water-pct" id="water-pct-text">0%</div>
   </div>
 
   <div style="display:flex;align-items:center;justify-content:space-between;padding:0 20px;">
-    <div class="water-section-title" style="margin:0;">クイック追加</div>
-    <button onclick="openWaterBtnEditor()" style="background:none;border:1px solid var(--border);border-radius:8px;color:var(--text-muted);font-size:12px;padding:4px 10px;cursor:pointer;">✏️ 編集</button>
+    <div class="water-section-title" style="margin:0;" data-i18n="water_quick_add">クイック追加</div>
+    <button onclick="openWaterBtnEditor()" style="background:none;border:1px solid var(--border);border-radius:8px;color:var(--text-muted);font-size:12px;padding:4px 10px;cursor:pointer;" data-i18n="water_edit_btn">✏️ 編集</button>
   </div>
   <div class="water-quick-grid" id="water-quick-grid"></div>
 
-  <div class="water-section-title" style="margin-top:18px;">今日のログ</div>
+  <div class="water-section-title" style="margin-top:18px;" data-i18n="water_today_log">今日のログ</div>
   <div class="water-log" id="water-log-list"></div>
   <div style="padding:0 20px;">
-    <button class="water-reset-btn" onclick="resetTodayWater()">今日の水分をリセット</button>
+    <button class="water-reset-btn" onclick="resetTodayWater()" data-i18n="water_reset">今日の水分をリセット</button>
   </div>
 </div>
 
@@ -784,7 +784,7 @@
 <div id="gym-screen" class="screen">
   <div class="screen-header">
     <button class="btn-back" onclick="showScreen(null)">←</button>
-    <div class="screen-title">💪 筋トレメモ</div>
+    <div class="screen-title" data-i18n="screen_gym">💪 筋トレメモ</div>
   </div>
   <div class="gym-date-bar">
     <button class="gym-date-nav" onclick="gymChangeDate(-1)">‹</button>
@@ -792,9 +792,9 @@
     <button class="gym-date-nav" onclick="gymChangeDate(1)">›</button>
   </div>
   <div class="gym-action-bar">
-    <button class="gym-action-btn accent" onclick="openMySetModal()">📋 マイセット</button>
-    <button class="gym-action-btn" onclick="openTimer()">⏱ タイマー</button>
-    <button class="gym-action-btn" onclick="gymShare()">📷 シェア</button>
+    <button class="gym-action-btn accent" onclick="openMySetModal()" data-i18n="gym_myset">📋 マイセット</button>
+    <button class="gym-action-btn" onclick="openTimer()" data-i18n="gym_timer">⏱ タイマー</button>
+    <button class="gym-action-btn" onclick="gymShare()" data-i18n="gym_share">📷 シェア</button>
   </div>
 
   <div class="gym-body">
@@ -805,14 +805,14 @@
         <span id="sw-end-label">終了: —</span>
       </div>
       <div class="gym-stopwatch-btns">
-        <button class="gym-sw-btn start" id="sw-btn-start" onclick="swStart()">スタート</button>
-        <button class="gym-sw-btn stop" id="sw-btn-stop" onclick="swStop()" style="display:none;">ストップ</button>
-        <button class="gym-sw-btn reset" onclick="swReset()">リセット</button>
+        <button class="gym-sw-btn start" id="sw-btn-start" onclick="swStart()" data-i18n="sw_start">スタート</button>
+        <button class="gym-sw-btn stop" id="sw-btn-stop" onclick="swStop()" style="display:none;" data-i18n="sw_stop">ストップ</button>
+        <button class="gym-sw-btn reset" onclick="swReset()" data-i18n="sw_reset">リセット</button>
       </div>
     </div>
     <div id="gym-exercise-list"></div>
-    <button class="gym-add-exercise-btn" onclick="openGymPicker()">＋ 種目を追加</button>
-    <button class="gym-save-btn" onclick="saveGym()">← 戻る（自動保存済み）</button>
+    <button class="gym-add-exercise-btn" onclick="openGymPicker()" data-i18n="btn_add_exercise_gym">＋ 種目を追加</button>
+    <button class="gym-save-btn" onclick="saveGym()" data-i18n="btn_back_save">← 戻る（自動保存済み）</button>
   </div>
 </div>
 
@@ -822,12 +822,12 @@
     <!-- ヘッダー -->
     <div style="display:flex;align-items:center;padding-top:max(48px,env(safe-area-inset-top));padding-right:20px;padding-bottom:16px;padding-left:20px;background:var(--accent);gap:12px;">
       <button onclick="closeGymPicker()" style="background:none;border:none;color:var(--bg);font-size:22px;cursor:pointer;padding:0;line-height:1;font-weight:bold;">←</button>
-      <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--bg);flex:1;letter-spacing:0.05em;">種目を選択</div>
-      <button onclick="openGymPresetEditor()" style="background:none;border:1px solid rgba(0,0,0,0.3);border-radius:8px;color:var(--bg);font-size:13px;padding:5px 12px;cursor:pointer;">編集</button>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--bg);flex:1;letter-spacing:0.05em;" data-i18n="gym_picker_title">種目を選択</div>
+      <button onclick="openGymPresetEditor()" style="background:none;border:1px solid rgba(0,0,0,0.3);border-radius:8px;color:var(--bg);font-size:13px;padding:5px 12px;cursor:pointer;" data-i18n="gym_picker_edit">編集</button>
     </div>
     <!-- 検索 -->
     <div style="padding:10px 16px;background:var(--surface);border-bottom:1px solid var(--border);">
-      <input type="text" class="gym-picker-input" id="gym-picker-search" placeholder="種目を検索..." oninput="filterGymPicker()" onfocus="this.scrollIntoView({behavior:'smooth'})" style="margin:0;">
+      <input type="text" class="gym-picker-input" id="gym-picker-search" data-i18n-ph="gym_picker_search_ph" placeholder="種目を検索..." oninput="filterGymPicker()" onfocus="this.scrollIntoView({behavior:'smooth'})" style="margin:0;">
     </div>
     <!-- 種目リスト -->
     <div class="gym-picker-list" id="gym-picker-list"></div>
@@ -841,9 +841,9 @@
     <div class="gym-prev-title" id="gym-prev-name">—</div>
     <div class="gym-prev-date" id="gym-prev-date">—</div>
     <div id="gym-prev-sets"></div>
-    <button class="gym-prev-apply-btn" onclick="applyPrevExercise()">そのままコピーする</button>
-    <button class="gym-prev-apply-btn partial" onclick="applyPrevWeightOnly()">重量だけコピーする</button>
-    <button onclick="closeGymPrevModal()" style="width:100%;padding:12px;background:none;border:none;color:var(--text-muted);font-size:14px;cursor:pointer;margin-top:4px;">閉じる</button>
+    <button class="gym-prev-apply-btn" onclick="applyPrevExercise()" data-i18n="copy_all">そのままコピーする</button>
+    <button class="gym-prev-apply-btn partial" onclick="applyPrevWeightOnly()" data-i18n="copy_weight">重量だけコピーする</button>
+    <button onclick="closeGymPrevModal()" style="width:100%;padding:12px;background:none;border:none;color:var(--text-muted);font-size:14px;cursor:pointer;margin-top:4px;" data-i18n="close">閉じる</button>
   </div>
 </div>
 
@@ -851,7 +851,7 @@
 <div class="activity-picker-overlay" id="gym-preset-editor" onclick="handleGymPresetEditorOverlay(event)" style="z-index:110;">
   <div class="activity-picker-sheet" style="max-height:85vh;overflow-y:auto;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-      <div class="gym-picker-title" style="margin:0;">種目を編集</div>
+      <div class="gym-picker-title" style="margin:0;" data-i18n="preset_editor_title">種目を編集</div>
       <button onclick="closeGymPresetEditor()" style="background:none;border:none;color:var(--text-muted);font-size:22px;cursor:pointer;">✕</button>
     </div>
     <!-- 部位タブ -->
@@ -859,8 +859,8 @@
     </div>
     <div id="preset-editor-list"></div>
     <div class="gym-preset-add-row">
-      <input type="text" class="gym-preset-add-input" id="preset-add-input" placeholder="新しい種目名を入力">
-      <button class="gym-preset-add-btn" onclick="addGymPreset()">追加</button>
+      <input type="text" class="gym-preset-add-input" id="preset-add-input" data-i18n-ph="preset_add_ph" placeholder="新しい種目名を入力">
+      <button class="gym-preset-add-btn" onclick="addGymPreset()" data-i18n="preset_add_btn">追加</button>
     </div>
   </div>
 </div>
@@ -870,20 +870,20 @@
   <div class="timer-display" id="timer-display">00:00</div>
   <div class="timer-label" id="timer-label">REST TIMER</div>
   <div class="timer-presets">
-    <button class="timer-preset-btn" onclick="setTimerSec(30)">30秒</button>
-    <button class="timer-preset-btn" onclick="setTimerSec(60)">1分</button>
-    <button class="timer-preset-btn active" onclick="setTimerSec(90)">90秒</button>
-    <button class="timer-preset-btn" onclick="setTimerSec(120)">2分</button>
-    <button class="timer-preset-btn" onclick="setTimerSec(180)">3分</button>
+    <button class="timer-preset-btn" onclick="setTimerSec(30)" data-i18n="timer_sec30">30秒</button>
+    <button class="timer-preset-btn" onclick="setTimerSec(60)" data-i18n="timer_1min">1分</button>
+    <button class="timer-preset-btn active" onclick="setTimerSec(90)" data-i18n="timer_90sec">90秒</button>
+    <button class="timer-preset-btn" onclick="setTimerSec(120)" data-i18n="timer_2min">2分</button>
+    <button class="timer-preset-btn" onclick="setTimerSec(180)" data-i18n="timer_3min">3分</button>
   </div>
   <div class="timer-custom-row">
     <input type="number" class="timer-custom-input" id="timer-custom-input" placeholder="90" value="90">
-    <span class="timer-custom-label">秒で設定</span>
-    <button class="timer-preset-btn" onclick="setTimerSec(parseInt(document.getElementById('timer-custom-input').value)||90)">セット</button>
+    <span class="timer-custom-label" data-i18n="timer_sec_label">秒で設定</span>
+    <button class="timer-preset-btn" onclick="setTimerSec(parseInt(document.getElementById('timer-custom-input').value)||90)" data-i18n="timer_set_btn">セット</button>
   </div>
   <div class="timer-btns">
-    <button class="timer-btn start" id="timer-start-btn" onclick="toggleTimer()">スタート</button>
-    <button class="timer-btn close-btn" onclick="closeTimer()">閉じる</button>
+    <button class="timer-btn start" id="timer-start-btn" onclick="toggleTimer()" data-i18n="timer_start">スタート</button>
+    <button class="timer-btn close-btn" onclick="closeTimer()" data-i18n="timer_close">閉じる</button>
   </div>
 </div>
 
@@ -891,12 +891,12 @@
 <div class="activity-picker-overlay" id="myset-modal" onclick="if(event.target===this)closeMySetModal()" style="z-index:110;">
   <div class="activity-picker-sheet" style="max-height:85vh;overflow-y:auto;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-      <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--accent);">マイセット</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--accent);" data-i18n="myset_title">マイセット</div>
       <button onclick="closeMySetModal()" style="background:none;border:none;color:var(--text-muted);font-size:22px;cursor:pointer;">✕</button>
     </div>
     <div id="myset-list"></div>
     <div style="margin-top:12px;border-top:1px solid var(--border);padding-top:12px;">
-      <button onclick="saveAsMySet()" style="width:100%;padding:12px;background:var(--accent);color:var(--bg);border:none;border-radius:10px;font-family:'Bebas Neue',sans-serif;font-size:18px;cursor:pointer;">今日のメニューを登録</button>
+      <button onclick="saveAsMySet()" style="width:100%;padding:12px;background:var(--accent);color:var(--bg);border:none;border-radius:10px;font-family:'Bebas Neue',sans-serif;font-size:18px;cursor:pointer;" data-i18n="myset_register">今日のメニューを登録</button>
     </div>
   </div>
 </div>
@@ -906,25 +906,25 @@
   <div class="share-canvas-wrap" style="max-height:60vh;overflow-y:auto;width:100%;"><canvas id="share-canvas" style="width:100%;height:auto;display:block;"></canvas></div>
   <img id="share-img-fallback" style="display:none;max-width:100%;border-radius:8px;margin-bottom:12px;" alt="長押しで保存">
   <div class="share-btns">
-    <button class="share-btn download" onclick="shareImage()">📤 シェアする</button>
-    <button class="share-btn cancel" onclick="document.getElementById('share-overlay').classList.remove('open');document.getElementById('share-img-fallback').style.display='none';showScreen(null);">スキップ</button>
+    <button class="share-btn download" onclick="shareImage()" data-i18n="share_btn">📤 シェアする</button>
+    <button class="share-btn cancel" onclick="document.getElementById('share-overlay').classList.remove('open');document.getElementById('share-img-fallback').style.display='none';showScreen(null);" data-i18n="share_skip">スキップ</button>
   </div>
 </div>
 <!-- VIEW SCREEN -->
 <div id="view-screen" class="screen">
   <div class="screen-header">
     <button class="btn-back" onclick="showScreen(null)">←</button>
-    <div class="screen-title">記録を見る</div>
+    <div class="screen-title" data-i18n="screen_view">記録を見る</div>
   </div>
   <div class="tab-bar">
-    <button class="tab-btn active" onclick="switchTab('tab-list',this)">一覧</button>
-    <button class="tab-btn" onclick="switchTab('tab-graph',this)">グラフ</button>
+    <button class="tab-btn active" onclick="switchTab('tab-list',this)" data-i18n="tab_list">一覧</button>
+    <button class="tab-btn" onclick="switchTab('tab-graph',this)" data-i18n="tab_graph">グラフ</button>
   </div>
   <!-- フィルターバー（固定） -->
   <div class="filter-bar">
-    <button class="filter-btn active" onclick="setFilter('all',this)">すべて</button>
-    <button class="filter-btn" onclick="setFilter('week',this)">今週</button>
-    <button class="filter-btn" onclick="setFilter('month',this)">今月</button>
+    <button class="filter-btn active" onclick="setFilter('all',this)" data-i18n="filter_all">すべて</button>
+    <button class="filter-btn" onclick="setFilter('week',this)" data-i18n="filter_week">今週</button>
+    <button class="filter-btn" onclick="setFilter('month',this)" data-i18n="filter_month">今月</button>
   </div>
   <div id="tab-list" class="tab-content active">
     <div class="tab-list-body">
@@ -942,13 +942,13 @@
   <div id="tab-graph" class="tab-content">
     <div class="chart-container" id="weekly-report-card"></div>
     <div class="chart-container" id="roadmap-card">
-      <div class="chart-title">🗺 大会ロードマップ</div>
+      <div class="chart-title" data-i18n="chart_roadmap">🗺 大会ロードマップ</div>
       <div id="roadmap-chart-container"></div>
     </div>
-    <div class="chart-container"><div class="chart-title">📈 体重推移 (kg)</div><canvas id="weight-chart" height="180"></canvas></div>
-    <div class="chart-container"><div class="chart-title">🔥 カロリー推移 (kcal)</div><canvas id="kcal-chart" height="180"></canvas></div>
-    <div class="chart-container"><div class="chart-title">🥩 PFC推移 (g)</div><canvas id="pfc-chart" height="200"></canvas></div>
-    <div class="chart-container"><div class="chart-title">💧 水分推移 (ml)</div><canvas id="water-chart" height="180"></canvas></div>
+    <div class="chart-container"><div class="chart-title" data-i18n="chart_weight">📈 体重推移 (kg)</div><canvas id="weight-chart" height="180"></canvas></div>
+    <div class="chart-container"><div class="chart-title" data-i18n="chart_kcal">🔥 カロリー推移 (kcal)</div><canvas id="kcal-chart" height="180"></canvas></div>
+    <div class="chart-container"><div class="chart-title" data-i18n="chart_pfc">🥩 PFC推移 (g)</div><canvas id="pfc-chart" height="200"></canvas></div>
+    <div class="chart-container"><div class="chart-title" data-i18n="chart_water">💧 水分推移 (ml)</div><canvas id="water-chart" height="180"></canvas></div>
   </div>
 </div>
 
@@ -957,34 +957,34 @@
   <div class="paywall-sheet">
     <div style="font-size:36px;margin-bottom:10px;">🔓</div>
     <div style="font-family:'Bebas Neue';font-size:30px;color:var(--accent);letter-spacing:0.1em;margin-bottom:6px;">PREMIUM</div>
-    <div style="font-size:15px;color:var(--text);font-weight:700;margin-bottom:6px;">全期間のデータを解放する</div>
-    <div style="font-size:13px;color:var(--text-muted);margin-bottom:20px;line-height:1.7;">無料プランは直近30日の履歴が対象です。<br>プレミアムで大会準備のすべての記録を<br>いつでも振り返れます。</div>
+    <div style="font-size:15px;color:var(--text);font-weight:700;margin-bottom:6px;" data-i18n="paywall_unlock">全期間のデータを解放する</div>
+    <div style="font-size:13px;color:var(--text-muted);margin-bottom:20px;line-height:1.7;" id="paywall-desc-text">無料プランは直近30日の履歴が対象です。<br>プレミアムで大会準備のすべての記録を<br>いつでも振り返れます。</div>
     <div style="background:var(--surface2);border-radius:14px;padding:16px 20px;margin-bottom:20px;text-align:left;">
-      <div class="paywall-feature"><span>📊</span><span>無制限の履歴閲覧・分析</span></div>
-      <div class="paywall-feature"><span>☁️</span><span>複数端末のクラウド同期</span></div>
-      <div class="paywall-feature"><span>🗺</span><span>大会ロードマップ</span></div>
-      <div class="paywall-feature"><span>📋</span><span>週レポート</span></div>
+      <div class="paywall-feature"><span>📊</span><span data-i18n="paywall_f1">無制限の履歴閲覧・分析</span></div>
+      <div class="paywall-feature"><span>☁️</span><span data-i18n="paywall_f2">複数端末のクラウド同期</span></div>
+      <div class="paywall-feature"><span>🗺</span><span data-i18n="paywall_f3">大会ロードマップ</span></div>
+      <div class="paywall-feature"><span>📋</span><span data-i18n="paywall_f4">週レポート</span></div>
     </div>
-    <button onclick="purchasePremium()" style="width:100%;padding:16px;background:var(--accent);color:var(--bg);border:none;border-radius:14px;font-size:16px;font-weight:700;cursor:pointer;margin-bottom:10px;">¥300 / 月で始める</button>
-    <button onclick="closePaywall()" style="width:100%;padding:12px;background:none;border:1px solid var(--border);border-radius:14px;font-size:14px;color:var(--text-muted);cursor:pointer;">あとで</button>
+    <button onclick="purchasePremium()" style="width:100%;padding:16px;background:var(--accent);color:var(--bg);border:none;border-radius:14px;font-size:16px;font-weight:700;cursor:pointer;margin-bottom:10px;" data-i18n="paywall_price">¥300 / 月で始める</button>
+    <button onclick="closePaywall()" style="width:100%;padding:12px;background:none;border:1px solid var(--border);border-radius:14px;font-size:14px;color:var(--text-muted);cursor:pointer;" data-i18n="paywall_later">あとで</button>
   </div>
 </div>
 
 <!-- CUSTOM MODAL -->
 <div class="modal-overlay" id="custom-modal" onclick="handleCustomOverlay(event)">
   <div class="modal-sheet">
-    <div class="modal-title">💧 カスタム水分追加</div>
+    <div class="modal-title" data-i18n="water_custom_title">💧 カスタム水分追加</div>
     <div class="modal-input-row">
       <input type="number" class="modal-input" id="custom-ml-input" placeholder="500">
       <span class="modal-unit">ml</span>
     </div>
     <div class="modal-save-check" onclick="toggleSaveCustom()">
       <div class="modal-checkbox" id="save-custom-check"></div>
-      <span class="modal-save-label">クイックボタンに追加する</span>
+      <span class="modal-save-label" data-i18n="water_save_label">クイックボタンに追加する</span>
     </div>
     <div class="modal-btns">
-      <button class="modal-btn cancel" onclick="closeCustomModal()">キャンセル</button>
-      <button class="modal-btn confirm" onclick="confirmCustom()">追加する</button>
+      <button class="modal-btn cancel" onclick="closeCustomModal()" data-i18n="btn_cancel">キャンセル</button>
+      <button class="modal-btn confirm" onclick="confirmCustom()" data-i18n="btn_add">追加する</button>
     </div>
   </div>
 </div>
@@ -993,7 +993,7 @@
 <div class="activity-picker-overlay" id="activity-preset-editor" onclick="if(event.target===this)closeActivityPresetEditor()" style="z-index:85;">
   <div class="activity-picker-sheet" style="max-height:85vh;overflow-y:auto;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-      <div class="activity-picker-title" style="color:var(--success);margin:0;">運動を編集</div>
+      <div class="activity-picker-title" style="color:var(--success);margin:0;" data-i18n="activity_editor_title">運動を編集</div>
       <button onclick="closeActivityPresetEditor()" style="background:none;border:none;color:var(--text-muted);font-size:22px;cursor:pointer;">✕</button>
     </div>
     <!-- カテゴリタブ -->
@@ -1001,67 +1001,67 @@
     <div id="activity-editor-list"></div>
     <!-- 新規追加 -->
     <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">
-      <div style="font-size:11px;color:var(--text-muted);letter-spacing:0.1em;margin-bottom:8px;">新しい種目を追加</div>
+      <div style="font-size:11px;color:var(--text-muted);letter-spacing:0.1em;margin-bottom:8px;" data-i18n="activity_new_item">新しい種目を追加</div>
       <div style="display:flex;gap:8px;margin-bottom:8px;">
-        <input type="text" class="activity-picker-search" id="act-editor-icon" placeholder="🏃" style="width:60px;min-width:60px;margin:0;text-align:center;font-size:20px;">
-        <input type="text" class="activity-picker-search" id="act-editor-name" placeholder="種目名" style="flex:1;margin:0;">
-        <input type="number" class="activity-picker-search" id="act-editor-met" placeholder="MET" style="width:70px;min-width:70px;margin:0;">
+        <input type="text" class="activity-picker-search" id="act-editor-icon" placeholder="🏃" data-i18n-ph="activity_icon_ph" style="width:60px;min-width:60px;margin:0;text-align:center;font-size:20px;">
+        <input type="text" class="activity-picker-search" id="act-editor-name" data-i18n-ph="activity_name_ph" placeholder="種目名" style="flex:1;margin:0;">
+        <input type="number" class="activity-picker-search" id="act-editor-met" data-i18n-ph="activity_met_ph" placeholder="MET" style="width:70px;min-width:70px;margin:0;">
       </div>
-      <button onclick="addActivityPresetItem()" style="width:100%;padding:11px;background:var(--success);color:var(--bg);border:none;border-radius:10px;font-family:'Bebas Neue',sans-serif;font-size:16px;cursor:pointer;">追加</button>
+      <button onclick="addActivityPresetItem()" style="width:100%;padding:11px;background:var(--success);color:var(--bg);border:none;border-radius:10px;font-family:'Bebas Neue',sans-serif;font-size:16px;cursor:pointer;" data-i18n="preset_add_btn">追加</button>
     </div>
     <!-- カテゴリ追加 -->
     <div style="margin-top:8px;">
       <div style="display:flex;gap:8px;">
-        <input type="text" class="activity-picker-search" id="act-editor-cat-name" placeholder="新しいカテゴリ名" style="flex:1;margin:0;">
-        <button onclick="addActivityPresetCat()" style="padding:11px 14px;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:10px;font-size:13px;cursor:pointer;">カテゴリ追加</button>
+        <input type="text" class="activity-picker-search" id="act-editor-cat-name" data-i18n-ph="activity_new_cat_ph" placeholder="新しいカテゴリ名" style="flex:1;margin:0;">
+        <button onclick="addActivityPresetCat()" style="padding:11px 14px;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:10px;font-size:13px;cursor:pointer;" data-i18n="activity_add_cat">カテゴリ追加</button>
       </div>
     </div>
-    <button onclick="resetActivityPresets()" style="width:100%;margin-top:12px;padding:10px;background:transparent;border:1px solid var(--border);border-radius:10px;color:var(--text-muted);font-size:13px;cursor:pointer;">デフォルトに戻す</button>
+    <button onclick="resetActivityPresets()" style="width:100%;margin-top:12px;padding:10px;background:transparent;border:1px solid var(--border);border-radius:10px;color:var(--text-muted);font-size:13px;cursor:pointer;" data-i18n="activity_reset">デフォルトに戻す</button>
   </div>
 </div>
 
 <!-- ACTIVITY ICON PICKER -->
 <div class="activity-picker-overlay" id="activity-icon-picker" onclick="if(event.target===this)closeActivityIconPicker()" style="z-index:90;">
   <div class="activity-picker-sheet">
-    <div class="activity-picker-title" style="color:var(--success);margin-bottom:12px;">アイコンを選択</div>
+    <div class="activity-picker-title" style="color:var(--success);margin-bottom:12px;" data-i18n="icon_picker_title">アイコンを選択</div>
     <div id="activity-icon-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-bottom:16px;"></div>
-    <button onclick="closeActivityIconPicker()" style="width:100%;padding:12px;background:var(--surface2);border:none;border-radius:10px;color:var(--text-muted);font-size:14px;cursor:pointer;">閉じる</button>
+    <button onclick="closeActivityIconPicker()" style="width:100%;padding:12px;background:var(--surface2);border:none;border-radius:10px;color:var(--text-muted);font-size:14px;cursor:pointer;" data-i18n="close">閉じる</button>
   </div>
 </div>
 
 <!-- ACTIVITY NAME EDIT -->
 <div class="activity-picker-overlay" id="activity-name-editor" onclick="if(event.target===this)closeActivityNameEdit()" style="z-index:90;">
   <div class="activity-picker-sheet">
-    <div class="activity-picker-title" style="color:var(--success);margin-bottom:12px;">名前を編集</div>
+    <div class="activity-picker-title" style="color:var(--success);margin-bottom:12px;" data-i18n="name_editor_title">名前を編集</div>
     <input type="text" class="activity-picker-search" id="activity-name-input" placeholder="運動名">
-    <button onclick="saveActivityName()" style="width:100%;padding:12px;background:var(--success);color:var(--bg);border:none;border-radius:10px;font-family:'Bebas Neue',sans-serif;font-size:18px;cursor:pointer;">保存</button>
+    <button onclick="saveActivityName()" style="width:100%;padding:12px;background:var(--success);color:var(--bg);border:none;border-radius:10px;font-family:'Bebas Neue',sans-serif;font-size:18px;cursor:pointer;" data-i18n="btn_save_short">保存</button>
   </div>
 </div>
 
 <!-- WATER BTN EDITOR -->
 <div class="activity-picker-overlay" id="water-btn-editor" onclick="if(event.target===this)closeWaterBtnEditor()">
   <div class="activity-picker-sheet">
-    <div class="activity-picker-title" style="color:var(--accent2);">💧 クイックボタン編集</div>
+    <div class="activity-picker-title" style="color:var(--accent2);" data-i18n="water_btn_editor_title">💧 クイックボタン編集</div>
     <div id="water-btn-editor-list" style="margin-bottom:16px;"></div>
     <div style="display:flex;gap:8px;">
-      <input type="number" class="activity-picker-search" id="water-btn-new-val" placeholder="追加するml数" style="margin-bottom:0;">
+      <input type="number" class="activity-picker-search" id="water-btn-new-val" data-i18n-ph="water_btn_new_ph" placeholder="追加するml数" style="margin-bottom:0;">
       <button class="activity-picker-add-btn" onclick="addWaterQuickBtn()">追加</button>
     </div>
-    <button onclick="resetWaterBtns()" style="width:100%;margin-top:10px;padding:10px;background:transparent;border:1px solid var(--border);border-radius:10px;color:var(--text-muted);font-size:13px;cursor:pointer;">デフォルトに戻す</button>
+    <button onclick="resetWaterBtns()" style="width:100%;margin-top:10px;padding:10px;background:transparent;border:1px solid var(--border);border-radius:10px;color:var(--text-muted);font-size:13px;cursor:pointer;" data-i18n="water_btn_reset">デフォルトに戻す</button>
   </div>
 </div>
 
 <!-- GOAL MODAL -->
 <div class="goal-modal-overlay" id="goal-modal" onclick="handleGoalOverlay(event)">
   <div class="goal-modal-box">
-    <div class="modal-title">目標水分量</div>
+    <div class="modal-title" data-i18n="goal_modal_title">目標水分量</div>
     <div class="modal-input-row">
       <input type="number" class="modal-input" id="goal-ml-input" placeholder="3000">
       <span class="modal-unit">ml</span>
     </div>
     <div class="modal-btns">
-      <button class="modal-btn cancel" onclick="closeGoalModal()">キャンセル</button>
-      <button class="modal-btn confirm" onclick="confirmGoal()">保存</button>
+      <button class="modal-btn cancel" onclick="closeGoalModal()" data-i18n="btn_cancel">キャンセル</button>
+      <button class="modal-btn confirm" onclick="confirmGoal()" data-i18n="btn_save_short">保存</button>
     </div>
   </div>
 </div>
@@ -1071,46 +1071,46 @@
 <div class="edit-modal-overlay" id="edit-modal" onclick="handleEditOverlay(event)">
   <div class="edit-modal-sheet">
     <div class="edit-modal-title">
-      <span>記録を編集</span>
+      <span data-i18n="edit_modal_title">記録を編集</span>
       <button class="edit-modal-close" onclick="closeEditModal()">✕</button>
     </div>
     <input type="hidden" id="edit-date-key">
     <div class="edit-grid">
-      <div class="edit-group"><label class="edit-label">体重 (kg)</label><input type="number" class="edit-input" id="edit-weight" step="0.1" placeholder="62.5"></div>
-      <div class="edit-group"><label class="edit-label">睡眠 (h)</label><input type="number" class="edit-input" id="edit-sleep" step="0.5" placeholder="7.5"></div>
-      <div class="edit-group"><label class="edit-label">タンパク質 (g)</label><input type="number" class="edit-input" id="edit-p" placeholder="180" oninput="editCalcKcal()"></div>
-      <div class="edit-group"><label class="edit-label">脂質 (g)</label><input type="number" class="edit-input" id="edit-f" placeholder="40" oninput="editCalcKcal()"></div>
-      <div class="edit-group"><label class="edit-label">炭水化物 (g)</label><input type="number" class="edit-input" id="edit-c" placeholder="180" oninput="editCalcKcal()"></div>
-      <div class="edit-group"><label class="edit-label">カロリー (kcal)</label><input type="number" class="edit-input" id="edit-kcal" placeholder="自動計算" readonly style="opacity:0.6"></div>
-      <div class="edit-group"><label class="edit-label">塩分 (g)</label><input type="number" class="edit-input" id="edit-salt" step="0.1" placeholder="5.0"></div>
-      <div class="edit-group"><label class="edit-label">日サロ (分)</label><input type="number" class="edit-input" id="edit-salon" placeholder="0"></div>
+      <div class="edit-group"><label class="edit-label" data-i18n="label_weight">体重 (kg)</label><input type="number" class="edit-input" id="edit-weight" step="0.1" placeholder="62.5"></div>
+      <div class="edit-group"><label class="edit-label" data-i18n="label_sleep">睡眠 (h)</label><input type="number" class="edit-input" id="edit-sleep" step="0.5" placeholder="7.5"></div>
+      <div class="edit-group"><label class="edit-label" data-i18n="label_protein">タンパク質 (g)</label><input type="number" class="edit-input" id="edit-p" placeholder="180" oninput="editCalcKcal()"></div>
+      <div class="edit-group"><label class="edit-label" data-i18n="label_fat">脂質 (g)</label><input type="number" class="edit-input" id="edit-f" placeholder="40" oninput="editCalcKcal()"></div>
+      <div class="edit-group"><label class="edit-label" data-i18n="label_carbs">炭水化物 (g)</label><input type="number" class="edit-input" id="edit-c" placeholder="180" oninput="editCalcKcal()"></div>
+      <div class="edit-group"><label class="edit-label" data-i18n="label_kcal">カロリー (kcal)</label><input type="number" class="edit-input" id="edit-kcal" data-i18n-ph="placeholder_kcal" placeholder="自動計算" readonly style="opacity:0.6"></div>
+      <div class="edit-group"><label class="edit-label" data-i18n="label_salt">塩分 (g)</label><input type="number" class="edit-input" id="edit-salt" step="0.1" placeholder="5.0"></div>
+      <div class="edit-group"><label class="edit-label" data-i18n="label_salon">日サロ (分)</label><input type="number" class="edit-input" id="edit-salon" placeholder="0"></div>
       <div class="edit-group full">
-        <label class="edit-label">🚶 歩数</label>
+        <label class="edit-label" data-i18n="label_steps">🚶 歩数</label>
         <input type="number" class="edit-input" id="edit-steps" placeholder="8000">
       </div>
       <div class="edit-group full">
-        <label class="edit-label">🏃 運動記録</label>
+        <label class="edit-label" data-i18n="activity_add_title">🏃 運動記録</label>
         <div id="edit-activity-list" style="margin-bottom:8px;"></div>
-        <button class="activity-add-btn" style="font-size:13px;padding:10px;" onclick="openEditActivityPicker()">＋ 運動を追加</button>
+        <button class="activity-add-btn" style="font-size:13px;padding:10px;" onclick="openEditActivityPicker()" data-i18n="btn_add_exercise">＋ 運動を追加</button>
       </div>
-      <div class="edit-group full"><label class="edit-label">水分摂取量 (ml)</label><input type="number" class="edit-input" id="edit-water" placeholder="3000"></div>
+      <div class="edit-group full"><label class="edit-label" data-i18n="label_water_ml">水分摂取量 (ml)</label><input type="number" class="edit-input" id="edit-water" placeholder="3000"></div>
       <div class="edit-group full">
-        <label class="edit-label">筋トレ部位</label>
+        <label class="edit-label" data-i18n="label_muscles">筋トレ部位</label>
         <div class="edit-muscle-grid">
-          <button class="edit-muscle-btn" onclick="toggleEditMuscle(this)" data-muscle="胸">胸</button>
-          <button class="edit-muscle-btn" onclick="toggleEditMuscle(this)" data-muscle="背中">背中</button>
-          <button class="edit-muscle-btn" onclick="toggleEditMuscle(this)" data-muscle="肩">肩</button>
-          <button class="edit-muscle-btn" onclick="toggleEditMuscle(this)" data-muscle="腕">腕</button>
-          <button class="edit-muscle-btn" onclick="toggleEditMuscle(this)" data-muscle="足">足</button>
-          <button class="edit-muscle-btn" onclick="toggleEditMuscle(this)" data-muscle="腹筋">腹筋</button>
+          <button class="edit-muscle-btn" onclick="toggleEditMuscle(this)" data-muscle="胸" data-i18n="muscle_chest">胸</button>
+          <button class="edit-muscle-btn" onclick="toggleEditMuscle(this)" data-muscle="背中" data-i18n="muscle_back">背中</button>
+          <button class="edit-muscle-btn" onclick="toggleEditMuscle(this)" data-muscle="肩" data-i18n="muscle_shoulder">肩</button>
+          <button class="edit-muscle-btn" onclick="toggleEditMuscle(this)" data-muscle="腕" data-i18n="muscle_arm">腕</button>
+          <button class="edit-muscle-btn" onclick="toggleEditMuscle(this)" data-muscle="足" data-i18n="muscle_leg">足</button>
+          <button class="edit-muscle-btn" onclick="toggleEditMuscle(this)" data-muscle="腹筋" data-i18n="muscle_abs">腹筋</button>
         </div>
       </div>
-      <div class="edit-group full"><label class="edit-label">メモ</label><input type="text" class="edit-input" id="edit-memo" placeholder="メモ（空欄可）"></div>
+      <div class="edit-group full"><label class="edit-label" data-i18n="label_memo_short">メモ</label><input type="text" class="edit-input" id="edit-memo" data-i18n-ph="placeholder_memo_short" placeholder="メモ（空欄可）"></div>
     </div>
     <div class="edit-btns">
-      <button class="edit-btn cancel" onclick="closeEditModal()">キャンセル</button>
-      <button class="edit-btn delete" onclick="deleteRecord()">削除</button>
-      <button class="edit-btn save" onclick="saveEditRecord()">保存</button>
+      <button class="edit-btn cancel" onclick="closeEditModal()" data-i18n="btn_cancel">キャンセル</button>
+      <button class="edit-btn delete" onclick="deleteRecord()" data-i18n="btn_delete">削除</button>
+      <button class="edit-btn save" onclick="saveEditRecord()" data-i18n="btn_save_short">保存</button>
     </div>
   </div>
 </div>
@@ -1118,14 +1118,14 @@
 <!-- WEIGHT GOAL MODAL -->
 <div class="goal-modal-overlay" id="wgoal-modal" onclick="handleWGoalOverlay(event)">
   <div class="goal-modal-box">
-    <div class="modal-title" style="color:var(--accent);">週目標平均体重</div>
+    <div class="modal-title" style="color:var(--accent);" data-i18n="wgoal_title">週目標平均体重</div>
     <div class="modal-input-row">
       <input type="number" class="modal-input" id="wgoal-input" placeholder="62.0" step="0.1">
       <span class="modal-unit">kg</span>
     </div>
     <div class="modal-btns">
-      <button class="modal-btn cancel" onclick="closeWeightGoalModal()">キャンセル</button>
-      <button class="modal-btn confirm" style="background:var(--accent);color:var(--bg);" onclick="confirmWeightGoal()">保存</button>
+      <button class="modal-btn cancel" onclick="closeWeightGoalModal()" data-i18n="btn_cancel">キャンセル</button>
+      <button class="modal-btn confirm" style="background:var(--accent);color:var(--bg);" onclick="confirmWeightGoal()" data-i18n="btn_save_short">保存</button>
     </div>
   </div>
 </div>
@@ -1134,16 +1134,16 @@
 <div class="activity-picker-overlay" id="activity-picker" onclick="handleActivityPickerOverlay(event)">
   <div class="activity-picker-sheet">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-      <div class="activity-picker-title" style="margin:0;">🏃 運動を追加</div>
+      <div class="activity-picker-title" style="margin:0;" data-i18n="activity_add_title">🏃 運動を追加</div>
       <button onclick="openActivityPresetEditor()" style="background:none;border:1px solid var(--border);border-radius:8px;color:var(--text-muted);font-size:12px;padding:4px 10px;cursor:pointer;">✏️ 編集</button>
     </div>
-    <input type="text" class="activity-picker-search" id="activity-search" placeholder="種目を検索..." oninput="filterActivityPicker()">
+    <input type="text" class="activity-picker-search" id="activity-search" data-i18n-ph="activity_search_ph" placeholder="種目を検索..." oninput="filterActivityPicker()">
     <div id="activity-picker-list"></div>
-    <div class="activity-picker-category">カスタム追加</div>
+    <div class="activity-picker-category" data-i18n="activity_custom_add">カスタム追加</div>
     <div class="activity-picker-custom-row">
-      <input type="text" class="activity-picker-custom-input" id="activity-custom-name" placeholder="種目名">
-      <input type="number" class="activity-picker-custom-kcal" id="activity-custom-kcal" placeholder="kcal/分">
-      <button class="activity-picker-add-btn" onclick="addCustomActivity()">追加</button>
+      <input type="text" class="activity-picker-custom-input" id="activity-custom-name" data-i18n-ph="activity_custom_name_ph" placeholder="種目名">
+      <input type="number" class="activity-picker-custom-kcal" id="activity-custom-kcal" data-i18n-ph="activity_custom_kcal_ph" placeholder="kcal/分">
+      <button class="activity-picker-add-btn" onclick="addCustomActivity()" data-i18n="preset_add_btn">追加</button>
     </div>
   </div>
 </div>
@@ -1151,66 +1151,66 @@
 <!-- PROFILE MODAL -->
 <div class="profile-modal-overlay" id="profile-modal" onclick="handleProfileOverlay(event)">
   <div class="profile-modal-sheet">
-    <div class="profile-modal-title">⚙ プロフィール設定</div>
+    <div class="profile-modal-title" data-i18n="profile_title">⚙ プロフィール設定</div>
     <!-- プランステータス -->
     <div id="plan-status-bar" style="background:var(--surface2);border-radius:12px;padding:12px 14px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;">
       <div>
-        <div style="font-size:10px;color:var(--text-muted);margin-bottom:2px;">現在のプラン</div>
-        <div id="plan-status-label" style="font-size:14px;font-weight:700;color:var(--text);">無料プラン（直近30日）</div>
+        <div style="font-size:10px;color:var(--text-muted);margin-bottom:2px;" data-i18n="plan_current">現在のプラン</div>
+        <div id="plan-status-label" style="font-size:14px;font-weight:700;color:var(--text);" data-i18n="plan_free">無料プラン（直近30日）</div>
       </div>
-      <button id="plan-upgrade-btn" onclick="openPaywall()" style="padding:7px 14px;background:var(--accent);color:var(--bg);border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">アップグレード</button>
+      <button id="plan-upgrade-btn" onclick="openPaywall()" style="padding:7px 14px;background:var(--accent);color:var(--bg);border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;" data-i18n="btn_upgrade">アップグレード</button>
     </div>
     <!-- Firebase認証UI -->
     <div style="background:var(--surface2);border-radius:12px;padding:12px 14px;margin-bottom:16px;">
-      <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;">アカウント</div>
-      <div id="auth-info" style="font-size:12px;color:var(--text);margin-bottom:8px;">ログインするとデータが同期されます</div>
-      <button id="auth-btn" onclick="firebaseSignIn()" style="width:100%;padding:10px;background:var(--accent);color:var(--bg);border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;">Googleでログイン</button>
+      <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;" data-i18n="account_label">アカウント</div>
+      <div id="auth-info" style="font-size:12px;color:var(--text);margin-bottom:8px;" data-i18n="auth_desc">ログインするとデータが同期されます</div>
+      <button id="auth-btn" onclick="firebaseSignIn()" style="width:100%;padding:10px;background:var(--accent);color:var(--bg);border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;" data-i18n="btn_google_login">Googleでログイン</button>
     </div>
 
     <div class="profile-grid">
       <div class="profile-group">
-        <label class="profile-label">身長 (cm)</label>
+        <label class="profile-label" data-i18n="label_height">身長 (cm)</label>
         <input type="number" class="profile-input" id="prof-height" placeholder="168" step="0.1" oninput="updateBMRPreview()">
       </div>
       <div class="profile-group">
-        <label class="profile-label">年齢</label>
+        <label class="profile-label" data-i18n="label_age">年齢</label>
         <input type="number" class="profile-input" id="prof-age" placeholder="25" oninput="updateBMRPreview()">
       </div>
       <div class="profile-group full">
-        <label class="profile-label">性別</label>
+        <label class="profile-label" data-i18n="label_sex">性別</label>
         <div class="profile-sex-row">
-          <button class="profile-sex-btn selected" id="sex-male" onclick="selectSex('male')">男性</button>
-          <button class="profile-sex-btn" id="sex-female" onclick="selectSex('female')">女性</button>
+          <button class="profile-sex-btn selected" id="sex-male" onclick="selectSex('male')" data-i18n="sex_male">男性</button>
+          <button class="profile-sex-btn" id="sex-female" onclick="selectSex('female')" data-i18n="sex_female">女性</button>
         </div>
       </div>
     </div>
     <div class="profile-bmr-display">
       <div class="profile-bmr-value" id="prof-bmr-val">—</div>
-      <div class="profile-bmr-label">推定基礎代謝 (kcal/日)</div>
+      <div class="profile-bmr-label" data-i18n="bmr_label">推定基礎代謝 (kcal/日)</div>
     </div>
     <div class="profile-group full" style="margin-top:4px;">
-      <label class="profile-label">🏆 大会名</label>
-      <input type="text" class="profile-input" id="prof-contest-name" placeholder="例：東京クラシック2026" maxlength="40">
+      <label class="profile-label" data-i18n="label_contest_name">🏆 大会名</label>
+      <input type="text" class="profile-input" id="prof-contest-name" data-i18n-ph="contest_name_ph" placeholder="例：東京クラシック2026" maxlength="40">
     </div>
     <div class="profile-group full">
-      <label class="profile-label">📅 大会日</label>
+      <label class="profile-label" data-i18n="label_contest_date">📅 大会日</label>
       <input type="date" class="profile-input" id="prof-contest-date">
     </div>
     <div class="profile-group full">
-      <label class="profile-label">🎯 大会目標体重 (kg)</label>
-      <input type="number" class="profile-input" id="prof-contest-weight" placeholder="例：75.0" step="0.1">
+      <label class="profile-label" data-i18n="label_contest_weight">🎯 大会目標体重 (kg)</label>
+      <input type="number" class="profile-input" id="prof-contest-weight" data-i18n-ph="contest_weight_ph" placeholder="例：75.0" step="0.1">
     </div>
-    <button class="btn-submit" onclick="saveProfile()">保存する</button>
+    <button class="btn-submit" onclick="saveProfile()" data-i18n="btn_save">保存する</button>
 
     <!-- 通知設定 -->
     <div style="margin-top:20px;border-top:1px solid var(--border);padding-top:16px;">
-      <div style="font-size:11px;color:var(--text-muted);letter-spacing:0.1em;margin-bottom:12px;">🔔 記録リマインダー通知</div>
+      <div style="font-size:11px;color:var(--text-muted);letter-spacing:0.1em;margin-bottom:12px;" data-i18n="notif_title">🔔 記録リマインダー通知</div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-        <span style="font-size:14px;color:var(--text);">毎日通知</span>
+        <span style="font-size:14px;color:var(--text);" data-i18n="notif_daily">毎日通知</span>
         <button class="toggle" id="notif-toggle" onclick="toggleNotif()"></button>
       </div>
       <div id="notif-time-row" style="display:flex;align-items:center;gap:10px;">
-        <span style="font-size:13px;color:var(--text-muted);flex:1;">通知時刻</span>
+        <span style="font-size:13px;color:var(--text-muted);flex:1;" data-i18n="notif_time">通知時刻</span>
         <input type="number" id="notif-hour" min="0" max="23" value="20"
           style="width:52px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px;color:var(--text);font-size:16px;text-align:center;outline:none;">
         <span style="color:var(--text-muted);">:</span>
@@ -1222,9 +1222,9 @@
     </div>
 
     <div id="backup-section" style="margin-top:20px;border-top:1px solid var(--border);padding-top:16px;">
-      <div style="font-size:11px;color:var(--text-muted);letter-spacing:0.1em;margin-bottom:10px;">データバックアップ</div>
-      <button onclick="exportData()" style="width:100%;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;cursor:pointer;margin-bottom:8px;">📤 データをエクスポート</button>
-      <button onclick="openImportPicker()" style="width:100%;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;cursor:pointer;">📥 データをインポート</button>
+      <div style="font-size:11px;color:var(--text-muted);letter-spacing:0.1em;margin-bottom:10px;" data-i18n="backup_title">データバックアップ</div>
+      <button onclick="exportData()" style="width:100%;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;cursor:pointer;margin-bottom:8px;" data-i18n="btn_export">📤 データをエクスポート</button>
+      <button onclick="openImportPicker()" style="width:100%;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;cursor:pointer;" data-i18n="btn_import">📥 データをインポート</button>
     </div>
   </div>
 </div>
@@ -1240,40 +1240,40 @@
         <!-- Slide 1: Welcome -->
         <div class="ob-slide">
           <div class="ob-icon">🏋️</div>
-          <div class="ob-title">TRAINING<br>LOG</div>
-          <p class="ob-desc">大会を目指す競技者のための<strong>記録パートナー</strong><br>食事・水分・トレーニングを一元管理できます</p>
+          <div class="ob-title" id="ob-app-name">TRAINING<br>LOG</div>
+          <p class="ob-desc" id="ob-slide1-desc">大会を目指す競技者のための<strong>記録パートナー</strong><br>食事・水分・トレーニングを一元管理できます</p>
         </div>
 
-        <!-- Slide 2: 記録 -->
+        <!-- Slide 2 -->
         <div class="ob-slide">
           <div class="ob-icon">📊</div>
-          <div class="ob-title cyan">毎日の<br>記録</div>
+          <div class="ob-title cyan" id="ob-slide2-title">毎日の<br>記録</div>
           <div class="ob-features">
-            <div class="ob-feature-row"><span class="ob-feature-icon">⚖️</span><div class="ob-feature-text"><strong>体重・栄養管理</strong>PFCバランス・カロリーを記録</div></div>
-            <div class="ob-feature-row"><span class="ob-feature-icon">💧</span><div class="ob-feature-text"><strong>水分摂取</strong>目標量に対する達成率を管理</div></div>
-            <div class="ob-feature-row"><span class="ob-feature-icon">😴</span><div class="ob-feature-text"><strong>睡眠・歩数</strong>コンディションも記録に残せる</div></div>
+            <div class="ob-feature-row"><span class="ob-feature-icon">⚖️</span><div class="ob-feature-text"><strong data-i18n="ob_slide2_f1_title">体重・栄養管理</strong><span data-i18n="ob_slide2_f1_desc">PFCバランス・カロリーを記録</span></div></div>
+            <div class="ob-feature-row"><span class="ob-feature-icon">💧</span><div class="ob-feature-text"><strong data-i18n="ob_slide2_f2_title">水分摂取</strong><span data-i18n="ob_slide2_f2_desc">目標量に対する達成率を管理</span></div></div>
+            <div class="ob-feature-row"><span class="ob-feature-icon">😴</span><div class="ob-feature-text"><strong data-i18n="ob_slide2_f3_title">睡眠・歩数</strong><span data-i18n="ob_slide2_f3_desc">コンディションも記録に残せる</span></div></div>
           </div>
         </div>
 
-        <!-- Slide 3: ジム -->
+        <!-- Slide 3 -->
         <div class="ob-slide">
           <div class="ob-icon">💪</div>
-          <div class="ob-title green">ジム<br>ログ</div>
+          <div class="ob-title green" id="ob-slide3-title">ジム<br>ログ</div>
           <div class="ob-features">
-            <div class="ob-feature-row"><span class="ob-feature-icon">🗓️</span><div class="ob-feature-text"><strong>日付別に管理</strong>種目・セット・レップ数を記録</div></div>
-            <div class="ob-feature-row"><span class="ob-feature-icon">📈</span><div class="ob-feature-text"><strong>前回記録を参照</strong>重量の進捗を確認しながらトレーニング</div></div>
-            <div class="ob-feature-row"><span class="ob-feature-icon">🎯</span><div class="ob-feature-text"><strong>部位別フィルター</strong>胸・背中・脚など部位で絞り込み</div></div>
+            <div class="ob-feature-row"><span class="ob-feature-icon">🗓️</span><div class="ob-feature-text"><strong data-i18n="ob_slide3_f1_title">日付別に管理</strong><span data-i18n="ob_slide3_f1_desc">種目・セット・レップ数を記録</span></div></div>
+            <div class="ob-feature-row"><span class="ob-feature-icon">📈</span><div class="ob-feature-text"><strong data-i18n="ob_slide3_f2_title">前回記録を参照</strong><span data-i18n="ob_slide3_f2_desc">重量の進捗を確認しながらトレーニング</span></div></div>
+            <div class="ob-feature-row"><span class="ob-feature-icon">🎯</span><div class="ob-feature-text"><strong data-i18n="ob_slide3_f3_title">部位別フィルター</strong><span data-i18n="ob_slide3_f3_desc">胸・背中・脚など部位で絞り込み</span></div></div>
           </div>
         </div>
 
-        <!-- Slide 4: 振り返り -->
+        <!-- Slide 4 -->
         <div class="ob-slide">
           <div class="ob-icon">📉</div>
-          <div class="ob-title white">グラフで<br>振り返る</div>
+          <div class="ob-title white" id="ob-slide4-title">グラフで<br>振り返る</div>
           <div class="ob-features">
-            <div class="ob-feature-row"><span class="ob-feature-icon">📅</span><div class="ob-feature-text"><strong>カレンダービュー</strong>記録した日を一覧で確認</div></div>
-            <div class="ob-feature-row"><span class="ob-feature-icon">📊</span><div class="ob-feature-text"><strong>体重グラフ</strong>週ごとの目標と実績を比較</div></div>
-            <div class="ob-feature-row"><span class="ob-feature-icon">☁️</span><div class="ob-feature-text"><strong>クラウド同期</strong>Googleアカウントでデータを保護</div></div>
+            <div class="ob-feature-row"><span class="ob-feature-icon">📅</span><div class="ob-feature-text"><strong data-i18n="ob_slide4_f1_title">カレンダービュー</strong><span data-i18n="ob_slide4_f1_desc">記録した日を一覧で確認</span></div></div>
+            <div class="ob-feature-row"><span class="ob-feature-icon">📊</span><div class="ob-feature-text"><strong data-i18n="ob_slide4_f2_title">体重グラフ</strong><span data-i18n="ob_slide4_f2_desc">週ごとの目標と実績を比較</span></div></div>
+            <div class="ob-feature-row"><span class="ob-feature-icon">☁️</span><div class="ob-feature-text"><strong data-i18n="ob_slide4_f3_title">クラウド同期</strong><span data-i18n="ob_slide4_f3_desc">Googleアカウントでデータを保護</span></div></div>
           </div>
         </div>
 
@@ -1289,22 +1289,22 @@
       </div>
       <div style="display:flex;gap:10px;width:100%;">
         <button class="ob-btn-back" id="ob-btn-back" onclick="obPrev()" style="display:none;">←</button>
-        <button class="ob-btn-next" id="ob-btn-next" onclick="obNext()" style="flex:1;">次へ</button>
+        <button class="ob-btn-next" id="ob-btn-next" onclick="obNext()" style="flex:1;" data-i18n="ob_next">次へ</button>
       </div>
-      <button class="ob-btn-skip" id="ob-btn-skip" onclick="obSkipToLogin()">スキップ</button>
+      <button class="ob-btn-skip" id="ob-btn-skip" onclick="obSkipToLogin()" data-i18n="ob_skip">スキップ</button>
     </div>
   </div>
 
   <!-- ログイン選択画面（スライド終了後に表示） -->
   <div id="ob-login-choice" style="display:none;flex-direction:column;align-items:center;justify-content:center;flex:1;width:100%;padding:40px 28px max(40px,env(safe-area-inset-bottom));">
     <div style="font-size:56px;margin-bottom:16px;">🔐</div>
-    <div class="ob-title" style="margin-bottom:8px;">データを<br>守りますか？</div>
-    <p class="ob-desc" style="margin-bottom:32px;">Googleアカウントでログインすると<br>データがクラウドに自動保存されます。<br>後からでもログインできます。</p>
+    <div class="ob-title" style="margin-bottom:8px;" id="ob-login-title">データを<br>守りますか？</div>
+    <p class="ob-desc" style="margin-bottom:32px;" id="ob-login-desc">Googleアカウントでログインすると<br>データがクラウドに自動保存されます。<br>後からでもログインできます。</p>
     <div style="display:flex;flex-direction:column;gap:12px;width:100%;max-width:360px;">
-      <button class="ob-login-btn" onclick="obChooseLogin()">
+      <button class="ob-login-btn" onclick="obChooseLogin()" data-i18n="ob_login_btn">
         <span>🔑</span> Googleでログイン
       </button>
-      <button class="ob-btn-next" onclick="obChooseGuest()" style="background:var(--surface2);color:var(--text-muted);border:1px solid var(--border);">
+      <button class="ob-btn-next" onclick="obChooseGuest()" style="background:var(--surface2);color:var(--text-muted);border:1px solid var(--border);" data-i18n="ob_guest_btn">
         ゲストとして使う
       </button>
     </div>
@@ -1315,7 +1315,836 @@
 <div class="toast" id="toast"></div>
 
 <script>
-  const APP_VERSION = 'v20260518a';
+  const APP_VERSION = 'v20260518b';
+
+  // ==================
+  // i18n
+  // ==================
+  const LANG = navigator.language.startsWith('ja') ? 'ja' : 'en';
+
+  const STRINGS = {
+    ja: {
+      app_name: 'BodymakeLog',
+      app_subtitle: '大会競技者向け 記録アプリ',
+      welcome: 'ようこそ、',
+      welcome_suffix: 'さん 👋',
+      guest: 'ゲスト',
+      btn_record: '記録する',
+      btn_water: '💧 水分を記録する',
+      btn_gym: '💪 筋トレメモ',
+      btn_view: '表示する',
+      // record screen
+      screen_record: '今日の記録',
+      section_date: '📅 日付',
+      section_weight_sleep: '⚖️ 体重・睡眠',
+      label_weight: '体重 (kg)',
+      label_sleep: '睡眠時間 (h)',
+      section_pfc: '🍽️ PFC',
+      label_protein: 'タンパク質 (g)',
+      label_fat: '脂質 (g)',
+      label_carbs: '炭水化物 (g)',
+      label_kcal: 'カロリー (kcal)',
+      placeholder_kcal: '自動計算',
+      section_salt: '🧂 塩分',
+      label_salt: '塩分 (g)',
+      section_activity: '🚶 活動・運動',
+      label_steps: '歩数',
+      btn_add_exercise: '＋ 運動を追加',
+      section_salon: '🌞 日サロ',
+      label_salon: '日サロ時間 (分)',
+      section_training: '💪 筋トレ部位',
+      label_trained: '筋トレした',
+      muscle_chest: '胸',
+      muscle_back: '背中',
+      muscle_shoulder: '肩',
+      muscle_arm: '腕',
+      muscle_leg: '足',
+      muscle_abs: '腹筋',
+      section_memo: '📝 メモ',
+      placeholder_memo: '体調・気づきなど（空欄可）',
+      btn_save: '保存する',
+      // water screen
+      screen_water: '水分記録',
+      water_goal_label: '目標',
+      water_goal_edit: '変更',
+      water_quick_add: 'クイック追加',
+      water_edit_btn: '✏️ 編集',
+      water_today_log: '今日のログ',
+      water_reset: '今日の水分をリセット',
+      custom_btn_label: 'カスタム',
+      // gym screen
+      screen_gym: '💪 筋トレメモ',
+      gym_myset: '📋 マイセット',
+      gym_timer: '⏱ タイマー',
+      gym_share: '📷 シェア',
+      sw_start: 'スタート',
+      sw_stop: 'ストップ',
+      sw_reset: 'リセット',
+      sw_start_prefix: '開始: ',
+      sw_end_prefix: '終了: ',
+      btn_add_exercise_gym: '＋ 種目を追加',
+      btn_back_save: '← 戻る（自動保存済み）',
+      prev_label: '前回',
+      add_set: '＋ セットを追加',
+      // gym picker
+      gym_picker_title: '種目を選択',
+      gym_picker_edit: '編集',
+      gym_picker_search_ph: '種目を検索...',
+      // gym prev modal
+      copy_all: 'そのままコピーする',
+      copy_weight: '重量だけコピーする',
+      close: '閉じる',
+      // gym preset editor
+      preset_editor_title: '種目を編集',
+      preset_add_ph: '新しい種目名を入力',
+      preset_add_btn: '追加',
+      // timer
+      timer_sec30: '30秒',
+      timer_1min: '1分',
+      timer_90sec: '90秒',
+      timer_2min: '2分',
+      timer_3min: '3分',
+      timer_set_ph: '90',
+      timer_sec_label: '秒で設定',
+      timer_set_btn: 'セット',
+      timer_start: 'スタート',
+      timer_stop: '停止',
+      timer_done: '完了！',
+      timer_close: '閉じる',
+      // myset modal
+      myset_title: 'マイセット',
+      myset_register: '今日のメニューを登録',
+      myset_empty: 'マイセットがありません。今日のメニューを登録してください。',
+      myset_load: '読み込む',
+      myset_delete: '削除',
+      myset_name_prompt: 'マイセットの名前を入力してください',
+      myset_name_default_suffix: 'のメニュー',
+      // share overlay
+      share_btn: '📤 シェアする',
+      share_skip: 'スキップ',
+      // view screen
+      screen_view: '記録を見る',
+      tab_list: '一覧',
+      tab_graph: 'グラフ',
+      filter_all: 'すべて',
+      filter_week: '今週',
+      filter_month: '今月',
+      // chart titles
+      chart_roadmap: '🗺 大会ロードマップ',
+      chart_weight: '📈 体重推移 (kg)',
+      chart_kcal: '🔥 カロリー推移 (kcal)',
+      chart_pfc: '🥩 PFC推移 (g)',
+      chart_water: '💧 水分推移 (ml)',
+      // paywall
+      paywall_unlock: '全期間のデータを解放する',
+      paywall_desc: '無料プランは直近30日の履歴が対象です。\nプレミアムで大会準備のすべての記録を\nいつでも振り返れます。',
+      paywall_f1: '無制限の履歴閲覧・分析',
+      paywall_f2: '複数端末のクラウド同期',
+      paywall_f3: '大会ロードマップ',
+      paywall_f4: '週レポート',
+      paywall_price: '¥300 / 月で始める',
+      paywall_later: 'あとで',
+      // custom water modal
+      water_custom_title: '💧 カスタム水分追加',
+      water_save_label: 'クイックボタンに追加する',
+      btn_cancel: 'キャンセル',
+      btn_add: '追加する',
+      // activity picker
+      activity_add_title: '🏃 運動を追加',
+      activity_search_ph: '種目を検索...',
+      activity_custom_add: 'カスタム追加',
+      activity_custom_name_ph: '種目名',
+      activity_custom_kcal_ph: 'kcal/分',
+      // activity preset editor
+      activity_editor_title: '運動を編集',
+      activity_new_item: '新しい種目を追加',
+      activity_icon_ph: '🏃',
+      activity_name_ph: '種目名',
+      activity_met_ph: 'MET',
+      activity_add_cat: 'カテゴリ追加',
+      activity_new_cat_ph: '新しいカテゴリ名',
+      activity_reset: 'デフォルトに戻す',
+      activity_del_cat: 'このカテゴリを削除',
+      // icon picker
+      icon_picker_title: 'アイコンを選択',
+      // name editor
+      name_editor_title: '名前を編集',
+      btn_save_short: '保存',
+      // water btn editor
+      water_btn_editor_title: '💧 クイックボタン編集',
+      water_btn_new_ph: '追加するml数',
+      water_btn_reset: 'デフォルトに戻す',
+      // goal modal
+      goal_modal_title: '目標水分量',
+      // edit modal
+      edit_modal_title: '記録を編集',
+      label_water_ml: '水分摂取量 (ml)',
+      label_muscles: '筋トレ部位',
+      label_memo_short: 'メモ',
+      placeholder_memo_short: 'メモ（空欄可）',
+      btn_delete: '削除',
+      // wgoal modal
+      wgoal_title: '週目標平均体重',
+      // profile modal
+      profile_title: '⚙ プロフィール設定',
+      plan_current: '現在のプラン',
+      plan_free: '無料プラン（直近30日）',
+      plan_premium: 'プレミアムプラン ✨',
+      btn_upgrade: 'アップグレード',
+      account_label: 'アカウント',
+      auth_desc: 'ログインするとデータが同期されます',
+      btn_google_login: 'Googleでログイン',
+      btn_logout: 'ログアウト',
+      label_height: '身長 (cm)',
+      label_age: '年齢',
+      label_sex: '性別',
+      sex_male: '男性',
+      sex_female: '女性',
+      bmr_label: '推定基礎代謝 (kcal/日)',
+      label_contest_name: '🏆 大会名',
+      label_contest_date: '📅 大会日',
+      label_contest_weight: '🎯 大会目標体重 (kg)',
+      contest_name_ph: '例：東京クラシック2026',
+      contest_weight_ph: '例：75.0',
+      notif_title: '🔔 記録リマインダー通知',
+      notif_daily: '毎日通知',
+      notif_time: '通知時刻',
+      backup_title: 'データバックアップ',
+      btn_export: '📤 データをエクスポート',
+      btn_import: '📥 データをインポート',
+      // onboarding
+      ob_slide1_desc: '大会を目指す競技者のための記録パートナー\n食事・水分・トレーニングを一元管理できます',
+      ob_slide2_title: '毎日の\n記録',
+      ob_slide2_f1_title: '体重・栄養管理',
+      ob_slide2_f1_desc: 'PFCバランス・カロリーを記録',
+      ob_slide2_f2_title: '水分摂取',
+      ob_slide2_f2_desc: '目標量に対する達成率を管理',
+      ob_slide2_f3_title: '睡眠・歩数',
+      ob_slide2_f3_desc: 'コンディションも記録に残せる',
+      ob_slide3_title: 'ジム\nログ',
+      ob_slide3_f1_title: '日付別に管理',
+      ob_slide3_f1_desc: '種目・セット・レップ数を記録',
+      ob_slide3_f2_title: '前回記録を参照',
+      ob_slide3_f2_desc: '重量の進捗を確認しながらトレーニング',
+      ob_slide3_f3_title: '部位別フィルター',
+      ob_slide3_f3_desc: '胸・背中・脚など部位で絞り込み',
+      ob_slide4_title: 'グラフで\n振り返る',
+      ob_slide4_f1_title: 'カレンダービュー',
+      ob_slide4_f1_desc: '記録した日を一覧で確認',
+      ob_slide4_f2_title: '体重グラフ',
+      ob_slide4_f2_desc: '週ごとの目標と実績を比較',
+      ob_slide4_f3_title: 'クラウド同期',
+      ob_slide4_f3_desc: 'Googleアカウントでデータを保護',
+      ob_next: '次へ',
+      ob_start: 'はじめる',
+      ob_skip: 'スキップ',
+      ob_login_title: 'データを\n守りますか？',
+      ob_login_desc: 'Googleアカウントでログインすると\nデータがクラウドに自動保存されます。\n後からでもログインできます。',
+      ob_login_btn: '🔑 Googleでログイン',
+      ob_guest_btn: 'ゲストとして使う',
+      // toast / messages
+      toast_date_required: '日付を入力してください',
+      toast_saved: '保存しました ✓',
+      toast_updated: '更新しました ✓',
+      toast_deleted: '削除しました',
+      toast_synced: 'データを同期しました ✓',
+      toast_welcome_guest: 'ようこそ！記録を始めましょう 🏋️',
+      toast_loggedout: 'ログアウトしました',
+      toast_goal_set: '目標体重を設定しました ✓',
+      toast_water_goal_updated: '目標を更新しました',
+      toast_profile_saved: 'プロフィールを保存しました ✓',
+      toast_premium_welcome: 'プレミアムへようこそ！ 🎉',
+      toast_billing_wip: '課金機能は準備中です',
+      toast_app_login_required: 'アプリからログインしてください',
+      toast_no_data_today: 'この日の記録がありません',
+      toast_generating: '生成中...',
+      toast_generate_failed: '生成に失敗しました',
+      toast_prev_none: 'の前回記録がありません',
+      toast_prev_data_none: '前回のデータがありません',
+      toast_copied: '前回の記録をコピーしました',
+      toast_weight_copied: '前回の重量をコピーしました',
+      toast_export: 'エクスポートしました ✓',
+      toast_import_done: 'インポート完了。再起動します...',
+      toast_import_fail: 'インポートに失敗しました',
+      toast_reset_default: 'デフォルトに戻しました',
+      toast_myset_saved: 'マイセットに登録しました ✓',
+      toast_ml_required: 'ml数を入力してください',
+      toast_exercise_required: '種目名を入力してください',
+      toast_part_required: '部位を選択してください',
+      toast_cat_required: 'カテゴリ名を入力してください',
+      toast_gym_preset_reset: '種目プリセットをリセットしました',
+      toast_min_cat: '最低1つのカテゴリが必要です',
+      toast_preset_saved: '保存しました',
+      toast_added_suffix: ' を追加しました',
+      toast_loaded_suffix: ' を読み込みました',
+      toast_copied_date_suffix: 'の記録をコピーしました',
+      // week calendar
+      week_avg_weight: '週平均体重',
+      week_goal: '目標 ',
+      week_above_goal: '目標より重い',
+      week_below_goal: '目標より軽い',
+      week_on_target: '目標通り',
+      week_no_weight: 'この週の体重記録がありません',
+      week_goal_row: 'この週の目標体重',
+      not_set: '未設定',
+      set_btn: '設定',
+      day_names_short: ['日','月','火','水','木','金','土'],
+      goal_set_hint: '目標を設定すると差分が表示されます',
+      // month calendar
+      month_avg: '月平均: ',
+      // weekly report
+      weekly_report_title: '📊 今週のレポート',
+      report_avg_weight: '週平均体重',
+      report_gym_count: 'ジム回数',
+      report_gym_unit: '回',
+      report_gym_this_week: '今週',
+      report_avg_kcal: '平均カロリー',
+      report_avg_protein: '平均タンパク質',
+      report_avg_water: '平均水分摂取',
+      // roadmap
+      roadmap_set_date: 'プロフィールで大会日を設定してください',
+      roadmap_set_weight: 'プロフィールで大会目標体重を設定してください',
+      roadmap_ended: '大会は終了しました 🏆',
+      roadmap_record_weight: '体重を記録してください',
+      roadmap_weeks_to_contest: '大会まで',
+      roadmap_needed_loss: '必要減量',
+      roadmap_per_week: '週あたり',
+      roadmap_week_unit: '週',
+      roadmap_this_week_target: '今週の目標',
+      roadmap_weekly_actual: '週平均実績',
+      label_target: '目標',
+      label_actual: '実績',
+      label_target_line: '目標ライン',
+      chart_now: '現在',
+      chart_contest: '大会',
+      chart_weeks_suffix: '週後',
+      // records list
+      tag_training: 'トレーニング',
+      tag_salt: '塩分',
+      edit_btn: '編集',
+      record_empty: '記録がありません',
+      locked_count_suffix: '件の記録があります',
+      locked_more_suffix: 'さらに',
+      locked_desc: 'プレミアムで30日以前の履歴を表示',
+      upgrade_btn: 'アップグレード',
+      // weight analysis
+      analysis_title: '🔍 体重変動分析',
+      analysis_date_suffix: 'の体重変動',
+      // confirm dialogs
+      confirm_reset_water: '今日の水分記録をリセットしますか？',
+      confirm_delete_record: ' の記録を削除しますか？',
+      confirm_load_myset: '現在のメニューを置き換えますか？',
+      confirm_delete_myset: 'このマイセットを削除しますか？',
+      // stopwatch labels
+      sw_start_display: '開始: —',
+      sw_end_display: '終了: —',
+      // gym part bar
+      gym_part_chest: '胸',
+      gym_part_back: '背中',
+      gym_part_shoulder: '肩',
+      gym_part_arm: '腕',
+      gym_part_leg: '足',
+      gym_part_abs: '腹筋',
+      gym_part_cardio: '有酸素',
+      gym_empty: '種目を追加してください',
+      gym_add_set: '＋ セットを追加',
+      // copy prev
+      copy_prev_title_prefix: '部位を選択（',
+      copy_prev_title_suffix: '）',
+      copy_prev_all: 'すべてコピー',
+      copy_prev_cancel: 'キャンセル',
+      copy_prev_exercises_suffix: '種目）',
+      // assist
+      assist_type_label: 'タイプ',
+      assist_option: '補助',
+      weight_option: '加重',
+      bodyweight_btn: '自重',
+      assist_mark: '補',
+      // cardio labels
+      cardio_incline: '傾斜(%)',
+      cardio_speed: '時速(km/h)',
+      cardio_distance: '距離(km)',
+      cardio_duration: '時間(分)',
+      // prev modal
+      prev_prefix: '前回: ',
+      // weight analysis texts
+      wa_no_prev: '前日の体重が未記録のため変動計算はできませんが、前日の食事・トレーニングの影響を分析します。',
+      wa_stable: '前日比 <strong>±{0}kg</strong>。ほぼ横ばい。水分の誤差範囲内。',
+      wa_decrease: '前日比 <strong>{0}kg</strong> 減少。良いトレンドです。',
+      wa_increase: '前日比 <strong>+{0}kg</strong> 増加。以下の要因を分析します。',
+      wa_salt_high: '前日の塩分 <strong>{0}g</strong>（目標7.5g超）。高塩分は細胞外液を増加させ翌朝体重に直結。{1}',
+      wa_salt_high_main: '今日の増加の主因と考えられます。',
+      wa_salt_high_alt: '体重は下がっていますが影響はあった可能性。',
+      wa_salt_mid: '前日の塩分 <strong>{0}g</strong>（やや多め）。むくみへの軽度の影響がある可能性。',
+      wa_salt_ok: '前日の塩分 <strong>{0}g</strong>（適正）。塩分によるむくみの影響は少ない。',
+      wa_water_high: '前日の水分 <strong>{0}L</strong>。十分な水分が塩分排出・代謝をサポート。体重変動を最小化できています。',
+      wa_water_mid: '前日の水分 <strong>{0}L</strong>（目標3L未満）。水分が少ないと塩分や老廃物が体内に残りやすく翌朝体重が高くなる傾向。',
+      wa_water_low: '前日の水分 <strong>{0}L</strong>（かなり少ない）。水分不足は代謝低下・むくみ・塩分蓄積のリスクあり。',
+      wa_salon_long: '前日に日サロ <strong>{0}分</strong>。紫外線による皮膚の炎症反応でむくみが生じやすく、翌日体重が{1}。水分を多めに摂るとケアになります。',
+      wa_salon_long_inc: '増加している',
+      wa_salon_long_tend: '増加しやすい傾向があります',
+      wa_salon_short: '前日に日サロ <strong>{0}分</strong>。短時間ですが皮膚の軽度な炎症反応が翌朝の体重に微影響する場合があります。',
+      wa_kcal_high: '前日のカロリー <strong>{0}kcal</strong>（高め）。維持カロリーを大幅に超えており、消化物・グリコーゲン増加で体重に上乗せ。',
+      wa_kcal_mid: '前日のカロリー <strong>{0}kcal</strong>（やや多め）。減量ペースが鈍化する可能性。',
+      wa_kcal_low: '前日のカロリー <strong>{0}kcal</strong>（少なめ）。極端な制限は代謝適応を招きやすく、逆に体重が動きにくくなるリスクあり。',
+      wa_kcal_ok: '前日のカロリー <strong>{0}kcal</strong>（適正範囲）。カロリー面の問題なし。',
+      wa_carb_high: '前日の炭水化物 <strong>{0}g</strong>（多め）。糖質1gに対して約3〜4gの水が筋肉に蓄積されるため、体重が増えやすい。脂肪増加ではなくグリコーゲン由来。',
+      wa_carb_mid: '前日の炭水化物 <strong>{0}g</strong>（やや多め）。グリコーゲン貯蔵が増え一時的な体重増加の可能性あり。',
+      wa_carb_low: '前日の炭水化物 <strong>{0}g</strong>（少なめ）。グリコーゲンが枯渇しトレーニングパフォーマンス低下に注意。',
+      wa_fat_high: '前日の脂質 <strong>{0}g</strong>（高め）。脂質は消化に時間がかかり翌朝も消化物が残りやすい。体重増加の一因の可能性。',
+      wa_fat_mid: '前日の脂質 <strong>{0}g</strong>（やや多め）。消化の遅延が翌朝体重に微影響する場合あり。',
+      wa_protein_low: '前日のタンパク質 <strong>{0}g</strong>（少なめ）。減量中の筋肉分解リスクあり。160g以上を目標に。',
+      wa_protein_ok: '前日のタンパク質 <strong>{0}g</strong>。筋肉維持に十分。',
+      wa_training_big: '<strong>{0}に{1}</strong>のトレーニング。大筋群の筋損傷回復で炎症・水分保持が起きやすく、翌朝〜2日後まで体重が0.3〜0.8kg増える場合があります。',
+      wa_training_small: '<strong>{0}に{1}</strong>のトレーニング。小筋群なので体重への影響は軽微。',
+      wa_when_prev: '前日',
+      wa_when_prev2: '2日前',
+      wa_sleep_short: '当日の睡眠 <strong>{0}h</strong>（短い）。睡眠不足はコルチゾール増加→水分貯留・脂肪燃焼低下につながりやすい。',
+      wa_sleep_mid: '当日の睡眠 <strong>{0}h</strong>（やや短め）。7h以上確保できると回復・脂肪燃焼効率が改善。',
+      wa_sleep_ok: '当日の睡眠 <strong>{0}h</strong>。十分な睡眠で成長ホルモン分泌・脂肪燃焼をサポートできています。',
+      wa_salt2: '2日前の塩分 <strong>{0}g</strong>（高め）。塩分の排出には24〜48時間かかることがあり、今日の体重に遅れて影響している可能性あり。',
+      wa_steps_high: '前日の歩数 <strong>{0}歩</strong>（活動量多め）。消費カロリーが増え減量に有利。',
+      wa_steps_low: '前日の歩数 <strong>{0}歩</strong>（少なめ）。活動量が低いと消費カロリーが減り体重が落ちにくい。',
+      wa_cardio_high: '前日の有酸素運動で <strong>{0}kcal</strong> 消費。脂肪燃焼に効果的。',
+      wa_cardio_low: '前日の有酸素運動で <strong>{0}kcal</strong> 消費。',
+      wa_balance_good: '前日の推定カロリー収支 <strong>{0}kcal</strong>。十分な赤字。（{1}）',
+      wa_balance_ok: '前日の推定カロリー収支 <strong>{0}kcal</strong>。適度な赤字。（{1}）',
+      wa_balance_over: '前日の推定カロリー収支 <strong>{0}kcal</strong>。黒字気味。体重増加につながりやすい。（{1}）',
+      wa_balance_bmr: '基礎代謝{0}+有酸素{1}+歩行{2}',
+      wa_memo_drinking: '前日のメモに「飲み会・アルコール」の記録。アルコールは利尿→翌日のリバウンド水分貯留を引き起こしやすく、体重が増えやすいパターンです。',
+      wa_memo_eating_out: '前日のメモに外食の記録。外食は塩分・脂質が高くなりやすく体重変動の一因になります。',
+      wa_memo_outdoor: '前日のメモにアウトドア活動の記録。環境の変化・食事内容の乱れが体重変動に影響する場合あり。',
+      wa_no_cause: '明確な原因が見当たりません。計測タイミング・排便・生理周期（女性）・気温による発汗量の違いなど、日常的な誤差の範囲と考えられます。',
+      wa_big_drop: '大幅な減少です。前日の水分・塩分・カロリー管理が良かった可能性が高い。このペースを維持しましょう。',
+      // empty state
+      empty_records: '記録がありません',
+      empty_no_log: 'まだ記録がありません',
+      empty_add_exercise: '種目を追加してください',
+      // plan status
+      plan_status_premium_badge: '✨',
+      // contest label
+      days_to_contest: 'DAYS TO CONTEST',
+    },
+    en: {
+      app_name: 'PhysiqueLog',
+      app_subtitle: 'Contest Athlete Tracker',
+      welcome: 'Welcome, ',
+      welcome_suffix: ' 👋',
+      guest: 'Guest',
+      btn_record: 'Log Today',
+      btn_water: '💧 Log Hydration',
+      btn_gym: '💪 Training Log',
+      btn_view: 'View Records',
+      // record screen
+      screen_record: "Today's Log",
+      section_date: '📅 Date',
+      section_weight_sleep: '⚖️ Weight & Sleep',
+      label_weight: 'Weight (kg)',
+      label_sleep: 'Sleep (h)',
+      section_pfc: '🍽️ Nutrition',
+      label_protein: 'Protein (g)',
+      label_fat: 'Fat (g)',
+      label_carbs: 'Carbs (g)',
+      label_kcal: 'Calories (kcal)',
+      placeholder_kcal: 'Auto-calculated',
+      section_salt: '🧂 Sodium',
+      label_salt: 'Sodium (g)',
+      section_activity: '🚶 Activity & Exercise',
+      label_steps: 'Steps',
+      btn_add_exercise: '+ Add Exercise',
+      section_salon: '🌞 Tanning',
+      label_salon: 'Tanning Time (min)',
+      section_training: '💪 Muscles Trained',
+      label_trained: 'Trained Today',
+      muscle_chest: 'Chest',
+      muscle_back: 'Back',
+      muscle_shoulder: 'Shoulder',
+      muscle_arm: 'Arms',
+      muscle_leg: 'Legs',
+      muscle_abs: 'Abs',
+      section_memo: '📝 Notes',
+      placeholder_memo: 'Condition, notes, etc. (optional)',
+      btn_save: 'Save',
+      // water screen
+      screen_water: 'Hydration Log',
+      water_goal_label: 'Goal',
+      water_goal_edit: 'Edit',
+      water_quick_add: 'Quick Add',
+      water_edit_btn: '✏️ Edit',
+      water_today_log: "Today's Log",
+      water_reset: "Reset Today's Water",
+      custom_btn_label: 'Custom',
+      // gym screen
+      screen_gym: '💪 Training Log',
+      gym_myset: '📋 My Sets',
+      gym_timer: '⏱ Timer',
+      gym_share: '📷 Share',
+      sw_start: 'Start',
+      sw_stop: 'Stop',
+      sw_reset: 'Reset',
+      sw_start_prefix: 'Start: ',
+      sw_end_prefix: 'End: ',
+      btn_add_exercise_gym: '+ Add Exercise',
+      btn_back_save: '← Back (Auto-saved)',
+      prev_label: 'Last',
+      add_set: '+ Add Set',
+      // gym picker
+      gym_picker_title: 'Select Exercise',
+      gym_picker_edit: 'Edit',
+      gym_picker_search_ph: 'Search exercises...',
+      // gym prev modal
+      copy_all: 'Copy All Sets',
+      copy_weight: 'Copy Weights Only',
+      close: 'Close',
+      // gym preset editor
+      preset_editor_title: 'Edit Exercises',
+      preset_add_ph: 'New exercise name',
+      preset_add_btn: 'Add',
+      // timer
+      timer_sec30: '30s',
+      timer_1min: '1min',
+      timer_90sec: '90s',
+      timer_2min: '2min',
+      timer_3min: '3min',
+      timer_set_ph: '90',
+      timer_sec_label: 'sec',
+      timer_set_btn: 'Set',
+      timer_start: 'Start',
+      timer_stop: 'Pause',
+      timer_done: 'Done!',
+      timer_close: 'Close',
+      // myset modal
+      myset_title: 'My Sets',
+      myset_register: "Save Today's Routine",
+      myset_empty: 'No saved sets. Save today\'s routine below.',
+      myset_load: 'Load',
+      myset_delete: 'Delete',
+      myset_name_prompt: 'Enter a name for this set',
+      myset_name_default_suffix: ' Routine',
+      // share overlay
+      share_btn: '📤 Share',
+      share_skip: 'Skip',
+      // view screen
+      screen_view: 'Records',
+      tab_list: 'List',
+      tab_graph: 'Charts',
+      filter_all: 'All',
+      filter_week: 'This Week',
+      filter_month: 'This Month',
+      // chart titles
+      chart_roadmap: '🗺 Contest Roadmap',
+      chart_weight: '📈 Weight Trend (kg)',
+      chart_kcal: '🔥 Calorie Trend (kcal)',
+      chart_pfc: '🥩 PFC Trend (g)',
+      chart_water: '💧 Hydration Trend (ml)',
+      // paywall
+      paywall_unlock: 'Unlock Full History',
+      paywall_desc: 'Free plan includes the last 30 days.\nGo Premium to access all your contest prep records anytime.',
+      paywall_f1: 'Unlimited history & analytics',
+      paywall_f2: 'Multi-device cloud sync',
+      paywall_f3: 'Contest roadmap',
+      paywall_f4: 'Weekly report',
+      paywall_price: 'Start for $2.99/month',
+      paywall_later: 'Later',
+      // custom water modal
+      water_custom_title: '💧 Custom Hydration Entry',
+      water_save_label: 'Add to Quick Buttons',
+      btn_cancel: 'Cancel',
+      btn_add: 'Add',
+      // activity picker
+      activity_add_title: '🏃 Add Exercise',
+      activity_search_ph: 'Search exercises...',
+      activity_custom_add: 'Custom Entry',
+      activity_custom_name_ph: 'Exercise name',
+      activity_custom_kcal_ph: 'kcal/min',
+      // activity preset editor
+      activity_editor_title: 'Edit Exercises',
+      activity_new_item: 'Add New Exercise',
+      activity_icon_ph: '🏃',
+      activity_name_ph: 'Exercise name',
+      activity_met_ph: 'MET',
+      activity_add_cat: 'Add Category',
+      activity_new_cat_ph: 'New category name',
+      activity_reset: 'Reset to Default',
+      activity_del_cat: 'Delete This Category',
+      // icon picker
+      icon_picker_title: 'Select Icon',
+      // name editor
+      name_editor_title: 'Edit Name',
+      btn_save_short: 'Save',
+      // water btn editor
+      water_btn_editor_title: '💧 Edit Quick Buttons',
+      water_btn_new_ph: 'Amount (ml)',
+      water_btn_reset: 'Reset to Default',
+      // goal modal
+      goal_modal_title: 'Water Goal',
+      // edit modal
+      edit_modal_title: 'Edit Record',
+      label_water_ml: 'Water Intake (ml)',
+      label_muscles: 'Muscles Trained',
+      label_memo_short: 'Notes',
+      placeholder_memo_short: 'Notes (optional)',
+      btn_delete: 'Delete',
+      // wgoal modal
+      wgoal_title: 'Weekly Target Weight',
+      // profile modal
+      profile_title: '⚙ Profile Settings',
+      plan_current: 'Current Plan',
+      plan_free: 'Free Plan (Last 30 Days)',
+      plan_premium: 'Premium Plan ✨',
+      btn_upgrade: 'Upgrade',
+      account_label: 'Account',
+      auth_desc: 'Sign in to sync your data',
+      btn_google_login: 'Sign in with Google',
+      btn_logout: 'Sign Out',
+      label_height: 'Height (cm)',
+      label_age: 'Age',
+      label_sex: 'Sex',
+      sex_male: 'Male',
+      sex_female: 'Female',
+      bmr_label: 'Estimated BMR (kcal/day)',
+      label_contest_name: '🏆 Contest Name',
+      label_contest_date: '📅 Contest Date',
+      label_contest_weight: '🎯 Target Contest Weight (kg)',
+      contest_name_ph: 'e.g. Tokyo Classic 2026',
+      contest_weight_ph: 'e.g. 75.0',
+      notif_title: '🔔 Daily Reminder Notification',
+      notif_daily: 'Daily notification',
+      notif_time: 'Notification time',
+      backup_title: 'Data Backup',
+      btn_export: '📤 Export Data',
+      btn_import: '📥 Import Data',
+      // onboarding
+      ob_slide1_desc: 'Your training partner for contest prep.\nTrack nutrition, hydration & workouts in one place.',
+      ob_slide2_title: 'Daily\nLogging',
+      ob_slide2_f1_title: 'Weight & Nutrition',
+      ob_slide2_f1_desc: 'Track PFC balance and calories',
+      ob_slide2_f2_title: 'Hydration',
+      ob_slide2_f2_desc: 'Monitor your daily water intake goal',
+      ob_slide2_f3_title: 'Sleep & Steps',
+      ob_slide2_f3_desc: 'Track recovery and conditioning',
+      ob_slide3_title: 'Gym\nLog',
+      ob_slide3_f1_title: 'Date-based Tracking',
+      ob_slide3_f1_desc: 'Log exercises, sets and reps',
+      ob_slide3_f2_title: 'Previous Records',
+      ob_slide3_f2_desc: 'Track weight progress session to session',
+      ob_slide3_f3_title: 'Muscle Filter',
+      ob_slide3_f3_desc: 'Filter by chest, back, legs and more',
+      ob_slide4_title: 'Track\nProgress',
+      ob_slide4_f1_title: 'Calendar View',
+      ob_slide4_f1_desc: 'See all logged days at a glance',
+      ob_slide4_f2_title: 'Weight Chart',
+      ob_slide4_f2_desc: 'Compare weekly targets vs actuals',
+      ob_slide4_f3_title: 'Cloud Sync',
+      ob_slide4_f3_desc: 'Protect your data with Google account',
+      ob_next: 'Next',
+      ob_start: 'Get Started',
+      ob_skip: 'Skip',
+      ob_login_title: 'Protect\nYour Data?',
+      ob_login_desc: 'Sign in with Google to automatically\nback up your data to the cloud.\nYou can also do this later.',
+      ob_login_btn: '🔑 Sign in with Google',
+      ob_guest_btn: 'Continue as Guest',
+      // toast / messages
+      toast_date_required: 'Please enter a date',
+      toast_saved: 'Saved ✓',
+      toast_updated: 'Updated ✓',
+      toast_deleted: 'Deleted',
+      toast_synced: 'Data synced ✓',
+      toast_welcome_guest: 'Welcome! Let\'s start logging 🏋️',
+      toast_loggedout: 'Signed out',
+      toast_goal_set: 'Target weight set ✓',
+      toast_water_goal_updated: 'Goal updated',
+      toast_profile_saved: 'Profile saved ✓',
+      toast_premium_welcome: 'Welcome to Premium! 🎉',
+      toast_billing_wip: 'Billing coming soon',
+      toast_app_login_required: 'Please sign in from the app',
+      toast_no_data_today: 'No data for this day',
+      toast_generating: 'Generating...',
+      toast_generate_failed: 'Generation failed',
+      toast_prev_none: ': no previous record',
+      toast_prev_data_none: 'No previous data found',
+      toast_copied: 'Previous session copied',
+      toast_weight_copied: 'Previous weights copied',
+      toast_export: 'Exported ✓',
+      toast_import_done: 'Import complete. Restarting...',
+      toast_import_fail: 'Import failed',
+      toast_reset_default: 'Reset to default',
+      toast_myset_saved: 'Saved to My Sets ✓',
+      toast_ml_required: 'Please enter an amount (ml)',
+      toast_exercise_required: 'Please enter an exercise name',
+      toast_part_required: 'Please select a muscle group',
+      toast_cat_required: 'Please enter a category name',
+      toast_gym_preset_reset: 'Exercise presets reset',
+      toast_min_cat: 'At least one category is required',
+      toast_preset_saved: 'Saved',
+      toast_added_suffix: ' added',
+      toast_loaded_suffix: ' loaded',
+      toast_copied_date_suffix: ' session copied',
+      // week calendar
+      week_avg_weight: 'Weekly Avg Weight',
+      week_goal: 'Target: ',
+      week_above_goal: 'Above target',
+      week_below_goal: 'Below target',
+      week_on_target: 'On target',
+      week_no_weight: 'No weight records this week',
+      week_goal_row: "This Week's Target Weight",
+      not_set: 'Not set',
+      set_btn: 'Set',
+      day_names_short: ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],
+      goal_set_hint: 'Set a target to see the difference',
+      // month calendar
+      month_avg: 'Monthly avg: ',
+      // weekly report
+      weekly_report_title: '📊 Weekly Report',
+      report_avg_weight: 'Avg Weight',
+      report_gym_count: 'Gym Sessions',
+      report_gym_unit: 'x',
+      report_gym_this_week: 'This week',
+      report_avg_kcal: 'Avg Calories',
+      report_avg_protein: 'Avg Protein',
+      report_avg_water: 'Avg Hydration',
+      // roadmap
+      roadmap_set_date: 'Set your contest date in Profile',
+      roadmap_set_weight: 'Set your target contest weight in Profile',
+      roadmap_ended: 'Contest is over 🏆',
+      roadmap_record_weight: 'Please log your weight',
+      roadmap_weeks_to_contest: 'Weeks Left',
+      roadmap_needed_loss: 'Need to Lose',
+      roadmap_per_week: 'Per Week',
+      roadmap_week_unit: 'wks',
+      roadmap_this_week_target: "This Week's Target",
+      roadmap_weekly_actual: 'Weekly Average',
+      label_target: 'Target',
+      label_actual: 'Actual',
+      label_target_line: 'Target Line',
+      chart_now: 'Now',
+      chart_contest: 'Contest',
+      chart_weeks_suffix: 'wks',
+      // records list
+      tag_training: 'Training',
+      tag_salt: 'Sodium',
+      edit_btn: 'Edit',
+      record_empty: 'No records yet',
+      locked_count_suffix: ' records available',
+      locked_more_suffix: 'Plus ',
+      locked_desc: 'Go Premium to view records older than 30 days',
+      upgrade_btn: 'Upgrade',
+      // weight analysis
+      analysis_title: '🔍 Weight Change Analysis',
+      analysis_date_suffix: ' — Weight Change',
+      // confirm dialogs
+      confirm_reset_water: "Reset today's water log?",
+      confirm_delete_record: ' — Delete this record?',
+      confirm_load_myset: 'Replace current routine?',
+      confirm_delete_myset: 'Delete this set?',
+      // stopwatch labels
+      sw_start_display: 'Start: —',
+      sw_end_display: 'End: —',
+      // gym part bar
+      gym_part_chest: 'Chest',
+      gym_part_back: 'Back',
+      gym_part_shoulder: 'Shoulder',
+      gym_part_arm: 'Arms',
+      gym_part_leg: 'Legs',
+      gym_part_abs: 'Abs',
+      gym_part_cardio: 'Cardio',
+      gym_empty: 'Add an exercise to get started',
+      gym_add_set: '+ Add Set',
+      // copy prev
+      copy_prev_title_prefix: 'Select muscle group (',
+      copy_prev_title_suffix: ')',
+      copy_prev_all: 'Copy All',
+      copy_prev_cancel: 'Cancel',
+      copy_prev_exercises_suffix: ' exercises)',
+      // assist
+      assist_type_label: 'Type',
+      assist_option: 'Assist',
+      weight_option: 'Weighted',
+      bodyweight_btn: 'BW',
+      assist_mark: 'A',
+      // cardio labels
+      cardio_incline: 'Incline(%)',
+      cardio_speed: 'Speed(km/h)',
+      cardio_distance: 'Dist(km)',
+      cardio_duration: 'Time(min)',
+      // prev modal
+      prev_prefix: 'Last session: ',
+      // weight analysis texts
+      wa_no_prev: 'Previous day weight not logged — but analyzing yesterday\'s food and training impact.',
+      wa_stable: 'vs prev day: <strong>±{0}kg</strong>. Essentially flat — within water fluctuation range.',
+      wa_decrease: 'vs prev day: <strong>{0}kg</strong>. Good downward trend.',
+      wa_increase: 'vs prev day: <strong>+{0}kg</strong>. Analyzing potential causes below.',
+      wa_salt_high: 'Yesterday\'s sodium: <strong>{0}g</strong> (above 7.5g target). High sodium increases extracellular fluid, directly affecting morning weight. {1}',
+      wa_salt_high_main: 'Likely the main cause of today\'s increase.',
+      wa_salt_high_alt: 'Weight decreased despite this, but there may have been some impact.',
+      wa_salt_mid: 'Yesterday\'s sodium: <strong>{0}g</strong> (slightly high). Minor bloating possible.',
+      wa_salt_ok: 'Yesterday\'s sodium: <strong>{0}g</strong> (good). Sodium-related bloating unlikely.',
+      wa_water_high: 'Yesterday\'s hydration: <strong>{0}L</strong>. Adequate water supports sodium excretion and metabolism, minimizing weight fluctuation.',
+      wa_water_mid: 'Yesterday\'s hydration: <strong>{0}L</strong> (below 3L goal). Low hydration can cause sodium and waste retention, leading to higher morning weight.',
+      wa_water_low: 'Yesterday\'s hydration: <strong>{0}L</strong> (very low). Risk of metabolic slowdown, bloating and sodium retention.',
+      wa_salon_long: 'Yesterday\'s tanning: <strong>{0} min</strong>. UV-induced skin inflammation may cause fluid retention, raising tomorrow\'s weight. {1}. Extra hydration helps.',
+      wa_salon_long_inc: 'contributing to today\'s increase',
+      wa_salon_long_tend: 'which tends to raise weight',
+      wa_salon_short: 'Yesterday\'s tanning: <strong>{0} min</strong>. Short session, but mild skin inflammation may slightly affect morning weight.',
+      wa_kcal_high: 'Yesterday\'s calories: <strong>{0} kcal</strong> (high). Significantly over maintenance — digestive contents and glycogen storage add weight.',
+      wa_kcal_mid: 'Yesterday\'s calories: <strong>{0} kcal</strong> (slightly high). May slow weight loss pace.',
+      wa_kcal_low: 'Yesterday\'s calories: <strong>{0} kcal</strong> (low). Extreme restriction risks metabolic adaptation, making it harder to lose weight.',
+      wa_kcal_ok: 'Yesterday\'s calories: <strong>{0} kcal</strong> (appropriate). No calorie concerns.',
+      wa_carb_high: 'Yesterday\'s carbs: <strong>{0}g</strong> (high). Each gram of glycogen binds 3–4g of water in muscle, causing temporary weight gain — not fat.',
+      wa_carb_mid: 'Yesterday\'s carbs: <strong>{0}g</strong> (slightly high). Increased glycogen storage may cause a temporary scale bump.',
+      wa_carb_low: 'Yesterday\'s carbs: <strong>{0}g</strong> (low). Risk of glycogen depletion and reduced training performance.',
+      wa_fat_high: 'Yesterday\'s fat: <strong>{0}g</strong> (high). Fat digests slowly, meaning digestive contents may still be present in the morning.',
+      wa_fat_mid: 'Yesterday\'s fat: <strong>{0}g</strong> (slightly high). Delayed digestion may marginally affect morning weight.',
+      wa_protein_low: 'Yesterday\'s protein: <strong>{0}g</strong> (low). Risk of muscle catabolism during a cut. Aim for 160g+.',
+      wa_protein_ok: 'Yesterday\'s protein: <strong>{0}g</strong>. Sufficient for muscle retention.',
+      wa_training_big: '<strong>{1} training {0}</strong>. Damage to large muscle groups triggers inflammation and fluid retention lasting 24–48 hrs, adding 0.3–0.8kg.',
+      wa_training_small: '<strong>{1} training {0}</strong>. Small muscle group — minimal weight impact.',
+      wa_when_prev: 'yesterday',
+      wa_when_prev2: '2 days ago',
+      wa_sleep_short: 'Sleep: <strong>{0}h</strong> (short). Sleep deprivation raises cortisol → fluid retention and reduced fat burning.',
+      wa_sleep_mid: 'Sleep: <strong>{0}h</strong> (slightly short). 7+ hours improves recovery and fat burning efficiency.',
+      wa_sleep_ok: 'Sleep: <strong>{0}h</strong>. Quality sleep supports growth hormone release and fat burning.',
+      wa_salt2: 'Sodium 2 days ago: <strong>{0}g</strong> (high). Sodium excretion can take 24–48 hours, potentially affecting today\'s weight.',
+      wa_steps_high: 'Yesterday\'s steps: <strong>{0}</strong> (high activity). Increased calorie burn supports fat loss.',
+      wa_steps_low: 'Yesterday\'s steps: <strong>{0}</strong> (low). Reduced activity lowers calorie expenditure, making it harder to lose weight.',
+      wa_cardio_high: 'Yesterday\'s cardio burned <strong>{0} kcal</strong>. Effective for fat loss.',
+      wa_cardio_low: 'Yesterday\'s cardio burned <strong>{0} kcal</strong>.',
+      wa_balance_good: 'Estimated calorie balance yesterday: <strong>{0} kcal</strong>. Significant deficit. ({1})',
+      wa_balance_ok: 'Estimated calorie balance yesterday: <strong>{0} kcal</strong>. Moderate deficit. ({1})',
+      wa_balance_over: 'Estimated calorie balance yesterday: <strong>{0} kcal</strong>. Slight surplus — may contribute to weight gain. ({1})',
+      wa_balance_bmr: 'BMR {0} + cardio {1} + steps {2}',
+      wa_memo_drinking: 'Alcohol noted in yesterday\'s memo. Alcohol causes diuresis → rebound water retention the next day, raising weight.',
+      wa_memo_eating_out: 'Eating out noted in yesterday\'s memo. Restaurant food tends to be higher in sodium and fat, contributing to weight fluctuations.',
+      wa_memo_outdoor: 'Outdoor activity noted in yesterday\'s memo. Changes in environment and diet can affect weight.',
+      wa_no_cause: 'No clear cause found. This is likely normal daily fluctuation — measurement timing, bowel movements, menstrual cycle (women), or sweat variation due to temperature.',
+      wa_big_drop: 'Significant drop! Yesterday\'s hydration, sodium and calorie management were likely excellent. Keep it up.',
+      // empty state
+      empty_records: 'No records yet',
+      empty_no_log: 'No entries yet',
+      empty_add_exercise: 'Add an exercise to get started',
+      // plan status
+      plan_status_premium_badge: '✨',
+      // contest label
+      days_to_contest: 'DAYS TO CONTEST',
+    }
+  };
+
+  function t(key) {
+    return (STRINGS[LANG] && STRINGS[LANG][key] !== undefined) ? STRINGS[LANG][key] : (STRINGS['ja'][key] || key);
+  }
+
+  function applyI18n() {
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      const key = el.getAttribute('data-i18n');
+      el.textContent = t(key);
+    });
+    document.querySelectorAll('[data-i18n-ph]').forEach(el => {
+      el.placeholder = t(el.getAttribute('data-i18n-ph'));
+    });
+    // Update html lang attribute and document title
+    document.getElementById('html-root').lang = LANG;
+    document.title = t('app_name');
+  }
   const REMOTE_URL = 'https://tachizuki.github.io/training-log-v2/index.html';
 
   // AndroidBridgeからストレージデータを受け取る
@@ -1379,7 +2208,7 @@
   function todayKey() { return formatDate(new Date()); }
   function getTodayWater() { return waterData[todayKey()] || { total: 0, log: [] }; }
   function formatDate(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
-  function formatDateJP(d) { return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`; }
+  function formatDateJP(d) { return LANG === 'ja' ? `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日` : `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()} (${t('day_names_short')[d.getDay()]})`; }
 
   // ==================
   // FIREBASE AUTH & SYNC（Kotlin経由）
@@ -1399,7 +2228,7 @@
   function onFirebaseSignOut() {
     currentUser = null;
     updateAuthUI(null);
-    showToast('ログアウトしました', false);
+    showToast(t('toast_loggedout'), false);
   }
 
   function receiveFirestoreData(jsonStr) {
@@ -1413,7 +2242,7 @@
       gymData = JSON.parse(localStorage.getItem('gym_data') || '{}');
       userProfile = JSON.parse(localStorage.getItem('user_profile') || '{"height":168,"age":25,"sex":"male"}');
       updateTodaySummary();
-      showToast('データを同期しました ✓', false);
+      showToast(t('toast_synced'), false);
     } catch(e) {
       console.error('receiveFirestoreData error:', e);
     }
@@ -1424,13 +2253,13 @@
     const info = document.getElementById('auth-info');
     if (!btn) return;
     if (user) {
-      btn.textContent = 'ログアウト';
+      btn.textContent = t('btn_logout');
       btn.onclick = firebaseSignOut;
       if (info) info.textContent = user.displayName || user.email || '';
     } else {
-      btn.textContent = 'Googleでログイン';
+      btn.textContent = t('btn_google_login');
       btn.onclick = firebaseSignIn;
-      if (info) info.textContent = 'ログインするとデータが同期されます';
+      if (info) info.textContent = t('auth_desc');
     }
     updateWelcome();
     updateBackupVisibility();
@@ -1440,7 +2269,7 @@
     if (typeof AndroidBridge !== 'undefined') {
       AndroidBridge.signInWithGoogle();
     } else {
-      showToast('アプリからログインしてください');
+      showToast(t('toast_app_login_required'));
     }
   }
 
@@ -1484,7 +2313,7 @@
     document.getElementById('ob-slides').style.transform = `translateX(-${obCurrentSlide * 100}%)`;
     document.querySelectorAll('.ob-dot').forEach((d, i) => d.classList.toggle('active', i === obCurrentSlide));
     const isLast = obCurrentSlide === OB_TOTAL - 1;
-    document.getElementById('ob-btn-next').textContent = isLast ? 'はじめる' : '次へ';
+    document.getElementById('ob-btn-next').textContent = isLast ? t('ob_start') : t('ob_next');
     document.getElementById('ob-btn-back').style.display = obCurrentSlide === 0 ? 'none' : '';
   }
 
@@ -1525,7 +2354,7 @@
   function obChooseGuest() {
     obFinishOnboarding();
     updateWelcome();
-    showToast('ようこそ！記録を始めましょう 🏋️', false);
+    showToast(t('toast_welcome_guest'), false);
   }
 
   function obFinishOnboarding() {
@@ -1581,7 +2410,7 @@
       el.textContent = currentUser.displayName.split(' ')[0]; // 名前の最初だけ
     } else {
       const profile = JSON.parse(localStorage.getItem('user_profile') || '{}');
-      el.textContent = profile.nickname || 'ゲスト';
+      el.textContent = profile.nickname || t('guest');
     }
   }
 
@@ -1632,6 +2461,37 @@
   }
 
   function init() {
+    // Apply i18n to static HTML
+    applyI18n();
+
+    // Set app name based on language
+    const appNameEl = document.getElementById('app-title-display');
+    if (appNameEl) appNameEl.innerHTML = t('app_name').replace(' ', '<br>');
+    const obAppNameEl = document.getElementById('ob-app-name');
+    if (obAppNameEl) obAppNameEl.innerHTML = t('app_name').replace(' ', '<br>');
+    // Onboarding titles needing innerHTML replacement
+    const obS2 = document.getElementById('ob-slide2-title');
+    if (obS2) obS2.innerHTML = t('ob_slide2_title');
+    const obS3 = document.getElementById('ob-slide3-title');
+    if (obS3) obS3.innerHTML = t('ob_slide3_title');
+    const obS4 = document.getElementById('ob-slide4-title');
+    if (obS4) obS4.innerHTML = t('ob_slide4_title');
+    const obLoginTitle = document.getElementById('ob-login-title');
+    if (obLoginTitle) obLoginTitle.innerHTML = t('ob_login_title');
+    const obLoginDesc = document.getElementById('ob-login-desc');
+    if (obLoginDesc) obLoginDesc.innerHTML = t('ob_login_desc').replace(/\n/g, '<br>');
+    const obSlide1Desc = document.getElementById('ob-slide1-desc');
+    if (obSlide1Desc) {
+      if (LANG === 'en') {
+        obSlide1Desc.innerHTML = t('ob_slide1_desc').replace(/\n/g, '<br>');
+      }
+    }
+    // Update default stopwatch labels
+    const swStart = document.getElementById('sw-start-label');
+    if (swStart) swStart.textContent = t('sw_start_display');
+    const swEnd = document.getElementById('sw-end-label');
+    if (swEnd) swEnd.textContent = t('sw_end_display');
+
     const verEl = document.getElementById('app-ver-display');
     if (verEl) verEl.textContent = APP_VERSION;
     document.getElementById('rec-date').value = formatDate(new Date());
@@ -1733,7 +2593,7 @@
 
   function saveRecord() {
     const date = document.getElementById('rec-date').value;
-    if (!date) { showToast('日付を入力してください'); return; }
+    if (!date) { showToast(t('toast_date_required')); return; }
     const record = {
       date,
       weight: parseFloat(document.getElementById('rec-weight').value)||null,
@@ -1754,7 +2614,7 @@
     if (idx>=0) records[idx]=record; else records.push(record);
     records.sort((a,b)=>b.date.localeCompare(a.date));
     localStorage.setItem('training_records', JSON.stringify(records));
-    showToast('保存しました ✓', false);
+    showToast(t('toast_saved'), false);
     if (currentUser) syncToCloud(currentUser.uid);
     resetForm();
     setTimeout(()=>showScreen(null), 800);
@@ -1799,7 +2659,7 @@
     updateRing(waterData[key].total);
     renderWaterLog(waterData[key].log);
     updateTodaySummary();
-    showToast(`+${ml}ml 追加 💧`, true);
+    showToast(`+${ml}ml 💧`, true);
     if (currentUser) syncToCloud(currentUser.uid);
   }
 
@@ -1817,7 +2677,7 @@
   function renderWaterLog(log) {
     const el = document.getElementById('water-log-list');
     if (!log||log.length===0) {
-      el.innerHTML='<div class="empty-state" style="padding:20px 0;"><div class="empty-state-icon">💧</div><div class="empty-state-text">まだ記録がありません</div></div>';
+      el.innerHTML='<div class="empty-state" style="padding:20px 0;"><div class="empty-state-icon">💧</div><div class="empty-state-text">'+t('empty_no_log')+'</div></div>';
       return;
     }
     el.innerHTML=[...log].reverse().map((item,i)=>{
@@ -1827,7 +2687,7 @@
   }
 
   function resetTodayWater() {
-    if (!confirm('今日の水分記録をリセットしますか？')) return;
+    if (!confirm(t('confirm_reset_water'))) return;
     waterData[todayKey()]={total:0,log:[]};
     localStorage.setItem('water_data', JSON.stringify(waterData));
     renderWater(); updateTodaySummary();
@@ -1841,7 +2701,7 @@
         <span class="btn-ml">${ml}</span><span class="btn-unit">ml</span>
       </button>`).join('') + `
       <button class="water-quick-btn custom-btn" onclick="openCustomModal()">
-        <span class="custom-icon">＋</span><span style="font-size:12px;">カスタム</span>
+        <span class="custom-icon">＋</span><span style="font-size:12px;">${t('custom_btn_label')}</span>
       </button>`;
   }
   function deleteCustomBtn(e,idx) {
@@ -1869,7 +2729,7 @@
 
   function confirmCustom() {
     const ml=parseInt(document.getElementById('custom-ml-input').value);
-    if(!ml||ml<=0){showToast('ml数を入力してください');return;}
+    if(!ml||ml<=0){showToast(t('toast_ml_required'));return;}
     if(saveCustom&&!waterQuickBtns.includes(ml)){
       waterQuickBtns.push(ml); waterQuickBtns.sort((a,b)=>a-b);
       localStorage.setItem('water_quick_btns',JSON.stringify(waterQuickBtns));
@@ -1900,7 +2760,7 @@
 
   function addWaterQuickBtn() {
     const ml = parseInt(document.getElementById('water-btn-new-val').value);
-    if (!ml || ml <= 0) { showToast('ml数を入力してください'); return; }
+    if (!ml || ml <= 0) { showToast(t('toast_ml_required')); return; }
     if (!waterQuickBtns.includes(ml)) {
       waterQuickBtns.push(ml);
       waterQuickBtns.sort((a,b)=>a-b);
@@ -1920,7 +2780,7 @@
     waterQuickBtns = [...DEFAULT_WATER_BTNS];
     localStorage.setItem('water_quick_btns', JSON.stringify(waterQuickBtns));
     renderWaterBtnEditorList();
-    showToast('デフォルトに戻しました', false);
+    showToast(t('toast_reset_default'), false);
   }
 
   function openGoalModal() {
@@ -1938,7 +2798,7 @@
     document.getElementById('water-goal-display').textContent=g+' ml';
     updateRing(getTodayWater().total);
     closeGoalModal();
-    showToast('目標を更新しました', true);
+    showToast(t('toast_water_goal_updated'), true);
   }
 
   // VIEW
@@ -1997,7 +2857,7 @@
     if (typeof AndroidBridge !== 'undefined' && typeof AndroidBridge.purchasePremium === 'function') {
       AndroidBridge.purchasePremium();
     } else {
-      showToast('課金機能は準備中です', false);
+      showToast(t('toast_billing_wip'), false);
     }
   }
 
@@ -2007,7 +2867,7 @@
     closePaywall();
     renderView();
     if (document.getElementById('tab-graph').classList.contains('active')) renderCharts();
-    showToast('プレミアムへようこそ！ 🎉', false);
+    showToast(t('toast_premium_welcome'), false);
   }
 
   // AndroidBridgeからの購入復元コールバック
@@ -2095,7 +2955,7 @@
     const weights = days.filter(d => d.rec?.weight).map(d => d.rec.weight);
     const avg = weights.length > 0 ? (weights.reduce((s,w)=>s+w,0)/weights.length).toFixed(2) : null;
 
-    const dayNames = ['日','月','火','水','木','金','土'];
+    const dayNames = t('day_names_short');
     const monthStr = (weekStart.getMonth()+1) + '/' + weekStart.getDate() + ' 〜 ' + (weekEnd.getMonth()+1) + '/' + weekEnd.getDate();
 
     let html = '';
@@ -2112,12 +2972,12 @@
       const diffStr = diffFixed !== null ? (diff > 0 ? '+' + diffFixed : diffFixed) + 'kg' : null;
       const diffColor = diff > 0 ? 'var(--danger)' : diff < 0 ? 'var(--success)' : 'var(--text-muted)';
       const diffBg = diff > 0 ? 'rgba(255,68,68,0.08)' : diff < 0 ? 'rgba(0,255,136,0.08)' : 'var(--surface)';
-      const diffLabel = diff > 0 ? '目標より重い' : diff < 0 ? '目標より軽い' : '目標通り';
+      const diffLabel = diff > 0 ? t('week_above_goal') : diff < 0 ? t('week_below_goal') : t('week_on_target');
 
       html += '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 16px;margin-bottom:10px;">';
       html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">';
-      html += '<span style="font-size:10px;color:var(--text-muted);letter-spacing:0.15em;">週平均体重</span>';
-      if (weekGoal > 0) html += '<span style="font-size:10px;color:var(--text-muted);">目標 ' + weekGoal + 'kg</span>';
+      html += '<span style="font-size:10px;color:var(--text-muted);letter-spacing:0.15em;">'+t('week_avg_weight')+'</span>';
+      if (weekGoal > 0) html += '<span style="font-size:10px;color:var(--text-muted);">'+t('week_goal') + weekGoal + 'kg</span>';
       html += '</div>';
       html += '<div style="display:flex;align-items:baseline;gap:10px;">';
       html += '<span style="font-size:28px;font-weight:bold;color:var(--accent2);">' + avg + '</span>';
@@ -2130,11 +2990,11 @@
       }
       html += '</div>';
       if (weekGoal === 0) {
-        html += '<div style="font-size:11px;color:var(--text-muted);margin-top:6px;">目標を設定すると差分が表示されます</div>';
+        html += '<div style="font-size:11px;color:var(--text-muted);margin-top:6px;">'+t('goal_set_hint')+'</div>';
       }
       html += '</div>';
     } else {
-      html += '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 16px;margin-bottom:10px;color:var(--text-muted);font-size:13px;">この週の体重記録がありません</div>';
+      html += '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 16px;margin-bottom:10px;color:var(--text-muted);font-size:13px;">'+t('week_no_weight')+'</div>';
     }
 
     // 7日グリッド
@@ -2156,10 +3016,10 @@
 
     // 週目標設定
     html += '<div class="cal-goal-row">';
-    html += '<span class="cal-goal-label">この週の目標体重</span>';
+    html += '<span class="cal-goal-label">'+t('week_goal_row')+'</span>';
     html += '<div style="display:flex;align-items:center;gap:8px;">';
-    html += '<span class="cal-goal-val">' + (weekGoal > 0 ? weekGoal + 'kg' : '未設定') + '</span>';
-    html += '<button class="cal-goal-edit" onclick="openWeightGoalModal()">設定</button>';
+    html += '<span class="cal-goal-val">' + (weekGoal > 0 ? weekGoal + 'kg' : t('not_set')) + '</span>';
+    html += '<button class="cal-goal-edit" onclick="openWeightGoalModal()">'+t('set_btn')+'</button>';
     html += '</div></div>';
 
     el.innerHTML = html;
@@ -2175,7 +3035,7 @@
     const year = targetDate.getFullYear();
     const month = targetDate.getMonth();
     const todayStr = formatDate(now);
-    const dayNames = ['日','月','火','水','木','金','土'];
+    const dayNames = t('day_names_short');
 
     // 月の日数
     const daysInMonth = new Date(year, month+1, 0).getDate();
@@ -2186,7 +3046,7 @@
     let html = '';
     html += '<div class="cal-header">';
     html += '<button class="cal-nav-btn" onclick="monthCalNav(-1)">‹</button>';
-    html += '<div class="cal-header-title">' + year + '年' + (month+1) + '月</div>';
+    html += '<div class="cal-header-title">' + (LANG === 'ja' ? year + '年' + (month+1) + '月' : (month+1) + '/' + year) + '</div>';
     html += '<button class="cal-nav-btn" onclick="monthCalNav(1)">›</button>';
     html += '</div>';
 
@@ -2197,7 +3057,7 @@
     });
     const avg = monthRecs.length > 0 ? (monthRecs.reduce((s,r)=>s+r.weight,0)/monthRecs.length).toFixed(2) : null;
     if (avg) {
-      html += '<div style="padding:4px 0 8px;font-size:13px;color:var(--text-muted);">月平均: <span style="color:var(--accent2);font-size:18px;font-weight:bold;">' + avg + 'kg</span></div>';
+      html += '<div style="padding:4px 0 8px;font-size:13px;color:var(--text-muted);">'+t('month_avg')+'<span style="color:var(--accent2);font-size:18px;font-weight:bold;">' + avg + 'kg</span></div>';
     }
 
     // 曜日ヘッダー
@@ -2242,7 +3102,7 @@
     setWeekGoal(base, v);
     closeWeightGoalModal();
     renderStats();
-    showToast('目標体重を設定しました ✓', false);
+    showToast(t('toast_goal_set'), false);
   }
 
   // ===== 体重変動分析 =====
@@ -2269,24 +3129,23 @@
 
     // ① 体重変動サマリー
     if (diff === null) {
-      items.push({icon:'⚖️', cls:'', text:`前日の体重が未記録のため変動計算はできませんが、前日の食事・トレーニングの影響を分析します。`});
-    } else
-if (absDiff < 0.15) {
-      items.push({icon:'⚖️', cls:'', text:`前日比 <strong>±${absDiff.toFixed(2)}kg</strong>。ほぼ横ばい。水分の誤差範囲内。`});
+      items.push({icon:'⚖️', cls:'', text:t('wa_no_prev')});
+    } else if (absDiff < 0.15) {
+      items.push({icon:'⚖️', cls:'', text:t('wa_stable').replace('{0}',absDiff.toFixed(2))});
     } else if (diff < 0) {
-      items.push({icon:'📉', cls:'good', text:`前日比 <strong>${sign}${diff.toFixed(2)}kg</strong> 減少。良いトレンドです。`});
+      items.push({icon:'📉', cls:'good', text:t('wa_decrease').replace('{0}',diff.toFixed(2))});
     } else {
-      items.push({icon:'📈', cls:'warn', text:`前日比 <strong>+${diff.toFixed(2)}kg</strong> 増加。以下の要因を分析します。`});
+      items.push({icon:'📈', cls:'warn', text:t('wa_increase').replace('{0}',diff.toFixed(2))});
     }
 
     // ② 塩分（前日）→ むくみの最大要因
     if (prevRec.salt != null) {
       if (prevRec.salt > 8) {
-        items.push({icon:'🧂', cls:'bad', text:`前日の塩分 <strong>${prevRec.salt}g</strong>（目標7.5g超）。高塩分は細胞外液を増加させ翌朝体重に直結。${diff > 0.3 ? '今日の増加の主因と考えられます。' : '体重は下がっていますが影響はあった可能性。'}`});
+        items.push({icon:'🧂', cls:'bad', text:t('wa_salt_high').replace('{0}',prevRec.salt).replace('{1}',diff > 0.3 ? t('wa_salt_high_main') : t('wa_salt_high_alt'))});
       } else if (prevRec.salt > 6) {
-        items.push({icon:'🧂', cls:'warn', text:`前日の塩分 <strong>${prevRec.salt}g</strong>（やや多め）。むくみへの軽度の影響がある可能性。`});
+        items.push({icon:'🧂', cls:'warn', text:t('wa_salt_mid').replace('{0}',prevRec.salt)});
       } else {
-        items.push({icon:'🧂', cls:'good', text:`前日の塩分 <strong>${prevRec.salt}g</strong>（適正）。塩分によるむくみの影響は少ない。`});
+        items.push({icon:'🧂', cls:'good', text:t('wa_salt_ok').replace('{0}',prevRec.salt)});
       }
     }
 
@@ -2294,111 +3153,111 @@ if (absDiff < 0.15) {
     if (prevWater && prevWater.total > 0) {
       const wL = (prevWater.total/1000).toFixed(1);
       if (prevWater.total >= 3000) {
-        items.push({icon:'💧', cls:'good', text:`前日の水分 <strong>${wL}L</strong>。十分な水分が塩分排出・代謝をサポート。体重変動を最小化できています。`});
+        items.push({icon:'💧', cls:'good', text:t('wa_water_high').replace('{0}',wL)});
       } else if (prevWater.total >= 2000) {
-        items.push({icon:'💧', cls:'warn', text:`前日の水分 <strong>${wL}L</strong>（目標3L未満）。水分が少ないと塩分や老廃物が体内に残りやすく翌朝体重が高くなる傾向。`});
+        items.push({icon:'💧', cls:'warn', text:t('wa_water_mid').replace('{0}',wL)});
       } else {
-        items.push({icon:'💧', cls:'bad', text:`前日の水分 <strong>${wL}L</strong>（かなり少ない）。水分不足は代謝低下・むくみ・塩分蓄積のリスクあり。`});
+        items.push({icon:'💧', cls:'bad', text:t('wa_water_low').replace('{0}',wL)});
       }
     }
 
     // ④ 日サロ（前日）→ 熱による炎症・むくみ
     if (prevRec.salon && prevRec.salon > 0) {
       if (prevRec.salon >= 30) {
-        items.push({icon:'🌞', cls:'warn', text:`前日に日サロ <strong>${prevRec.salon}分</strong>。紫外線による皮膚の炎症反応でむくみが生じやすく、翌日体重が${diff>0?'増加している':'増加しやすい傾向があります'}。水分を多めに摂るとケアになります。`});
+        items.push({icon:'🌞', cls:'warn', text:t('wa_salon_long').replace('{0}',prevRec.salon).replace('{1}',diff>0?t('wa_salon_long_inc'):t('wa_salon_long_tend'))});
       } else {
-        items.push({icon:'🌞', cls:'', text:`前日に日サロ <strong>${prevRec.salon}分</strong>。短時間ですが皮膚の軽度な炎症反応が翌朝の体重に微影響する場合があります。`});
+        items.push({icon:'🌞', cls:'', text:t('wa_salon_short').replace('{0}',prevRec.salon)});
       }
     }
 
     // ⑤ カロリー収支（前日）
     if (prevRec.kcal) {
       if (prevRec.kcal > 2300) {
-        items.push({icon:'🔥', cls:'bad', text:`前日のカロリー <strong>${prevRec.kcal}kcal</strong>（高め）。維持カロリーを大幅に超えており、消化物・グリコーゲン増加で体重に上乗せ。`});
+        items.push({icon:'🔥', cls:'bad', text:t('wa_kcal_high').replace('{0}',prevRec.kcal)});
       } else if (prevRec.kcal > 2000) {
-        items.push({icon:'🔥', cls:'warn', text:`前日のカロリー <strong>${prevRec.kcal}kcal</strong>（やや多め）。減量ペースが鈍化する可能性。`});
+        items.push({icon:'🔥', cls:'warn', text:t('wa_kcal_mid').replace('{0}',prevRec.kcal)});
       } else if (prevRec.kcal < 1600) {
-        items.push({icon:'🔥', cls:'warn', text:`前日のカロリー <strong>${prevRec.kcal}kcal</strong>（少なめ）。極端な制限は代謝適応を招きやすく、逆に体重が動きにくくなるリスクあり。`});
+        items.push({icon:'🔥', cls:'warn', text:t('wa_kcal_low').replace('{0}',prevRec.kcal)});
       } else {
-        items.push({icon:'🔥', cls:'good', text:`前日のカロリー <strong>${prevRec.kcal}kcal</strong>（適正範囲）。カロリー面の問題なし。`});
+        items.push({icon:'🔥', cls:'good', text:t('wa_kcal_ok').replace('{0}',prevRec.kcal)});
       }
     }
 
     // ⑥ 炭水化物（前日）→ グリコーゲン＋水分貯留
     if (prevRec.c != null) {
       if (prevRec.c > 260) {
-        items.push({icon:'🍚', cls:'warn', text:`前日の炭水化物 <strong>${prevRec.c}g</strong>（多め）。糖質1gに対して約3〜4gの水が筋肉に蓄積されるため、体重が増えやすい。脂肪増加ではなくグリコーゲン由来。`});
+        items.push({icon:'🍚', cls:'warn', text:t('wa_carb_high').replace('{0}',prevRec.c)});
       } else if (prevRec.c > 220) {
-        items.push({icon:'🍚', cls:'', text:`前日の炭水化物 <strong>${prevRec.c}g</strong>（やや多め）。グリコーゲン貯蔵が増え一時的な体重増加の可能性あり。`});
+        items.push({icon:'🍚', cls:'', text:t('wa_carb_mid').replace('{0}',prevRec.c)});
       } else if (prevRec.c < 140) {
-        items.push({icon:'🍚', cls:'warn', text:`前日の炭水化物 <strong>${prevRec.c}g</strong>（少なめ）。グリコーゲンが枯渇しトレーニングパフォーマンス低下に注意。`});
+        items.push({icon:'🍚', cls:'warn', text:t('wa_carb_low').replace('{0}',prevRec.c)});
       }
     }
 
-    // ⑦ 脂質（前日）→ 消化が遅い
+    // ⑦ 脂質（前日）
     if (prevRec.f != null) {
       if (prevRec.f > 65) {
-        items.push({icon:'🫒', cls:'bad', text:`前日の脂質 <strong>${prevRec.f}g</strong>（高め）。脂質は消化に時間がかかり翌朝も消化物が残りやすい。体重増加の一因の可能性。`});
+        items.push({icon:'🫒', cls:'bad', text:t('wa_fat_high').replace('{0}',prevRec.f)});
       } else if (prevRec.f > 50) {
-        items.push({icon:'🫒', cls:'warn', text:`前日の脂質 <strong>${prevRec.f}g</strong>（やや多め）。消化の遅延が翌朝体重に微影響する場合あり。`});
+        items.push({icon:'🫒', cls:'warn', text:t('wa_fat_mid').replace('{0}',prevRec.f)});
       }
     }
 
     // ⑧ タンパク質（前日）
     if (prevRec.p != null) {
       if (prevRec.p < 150) {
-        items.push({icon:'🥩', cls:'warn', text:`前日のタンパク質 <strong>${prevRec.p}g</strong>（少なめ）。減量中の筋肉分解リスクあり。160g以上を目標に。`});
+        items.push({icon:'🥩', cls:'warn', text:t('wa_protein_low').replace('{0}',prevRec.p)});
       } else if (prevRec.p >= 180) {
-        items.push({icon:'🥩', cls:'good', text:`前日のタンパク質 <strong>${prevRec.p}g</strong>。筋肉維持に十分。`});
+        items.push({icon:'🥩', cls:'good', text:t('wa_protein_ok').replace('{0}',prevRec.p)});
       }
     }
 
-    // ⑨ 筋トレ（前日・2日前）→ 炎症・水分保持は24〜48h続く
+    // ⑨ 筋トレ（前日・2日前）
     const trainedDays = [];
     if (prevRec.trained && prevRec.muscles && prevRec.muscles.length > 0) {
-      trainedDays.push({when:'前日', muscles: prevRec.muscles});
+      trainedDays.push({when: t('wa_when_prev'), muscles: prevRec.muscles});
     }
     if (prev2Rec && prev2Rec.trained && prev2Rec.muscles && prev2Rec.muscles.length > 0) {
-      trainedDays.push({when:'2日前', muscles: prev2Rec.muscles});
+      trainedDays.push({when: t('wa_when_prev2'), muscles: prev2Rec.muscles});
     }
     for (const td of trainedDays) {
-      const bigMuscles = td.muscles.filter(m=>['脚','足','背中','胸'].includes(m));
+      const bigMuscles = td.muscles.filter(m=>['脚','足','背中','胸','Legs','Back','Chest'].includes(m));
       if (bigMuscles.length > 0) {
-        items.push({icon:'💪', cls:'warn', text:`<strong>${td.when}に${td.muscles.join('・')}</strong>のトレーニング。大筋群の筋損傷回復で炎症・水分保持が起きやすく、翌朝〜2日後まで体重が0.3〜0.8kg増える場合があります。`});
+        items.push({icon:'💪', cls:'warn', text:t('wa_training_big').replace('{0}',td.when).replace('{1}',td.muscles.join('・'))});
       } else {
-        items.push({icon:'💪', cls:'', text:`<strong>${td.when}に${td.muscles.join('・')}</strong>のトレーニング。小筋群なので体重への影響は軽微。`});
+        items.push({icon:'💪', cls:'', text:t('wa_training_small').replace('{0}',td.when).replace('{1}',td.muscles.join('・'))});
       }
     }
 
-    // ⑩ 睡眠（当日）→ 成長ホルモン・コルチゾール
+    // ⑩ 睡眠（当日）
     if (r.sleep != null) {
       if (r.sleep < 6) {
-        items.push({icon:'😴', cls:'bad', text:`当日の睡眠 <strong>${r.sleep}h</strong>（短い）。睡眠不足はコルチゾール増加→水分貯留・脂肪燃焼低下につながりやすい。`});
+        items.push({icon:'😴', cls:'bad', text:t('wa_sleep_short').replace('{0}',r.sleep)});
       } else if (r.sleep < 7) {
-        items.push({icon:'😴', cls:'warn', text:`当日の睡眠 <strong>${r.sleep}h</strong>（やや短め）。7h以上確保できると回復・脂肪燃焼効率が改善。`});
+        items.push({icon:'😴', cls:'warn', text:t('wa_sleep_mid').replace('{0}',r.sleep)});
       } else {
-        items.push({icon:'😴', cls:'good', text:`当日の睡眠 <strong>${r.sleep}h</strong>。十分な睡眠で成長ホルモン分泌・脂肪燃焼をサポートできています。`});
+        items.push({icon:'😴', cls:'good', text:t('wa_sleep_ok').replace('{0}',r.sleep)});
       }
     }
 
-    // ⑪ 2日前の塩分・水分が今日に影響する場合（塩分の排出は24〜48h）
+    // ⑪ 2日前の塩分
     if (prev2Rec && prev2Rec.salt > 9 && diff > 0.3) {
-      items.push({icon:'⏱️', cls:'warn', text:`2日前の塩分 <strong>${prev2Rec.salt}g</strong>（高め）。塩分の排出には24〜48時間かかることがあり、今日の体重に遅れて影響している可能性あり。`});
+      items.push({icon:'⏱️', cls:'warn', text:t('wa_salt2').replace('{0}',prev2Rec.salt)});
     }
 
     // ⑪.5 歩数・有酸素
     if (prevRec.steps) {
       if (prevRec.steps >= 10000) {
-        items.push({icon:'🚶', cls:'good', text:`前日の歩数 <strong>${prevRec.steps.toLocaleString()}歩</strong>（活動量多め）。消費カロリーが増え減量に有利。`});
+        items.push({icon:'🚶', cls:'good', text:t('wa_steps_high').replace('{0}',prevRec.steps.toLocaleString())});
       } else if (prevRec.steps < 5000) {
-        items.push({icon:'🚶', cls:'warn', text:`前日の歩数 <strong>${prevRec.steps.toLocaleString()}歩</strong>（少なめ）。活動量が低いと消費カロリーが減り体重が落ちにくい。`});
+        items.push({icon:'🚶', cls:'warn', text:t('wa_steps_low').replace('{0}',prevRec.steps.toLocaleString())});
       }
     }
     if (prevRec.cardioKcal || prevRec.steps) {
       if (prevRec.cardioKcal >= 300) {
-        items.push({icon:'🚴', cls:'good', text:`前日の有酸素運動で <strong>${prevRec.cardioKcal}kcal</strong> 消費。脂肪燃焼に効果的。${prevRec.cardioMemo ? `（${prevRec.cardioMemo}）` : ''}`});
+        items.push({icon:'🚴', cls:'good', text:t('wa_cardio_high').replace('{0}',prevRec.cardioKcal) + (prevRec.cardioMemo ? ` (${prevRec.cardioMemo})` : '')});
       } else {
-        items.push({icon:'🚴', cls:'', text:`前日の有酸素運動で <strong>${prevRec.cardioKcal}kcal</strong> 消費。${prevRec.cardioMemo ? `（${prevRec.cardioMemo}）` : ''}`});
+        items.push({icon:'🚴', cls:'', text:t('wa_cardio_low').replace('{0}',prevRec.cardioKcal) + (prevRec.cardioMemo ? ` (${prevRec.cardioMemo})` : '')});
       }
       // カロリー収支計算
       if (prevRec.kcal) {
@@ -2408,13 +3267,13 @@ if (absDiff < 0.15) {
         const totalBurn = bmr + cardioKcal + stepsKcal;
         const balance = prevRec.kcal - totalBurn;
         const balanceStr = (balance > 0 ? '+' : '') + Math.round(balance);
-        const burnDetail = `基礎代謝${bmr}+有酸素${cardioKcal}+歩行${stepsKcal}`;
+        const burnDetail = t('wa_balance_bmr').replace('{0}',bmr).replace('{1}',cardioKcal).replace('{2}',stepsKcal);
         if (balance < -500) {
-          items.push({icon:'📊', cls:'good', text:`前日の推定カロリー収支 <strong>${balanceStr}kcal</strong>。十分な赤字。（${burnDetail}）`});
+          items.push({icon:'📊', cls:'good', text:t('wa_balance_good').replace('{0}',balanceStr).replace('{1}',burnDetail)});
         } else if (balance < 0) {
-          items.push({icon:'📊', cls:'', text:`前日の推定カロリー収支 <strong>${balanceStr}kcal</strong>。適度な赤字。（${burnDetail}）`});
+          items.push({icon:'📊', cls:'', text:t('wa_balance_ok').replace('{0}',balanceStr).replace('{1}',burnDetail)});
         } else {
-          items.push({icon:'📊', cls:'warn', text:`前日の推定カロリー収支 <strong>${balanceStr}kcal</strong>。黒字気味。体重増加につながりやすい。（${burnDetail}）`});
+          items.push({icon:'📊', cls:'warn', text:t('wa_balance_over').replace('{0}',balanceStr).replace('{1}',burnDetail)});
         }
       }
     }
@@ -2450,7 +3309,7 @@ if (absDiff < 0.15) {
     if (items.length === 0) return '';
     const [_y,_m,_d] = r.date.split('-').map(Number);
     const d = new Date(_y, _m-1, _d);
-    const dateLabel = `${d.getMonth()+1}/${d.getDate()}(${['日','月','火','水','木','金','土'][d.getDay()]})`;
+    const dateLabel = `${d.getMonth()+1}/${d.getDate()}(${t('day_names_short')[d.getDay()]})`;
     const itemsHTML = items.map(item =>
       `<div class="analysis-item"><span class="analysis-icon">${item.icon}</span><span class="analysis-text ${item.cls}">${item.text}</span></div>`
     ).join('');
@@ -2459,8 +3318,8 @@ if (absDiff < 0.15) {
       <div class="analysis-card">
         <div class="analysis-header" onclick="toggleAnalysis('${safeKey}')">
           <div>
-            <span class="analysis-title">🔍 体重変動分析</span>
-            <span class="analysis-date-badge">${dateLabel}の体重変動</span>
+            <span class="analysis-title">${t('analysis_title')}</span>
+            <span class="analysis-date-badge">${dateLabel}${t('analysis_date_suffix')}</span>
           </div>
           <span class="analysis-toggle" id="atoggle-${safeKey}">▼</span>
         </div>
@@ -2483,37 +3342,37 @@ if (absDiff < 0.15) {
     // 無料ユーザー：30日より古い件数を計算してバナー表示用に保持
     const cutoff = getHistoryCutoff();
     const lockedCount = cutoff ? records.filter(r => r.date < cutoff).length : 0;
-    if(filtered.length===0 && lockedCount===0){list.innerHTML='<div class="empty-state"><div class="empty-state-icon">📋</div><div class="empty-state-text">記録がありません</div></div>';return;}
+    if(filtered.length===0 && lockedCount===0){list.innerHTML='<div class="empty-state"><div class="empty-state-icon">📋</div><div class="empty-state-text">'+t('record_empty')+'</div></div>';return;}
     if(filtered.length===0 && lockedCount>0){
       list.innerHTML=`<div class="paywall-list-banner" onclick="openPaywall()">
         <div style="font-size:28px;margin-bottom:6px;">🔒</div>
-        <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px;">${lockedCount}件の記録があります</div>
-        <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">プレミアムで30日以前の履歴を表示</div>
-        <div style="display:inline-block;padding:8px 24px;background:var(--accent);color:var(--bg);border-radius:20px;font-size:13px;font-weight:700;">アップグレード</div>
+        <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px;">${lockedCount}${t('locked_count_suffix')}</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">${t('locked_desc')}</div>
+        <div style="display:inline-block;padding:8px 24px;background:var(--accent);color:var(--bg);border-radius:20px;font-size:13px;font-weight:700;">${t('upgrade_btn')}</div>
       </div>`;
       return;
     }
     list.innerHTML=filtered.map((r)=>{
       const [ry,rm,rd]=r.date.split('-').map(Number); const d=new Date(ry,rm-1,rd);
-      const ds=`${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()} (${['日','月','火','水','木','金','土'][d.getDay()]})`;
+      const ds=`${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()} (${t('day_names_short')[d.getDay()]})`;
       const tags=[];
       if(r.trained&&r.muscles.length>0) r.muscles.forEach(m=>tags.push(`<span class="tag tag-muscle">💪 ${m}</span>`));
-      else if(r.trained) tags.push(`<span class="tag tag-muscle">💪 トレーニング</span>`);
+      else if(r.trained) tags.push(`<span class="tag tag-muscle">💪 ${t('tag_training')}</span>`);
       if(r.weight) tags.push(`<span class="tag tag-weight">⚖️ ${r.weight}kg</span>`);
       const wd=waterData[r.date];
       if(wd&&wd.total>0) tags.push(`<span class="tag tag-water">💧 ${wd.total}ml</span>`);
-      if(r.salt) tags.push(`<span class="tag tag-salt">🧂 塩分${r.salt}g</span>`);
+      if(r.salt) tags.push(`<span class="tag tag-salt">🧂 ${t('tag_salt')}${r.salt}g</span>`);
       if(r.sleep) tags.push(`<span class="tag tag-sleep">😴 ${r.sleep}h</span>`);
-      if(r.salon) tags.push(`<span class="tag tag-salon">🌞 ${r.salon}分</span>`);
+      if(r.salon) tags.push(`<span class="tag tag-salon">🌞 ${r.salon}${LANG==='ja'?'分':'min'}</span>`);
       if(r.steps) {
         const stepsKcal = Math.round((r.weight||63) * r.steps * 0.000539);
-        tags.push(`<span class="tag tag-steps">🚶 ${r.steps.toLocaleString()}歩 (≈${stepsKcal}kcal)</span>`);
+        tags.push(`<span class="tag tag-steps">🚶 ${r.steps.toLocaleString()}${LANG==='ja'?'歩':'steps'} (≈${stepsKcal}kcal)</span>`);
       }
-      if(r.cardioKcal) tags.push(`<span class="tag tag-cardio">🔥 有酸素${r.cardioKcal}kcal</span>`);
+      if(r.cardioKcal) tags.push(`<span class="tag tag-cardio">🔥 ${LANG==='ja'?'有酸素':'Cardio '}${r.cardioKcal}kcal</span>`);
       const memo=r.memo?`<div class="record-memo">${r.memo}</div>`:'';
       const analysis = buildAnalysisHTML(r, r.date);
       return `<div class="record-card">
-        <div class="record-date">${ds}<button class="record-edit-btn" onclick="openEditModal('${r.date}')">編集</button></div>
+        <div class="record-date">${ds}<button class="record-edit-btn" onclick="openEditModal('${r.date}')">${t('edit_btn')}</button></div>
         <div class="record-macros">
           <div class="macro-item"><div class="macro-value kcal">${r.kcal||'—'}</div><div class="macro-label">KCAL</div></div>
           <div class="macro-item"><div class="macro-value p">${r.p||'—'}</div><div class="macro-label">P(g)</div></div>
@@ -2528,9 +3387,9 @@ if (absDiff < 0.15) {
     if (lockedCount > 0) {
       list.innerHTML += `<div class="paywall-list-banner" onclick="openPaywall()">
         <div style="font-size:24px;margin-bottom:6px;">🔒</div>
-        <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px;">さらに${lockedCount}件の記録</div>
-        <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">プレミアムで30日以前の履歴を表示</div>
-        <div style="display:inline-block;padding:8px 24px;background:var(--accent);color:var(--bg);border-radius:20px;font-size:13px;font-weight:700;">アップグレード</div>
+        <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px;">${t('locked_more_suffix')}${lockedCount}${t('locked_count_suffix')}</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">${t('locked_desc')}</div>
+        <div style="display:inline-block;padding:8px 24px;background:var(--accent);color:var(--bg);border-radius:20px;font-size:13px;font-weight:700;">${t('upgrade_btn')}</div>
       </div>`;
     }
   }
@@ -2574,34 +3433,34 @@ if (absDiff < 0.15) {
       const diff = (parseFloat(avgWeight) - goalWeight).toFixed(1);
       const sign = diff > 0 ? '+' : '';
       const col = diff <= 0 ? 'var(--success)' : 'var(--danger)';
-      weightStatus = `<div style="font-size:11px;color:var(--text-muted);margin-top:2px;">目標 ${goalWeight}kg <span style="color:${col};">${sign}${diff}kg</span></div>`;
+      weightStatus = `<div style="font-size:11px;color:var(--text-muted);margin-top:2px;">${t('week_goal')}${goalWeight}kg <span style="color:${col};">${sign}${diff}kg</span></div>`;
     } else if (goalWeight) {
-      weightStatus = `<div style="font-size:11px;color:var(--text-muted);margin-top:2px;">目標 ${goalWeight}kg</div>`;
+      weightStatus = `<div style="font-size:11px;color:var(--text-muted);margin-top:2px;">${t('week_goal')}${goalWeight}kg</div>`;
     }
 
     card.innerHTML = `
-      <div class="chart-title">📊 今週のレポート</div>
+      <div class="chart-title">${t('weekly_report_title')}</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
         <div style="background:var(--surface2);border-radius:10px;padding:12px;text-align:center;">
-          <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px;">週平均体重</div>
+          <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px;">${t('report_avg_weight')}</div>
           <div style="font-size:26px;font-family:'Bebas Neue';color:var(--success);">${avgWeight ?? '—'}<span style="font-size:13px;">kg</span></div>
           ${weightStatus}
         </div>
         <div style="background:var(--surface2);border-radius:10px;padding:12px;text-align:center;">
-          <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px;">ジム回数</div>
-          <div style="font-size:26px;font-family:'Bebas Neue';color:var(--accent);">${gymCount}<span style="font-size:13px;">回</span></div>
-          <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">今週</div>
+          <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px;">${t('report_gym_count')}</div>
+          <div style="font-size:26px;font-family:'Bebas Neue';color:var(--accent);">${gymCount}<span style="font-size:13px;">${t('report_gym_unit')}</span></div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">${t('report_gym_this_week')}</div>
         </div>
         <div style="background:var(--surface2);border-radius:10px;padding:12px;text-align:center;">
-          <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px;">平均カロリー</div>
+          <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px;">${t('report_avg_kcal')}</div>
           <div style="font-size:26px;font-family:'Bebas Neue';color:var(--accent2);">${avgKcal ?? '—'}<span style="font-size:13px;">kcal</span></div>
         </div>
         <div style="background:var(--surface2);border-radius:10px;padding:12px;text-align:center;">
-          <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px;">平均タンパク質</div>
+          <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px;">${t('report_avg_protein')}</div>
           <div style="font-size:26px;font-family:'Bebas Neue';color:#ff8c42;">${avgP ?? '—'}<span style="font-size:13px;">g</span></div>
         </div>
         <div style="background:var(--surface2);border-radius:10px;padding:12px;text-align:center;grid-column:1/-1;">
-          <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px;">平均水分摂取</div>
+          <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px;">${t('report_avg_water')}</div>
           <div style="font-size:26px;font-family:'Bebas Neue';color:var(--accent2);">${avgWater ?? '—'}<span style="font-size:13px;">ml</span></div>
         </div>
       </div>`;
@@ -2616,18 +3475,18 @@ if (absDiff < 0.15) {
     const contestDateStr = localStorage.getItem('contest_date');
     const contestWeight = parseFloat(localStorage.getItem('contest_weight'));
     if (!contestDateStr) {
-      container.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:20px;font-size:13px;">プロフィールで大会日を設定してください</div>';
+      container.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:20px;font-size:13px;">'+t('roadmap_set_date')+'</div>';
       return;
     }
     if (!contestWeight) {
-      container.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:20px;font-size:13px;">プロフィールで大会目標体重を設定してください</div>';
+      container.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:20px;font-size:13px;">'+t('roadmap_set_weight')+'</div>';
       return;
     }
     const [cy,cm,cd] = contestDateStr.split('-').map(Number);
     const contestDate = new Date(cy, cm-1, cd);
     const today = new Date(); today.setHours(0,0,0,0);
     if (contestDate <= today) {
-      container.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:20px;font-size:13px;">大会は終了しました 🏆</div>';
+      container.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:20px;font-size:13px;">'+t('roadmap_ended')+'</div>';
       return;
     }
     const totalDays = Math.round((contestDate - today) / 86400000);
@@ -2635,7 +3494,7 @@ if (absDiff < 0.15) {
     const sortedRecs = [...records].sort((a,b) => b.date.localeCompare(a.date));
     const latestWeight = sortedRecs.find(r => r.weight)?.weight;
     if (!latestWeight) {
-      container.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:20px;font-size:13px;">体重を記録してください</div>';
+      container.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:20px;font-size:13px;">'+t('roadmap_record_weight')+'</div>';
       return;
     }
 
@@ -2664,11 +3523,11 @@ if (absDiff < 0.15) {
       container.innerHTML = `
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px;">
           <div style="background:var(--surface2);border-radius:10px;padding:14px;text-align:center;">
-            <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px;">今週の目標</div>
+            <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px;">${t('roadmap_this_week_target')}</div>
             <div style="font-size:28px;font-family:'Bebas Neue';color:rgba(232,255,0,0.85);">${target}<span style="font-size:13px;">kg</span></div>
           </div>
           <div style="background:var(--surface2);border-radius:10px;padding:14px;text-align:center;">
-            <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px;">週平均実績</div>
+            <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px;">${t('roadmap_weekly_actual')}</div>
             <div style="font-size:28px;font-family:'Bebas Neue';color:var(--success);">${actual ?? '—'}<span style="font-size:13px;">${actual?'kg':''}</span></div>
             ${diffLabel}
           </div>
@@ -2702,8 +3561,8 @@ if (absDiff < 0.15) {
         data:{
           labels: weeks.map(w=>w.label),
           datasets:[
-            {label:'目標', data:weeks.map(w=>w.target), borderColor:'rgba(232,255,0,0.7)', borderDash:[6,3], borderWidth:2, pointRadius:4, pointBackgroundColor:'rgba(232,255,0,0.7)', fill:false, tension:0},
-            {label:'実績', data:weeks.map(w=>w.actual), borderColor:'#00ff88', backgroundColor:'rgba(0,255,136,0.08)', borderWidth:2, pointRadius:5, pointBackgroundColor:'#00ff88', fill:true, tension:0.3, spanGaps:false}
+            {label:t('label_target'), data:weeks.map(w=>w.target), borderColor:'rgba(232,255,0,0.7)', borderDash:[6,3], borderWidth:2, pointRadius:4, pointBackgroundColor:'rgba(232,255,0,0.7)', fill:false, tension:0},
+            {label:t('label_actual'), data:weeks.map(w=>w.actual), borderColor:'#00ff88', backgroundColor:'rgba(0,255,136,0.08)', borderWidth:2, pointRadius:5, pointBackgroundColor:'#00ff88', fill:true, tension:0.3, spanGaps:false}
           ]
         },
         options: chartOpts
@@ -2714,7 +3573,7 @@ if (absDiff < 0.15) {
     // ===== 全体ビュー：大会までのフルタイムライン =====
     const weekLabels = [], targetWeights = [], actualWeights = [];
     for (let w = 0; w <= totalWeeks; w++) {
-      weekLabels.push(w === 0 ? '現在' : w === totalWeeks ? '大会' : `${w}週後`);
+      weekLabels.push(w === 0 ? t('chart_now') : w === totalWeeks ? t('chart_contest') : `${w}${t('chart_weeks_suffix')}`);
       const wDate = new Date(today); wDate.setDate(today.getDate() + w * 7);
       targetWeights.push(targetForDate(wDate));
       if (w === 0) {
@@ -2739,8 +3598,8 @@ if (absDiff < 0.15) {
       data:{
         labels: fLabels,
         datasets:[
-          {label:'目標ライン', data:fTarget, borderColor:'rgba(232,255,0,0.7)', borderDash:[6,3], borderWidth:2, pointRadius:3, pointBackgroundColor:'rgba(232,255,0,0.7)', fill:false, tension:0},
-          {label:'実績',       data:fActual, borderColor:'#00ff88', backgroundColor:'rgba(0,255,136,0.08)', borderWidth:2, pointRadius:4, pointBackgroundColor:'#00ff88', fill:true, tension:0.3, spanGaps:false}
+          {label:t('label_target_line'), data:fTarget, borderColor:'rgba(232,255,0,0.7)', borderDash:[6,3], borderWidth:2, pointRadius:3, pointBackgroundColor:'rgba(232,255,0,0.7)', fill:false, tension:0},
+          {label:t('label_actual'),      data:fActual, borderColor:'#00ff88', backgroundColor:'rgba(0,255,136,0.08)', borderWidth:2, pointRadius:4, pointBackgroundColor:'#00ff88', fill:true, tension:0.3, spanGaps:false}
         ]
       },
       options: chartOpts
@@ -2750,15 +3609,15 @@ if (absDiff < 0.15) {
     document.getElementById('roadmap-chart-container').insertAdjacentHTML('beforeend',
       `<div style="margin-top:12px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
         <div style="text-align:center;background:var(--surface2);border-radius:8px;padding:8px;">
-          <div style="font-size:9px;color:var(--text-muted);">大会まで</div>
-          <div style="font-size:20px;font-family:'Bebas Neue';color:var(--accent);">${totalWeeks}<span style="font-size:11px;">週</span></div>
+          <div style="font-size:9px;color:var(--text-muted);">${t('roadmap_weeks_to_contest')}</div>
+          <div style="font-size:20px;font-family:'Bebas Neue';color:var(--accent);">${totalWeeks}<span style="font-size:11px;">${t('roadmap_week_unit')}</span></div>
         </div>
         <div style="text-align:center;background:var(--surface2);border-radius:8px;padding:8px;">
-          <div style="font-size:9px;color:var(--text-muted);">必要減量</div>
+          <div style="font-size:9px;color:var(--text-muted);">${t('roadmap_needed_loss')}</div>
           <div style="font-size:20px;font-family:'Bebas Neue';color:${parseFloat(need)>0?'var(--danger)':'var(--success)'};">${need}<span style="font-size:11px;">kg</span></div>
         </div>
         <div style="text-align:center;background:var(--surface2);border-radius:8px;padding:8px;">
-          <div style="font-size:9px;color:var(--text-muted);">週あたり</div>
+          <div style="font-size:9px;color:var(--text-muted);">${t('roadmap_per_week')}</div>
           <div style="font-size:20px;font-family:'Bebas Neue';color:var(--accent2);">${weeklyReduction}<span style="font-size:11px;">kg</span></div>
         </div>
       </div>`
@@ -2790,16 +3649,16 @@ if (absDiff < 0.15) {
     const cd={responsive:true,plugins:{legend:{labels:{color:'#888',font:{size:11}}}},scales:{x:{ticks:{color:'#666',font:{size:10}},grid:{color:'#1a1a26'}},y:{ticks:{color:'#666',font:{size:10}},grid:{color:'#1a1a26'}}}};
 
     if(weightChart) weightChart.destroy();
-    weightChart=new Chart(document.getElementById('weight-chart'),{type:'line',data:{labels,datasets:[{label:'体重',data:sorted.map(r=>r.weight),borderColor:'#00ff88',backgroundColor:'rgba(0,255,136,0.1)',tension:0.4,fill:true,pointBackgroundColor:'#00ff88',pointRadius:4,spanGaps:true}]},options:{...cd}});
+    weightChart=new Chart(document.getElementById('weight-chart'),{type:'line',data:{labels,datasets:[{label:LANG==='ja'?'体重':'Weight',data:sorted.map(r=>r.weight),borderColor:'#00ff88',backgroundColor:'rgba(0,255,136,0.1)',tension:0.4,fill:true,pointBackgroundColor:'#00ff88',pointRadius:4,spanGaps:true}]},options:{...cd}});
 
     if(kcalChart) kcalChart.destroy();
-    kcalChart=new Chart(document.getElementById('kcal-chart'),{type:'bar',data:{labels,datasets:[{label:'カロリー',data:sorted.map(r=>r.kcal),backgroundColor:'rgba(232,255,0,0.5)',borderColor:'#e8ff00',borderWidth:1,borderRadius:4}]},options:{...cd}});
+    kcalChart=new Chart(document.getElementById('kcal-chart'),{type:'bar',data:{labels,datasets:[{label:LANG==='ja'?'カロリー':'Calories',data:sorted.map(r=>r.kcal),backgroundColor:'rgba(232,255,0,0.5)',borderColor:'#e8ff00',borderWidth:1,borderRadius:4}]},options:{...cd}});
 
     if(pfcChart) pfcChart.destroy();
     pfcChart=new Chart(document.getElementById('pfc-chart'),{type:'line',data:{labels,datasets:[{label:'P',data:sorted.map(r=>r.p),borderColor:'#ff8c42',tension:0.4,pointRadius:3,spanGaps:true},{label:'F',data:sorted.map(r=>r.f),borderColor:'#ffcc00',tension:0.4,pointRadius:3,spanGaps:true},{label:'C',data:sorted.map(r=>r.c),borderColor:'#00d4ff',tension:0.4,pointRadius:3,spanGaps:true}]},options:{...cd}});
 
     if(waterChartObj) waterChartObj.destroy();
-    waterChartObj=new Chart(document.getElementById('water-chart'),{type:'bar',data:{labels,datasets:[{label:'水分(ml)',data:sorted.map(r=>waterData[r.date]?.total||null),backgroundColor:'rgba(0,212,255,0.4)',borderColor:'#00d4ff',borderWidth:1,borderRadius:4}]},options:{...cd}});
+    waterChartObj=new Chart(document.getElementById('water-chart'),{type:'bar',data:{labels,datasets:[{label:LANG==='ja'?'水分(ml)':'Water(ml)',data:sorted.map(r=>waterData[r.date]?.total||null),backgroundColor:'rgba(0,212,255,0.4)',borderColor:'#00d4ff',borderWidth:1,borderRadius:4}]},options:{...cd}});
   }
 
   // ===== 編集機能 =====
@@ -2881,18 +3740,18 @@ if (absDiff < 0.15) {
     renderList();
     if(currentFilter==='week'||currentFilter==='month') renderStats();
     updateTodaySummary();
-    showToast('更新しました ✓', false);
+    showToast(t('toast_updated'), false);
   }
 
   function deleteRecord() {
     const dateKey = document.getElementById('edit-date-key').value;
-    if (!confirm(`${dateKey} の記録を削除しますか？`)) return;
+    if (!confirm(dateKey + t('confirm_delete_record'))) return;
     records = records.filter(r=>r.date!==dateKey);
     localStorage.setItem('training_records', JSON.stringify(records));
     closeEditModal();
     renderList();
     updateTodaySummary();
-    showToast('削除しました', false);
+    showToast(t('toast_deleted'), false);
   }
 
   // ==================
@@ -2954,8 +3813,7 @@ if (absDiff < 0.15) {
   function updateGymDateLabel() {
     const [y,m,d] = gymDate.split('-').map(Number);
     const dt = new Date(y,m-1,d);
-    const days = ['日','月','火','水','木','金','土'];
-    document.getElementById('gym-date-label').textContent = `${y}/${m}/${d} (${days[dt.getDay()]})`;
+    document.getElementById('gym-date-label').textContent = `${y}/${m}/${d} (${t('day_names_short')[dt.getDay()]})`;
   }
 
   function gymChangeDate(delta) {
@@ -3025,7 +3883,7 @@ if (absDiff < 0.15) {
   function renderGymExercises() {
     const list = document.getElementById('gym-exercise-list');
     if (gymExercises.length === 0) {
-      list.innerHTML = '<div class="empty-state" style="padding:20px 0;"><div class="empty-state-icon">🏋️</div><div class="empty-state-text">種目を追加してください</div></div>';
+      list.innerHTML = '<div class="empty-state" style="padding:20px 0;"><div class="empty-state-icon">🏋️</div><div class="empty-state-text">'+t('empty_add_exercise')+'</div></div>';
       return;
     }
     const CARDIO = ['ランニング','ウォーキング','自転車','トレッドミル','縄跳び','水泳','エアロバイク','有酸素','ジョギング'];
@@ -3037,21 +3895,21 @@ if (absDiff < 0.15) {
         ex.sets.forEach((s, si) => {
           const mVal = (s.memo || '').replace(/"/g, '&quot;');
           setsHtml += '<div style="background:var(--surface2);border-radius:8px;padding:8px;margin-bottom:6px;">';
-          setsHtml += '<div style="font-size:10px;color:var(--text-muted);margin-bottom:6px;">セット ' + (si+1) + '</div>';
+          setsHtml += '<div style="font-size:10px;color:var(--text-muted);margin-bottom:6px;">'+(LANG==='ja'?'セット':'Set')+' ' + (si+1) + '</div>';
           setsHtml += '<div class="gym-cardio-row">';
-          setsHtml += '<div><input type="number" class="gym-cardio-input" placeholder="—" value="' + (s.incline||'') + '" step="0.5" data-ei="' + ei + '" data-si="' + si + '" data-field="incline" oninput="gymUpdateCardio(this)"><div class="gym-cardio-label">傾斜(%)</div></div>';
-          setsHtml += '<div><input type="number" class="gym-cardio-input" placeholder="—" value="' + (s.speed||'') + '" step="0.1" data-ei="' + ei + '" data-si="' + si + '" data-field="speed" oninput="gymUpdateCardio(this)"><div class="gym-cardio-label">時速(km/h)</div></div>';
-          setsHtml += '<div><input type="number" class="gym-cardio-input" placeholder="—" value="' + (s.distance||'') + '" step="0.1" data-ei="' + ei + '" data-si="' + si + '" data-field="distance" oninput="gymUpdateCardio(this)"><div class="gym-cardio-label">距離(km)</div></div>';
-          setsHtml += '<div><input type="number" class="gym-cardio-input" placeholder="—" value="' + (s.duration||'') + '" step="1" data-ei="' + ei + '" data-si="' + si + '" data-field="duration" oninput="gymUpdateCardio(this)"><div class="gym-cardio-label">時間(分)</div></div>';
+          setsHtml += '<div><input type="number" class="gym-cardio-input" placeholder="—" value="' + (s.incline||'') + '" step="0.5" data-ei="' + ei + '" data-si="' + si + '" data-field="incline" oninput="gymUpdateCardio(this)"><div class="gym-cardio-label">'+t('cardio_incline')+'</div></div>';
+          setsHtml += '<div><input type="number" class="gym-cardio-input" placeholder="—" value="' + (s.speed||'') + '" step="0.1" data-ei="' + ei + '" data-si="' + si + '" data-field="speed" oninput="gymUpdateCardio(this)"><div class="gym-cardio-label">'+t('cardio_speed')+'</div></div>';
+          setsHtml += '<div><input type="number" class="gym-cardio-input" placeholder="—" value="' + (s.distance||'') + '" step="0.1" data-ei="' + ei + '" data-si="' + si + '" data-field="distance" oninput="gymUpdateCardio(this)"><div class="gym-cardio-label">'+t('cardio_distance')+'</div></div>';
+          setsHtml += '<div><input type="number" class="gym-cardio-input" placeholder="—" value="' + (s.duration||'') + '" step="1" data-ei="' + ei + '" data-si="' + si + '" data-field="duration" oninput="gymUpdateCardio(this)"><div class="gym-cardio-label">'+t('cardio_duration')+'</div></div>';
           setsHtml += '</div>';
           setsHtml += '<div style="display:flex;gap:8px;margin-top:6px;">';
-          setsHtml += '<input type="text" class="gym-set-memo" placeholder="メモ（空欄可）" value="' + mVal + '" data-ei="' + ei + '" data-si="' + si + '" oninput="gymUpdateSet(+this.dataset.ei,+this.dataset.si,2,this.value)" style="flex:1;">';
+          setsHtml += '<input type="text" class="gym-set-memo" placeholder="memo" value="' + mVal + '" data-ei="' + ei + '" data-si="' + si + '" oninput="gymUpdateSet(+this.dataset.ei,+this.dataset.si,2,this.value)" style="flex:1;">';
           setsHtml += '<button class="gym-set-del" onclick="gymDelSet(' + ei + ',' + si + ')" style="flex-shrink:0;">✕</button>';
           setsHtml += '</div></div>';
         });
       } else {
         ex.sets.forEach((s, si) => {
-          const rm = (s.weight === '自重') ? null : calcRM(s.weight, s.reps, ex.name);
+          const rm = (s.weight === '自重' || s.weight === 'BW') ? null : calcRM(s.weight, s.reps, ex.name);
           const rmText = rm ? rm + 'kg' : '—';
           const assistClass = s.assist ? 'on' : '';
           const wVal = s.weight || '';
@@ -3060,10 +3918,10 @@ if (absDiff < 0.15) {
           if (['チンニング','懸垂','プルアップ'].some(function(kw){return ex.name.indexOf(kw)>=0;}) && si===0) {
             const aType = ex.assistType || 'assist';
             setsHtml += '<div style="display:flex;gap:8px;margin-bottom:6px;align-items:center;">';
-            setsHtml += '<span style="font-size:11px;color:var(--text-muted);">タイプ</span>';
+            setsHtml += '<span style="font-size:11px;color:var(--text-muted);">'+t('assist_type_label')+'</span>';
             setsHtml += '<select onchange="gymSetChinningType(' + ei + ',this.value)" style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;padding:6px 8px;">';
-            setsHtml += '<option value="assist"' + (aType==='assist'?' selected':'') + '>補助</option>';
-            setsHtml += '<option value="weight"' + (aType==='weight'?' selected':'') + '>加重</option>';
+            setsHtml += '<option value="assist"' + (aType==='assist'?' selected':'') + '>'+t('assist_option')+'</option>';
+            setsHtml += '<option value="weight"' + (aType==='weight'?' selected':'') + '>'+t('weight_option')+'</option>';
             setsHtml += '</select></div>';
           }
           const isChinningEx = ['チンニング','懸垂','プルアップ'].some(function(kw){return ex.name.indexOf(kw)>=0;});
@@ -3073,7 +3931,7 @@ if (absDiff < 0.15) {
             // チンニングは自重ボタン付きテキスト入力
             setsHtml += '<div style="display:flex;flex-direction:column;gap:2px;flex:1;">';
             setsHtml += '<input type="text" class="gym-set-input" placeholder="kg/自重" value="' + wVal + '" inputmode="decimal" id="gs-' + ei + '-' + si + '-w" data-ei="' + ei + '" data-si="' + si + '" oninput="gymUpdateSet(+this.dataset.ei,+this.dataset.si,0,this.value)" onfocus="this.select()">';
-            setsHtml += '<button onclick="gymSetBodyweight(' + ei + ',' + si + ')" style="font-size:9px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text-muted);padding:1px 4px;cursor:pointer;width:100%;">自重</button>';
+            setsHtml += '<button onclick="gymSetBodyweight(' + ei + ',' + si + ')" style="font-size:9px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text-muted);padding:1px 4px;cursor:pointer;width:100%;">'+t('bodyweight_btn')+'</button>';
             setsHtml += '</div>';
           } else {
             setsHtml += '<input type="number" class="gym-set-input" placeholder="kg" value="' + wVal + '" step="0.5" inputmode="decimal" id="gs-' + ei + '-' + si + '-w" data-ei="' + ei + '" data-si="' + si + '" oninput="gymUpdateSet(+this.dataset.ei,+this.dataset.si,0,this.value)" onfocus="this.select()">';
@@ -3083,7 +3941,7 @@ if (absDiff < 0.15) {
           setsHtml += '<div class="gym-set-assist"><div class="gym-assist-check ' + assistClass + '" onclick="gymToggleAssist(' + ei + ',' + si + ')"></div></div>';
           setsHtml += '</div>';
           setsHtml += '<div style="display:flex;align-items:center;gap:8px;margin-top:2px;">';
-          setsHtml += '<input type="text" class="gym-set-memo" placeholder="メモ（空欄可）" value="' + mVal + '" data-ei="' + ei + '" data-si="' + si + '" oninput="gymUpdateSet(+this.dataset.ei,+this.dataset.si,2,this.value)" style="flex:1;">';
+          setsHtml += '<input type="text" class="gym-set-memo" placeholder="memo" value="' + mVal + '" data-ei="' + ei + '" data-si="' + si + '" oninput="gymUpdateSet(+this.dataset.ei,+this.dataset.si,2,this.value)" style="flex:1;">';
           setsHtml += '<button class="gym-set-copy-btn" onclick="gymCopySet(' + ei + ',' + si + ')" style="flex-shrink:0;">⧉</button>';
           setsHtml += '<button class="gym-set-del" onclick="gymDelSet(' + ei + ',' + si + ')" style="flex-shrink:0;">✕</button>';
           setsHtml += '</div>';
@@ -3093,12 +3951,12 @@ if (absDiff < 0.15) {
       html += '<div class="gym-exercise-header">';
       html += '<span class="gym-drag-handle" onpointerdown="gymDragStart(event,' + ei + ')" style="padding:12px 12px 12px 0;font-size:20px;">☰</span>';
       html += '<span class="gym-exercise-name">' + ex.name + '</span>';
-      html += '<button class="gym-prev-btn" onclick="showPrevExercise(' + ei + ')">前回</button>';
+      html += '<button class="gym-prev-btn" onclick="showPrevExercise(' + ei + ')">'+t('prev_label')+'</button>';
       html += '<button class="gym-exercise-del" onclick="gymDelExercise(' + ei + ')">✕</button>';
       html += '</div>';
-      if (!isCardio) html += '<div class="gym-set-header"><span class="gym-set-header-label">SET</span><span class="gym-set-header-label">重量kg</span><span class="gym-set-header-label">回数</span><span class="gym-set-header-label">1RM</span><span class="gym-set-header-label">補</span></div>';
+      if (!isCardio) html += '<div class="gym-set-header"><span class="gym-set-header-label">SET</span><span class="gym-set-header-label">kg</span><span class="gym-set-header-label">rep</span><span class="gym-set-header-label">1RM</span><span class="gym-set-header-label">'+t('assist_mark')+'</span></div>';
       html += setsHtml;
-      html += '<button class="gym-add-set-btn" onclick="gymAddSet(' + ei + ')">＋ セットを追加</button>';
+      html += '<button class="gym-add-set-btn" onclick="gymAddSet(' + ei + ')">'+t('gym_add_set')+'</button>';
       html += '</div>';
     });
     list.innerHTML = html;
@@ -3205,7 +4063,7 @@ if (absDiff < 0.15) {
     document.getElementById('sw-display').classList.add('running');
     const t = swStartTime;
     document.getElementById('sw-start-label').textContent =
-      `開始: ${String(t.getHours()).padStart(2,'0')}:${String(t.getMinutes()).padStart(2,'0')}`;
+      t('sw_start_prefix') + `${String(t.getHours()).padStart(2,'0')}:${String(t.getMinutes()).padStart(2,'0')}`;
   }
 
   function swStop() {
@@ -3220,7 +4078,7 @@ if (absDiff < 0.15) {
     document.getElementById('sw-display').classList.remove('running');
     const t = swEndTime;
     document.getElementById('sw-end-label').textContent =
-      `終了: ${String(t.getHours()).padStart(2,'0')}:${String(t.getMinutes()).padStart(2,'0')}`;
+      t('sw_end_prefix') + `${String(t.getHours()).padStart(2,'0')}:${String(t.getMinutes()).padStart(2,'0')}`;
   }
 
   function swReset() {
@@ -3231,8 +4089,8 @@ if (absDiff < 0.15) {
     swElapsed = 0;
     document.getElementById('sw-display').textContent = '00:00:00';
     document.getElementById('sw-display').classList.remove('running');
-    document.getElementById('sw-start-label').textContent = '開始: —';
-    document.getElementById('sw-end-label').textContent = '終了: —';
+    document.getElementById('sw-start-label').textContent = t('sw_start_display');
+    document.getElementById('sw-end-label').textContent = t('sw_end_display');
     document.getElementById('sw-btn-start').style.display = 'flex';
     document.getElementById('sw-btn-stop').style.display = 'none';
   }
@@ -3488,7 +4346,7 @@ if (absDiff < 0.15) {
     }
 
     // 保存後にシェア画面を起動してからトップに戻る
-    showToast('保存しました ✓', false);
+    showToast(t('toast_saved'), false);
     if (currentUser) syncToCloud(currentUser.uid);
     setTimeout(() => {
       gymShare();
@@ -3503,7 +4361,7 @@ if (absDiff < 0.15) {
         return date < gymDate && gymData[k].exercises && gymData[k].exercises.length > 0;
       })
       .sort(function(a,b) { return b.split('_')[0].localeCompare(a.split('_')[0]); });
-    if (keys.length === 0) { showToast('前回のデータがありません'); return; }
+    if (keys.length === 0) { showToast(t('toast_prev_data_none')); return; }
 
     const prevDate = keys[0].split('_')[0];
     const sameDay = keys.filter(function(k) { return k.split('_')[0] === prevDate; });
@@ -3550,12 +4408,13 @@ if (absDiff < 0.15) {
     var sheet = document.createElement('div');
     sheet.style.cssText = 'background:var(--surface);border-radius:24px 24px 0 0;padding:24px 24px 48px;width:100%;max-width:480px;';
 
-    var html = '<div style="font-size:20px;font-weight:bold;color:var(--accent);margin-bottom:16px;">部位を選択（' + prevDate + '）</div>';
-    html += '<button onclick="gymCopyPrevClose(null)" style="width:100%;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;cursor:pointer;margin-bottom:8px;">すべてコピー</button>';
+    var html = '<div style="font-size:20px;font-weight:bold;color:var(--accent);margin-bottom:16px;">'+t('copy_prev_title_prefix')+prevDate+t('copy_prev_title_suffix')+'</div>';
+    html += '<button onclick="gymCopyPrevClose(null)" style="width:100%;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;cursor:pointer;margin-bottom:8px;">'+t('copy_prev_all')+'</button>';
     parts.forEach(function(p) {
-      html += '<button onclick="gymCopyPrevClose(' + JSON.stringify(p) + ')" style="width:100%;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;cursor:pointer;margin-bottom:8px;">' + p + '（' + byPart[p].length + '種目）</button>';
+      var pLabel = p === 'その他' && LANG !== 'ja' ? 'Other' : p;
+      html += '<button onclick="gymCopyPrevClose(' + JSON.stringify(p) + ')" style="width:100%;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;cursor:pointer;margin-bottom:8px;">' + pLabel + (LANG==='ja'?'（':' (')+byPart[p].length + t('copy_prev_exercises_suffix')+'</button>';
     });
-    html += '<button onclick="gymCopyPrevCancel()" style="width:100%;padding:12px;background:none;border:none;color:var(--text-muted);font-size:14px;cursor:pointer;margin-top:4px;">キャンセル</button>';
+    html += '<button onclick="gymCopyPrevCancel()" style="width:100%;padding:12px;background:none;border:none;color:var(--text-muted);font-size:14px;cursor:pointer;margin-top:4px;">'+t('copy_prev_cancel')+'</button>';
     sheet.innerHTML = html;
     overlay.appendChild(sheet);
     document.body.appendChild(overlay);
@@ -3589,7 +4448,7 @@ if (absDiff < 0.15) {
     gymExercises.forEach(ex => ex.sets.forEach(s => { s.memo = ''; }));
     renderGymExercises();
     autoSaveGym();
-    showToast(prevDate + 'の記録をコピーしました', false);
+    showToast(prevDate + t('toast_copied_date_suffix'), false);
   }
 
   // PICKER
@@ -3599,16 +4458,16 @@ if (absDiff < 0.15) {
   function showPrevExercise(ei) {
     const name = gymExercises[ei].name;
     const prev = getPrevExerciseData(name);
-    if (!prev) { 
-      showToast(name + 'の前回記録がありません');
-      return; 
+    if (!prev) {
+      showToast(name + t('toast_prev_none'));
+      return;
     }
 
     prevExerciseData = prev;
     prevExerciseIdx = ei;
 
     document.getElementById('gym-prev-name').textContent = name;
-    document.getElementById('gym-prev-date').textContent = `前回: ${prev.date}`;
+    document.getElementById('gym-prev-date').textContent = t('prev_prefix') + prev.date;
 
     const setsEl = document.getElementById('gym-prev-sets');
     setsEl.innerHTML = prev.sets.map((s, i) => {
@@ -3617,7 +4476,7 @@ if (absDiff < 0.15) {
         <span class="gym-prev-set-num">${i+1}</span>
         <span class="gym-prev-set-val">${s.weight||'—'}kg × ${s.reps||'—'}rep</span>
         ${rm ? `<span class="gym-prev-set-rm">1RM: ${rm}kg</span>` : ''}
-        ${s.assist ? `<span class="gym-prev-set-assist">補助</span>` : ''}
+        ${s.assist ? `<span class="gym-prev-set-assist">${t('assist_mark')}</span>` : ''}
       </div>`;
     }).join('');
 
@@ -3635,7 +4494,7 @@ if (absDiff < 0.15) {
     gymExercises[prevExerciseIdx].sets = JSON.parse(JSON.stringify(prevExerciseData.sets)).map(s => ({...s, memo:''}));
     closeGymPrevModal();
     renderGymExercises();
-    showToast('前回の記録をコピーしました', false);
+    showToast(t('toast_copied'), false);
   }
 
   function applyPrevWeightOnly() {
@@ -3650,7 +4509,7 @@ if (absDiff < 0.15) {
     });
     closeGymPrevModal();
     renderGymExercises();
-    showToast('前回の重量をコピーしました', false);
+    showToast(t('toast_weight_copied'), false);
   }
 
   function openGymPicker() {
@@ -3771,7 +4630,7 @@ if (absDiff < 0.15) {
     document.getElementById('gym-preset-editor').classList.remove('open');
     document.getElementById('gym-picker').classList.remove('open');
     renderGymExercises();
-    showToast(name + ' を追加しました', false);
+    showToast(name + t('toast_added_suffix'), false);
   }
 
   function closeGymPresetEditor() {
@@ -3804,18 +4663,18 @@ if (absDiff < 0.15) {
           '<option value="' + c + '"' + (c === presetEditorPart ? ' selected' : '') + '>' + c + '</option>'
         ).join('');
         return '<div style="background:var(--surface2);border-radius:10px;padding:12px;margin-bottom:8px;">' +
-          '<div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;">種目名</div>' +
+          '<div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;">'+t('gym_picker_title')+'</div>' +
           '<input type="text" class="gym-edit-name-input" id="preset-edit-input-' + i + '" value="' + name + '" style="width:100%;margin-bottom:10px;">' +
-          '<div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;">部位を移動</div>' +
+          '<div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;">'+t('label_muscles')+'</div>' +
           '<select id="preset-edit-cat-' + i + '" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px;color:var(--text);font-size:14px;margin-bottom:10px;">' + catOptions + '</select>' +
           '<div style="display:flex;gap:8px;">' +
-          '<button class="gym-preset-edit-btn" style="flex:1;padding:10px;background:var(--accent);color:var(--bg);border:none;border-radius:8px;font-size:14px;cursor:pointer;" onclick="savePresetName(' + i + ')">保存</button>' +
-          '<button class="gym-preset-del-btn" style="padding:10px 14px;background:rgba(255,68,68,0.15);border:1px solid rgba(255,68,68,0.3);border-radius:8px;color:var(--danger);font-size:14px;cursor:pointer;" onclick="deletePreset(' + i + ')">削除</button>' +
+          '<button class="gym-preset-edit-btn" style="flex:1;padding:10px;background:var(--accent);color:var(--bg);border:none;border-radius:8px;font-size:14px;cursor:pointer;" onclick="savePresetName(' + i + ')">'+t('btn_save_short')+'</button>' +
+          '<button class="gym-preset-del-btn" style="padding:10px 14px;background:rgba(255,68,68,0.15);border:1px solid rgba(255,68,68,0.3);border-radius:8px;color:var(--danger);font-size:14px;cursor:pointer;" onclick="deletePreset(' + i + ')">'+t('btn_delete')+'</button>' +
           '</div></div>';
       }
       return '<div class="gym-preset-item" style="cursor:pointer;" onclick="addFromPresetEditor(\'' + name + '\')">' +
         '<span class="gym-preset-item-name">' + name + '</span>' +
-        '<button class="gym-preset-edit-btn" onclick="event.stopPropagation();startEditPreset(' + i + ')">編集</button>' +
+        '<button class="gym-preset-edit-btn" onclick="event.stopPropagation();startEditPreset(' + i + ')">'+t('edit_btn')+'</button>' +
         '<button class="gym-preset-del-btn" onclick="event.stopPropagation();deletePreset(' + i + ')">✕</button>' +
         '</div>';
     }).join('');
@@ -3846,7 +4705,7 @@ if (absDiff < 0.15) {
     localStorage.setItem('gym_presets', JSON.stringify(gymPresets));
     editingPresetIdx = null;
     renderPresetEditorList();
-    showToast('保存しました', false);
+    showToast(t('toast_preset_saved'), false);
   }
 
   function deletePreset(i) {
@@ -3858,7 +4717,7 @@ if (absDiff < 0.15) {
 
   function addGymPreset() {
     const name = document.getElementById('preset-add-input').value.trim();
-    if (!name) { showToast('種目名を入力してください'); return; }
+    if (!name) { showToast(t('toast_exercise_required')); return; }
     if (!gymPresets[presetEditorPart]) gymPresets[presetEditorPart] = [];
     if (!gymPresets[presetEditorPart].includes(name)) {
       gymPresets[presetEditorPart].push(name);
@@ -3879,7 +4738,7 @@ if (absDiff < 0.15) {
 
     // カテゴリフィルターボタン
     html += '<div style="display:flex;gap:6px;flex-wrap:wrap;padding:10px 16px;background:var(--surface);border-bottom:1px solid var(--border);">';
-    html += `<button onclick="setGymPickerCat(null)" style="padding:5px 12px;border-radius:14px;font-size:12px;cursor:pointer;border:1px solid ${gymPickerCatFilter===null?'var(--accent)':'var(--border)'};background:${gymPickerCatFilter===null?'var(--accent)':'transparent'};color:${gymPickerCatFilter===null?'var(--bg)':'var(--text-muted)'};">すべて</button>`;
+    html += `<button onclick="setGymPickerCat(null)" style="padding:5px 12px;border-radius:14px;font-size:12px;cursor:pointer;border:1px solid ${gymPickerCatFilter===null?'var(--accent)':'var(--border)'};background:${gymPickerCatFilter===null?'var(--accent)':'transparent'};color:${gymPickerCatFilter===null?'var(--bg)':'var(--text-muted)'};">${t('filter_all')}</button>`;
     cats.forEach(c => {
       html += `<button onclick="setGymPickerCat('${c}')" style="padding:5px 12px;border-radius:14px;font-size:12px;cursor:pointer;border:1px solid ${gymPickerCatFilter===c?'var(--accent)':'var(--border)'};background:${gymPickerCatFilter===c?'var(--accent)':'transparent'};color:${gymPickerCatFilter===c?'var(--bg)':'var(--text-muted)'};">${c}</button>`;
     });
@@ -3898,7 +4757,7 @@ if (absDiff < 0.15) {
     });
 
     if (!html.includes('gym-picker-item')) {
-      html += '<div style="color:var(--text-muted);padding:32px;text-align:center;">該当なし</div>';
+      html += '<div style="color:var(--text-muted);padding:32px;text-align:center;">—</div>';
     }
 
     el.innerHTML = html;
@@ -3907,7 +4766,7 @@ if (absDiff < 0.15) {
     const catSel = document.getElementById('gym-custom-cat');
     if (catSel) {
       const currentVal = catSel.value;
-      catSel.innerHTML = '<option value="">部位を選択</option>' +
+      catSel.innerHTML = '<option value="">' + t('toast_part_required') + '</option>' +
         cats.map(c => `<option value="${c}" ${c===currentVal?'selected':''}>${c}</option>`).join('');
     }
   }
@@ -3992,8 +4851,8 @@ if (absDiff < 0.15) {
   function addCustomGymExercise() {
     const name = document.getElementById('gym-picker-search').value.trim();
     const cat = document.getElementById('gym-custom-cat')?.value;
-    if (!name) { showToast('種目名を入力してください'); return; }
-    if (!cat) { showToast('部位を選択してください'); return; }
+    if (!name) { showToast(t('toast_exercise_required')); return; }
+    if (!cat) { showToast(t('toast_part_required')); return; }
     gymPresets = gymPresets || JSON.parse(JSON.stringify(GYM_PRESETS));
     if (!gymPresets[cat]) gymPresets[cat] = [];
     if (!gymPresets[cat].includes(name)) {
@@ -4021,7 +4880,7 @@ if (absDiff < 0.15) {
     document.getElementById('timer-overlay').classList.remove('open');
     clearInterval(timerInterval);
     timerRunning = false;
-    document.getElementById('timer-start-btn').textContent = 'スタート';
+    document.getElementById('timer-start-btn').textContent = t('timer_start');
     document.getElementById('timer-display').classList.remove('done');
   }
 
@@ -4031,12 +4890,11 @@ if (absDiff < 0.15) {
     timerSec = sec;
     timerRemain = sec;
     document.getElementById('timer-custom-input').value = sec;
-    document.getElementById('timer-start-btn').textContent = 'スタート';
+    document.getElementById('timer-start-btn').textContent = t('timer_start');
     document.getElementById('timer-display').classList.remove('done');
     document.querySelectorAll('.timer-preset-btn').forEach(b=>{
-      b.classList.toggle('active', parseInt(b.textContent)===sec || b.textContent===sec+'秒' ||
-        (sec===30&&b.textContent==='30秒')||(sec===60&&b.textContent==='1分')||
-        (sec===90&&b.textContent==='90秒')||(sec===120&&b.textContent==='2分')||(sec===180&&b.textContent==='3分'));
+      const m = (b.getAttribute('onclick')||'').match(/setTimerSec\((\d+)\)/);
+      b.classList.toggle('active', m ? parseInt(m[1])===sec : false);
     });
     updateTimerDisplay();
   }
@@ -4045,20 +4903,20 @@ if (absDiff < 0.15) {
     if (timerRunning) {
       clearInterval(timerInterval);
       timerRunning = false;
-      document.getElementById('timer-start-btn').textContent = 'スタート';
+      document.getElementById('timer-start-btn').textContent = t('timer_start');
     } else {
       if (timerRemain <= 0) { timerRemain = timerSec; document.getElementById('timer-display').classList.remove('done'); }
       timerRunning = true;
-      document.getElementById('timer-start-btn').textContent = '停止';
+      document.getElementById('timer-start-btn').textContent = t('timer_stop');
       timerInterval = setInterval(()=>{
         timerRemain--;
         updateTimerDisplay();
         if (timerRemain <= 0) {
           clearInterval(timerInterval);
           timerRunning = false;
-          document.getElementById('timer-start-btn').textContent = 'スタート';
+          document.getElementById('timer-start-btn').textContent = t('timer_start');
           document.getElementById('timer-display').classList.add('done');
-          document.getElementById('timer-label').textContent = '完了！';
+          document.getElementById('timer-label').textContent = t('timer_done');
           // バイブレーション
           if (navigator.vibrate) navigator.vibrate([300,100,300,100,300,100,300,100,300,100,300,100,300,100,300,100,300]);
           // ビープ音
@@ -4096,7 +4954,7 @@ if (absDiff < 0.15) {
   function gymShare() {
     const hasGymData = gymExercises.length > 0 ||
       Object.keys(gymData).some(k => k.split('_')[0] === gymDate && gymData[k].exercises?.length > 0);
-    if (!hasGymData) { showToast('この日の記録がありません'); return; }
+    if (!hasGymData) { showToast(t('toast_no_data_today')); return; }
     // シェア前に現在のデータを自動保存
     if (gymExercises.length > 0) {
       const key = getGymKey();
@@ -4104,13 +4962,13 @@ if (absDiff < 0.15) {
       gymData[key].exercises = JSON.parse(JSON.stringify(gymExercises));
       localStorage.setItem('gym_data', JSON.stringify(gymData));
     }
-    showToast('生成中...', false);
+    showToast(t('toast_generating'), false);
     setTimeout(() => {
       try {
         _buildShareCanvas();
         document.getElementById('share-overlay').classList.add('open');
       } catch(e) {
-        showToast('生成に失敗しました');
+        showToast(t('toast_generate_failed'));
       }
     }, 50);
   }
@@ -4184,16 +5042,16 @@ if (absDiff < 0.15) {
       if (isCardio) {
         // 有酸素専用ヘッダー
         ctx.fillText('SET', padding + 10, y + 14);
-        ctx.fillText('傾斜(%)', padding + 80, y + 14);
-        ctx.fillText('時速(km/h)', padding + 200, y + 14);
-        ctx.fillText('距離(km)', padding + 320, y + 14);
-        ctx.fillText('時間(分)', padding + 440, y + 14);
+        ctx.fillText(t('cardio_incline'), padding + 80, y + 14);
+        ctx.fillText(t('cardio_speed'), padding + 200, y + 14);
+        ctx.fillText(t('cardio_distance'), padding + 320, y + 14);
+        ctx.fillText(t('cardio_duration'), padding + 440, y + 14);
       } else {
         ctx.fillText('SET', padding + 10, y + 14);
-        ctx.fillText('重量(kg)', padding + 80, y + 14);
-        ctx.fillText('回数', padding + 200, y + 14);
+        ctx.fillText(LANG==='ja'?'重量(kg)':'Weight(kg)', padding + 80, y + 14);
+        ctx.fillText(LANG==='ja'?'回数':'Reps', padding + 200, y + 14);
         ctx.fillText('1RM', padding + 300, y + 14);
-        ctx.fillText('補助', padding + 400, y + 14);
+        ctx.fillText(t('assist_option'), padding + 400, y + 14);
       }
       y += lineH * 0.8;
 
@@ -4209,7 +5067,7 @@ if (absDiff < 0.15) {
           ctx.fillStyle = '#e8ff00';
           ctx.fillText(s.distance != null ? s.distance + 'km' : '—', padding + 320, y + 16);
           ctx.fillStyle = '#f0f0f0';
-          ctx.fillText(s.duration != null ? s.duration + '分' : '—', padding + 440, y + 16);
+          ctx.fillText(s.duration != null ? s.duration + (LANG==='ja'?'分':'min') : '—', padding + 440, y + 16);
         } else {
           const rm = calcRM(s.weight, s.reps, ex.name);
           ctx.fillStyle = '#00d4ff';
@@ -4222,10 +5080,10 @@ if (absDiff < 0.15) {
           if (isChinningCanvas) {
             const aType = ex.assistType || 'assist';
             ctx.fillStyle = aType === 'weight' ? '#e8ff00' : '#ff8c42';
-            ctx.fillText(aType === 'weight' ? '加重' : '補助', padding + 400, y + 16);
+            ctx.fillText(aType === 'weight' ? t('weight_option') : t('assist_option'), padding + 400, y + 16);
           } else {
             ctx.fillStyle = s.assist ? '#ff8c42' : '#444';
-            ctx.fillText(s.assist ? '✓補助' : '—', padding + 400, y + 16);
+            ctx.fillText(s.assist ? ('✓'+t('assist_option')) : '—', padding + 400, y + 16);
           }
         }
         y += lineH;
@@ -4366,18 +5224,18 @@ if (absDiff < 0.15) {
       a.kcal = kcal;
       const detailHtml = a.hasDetail ? `
         <div style="display:flex;gap:6px;margin-top:4px;flex-wrap:wrap;">
-          <div style="display:flex;align-items:center;gap:3px;"><span style="font-size:10px;color:var(--text-muted);">傾斜</span><input type="number" value="${a.incline||''}" placeholder="%" step="0.5" style="width:48px;" class="activity-item-min" onchange="updateActivityDetail(${i},'incline',this.value,'rec')"></div>
-          <div style="display:flex;align-items:center;gap:3px;"><span style="font-size:10px;color:var(--text-muted);">時速</span><input type="number" value="${a.speed||''}" placeholder="km/h" step="0.1" style="width:56px;" class="activity-item-min" onchange="updateActivityDetail(${i},'speed',this.value,'rec')"></div>
-          <div style="display:flex;align-items:center;gap:3px;"><span style="font-size:10px;color:var(--text-muted);">距離</span><input type="number" value="${a.distance||''}" placeholder="km" step="0.1" style="width:52px;" class="activity-item-min" onchange="updateActivityDetail(${i},'distance',this.value,'rec')"></div>
+          <div style="display:flex;align-items:center;gap:3px;"><span style="font-size:10px;color:var(--text-muted);">${LANG==='ja'?'傾斜':'Incline'}</span><input type="number" value="${a.incline||''}" placeholder="%" step="0.5" style="width:48px;" class="activity-item-min" onchange="updateActivityDetail(${i},'incline',this.value,'rec')"></div>
+          <div style="display:flex;align-items:center;gap:3px;"><span style="font-size:10px;color:var(--text-muted);">${LANG==='ja'?'時速':'Speed'}</span><input type="number" value="${a.speed||''}" placeholder="km/h" step="0.1" style="width:56px;" class="activity-item-min" onchange="updateActivityDetail(${i},'speed',this.value,'rec')"></div>
+          <div style="display:flex;align-items:center;gap:3px;"><span style="font-size:10px;color:var(--text-muted);">${LANG==='ja'?'距離':'Dist'}</span><input type="number" value="${a.distance||''}" placeholder="km" step="0.1" style="width:52px;" class="activity-item-min" onchange="updateActivityDetail(${i},'distance',this.value,'rec')"></div>
         </div>` : '';
       return `<div class="activity-item" style="flex-direction:column;align-items:stretch;">
         <div style="display:flex;align-items:center;gap:8px;">
           <span class="activity-item-icon" style="cursor:pointer;" onclick="openActivityIconPicker(${i},'rec')">${a.icon||'🏃'}</span>
           <div class="activity-item-body">
             <div class="activity-item-name">${a.name}</div>
-            <div class="activity-item-kcal">${kcal ? kcal+'kcal' : '分を入力してください'}</div>
+            <div class="activity-item-kcal">${kcal ? kcal+'kcal' : (LANG==='ja'?'分を入力':'enter min')}</div>
           </div>
-          <input type="number" class="activity-item-min" value="${a.minutes||''}" placeholder="分"
+          <input type="number" class="activity-item-min" value="${a.minutes||''}" placeholder="${LANG==='ja'?'分':'min'}"
             onchange="updateActivityMin(${i}, this.value)">
           <button class="activity-item-del" onclick="delActivity(${i})">✕</button>
         </div>
@@ -4439,11 +5297,11 @@ if (absDiff < 0.15) {
             <span class="activity-picker-item-icon">${it.icon||cat.icon}</span>
             <span class="activity-picker-item-name">${it.name}</span>
           </div>
-          <span class="activity-picker-item-met">${it.met ? 'MET '+it.met : (it.kcalPerMin||0)+'kcal/分'}</span>
+          <span class="activity-picker-item-met">${it.met ? 'MET '+it.met : (it.kcalPerMin||0)+'kcal/'+(LANG==='ja'?'分':'min')}</span>
         </div>`;
       });
     }
-    el.innerHTML = html || '<div style="color:var(--text-muted);padding:20px;text-align:center;">該当なし</div>';
+    el.innerHTML = html || '<div style="color:var(--text-muted);padding:20px;text-align:center;">—</div>';
   }
 
   function addActivityFromPreset(name, met, icon) {
@@ -4455,7 +5313,7 @@ if (absDiff < 0.15) {
   function addCustomActivity() {
     const name = document.getElementById('activity-custom-name').value.trim();
     const kcalPerMin = parseFloat(document.getElementById('activity-custom-kcal').value)||0;
-    if (!name) { showToast('種目名を入力してください'); return; }
+    if (!name) { showToast(t('toast_exercise_required')); return; }
     recActivities.push({name, kcalPerMin, icon:'🏃', minutes:null, kcal:0});
     renderActivityList();
     document.getElementById('activity-picker').classList.remove('open');
@@ -4477,9 +5335,9 @@ if (absDiff < 0.15) {
         <span class="activity-item-icon" style="cursor:pointer;" onclick="openActivityIconPicker(${i},'edit')">${a.icon||'🏃'}</span>
         <div class="activity-item-body">
           <div class="activity-item-name" onclick="openActivityNameEdit(${i},'edit')" style="cursor:pointer;">${a.name} <span style="font-size:10px;color:var(--text-muted);">✎</span></div>
-          <div class="activity-item-kcal">${kcal ? kcal+'kcal' : '分を入力してください'}</div>
+          <div class="activity-item-kcal">${kcal ? kcal+'kcal' : (LANG==='ja'?'分を入力':'enter min')}</div>
         </div>
-        <input type="number" class="activity-item-min" value="${a.minutes||''}" placeholder="分"
+        <input type="number" class="activity-item-min" value="${a.minutes||''}" placeholder="${LANG==='ja'?'分':'min'}"
           onchange="updateEditActivityMin(${i}, this.value)">
         <button class="activity-item-del" onclick="delEditActivity(${i})">✕</button>
       </div>`;
@@ -4500,13 +5358,13 @@ if (absDiff < 0.15) {
       <div class="gym-preset-item">
         <span style="font-size:18px;margin-right:6px;">${item.icon||cat.icon}</span>
         <span class="gym-preset-item-name">${item.name}</span>
-        <span style="font-size:11px;color:var(--text-muted);margin-right:8px;">${item.met?'MET '+item.met:(item.kcalPerMin||0)+'kcal/分'}</span>
+        <span style="font-size:11px;color:var(--text-muted);margin-right:8px;">${item.met?'MET '+item.met:(item.kcalPerMin||0)+'kcal/'+(LANG==='ja'?'分':'min')}</span>
         <button class="gym-preset-del-btn" onclick="delActivityPresetItem(${i})">✕</button>
       </div>
-    `).join('') || '<div style="color:var(--text-muted);font-size:13px;padding:12px 0;">種目がありません</div>';
+    `).join('') || '<div style="color:var(--text-muted);font-size:13px;padding:12px 0;">'+(LANG==='ja'?'種目がありません':'No exercises')+'</div>';
 
     // カテゴリ削除ボタン
-    el.innerHTML += `<button onclick="delActivityPresetCat(${actEditorCatIdx})" style="margin-top:8px;width:100%;padding:8px;background:transparent;border:1px dashed var(--danger);border-radius:8px;color:var(--danger);font-size:12px;cursor:pointer;">このカテゴリを削除</button>`;
+    el.innerHTML += `<button onclick="delActivityPresetCat(${actEditorCatIdx})" style="margin-top:8px;width:100%;padding:8px;background:transparent;border:1px dashed var(--danger);border-radius:8px;color:var(--danger);font-size:12px;cursor:pointer;">${t('activity_del_cat')}</button>`;
   }
 
   function delActivityPresetItem(itemIdx) {
@@ -4516,7 +5374,7 @@ if (absDiff < 0.15) {
   }
 
   function delActivityPresetCat(catIdx) {
-    if (activityPresets.length <= 1) { showToast('最低1つのカテゴリが必要です'); return; }
+    if (activityPresets.length <= 1) { showToast(t('toast_min_cat')); return; }
     activityPresets.splice(catIdx, 1);
     actEditorCatIdx = Math.min(actEditorCatIdx, activityPresets.length-1);
     localStorage.setItem('activity_presets', JSON.stringify(activityPresets));
@@ -4528,7 +5386,7 @@ if (absDiff < 0.15) {
     const icon = document.getElementById('act-editor-icon').value.trim() || activityPresets[actEditorCatIdx].icon;
     const name = document.getElementById('act-editor-name').value.trim();
     const met = parseFloat(document.getElementById('act-editor-met').value) || null;
-    if (!name) { showToast('種目名を入力してください'); return; }
+    if (!name) { showToast(t('toast_exercise_required')); return; }
     activityPresets[actEditorCatIdx].items.push({name, icon, met, kcalPerMin: met ? null : 0});
     localStorage.setItem('activity_presets', JSON.stringify(activityPresets));
     document.getElementById('act-editor-icon').value = '';
@@ -4539,7 +5397,7 @@ if (absDiff < 0.15) {
 
   function addActivityPresetCat() {
     const name = document.getElementById('act-editor-cat-name').value.trim();
-    if (!name) { showToast('カテゴリ名を入力してください'); return; }
+    if (!name) { showToast(t('toast_cat_required')); return; }
     activityPresets.push({cat: name, icon: '🏃', items: []});
     actEditorCatIdx = activityPresets.length - 1;
     localStorage.setItem('activity_presets', JSON.stringify(activityPresets));
@@ -4554,7 +5412,7 @@ if (absDiff < 0.15) {
     actEditorCatIdx = 0;
     renderActivityEditorCats();
     renderActivityEditorList();
-    showToast('デフォルトに戻しました', false);
+    showToast(t('toast_reset_default'), false);
   }
 
   // アイコン・名前編集
@@ -4649,7 +5507,7 @@ if (absDiff < 0.15) {
     const premium = isPremium();
     const label = document.getElementById('plan-status-label');
     const btn = document.getElementById('plan-upgrade-btn');
-    if (label) label.textContent = premium ? 'プレミアムプラン ✨' : '無料プラン（直近30日）';
+    if (label) label.textContent = premium ? t('plan_premium') : t('plan_free');
     if (label) label.style.color = premium ? 'var(--accent)' : 'var(--text)';
     if (btn) btn.style.display = premium ? 'none' : '';
   }
@@ -4691,7 +5549,7 @@ if (absDiff < 0.15) {
     else localStorage.removeItem('contest_weight');
     updateContestCountdown();
     document.getElementById('profile-modal').classList.remove('open');
-    showToast('プロフィールを保存しました ✓', false);
+    showToast(t('toast_profile_saved'), false);
     if (currentUser) syncToCloud(currentUser.uid, 0); // プロフィール保存は即時同期
   }
 
@@ -4699,7 +5557,7 @@ if (absDiff < 0.15) {
   function resetGymPresets() {
     localStorage.removeItem('gym_presets');
     gymPresets = JSON.parse(JSON.stringify(GYM_PRESETS));
-    showToast('種目プリセットをリセットしました', false);
+    showToast(t('toast_gym_preset_reset'), false);
   }
 
   function exportData() {
@@ -4722,7 +5580,7 @@ if (absDiff < 0.15) {
       document.body.appendChild(a); a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      showToast('エクスポートしました ✓', false);
+      showToast(t('toast_export'), false);
     }
   }
 
@@ -4742,10 +5600,10 @@ if (absDiff < 0.15) {
     try {
       const data = JSON.parse(jsonStr);
       Object.keys(data).forEach(k => localStorage.setItem(k, data[k]));
-      showToast('インポート完了。再起動します...', false);
+      showToast(t('toast_import_done'), false);
       setTimeout(() => location.reload(), 1500);
     } catch(e) {
-      showToast('インポートに失敗しました');
+      showToast(t('toast_import_fail'));
     }
   }
 
@@ -4757,10 +5615,10 @@ if (absDiff < 0.15) {
       try {
         const data = JSON.parse(e.target.result);
         Object.keys(data).forEach(k => localStorage.setItem(k, data[k]));
-        showToast('インポート完了。再起動します...', false);
+        showToast(t('toast_import_done'), false);
         setTimeout(() => location.reload(), 1500);
       } catch(err) {
-        showToast('インポートに失敗しました');
+        showToast(t('toast_import_fail'));
       }
     };
     reader.readAsText(file);
@@ -4804,11 +5662,11 @@ if (absDiff < 0.15) {
       <div class="gym-preset-item">
         <span style="font-size:18px;margin-right:6px;">${item.icon||cat.icon}</span>
         <span class="gym-preset-item-name">${item.name}</span>
-        <span style="font-size:11px;color:var(--text-muted);margin-right:8px;">${item.met?'MET '+item.met:(item.kcalPerMin||0)+'kcal/分'}</span>
+        <span style="font-size:11px;color:var(--text-muted);margin-right:8px;">${item.met?'MET '+item.met:(item.kcalPerMin||0)+'kcal/'+(LANG==='ja'?'分':'min')}</span>
         <button class="gym-preset-del-btn" onclick="delActivityPresetItem(${i})">✕</button>
       </div>
-    `).join('') || '<div style="color:var(--text-muted);font-size:13px;padding:12px 0;">種目がありません</div>';
-    el.innerHTML += `<button onclick="delActivityPresetCat(${actEditorCatIdx})" style="margin-top:8px;width:100%;padding:8px;background:transparent;border:1px dashed var(--danger);border-radius:8px;color:var(--danger);font-size:12px;cursor:pointer;">このカテゴリを削除</button>`;
+    `).join('') || '<div style="color:var(--text-muted);font-size:13px;padding:12px 0;">'+(LANG==='ja'?'種目がありません':'No exercises')+'</div>';
+    el.innerHTML += `<button onclick="delActivityPresetCat(${actEditorCatIdx})" style="margin-top:8px;width:100%;padding:8px;background:transparent;border:1px dashed var(--danger);border-radius:8px;color:var(--danger);font-size:12px;cursor:pointer;">${t('activity_del_cat')}</button>`;
   }
 
   function delActivityPresetItem(itemIdx) {
@@ -4818,7 +5676,7 @@ if (absDiff < 0.15) {
   }
 
   function delActivityPresetCat(catIdx) {
-    if (activityPresets.length <= 1) { showToast('最低1つのカテゴリが必要です'); return; }
+    if (activityPresets.length <= 1) { showToast(t('toast_min_cat')); return; }
     activityPresets.splice(catIdx, 1);
     actEditorCatIdx = Math.min(actEditorCatIdx, activityPresets.length-1);
     localStorage.setItem('activity_presets', JSON.stringify(activityPresets));
@@ -4830,7 +5688,7 @@ if (absDiff < 0.15) {
     const icon = document.getElementById('act-editor-icon').value.trim() || activityPresets[actEditorCatIdx].icon;
     const name = document.getElementById('act-editor-name').value.trim();
     const met = parseFloat(document.getElementById('act-editor-met').value) || null;
-    if (!name) { showToast('種目名を入力してください'); return; }
+    if (!name) { showToast(t('toast_exercise_required')); return; }
     activityPresets[actEditorCatIdx].items.push({name, icon, met, kcalPerMin: met ? null : 0});
     localStorage.setItem('activity_presets', JSON.stringify(activityPresets));
     document.getElementById('act-editor-icon').value = '';
@@ -4841,7 +5699,7 @@ if (absDiff < 0.15) {
 
   function addActivityPresetCat() {
     const name = document.getElementById('act-editor-cat-name').value.trim();
-    if (!name) { showToast('カテゴリ名を入力してください'); return; }
+    if (!name) { showToast(t('toast_cat_required')); return; }
     activityPresets.push({cat: name, icon: '🏃', items: []});
     actEditorCatIdx = activityPresets.length - 1;
     localStorage.setItem('activity_presets', JSON.stringify(activityPresets));
@@ -4928,7 +5786,7 @@ if (absDiff < 0.15) {
   function renderMySetList() {
     const el = document.getElementById('myset-list');
     if (mySets.length === 0) {
-      el.innerHTML = '<div style="color:var(--text-muted);font-size:13px;padding:12px 0;">マイセットがありません。今日のメニューを登録してください。</div>';
+      el.innerHTML = '<div style="color:var(--text-muted);font-size:13px;padding:12px 0;">'+t('myset_empty')+'</div>';
       return;
     }
     el.innerHTML = mySets.map(function(ms, i) {
@@ -4936,8 +5794,8 @@ if (absDiff < 0.15) {
         '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">' +
         '<div style="font-size:14px;font-weight:bold;color:var(--text);">' + ms.name + '</div>' +
         '<div style="display:flex;gap:6px;">' +
-        '<button onclick="loadMySet(' + i + ')" style="padding:5px 12px;background:var(--accent);color:var(--bg);border:none;border-radius:6px;font-size:12px;cursor:pointer;">読み込む</button>' +
-        '<button onclick="deleteMySet(' + i + ')" style="padding:5px 10px;background:none;border:1px solid var(--border);border-radius:6px;color:var(--danger);font-size:12px;cursor:pointer;">削除</button>' +
+        '<button onclick="loadMySet(' + i + ')" style="padding:5px 12px;background:var(--accent);color:var(--bg);border:none;border-radius:6px;font-size:12px;cursor:pointer;">'+t('myset_load')+'</button>' +
+        '<button onclick="deleteMySet(' + i + ')" style="padding:5px 10px;background:none;border:1px solid var(--border);border-radius:6px;color:var(--danger);font-size:12px;cursor:pointer;">'+t('myset_delete')+'</button>' +
         '</div></div>' +
         '<div style="font-size:11px;color:var(--text-muted);">' + ms.exercises.map(function(e) { return e.name; }).join('・') + '</div>' +
         '</div>';
@@ -4945,8 +5803,8 @@ if (absDiff < 0.15) {
   }
 
   function saveAsMySet() {
-    if (gymExercises.length === 0) { showToast('種目がありません'); return; }
-    const name = prompt('マイセットの名前を入力してください', gymDate + 'のメニュー');
+    if (gymExercises.length === 0) { showToast(t('empty_add_exercise')); return; }
+    const name = prompt(t('myset_name_prompt'), gymDate + t('myset_name_default_suffix'));
     if (!name) return;
     mySets.push({
       name: name,
@@ -4954,21 +5812,21 @@ if (absDiff < 0.15) {
     });
     localStorage.setItem('my_sets', JSON.stringify(mySets));
     renderMySetList();
-    showToast('マイセットに登録しました ✓', false);
+    showToast(t('toast_myset_saved'), false);
   }
 
   function loadMySet(i) {
-    if (!confirm('現在のメニューを置き換えますか？')) return;
+    if (!confirm(t('confirm_load_myset'))) return;
     gymExercises = JSON.parse(JSON.stringify(mySets[i].exercises));
     gymExercises.forEach(function(ex) { ex.sets.forEach(function(s) { s.memo = ''; }); });
     renderGymExercises();
     autoSaveGym();
     closeMySetModal();
-    showToast(mySets[i].name + ' を読み込みました', false);
+    showToast(mySets[i].name + t('toast_loaded_suffix'), false);
   }
 
   function deleteMySet(i) {
-    if (!confirm('このマイセットを削除しますか？')) return;
+    if (!confirm(t('confirm_delete_myset'))) return;
     mySets.splice(i, 1);
     localStorage.setItem('my_sets', JSON.stringify(mySets));
     renderMySetList();

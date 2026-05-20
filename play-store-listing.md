@@ -2,8 +2,10 @@
 
 ---
 
+# 🇯🇵 日本語（ja）
+
 ## アプリ名
-TrainingLog - 大会競技者向け記録アプリ
+BodymakeLog - 大会競技者向け記録アプリ
 
 ## 簡単な説明（80文字以内）
 体重・食事・水分・筋トレを一括管理。大会に向けた減量を科学的にサポート。
@@ -70,6 +72,78 @@ Googleアカウントでログインすると、データがクラウドに自�
 全ユーザー対象（PEGI 3 / Everyone）
 
 ## プライバシーポリシーURL
+https://training-log-v2-5vc.pages.dev/privacy-policy.html
+
+---
+
+# 🇺🇸 English (en-US) — Default language
+
+## App Name
+PhysiqueLog - Contest Prep Tracker
+
+## Short Description (80 chars max)
+Track weight, nutrition, hydration & training. Science-based contest prep logging.
+
+## Full Description (4000 chars max)
+
+Designed for every competitive athlete — bodybuilding, physique, classic physique and more — PhysiqueLog is your all-in-one contest prep companion.
+
+━━━━━━━━━━━━━━━
+📊 Daily Logging
+━━━━━━━━━━━━━━━
+· Weight (0.1kg precision)
+· Nutrition: calories, protein, fat, carbs, sodium
+· Hydration (real-time progress ring)
+· Sleep, steps, tanning time
+· Training (exercises, weight, sets, reps)
+· Cardio (MET-based calorie calculation)
+
+━━━━━━━━━━━━━━━
+🔍 Weight Change Analysis
+━━━━━━━━━━━━━━━
+Automatically analyzes yesterday's sodium, hydration, calorie balance, carbs, training, sleep and more — explaining why today's weight moved in 13 data points. Stop stressing over daily fluctuations.
+
+━━━━━━━━━━━━━━━
+🗺 Contest Roadmap (Premium)
+━━━━━━━━━━━━━━━
+Set your contest date and target weight to auto-generate a weekly target weight line. Overlay your actual progress to instantly see if you're on pace. View by week, month, or full timeline.
+
+━━━━━━━━━━━━━━━
+📋 Weekly Report (Premium)
+━━━━━━━━━━━━━━━
+Weekly average weight, gym sessions, average calories, protein, and hydration in one screen. Real-time comparison to your weekly goal.
+
+━━━━━━━━━━━━━━━
+☁️ Cloud Sync
+━━━━━━━━━━━━━━━
+Sign in with Google to automatically back up your data to the cloud. Seamlessly transfer data when switching devices (1 device free).
+
+━━━━━━━━━━━━━━━
+🔔 Daily Reminder
+━━━━━━━━━━━━━━━
+Set a custom notification time to build consistent logging habits.
+
+━━━━━━━━━━━━━━━
+💪 Training Features
+━━━━━━━━━━━━━━━
+· Built-in REST timer and stopwatch
+· Reference previous session records while logging
+· Save favorite routines with My Sets
+· Share workout results as an image
+
+━━━━━━━━━━━━━━━
+Premium Plan
+━━━━━━━━━━━━━━━
+Free plan includes the last 30 days of records.
+Premium ($2.99/month) unlocks unlimited history, contest roadmap, weekly reports, and multi-device cloud sync.
+
+## Category
+Health & Fitness
+
+## Content Rating
+Everyone (PEGI 3)
+
+## Privacy Policy URL
 https://training-log-v2-5vc.pages.dev/privacy-policy.html
 
 ---
