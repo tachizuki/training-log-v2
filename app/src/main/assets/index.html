@@ -83,8 +83,9 @@
   .today-stat-value.green { color: var(--success); }
   .today-stat-value.white { color: var(--text); }
 
-  .main-buttons { display: flex; flex-direction: column; gap: 10px; width: 100%; }
-  .btn-main { padding: 17px; border: none; border-radius: 12px; font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 0.1em; cursor: pointer; transition: all 0.2s; position: relative; overflow: hidden; }
+  /* トップメニュー: スクロール不要で1画面に収まるよう2x2グリッドに */
+  .main-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; }
+  .btn-main { padding: 18px 10px; border: none; border-radius: 12px; font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 0.06em; cursor: pointer; transition: all 0.2s; position: relative; overflow: hidden; min-height: 78px; display: flex; align-items: center; justify-content: center; text-align: center; line-height: 1.15; }
   .btn-main::after { content: ''; position: absolute; inset: 0; background: rgba(255,255,255,0.1); opacity: 0; transition: opacity 0.2s; }
   .btn-main:active::after { opacity: 1; }
   .btn-record { background: var(--accent); color: var(--bg); }
@@ -315,10 +316,48 @@
   .gym-prev-apply-btn.partial { background: var(--surface2); color: var(--text-muted); border: 1px solid var(--border); margin-top: 8px; font-size: 16px; }
   .gym-drag-handle { color: var(--text-muted); font-size: 18px; cursor: grab; padding: 0 8px 0 0; touch-action: none; user-select: none; transition: color 0.2s; }
   .gym-exercise-card { transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s; position: relative; }
-  .gym-exercise-card.drag-active { opacity: 0.35; border: 1px dashed var(--accent); transform: scale(0.97); }
-  .gym-exercise-card.drag-floating { opacity: 0.97; border: 1px solid var(--accent); box-shadow: 0 16px 48px rgba(0,0,0,0.7), 0 0 0 2px var(--accent); transform: scale(1.03) rotate(1deg); z-index: 50; pointer-events: none; position: fixed; }
+  /* ドラッグ元: 半透明＋点線枠で「ここから動かしている」ことを示す */
+  .gym-exercise-card.drag-active { opacity: 0.3; border: 1px dashed var(--accent); transform: scale(0.97); }
+  /* ドラッグ中の浮遊カード: 強いシャドウとアクセントカラーでフロート感を演出（指の追従もスムーズに） */
+  .gym-exercise-card.drag-floating {
+    opacity: 0.98;
+    border: 2px solid var(--accent);
+    box-shadow: 0 24px 60px rgba(0,0,0,0.85), 0 0 0 3px rgba(232,255,0,0.4), 0 0 30px rgba(232,255,0,0.35);
+    transform: scale(1.05) rotate(1.5deg);
+    z-index: 50;
+    pointer-events: none;
+    position: fixed;
+    background: var(--surface);
+  }
   .gym-exercise-card.drag-over { border: 2px solid var(--accent); background: rgba(232,255,0,0.07); transform: scale(1.01); }
   .gym-drag-overlay { position: fixed; inset: 0; z-index: 49; touch-action: none; }
+  /* ドロップ位置インジケーター: 上/下どちらに入るか分かるよう三角と「上 / 下」ラベルを使う */
+  .gym-drop-indicator {
+    position: fixed;
+    height: 0; left: 0; right: 0;
+    pointer-events: none;
+    z-index: 48;
+    display: flex; align-items: center; gap: 6px;
+    padding: 0 16px;
+  }
+  .gym-drop-indicator .line {
+    flex: 1;
+    height: 4px;
+    background: var(--accent);
+    border-radius: 2px;
+    box-shadow: 0 0 12px rgba(232,255,0,0.7);
+  }
+  .gym-drop-indicator .badge {
+    font-family: 'Bebas Neue', sans-serif;
+    background: var(--accent);
+    color: var(--bg);
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    letter-spacing: 0.1em;
+    display: flex; align-items: center; gap: 4px;
+    white-space: nowrap;
+  }
   .gym-set-header { display: grid; grid-template-columns: 28px 1fr 1fr 50px 24px; gap: 4px; margin-bottom: 4px; }
   .gym-set-header-label { font-size: 9px; color: var(--text-muted); text-align: center; letter-spacing: 0.05em; }
   .gym-set-row { display: grid; grid-template-columns: 28px 1fr 1fr 50px 24px; gap: 4px; align-items: center; margin-bottom: 5px; }
@@ -687,7 +726,20 @@
       <div class="form-section-title" data-i18n="section_weight_sleep">⚖️ 体重・睡眠</div>
       <div class="form-grid">
         <div class="form-group"><label class="form-label" data-i18n="label_weight">体重 (kg)</label><input type="number" class="form-input" id="rec-weight" placeholder="62.5" step="0.1"></div>
-        <div class="form-group"><label class="form-label" data-i18n="label_sleep">睡眠時間 (h)</label><input type="number" class="form-input" id="rec-sleep" placeholder="7.5" step="0.5"></div>
+        <div class="form-group">
+          <label class="form-label">😴 睡眠時間 (h) <span style="font-size:10px;color:var(--text-muted);">就寝・起床から自動計算</span></label>
+          <input type="number" class="form-input" id="rec-sleep" placeholder="7.5" step="0.1" readonly style="opacity:0.7;">
+        </div>
+      </div>
+      <div class="form-grid" style="margin-top:8px;">
+        <div class="form-group">
+          <label class="form-label">🌙 就寝時刻</label>
+          <input type="time" class="form-input" id="rec-bedtime" oninput="calcSleepFromBedWake('rec')">
+        </div>
+        <div class="form-group">
+          <label class="form-label">🌅 起床時刻</label>
+          <input type="time" class="form-input" id="rec-waketime" oninput="calcSleepFromBedWake('rec')">
+        </div>
       </div>
     </div>
     <div class="form-section">
@@ -813,6 +865,17 @@
     <div id="gym-exercise-list"></div>
     <button class="gym-add-exercise-btn" onclick="openGymPicker()" data-i18n="btn_add_exercise_gym">＋ 種目を追加</button>
     <button class="gym-save-btn" onclick="saveGym()" data-i18n="btn_back_save">← 戻る（自動保存済み）</button>
+
+    <!-- 筋トレ分析パネル -->
+    <div style="margin-top:18px;padding:16px;background:var(--surface);border:1px solid var(--border);border-radius:12px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;" onclick="toggleGymAnalysis()">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--accent);letter-spacing:0.05em;">📊 筋トレ分析</div>
+        <span id="gym-analysis-toggle" style="color:var(--text-muted);font-size:14px;">▼</span>
+      </div>
+      <div id="gym-analysis-body" style="display:none;margin-top:12px;">
+        <div id="gym-analysis-content"></div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -1077,7 +1140,9 @@
     <input type="hidden" id="edit-date-key">
     <div class="edit-grid">
       <div class="edit-group"><label class="edit-label" data-i18n="label_weight">体重 (kg)</label><input type="number" class="edit-input" id="edit-weight" step="0.1" placeholder="62.5"></div>
-      <div class="edit-group"><label class="edit-label" data-i18n="label_sleep">睡眠 (h)</label><input type="number" class="edit-input" id="edit-sleep" step="0.5" placeholder="7.5"></div>
+      <div class="edit-group"><label class="edit-label">😴 睡眠 (h)</label><input type="number" class="edit-input" id="edit-sleep" step="0.1" placeholder="7.5" readonly style="opacity:0.7;"></div>
+      <div class="edit-group"><label class="edit-label">🌙 就寝時刻</label><input type="time" class="edit-input" id="edit-bedtime" oninput="calcSleepFromBedWake('edit')"></div>
+      <div class="edit-group"><label class="edit-label">🌅 起床時刻</label><input type="time" class="edit-input" id="edit-waketime" oninput="calcSleepFromBedWake('edit')"></div>
       <div class="edit-group"><label class="edit-label" data-i18n="label_protein">タンパク質 (g)</label><input type="number" class="edit-input" id="edit-p" placeholder="180" oninput="editCalcKcal()"></div>
       <div class="edit-group"><label class="edit-label" data-i18n="label_fat">脂質 (g)</label><input type="number" class="edit-input" id="edit-f" placeholder="40" oninput="editCalcKcal()"></div>
       <div class="edit-group"><label class="edit-label" data-i18n="label_carbs">炭水化物 (g)</label><input type="number" class="edit-input" id="edit-c" placeholder="180" oninput="editCalcKcal()"></div>
@@ -1123,6 +1188,7 @@
       <input type="number" class="modal-input" id="wgoal-input" placeholder="62.0" step="0.1">
       <span class="modal-unit">kg</span>
     </div>
+    <div id="wgoal-auto-hint" style="font-size:11px;color:var(--text-muted);text-align:center;margin-top:6px;"></div>
     <div class="modal-btns">
       <button class="modal-btn cancel" onclick="closeWeightGoalModal()" data-i18n="btn_cancel">キャンセル</button>
       <button class="modal-btn confirm" style="background:var(--accent);color:var(--bg);" onclick="confirmWeightGoal()" data-i18n="btn_save_short">保存</button>
@@ -1164,7 +1230,13 @@
     <div style="background:var(--surface2);border-radius:12px;padding:12px 14px;margin-bottom:16px;">
       <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;" data-i18n="account_label">アカウント</div>
       <div id="auth-info" style="font-size:12px;color:var(--text);margin-bottom:8px;" data-i18n="auth_desc">ログインするとデータが同期されます</div>
-      <button id="auth-btn" onclick="firebaseSignIn()" style="width:100%;padding:10px;background:var(--accent);color:var(--bg);border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;" data-i18n="btn_google_login">Googleでログイン</button>
+      <button id="auth-btn" onclick="firebaseSignIn()" style="width:100%;padding:10px;background:var(--accent);color:var(--bg);border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:10px;" data-i18n="btn_google_login">Googleでログイン</button>
+      <!-- 表示名（ようこそ◯◯さん で使われる）-->
+      <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">表示名（任意）</div>
+      <input type="text" class="profile-input" id="prof-display-name" placeholder="トップ画面に表示したい名前" maxlength="20" style="margin:0;">
+      <div style="font-size:10px;color:var(--text-muted);margin-top:4px;line-height:1.5;">
+        空欄の場合: ログイン中はアカウント名、未ログインは「ゲスト」と表示されます。
+      </div>
     </div>
 
     <div class="profile-grid">
@@ -1197,9 +1269,51 @@
       <input type="date" class="profile-input" id="prof-contest-date">
     </div>
     <div class="profile-group full">
+      <label class="profile-label">
+        🏁 仕上げ日（ピーク日）
+        <span style="font-size:10px;color:var(--text-muted);font-weight:normal;">— 未設定なら大会日を使用</span>
+      </label>
+      <input type="date" class="profile-input" id="prof-peak-date">
+    </div>
+    <div class="profile-group full">
       <label class="profile-label" data-i18n="label_contest_weight">🎯 大会目標体重 (kg)</label>
       <input type="number" class="profile-input" id="prof-contest-weight" data-i18n-ph="contest_weight_ph" placeholder="例：75.0" step="0.1">
     </div>
+
+    <!-- 栄養目標 -->
+    <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);">
+      <div style="font-size:11px;color:var(--text-muted);letter-spacing:0.1em;margin-bottom:10px;">🍽️ 栄養目標値（分析の基準）</div>
+      <div class="profile-grid">
+        <div class="profile-group">
+          <label class="profile-label">タンパク質 (g)</label>
+          <input type="number" class="profile-input" id="prof-goal-p" placeholder="180" step="1">
+        </div>
+        <div class="profile-group">
+          <label class="profile-label">脂質 (g)</label>
+          <input type="number" class="profile-input" id="prof-goal-f" placeholder="50" step="1">
+        </div>
+        <div class="profile-group">
+          <label class="profile-label">炭水化物 (g)</label>
+          <input type="number" class="profile-input" id="prof-goal-c" placeholder="200" step="1">
+        </div>
+        <div class="profile-group">
+          <label class="profile-label">塩分 (g)</label>
+          <input type="number" class="profile-input" id="prof-goal-salt" placeholder="6" step="0.1">
+        </div>
+        <div class="profile-group">
+          <label class="profile-label">カロリー (kcal)</label>
+          <input type="number" class="profile-input" id="prof-goal-kcal" placeholder="2000" step="10">
+        </div>
+        <div class="profile-group">
+          <label class="profile-label">許容誤差 (±%)</label>
+          <input type="number" class="profile-input" id="prof-goal-tolerance" placeholder="10" step="1">
+        </div>
+      </div>
+      <div style="font-size:10px;color:var(--text-muted);margin-top:4px;line-height:1.5;">
+        目標±許容誤差の範囲内なら「OK」、超過は「超過」、不足は「不足」として日々の分析に反映されます。
+      </div>
+    </div>
+
     <button class="btn-submit" onclick="saveProfile()" data-i18n="btn_save">保存する</button>
 
     <!-- 通知設定 -->
@@ -2179,9 +2293,46 @@
     return formatDate(d);
   }
 
+  // ロードマップから週の体重目標を自動算出する。
+  // 大会(または仕上げ日)と目標体重、最新の実体重から線形補間で求める。
+  // 算出不可なら 0 を返す。
+  function getAutoWeekGoal(date) {
+    const peakDateStr = localStorage.getItem('peak_date') || localStorage.getItem('contest_date');
+    const contestWeight = parseFloat(localStorage.getItem('contest_weight'));
+    if (!peakDateStr || !contestWeight) return 0;
+    const [py, pm, pd] = peakDateStr.split('-').map(Number);
+    const peakDate = new Date(py, pm - 1, pd); peakDate.setHours(0,0,0,0);
+    const today = new Date(); today.setHours(0,0,0,0);
+    // 期限切れ
+    if (peakDate <= today) return 0;
+    // 直近の体重を起点に
+    const sortedRecs = [...records].sort((a,b) => b.date.localeCompare(a.date));
+    const latestWeight = sortedRecs.find(r => r.weight)?.weight;
+    if (!latestWeight) return 0;
+    const totalDays = Math.round((peakDate - today) / 86400000);
+    if (totalDays <= 0) return 0;
+    // 週の中央(水曜=日曜+3日)を対象に
+    const base = new Date(date); base.setHours(0,0,0,0);
+    base.setDate(base.getDate() - base.getDay() + 3);
+    const days = Math.round((base - today) / 86400000);
+    const ratio = Math.max(0, Math.min(1, days / totalDays));
+    const w = latestWeight - (latestWeight - contestWeight) * ratio;
+    return parseFloat(w.toFixed(1));
+  }
+
+  // 手動設定があればそれを優先、無ければ自動値を返す。
+  // 既存呼び出しは戻り値の有無のみ気にしているのでそのまま動く。
   function getWeekGoal(date) {
     const key = getWeekKey(date);
-    return weeklyGoals[key] || 0;
+    const manual = weeklyGoals[key];
+    if (manual && manual > 0) return manual;
+    return getAutoWeekGoal(date);
+  }
+
+  // 自動値かどうか判定（UI表示用）
+  function isWeekGoalAuto(date) {
+    const key = getWeekKey(date);
+    return !(weeklyGoals[key] && weeklyGoals[key] > 0);
   }
 
   function setWeekGoal(date, weight) {
@@ -2216,7 +2367,8 @@
   let currentUser = null;
   const STORAGE_KEYS = ['training_records','gym_data','water_data','user_profile',
                         'gym_presets','water_quick_btns','activity_presets','weekly_goals',
-                        'contest_date','contest_name','contest_weight'];
+                        'contest_date','contest_name','contest_weight','peak_date',
+                        'nutrition_goals','display_name_custom'];
 
   // Kotlinから呼ばれるコールバック
   function onFirebaseSignIn(uid, displayName, email) {
@@ -2406,12 +2558,18 @@
   function updateWelcome() {
     const el = document.getElementById('top-welcome-name');
     if (!el) return;
+    // 優先順位: ユーザーがプロフィールで設定したカスタム表示名 > ログイン時のアカウント名 > プロフィールのnickname > "ゲスト"
+    const custom = (localStorage.getItem('display_name_custom') || '').trim();
+    if (custom) {
+      el.textContent = custom;
+      return;
+    }
     if (currentUser && currentUser.displayName) {
       el.textContent = currentUser.displayName.split(' ')[0]; // 名前の最初だけ
-    } else {
-      const profile = JSON.parse(localStorage.getItem('user_profile') || '{}');
-      el.textContent = profile.nickname || t('guest');
+      return;
     }
+    const profile = JSON.parse(localStorage.getItem('user_profile') || '{}');
+    el.textContent = profile.nickname || t('guest');
   }
 
   // ==================
@@ -2534,7 +2692,7 @@
     const r = records.find(x => x.date === date);
     // データがない日付は全フィールドをクリア
     if (!r) {
-      ['rec-weight','rec-sleep','rec-p','rec-f','rec-c','rec-kcal','rec-salt','rec-steps','rec-salon','rec-memo'].forEach(id=>{
+      ['rec-weight','rec-sleep','rec-p','rec-f','rec-c','rec-kcal','rec-salt','rec-steps','rec-salon','rec-memo','rec-bedtime','rec-waketime'].forEach(id=>{
         const el = document.getElementById(id);
         if (el) el.value = '';
       });
@@ -2549,6 +2707,11 @@
     // 既存データを各フィールドに流し込む
     document.getElementById('rec-weight').value = r.weight||'';
     document.getElementById('rec-sleep').value = r.sleep||'';
+    // 就寝・起床時刻（保存済みなら復元、なければ睡眠時間からは時刻復元できないので空のまま）
+    const recBed = document.getElementById('rec-bedtime');
+    const recWake = document.getElementById('rec-waketime');
+    if (recBed) recBed.value = r.bedtime || '';
+    if (recWake) recWake.value = r.waketime || '';
     document.getElementById('rec-p').value = r.p||'';
     document.getElementById('rec-f').value = r.f||'';
     document.getElementById('rec-c').value = r.c||'';
@@ -2578,6 +2741,22 @@
     document.getElementById('rec-kcal').value = k>0?k:'';
   }
 
+  // 就寝時刻と起床時刻から睡眠時間(h)を計算してフィールドに反映
+  // prefix = 'rec' or 'edit'
+  function calcSleepFromBedWake(prefix) {
+    const bed = document.getElementById(prefix + '-bedtime')?.value;
+    const wake = document.getElementById(prefix + '-waketime')?.value;
+    const sleepEl = document.getElementById(prefix + '-sleep');
+    if (!bed || !wake || !sleepEl) return;
+    const [bh, bm] = bed.split(':').map(Number);
+    const [wh, wm] = wake.split(':').map(Number);
+    let mins = (wh*60+wm) - (bh*60+bm);
+    // 翌日にまたぐケース（23:00 → 06:30 など）
+    if (mins <= 0) mins += 24*60;
+    const hours = Math.round(mins / 6) / 10; // 0.1h単位に丸め
+    sleepEl.value = hours;
+  }
+
   function toggleTraining() {
     trainingOn = !trainingOn;
     document.getElementById('training-toggle').classList.toggle('on', trainingOn);
@@ -2598,6 +2777,8 @@
       date,
       weight: parseFloat(document.getElementById('rec-weight').value)||null,
       sleep: parseFloat(document.getElementById('rec-sleep').value)||null,
+      bedtime: document.getElementById('rec-bedtime')?.value || null,
+      waketime: document.getElementById('rec-waketime')?.value || null,
       p: parseFloat(document.getElementById('rec-p').value)||null,
       f: parseFloat(document.getElementById('rec-f').value)||null,
       c: parseFloat(document.getElementById('rec-c').value)||null,
@@ -2621,7 +2802,7 @@
   }
 
   function resetForm() {
-    ['rec-weight','rec-sleep','rec-p','rec-f','rec-c','rec-kcal','rec-salt','rec-steps','rec-salon','rec-memo'].forEach(id=>document.getElementById(id).value='');
+    ['rec-weight','rec-sleep','rec-p','rec-f','rec-c','rec-kcal','rec-salt','rec-steps','rec-salon','rec-memo','rec-bedtime','rec-waketime'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
     recActivities = []; renderActivityList();
     trainingOn=false; selectedMuscles=[];
     document.getElementById('training-toggle').classList.remove('on');
@@ -2830,6 +3011,10 @@
   const PREMIUM_HISTORY_DAYS = 30;
 
   function isPremium() {
+    // 開発中フラグ: 開発者ビルドでは常にプレミアム扱い（trueを返す）
+    // 本番リリース時にはこのDEV_UNLOCKを false にする
+    const DEV_UNLOCK_PREMIUM = true;
+    if (DEV_UNLOCK_PREMIUM) return true;
     if (typeof AndroidBridge !== 'undefined' && typeof AndroidBridge.isPremium === 'function') {
       const r = AndroidBridge.isPremium();
       return r === true || r === 'true';
@@ -3014,11 +3199,21 @@
     });
     html += '</div>';
 
-    // 週目標設定
+    // 週目標設定（自動算出なら「AUTO」バッジ、手動値ならリセット可）
+    const isAuto = isWeekGoalAuto(weekStart);
     html += '<div class="cal-goal-row">';
     html += '<span class="cal-goal-label">'+t('week_goal_row')+'</span>';
     html += '<div style="display:flex;align-items:center;gap:8px;">';
-    html += '<span class="cal-goal-val">' + (weekGoal > 0 ? weekGoal + 'kg' : t('not_set')) + '</span>';
+    if (weekGoal > 0) {
+      html += '<span class="cal-goal-val">' + weekGoal + 'kg</span>';
+      if (isAuto) {
+        html += '<span style="font-size:9px;background:rgba(0,212,255,0.18);color:var(--accent2);border-radius:6px;padding:2px 6px;letter-spacing:0.08em;">AUTO</span>';
+      } else {
+        html += '<button class="cal-goal-edit" onclick="resetWeekGoalToAuto()" style="font-size:10px;background:none;border:1px solid var(--border);color:var(--text-muted);">自動に戻す</button>';
+      }
+    } else {
+      html += '<span class="cal-goal-val">' + t('not_set') + '</span>';
+    }
     html += '<button class="cal-goal-edit" onclick="openWeightGoalModal()">'+t('set_btn')+'</button>';
     html += '</div></div>';
 
@@ -3090,6 +3285,26 @@
     const current = getWeekGoal(base);
     document.getElementById('wgoal-modal').classList.add('open');
     document.getElementById('wgoal-input').value = current > 0 ? current : '';
+    // 自動算出値をヒントとして表示
+    const auto = getAutoWeekGoal(base);
+    const hintEl = document.getElementById('wgoal-auto-hint');
+    if (hintEl) {
+      hintEl.textContent = auto > 0
+        ? `（ロードマップからの自動値: ${auto} kg）`
+        : '（自動算出には大会日と目標体重が必要です）';
+    }
+  }
+
+  // 手動の週目標を消して自動値に戻す
+  function resetWeekGoalToAuto() {
+    const now = new Date();
+    const base = new Date(now);
+    base.setDate(now.getDate() - now.getDay() + weekCalOffset * 7);
+    const key = getWeekKey(base);
+    delete weeklyGoals[key];
+    localStorage.setItem('weekly_goals', JSON.stringify(weeklyGoals));
+    renderStats();
+    showToast('自動算出に戻しました', false);
   }
   function closeWeightGoalModal() { document.getElementById('wgoal-modal').classList.remove('open'); }
   function handleWGoalOverlay(e) { if(e.target===document.getElementById('wgoal-modal')) closeWeightGoalModal(); }
@@ -3103,6 +3318,34 @@
     closeWeightGoalModal();
     renderStats();
     showToast(t('toast_goal_set'), false);
+  }
+
+  // ===== 栄養目標値 =====
+  // 既定値はあくまでフォールバック。ユーザー設定があればそれを優先。
+  const DEFAULT_NUTRITION_GOALS = { p: 180, f: 50, c: 200, salt: 6, kcal: 2000, tolerance: 10 };
+  function getNutritionGoals() {
+    try {
+      const raw = JSON.parse(localStorage.getItem('nutrition_goals') || '{}');
+      return {
+        p: raw.p ?? DEFAULT_NUTRITION_GOALS.p,
+        f: raw.f ?? DEFAULT_NUTRITION_GOALS.f,
+        c: raw.c ?? DEFAULT_NUTRITION_GOALS.c,
+        salt: raw.salt ?? DEFAULT_NUTRITION_GOALS.salt,
+        kcal: raw.kcal ?? DEFAULT_NUTRITION_GOALS.kcal,
+        tolerance: raw.tolerance ?? DEFAULT_NUTRITION_GOALS.tolerance,
+      };
+    } catch (e) { return { ...DEFAULT_NUTRITION_GOALS }; }
+  }
+
+  // 値と目標を比較して状態を返す
+  // 戻り値: { state: 'over'|'under'|'ok', diff: 数値, pct: %差 }
+  function evalGoal(value, goal, tolerance) {
+    if (value == null || !goal) return { state: 'na', diff: 0, pct: 0 };
+    const diff = value - goal;
+    const pct = (diff / goal) * 100;
+    const tol = tolerance != null ? tolerance : 10;
+    if (Math.abs(pct) <= tol) return { state: 'ok', diff, pct };
+    return { state: diff > 0 ? 'over' : 'under', diff, pct };
   }
 
   // ===== 体重変動分析 =====
@@ -3138,14 +3381,20 @@
       items.push({icon:'📈', cls:'warn', text:t('wa_increase').replace('{0}',diff.toFixed(2))});
     }
 
-    // ② 塩分（前日）→ むくみの最大要因
+    // ② 塩分（前日）→ むくみの最大要因。目標値との比較で評価
+    const NG = getNutritionGoals();
     if (prevRec.salt != null) {
-      if (prevRec.salt > 8) {
-        items.push({icon:'🧂', cls:'bad', text:t('wa_salt_high').replace('{0}',prevRec.salt).replace('{1}',diff > 0.3 ? t('wa_salt_high_main') : t('wa_salt_high_alt'))});
-      } else if (prevRec.salt > 6) {
-        items.push({icon:'🧂', cls:'warn', text:t('wa_salt_mid').replace('{0}',prevRec.salt)});
-      } else {
-        items.push({icon:'🧂', cls:'good', text:t('wa_salt_ok').replace('{0}',prevRec.salt)});
+      const e = evalGoal(prevRec.salt, NG.salt, NG.tolerance);
+      if (e.state === 'over') {
+        const severe = e.pct >= 30; // 30%以上の超過は重度
+        items.push({icon:'🧂', cls: severe ? 'bad' : 'warn',
+          text: `前日の塩分 ${prevRec.salt}g（目標 ${NG.salt}g・+${e.diff.toFixed(1)}g / +${e.pct.toFixed(0)}%）。むくみで体重が増えやすい状態です。`});
+      } else if (e.state === 'under') {
+        items.push({icon:'🧂', cls:'good',
+          text: `前日の塩分 ${prevRec.salt}g（目標 ${NG.salt}g・${e.diff.toFixed(1)}g）。控えめでむくみ要因は少ないです。`});
+      } else if (e.state === 'ok') {
+        items.push({icon:'🧂', cls:'good',
+          text: `前日の塩分 ${prevRec.salt}g（目標 ${NG.salt}g）。許容範囲内です。`});
       }
     }
 
@@ -3170,45 +3419,56 @@
       }
     }
 
-    // ⑤ カロリー収支（前日）
+    // ⑤ カロリー収支（前日）— 目標との比較
     if (prevRec.kcal) {
-      if (prevRec.kcal > 2300) {
-        items.push({icon:'🔥', cls:'bad', text:t('wa_kcal_high').replace('{0}',prevRec.kcal)});
-      } else if (prevRec.kcal > 2000) {
-        items.push({icon:'🔥', cls:'warn', text:t('wa_kcal_mid').replace('{0}',prevRec.kcal)});
-      } else if (prevRec.kcal < 1600) {
-        items.push({icon:'🔥', cls:'warn', text:t('wa_kcal_low').replace('{0}',prevRec.kcal)});
-      } else {
-        items.push({icon:'🔥', cls:'good', text:t('wa_kcal_ok').replace('{0}',prevRec.kcal)});
+      const e = evalGoal(prevRec.kcal, NG.kcal, NG.tolerance);
+      if (e.state === 'over') {
+        items.push({icon:'🔥', cls: e.pct >= 20 ? 'bad' : 'warn',
+          text: `前日のカロリー ${prevRec.kcal}kcal（目標 ${NG.kcal}・+${Math.round(e.diff)}kcal）。摂りすぎ傾向です。`});
+      } else if (e.state === 'under') {
+        items.push({icon:'🔥', cls: 'warn',
+          text: `前日のカロリー ${prevRec.kcal}kcal（目標 ${NG.kcal}・${Math.round(e.diff)}kcal）。不足気味です。`});
+      } else if (e.state === 'ok') {
+        items.push({icon:'🔥', cls:'good', text:`前日のカロリー ${prevRec.kcal}kcal（目標 ${NG.kcal}）。許容範囲内です。`});
       }
     }
 
-    // ⑥ 炭水化物（前日）→ グリコーゲン＋水分貯留
+    // ⑥ 炭水化物（前日）→ グリコーゲン＋水分貯留。目標との比較
     if (prevRec.c != null) {
-      if (prevRec.c > 260) {
-        items.push({icon:'🍚', cls:'warn', text:t('wa_carb_high').replace('{0}',prevRec.c)});
-      } else if (prevRec.c > 220) {
-        items.push({icon:'🍚', cls:'', text:t('wa_carb_mid').replace('{0}',prevRec.c)});
-      } else if (prevRec.c < 140) {
-        items.push({icon:'🍚', cls:'warn', text:t('wa_carb_low').replace('{0}',prevRec.c)});
+      const e = evalGoal(prevRec.c, NG.c, NG.tolerance);
+      if (e.state === 'over') {
+        items.push({icon:'🍚', cls:'warn',
+          text: `前日の炭水化物 ${prevRec.c}g（目標 ${NG.c}g・+${e.diff.toFixed(0)}g）。グリコーゲン＋水分で一時的に増えやすい。`});
+      } else if (e.state === 'under') {
+        items.push({icon:'🍚', cls:'warn',
+          text: `前日の炭水化物 ${prevRec.c}g（目標 ${NG.c}g・${e.diff.toFixed(0)}g）。不足で枯渇気味の可能性。`});
       }
     }
 
-    // ⑦ 脂質（前日）
+    // ⑦ 脂質（前日）— 目標との比較
     if (prevRec.f != null) {
-      if (prevRec.f > 65) {
-        items.push({icon:'🫒', cls:'bad', text:t('wa_fat_high').replace('{0}',prevRec.f)});
-      } else if (prevRec.f > 50) {
-        items.push({icon:'🫒', cls:'warn', text:t('wa_fat_mid').replace('{0}',prevRec.f)});
+      const e = evalGoal(prevRec.f, NG.f, NG.tolerance);
+      if (e.state === 'over') {
+        items.push({icon:'🫒', cls: e.pct >= 30 ? 'bad' : 'warn',
+          text: `前日の脂質 ${prevRec.f}g（目標 ${NG.f}g・+${e.diff.toFixed(0)}g）。摂りすぎです。`});
+      } else if (e.state === 'under') {
+        items.push({icon:'🫒', cls:'',
+          text: `前日の脂質 ${prevRec.f}g（目標 ${NG.f}g）。少なめです。`});
       }
     }
 
-    // ⑧ タンパク質（前日）
+    // ⑧ タンパク質（前日）— 目標との比較
     if (prevRec.p != null) {
-      if (prevRec.p < 150) {
-        items.push({icon:'🥩', cls:'warn', text:t('wa_protein_low').replace('{0}',prevRec.p)});
-      } else if (prevRec.p >= 180) {
-        items.push({icon:'🥩', cls:'good', text:t('wa_protein_ok').replace('{0}',prevRec.p)});
+      const e = evalGoal(prevRec.p, NG.p, NG.tolerance);
+      if (e.state === 'under') {
+        items.push({icon:'🥩', cls:'warn',
+          text: `前日のタンパク質 ${prevRec.p}g（目標 ${NG.p}g・${e.diff.toFixed(0)}g）。不足です。`});
+      } else if (e.state === 'over') {
+        items.push({icon:'🥩', cls:'good',
+          text: `前日のタンパク質 ${prevRec.p}g（目標 ${NG.p}g・+${e.diff.toFixed(0)}g）。十分摂取できています。`});
+      } else if (e.state === 'ok') {
+        items.push({icon:'🥩', cls:'good',
+          text: `前日のタンパク質 ${prevRec.p}g（目標 ${NG.p}g）。許容範囲内です。`});
       }
     }
 
@@ -3473,8 +3733,11 @@
     const container = document.getElementById('roadmap-chart-container');
     if (!container) return;
     const contestDateStr = localStorage.getItem('contest_date');
+    // 仕上げ日（ピーク日）が設定されていればそれを基準に。未設定なら大会日を使う
+    const peakDateStr = localStorage.getItem('peak_date');
+    const targetDateStr = peakDateStr || contestDateStr;
     const contestWeight = parseFloat(localStorage.getItem('contest_weight'));
-    if (!contestDateStr) {
+    if (!targetDateStr) {
       container.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:20px;font-size:13px;">'+t('roadmap_set_date')+'</div>';
       return;
     }
@@ -3482,7 +3745,7 @@
       container.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:20px;font-size:13px;">'+t('roadmap_set_weight')+'</div>';
       return;
     }
-    const [cy,cm,cd] = contestDateStr.split('-').map(Number);
+    const [cy,cm,cd] = targetDateStr.split('-').map(Number);
     const contestDate = new Date(cy, cm-1, cd);
     const today = new Date(); today.setHours(0,0,0,0);
     if (contestDate <= today) {
@@ -3670,6 +3933,10 @@
     document.getElementById('edit-date-key').value = dateKey;
     document.getElementById('edit-weight').value = r.weight||'';
     document.getElementById('edit-sleep').value = r.sleep||'';
+    const eBed = document.getElementById('edit-bedtime');
+    const eWake = document.getElementById('edit-waketime');
+    if (eBed) eBed.value = r.bedtime || '';
+    if (eWake) eWake.value = r.waketime || '';
     document.getElementById('edit-p').value = r.p||'';
     document.getElementById('edit-f').value = r.f||'';
     document.getElementById('edit-c').value = r.c||'';
@@ -3715,6 +3982,8 @@
       ...records[idx],
       weight: parseFloat(document.getElementById('edit-weight').value)||null,
       sleep: parseFloat(document.getElementById('edit-sleep').value)||null,
+      bedtime: document.getElementById('edit-bedtime')?.value || null,
+      waketime: document.getElementById('edit-waketime')?.value || null,
       p: parseFloat(document.getElementById('edit-p').value)||null,
       f: parseFloat(document.getElementById('edit-f').value)||null,
       c: parseFloat(document.getElementById('edit-c').value)||null,
@@ -4061,9 +4330,10 @@
     document.getElementById('sw-btn-start').style.display = 'none';
     document.getElementById('sw-btn-stop').style.display = 'flex';
     document.getElementById('sw-display').classList.add('running');
-    const t = swStartTime;
+    // 注意: 翻訳関数 t() を局所変数 t で上書きしないよう now を使う
+    const now = swStartTime;
     document.getElementById('sw-start-label').textContent =
-      t('sw_start_prefix') + `${String(t.getHours()).padStart(2,'0')}:${String(t.getMinutes()).padStart(2,'0')}`;
+      t('sw_start_prefix') + `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
   }
 
   function swStop() {
@@ -4076,9 +4346,10 @@
     document.getElementById('sw-btn-start').style.display = 'flex';
     document.getElementById('sw-btn-stop').style.display = 'none';
     document.getElementById('sw-display').classList.remove('running');
-    const t = swEndTime;
+    // 翻訳関数 t() を局所変数 t で上書きしないよう now を使う
+    const now = swEndTime;
     document.getElementById('sw-end-label').textContent =
-      t('sw_end_prefix') + `${String(t.getHours()).padStart(2,'0')}:${String(t.getMinutes()).padStart(2,'0')}`;
+      t('sw_end_prefix') + `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
   }
 
   function swReset() {
@@ -4114,6 +4385,7 @@
   let longPressTimer = null;
   let floatingEl = null;
   let overlayEl = null;
+  let dropIndicatorEl = null; // ドロップ位置を「上/下」で明示するインジケータ
 
   function gymDragStart(e, ei) {
     e.preventDefault();
@@ -4142,7 +4414,7 @@
   function startDrag(e, ei, card) {
     if (navigator.vibrate) navigator.vibrate(40);
     const rect = card.getBoundingClientRect();
-    dragState = { srcIdx: ei, curIdx: ei, offsetY: e.clientY - rect.top };
+    dragState = { srcIdx: ei, curIdx: ei, offsetY: e.clientY - rect.top, dropPos: null };
 
     floatingEl = card.cloneNode(true);
     floatingEl.classList.add('drag-floating');
@@ -4154,6 +4426,13 @@
     overlayEl.className = 'gym-drag-overlay';
     document.body.appendChild(overlayEl);
 
+    // ドロップ位置インジケータを生成
+    dropIndicatorEl = document.createElement('div');
+    dropIndicatorEl.className = 'gym-drop-indicator';
+    dropIndicatorEl.innerHTML = '<span class="badge">▲ ここに移動</span><span class="line"></span>';
+    dropIndicatorEl.style.display = 'none';
+    document.body.appendChild(dropIndicatorEl);
+
     document.addEventListener('pointermove', onDragMove, {passive:false});
     document.addEventListener('pointerup', onDragEnd, {once:true});
   }
@@ -4164,50 +4443,71 @@
     const y = e.clientY;
     floatingEl.style.top = (y - dragState.offsetY) + 'px';
 
-    // drag-active以外の全カード
-    const cards = [...document.querySelectorAll('#gym-exercise-list .gym-exercise-card')]
-      .filter(c => !c.classList.contains('drag-floating') && !c.classList.contains('drag-active'));
+    // drag-active 以外の全カード（順序保持のため allCards も別途取る）
+    const allCards = [...document.querySelectorAll('#gym-exercise-list .gym-exercise-card')];
+    const cards = allCards.filter(c => !c.classList.contains('drag-floating') && !c.classList.contains('drag-active'));
 
     cards.forEach(c => { c.classList.remove('drag-over'); c.style.borderTop = ''; c.style.borderBottom = ''; });
+    if (cards.length === 0) { if (dropIndicatorEl) dropIndicatorEl.style.display='none'; return; }
 
-    if (cards.length === 0) return;
+    // どのカードのどちら側に挿入するか
+    // targetIdx は gymExercises の挿入位置（splice の引数として使う前のインデックス）
+    let targetIdx = 0;
+    let indicatorTop = 0;
+    let positionLabel = ''; // 「上に移動」「下に移動」「最上部に挿入」「最下部に挿入」
 
-    // Y座標でどのカードとカードの間にいるか判定
-    let targetIdx = dragState.srcIdx;
-
-    // 最初のカードより上
-    const firstRect = cards[0].getBoundingClientRect();
-    if (y < firstRect.top + firstRect.height * 0.5) {
-      targetIdx = 0;
-      cards[0].style.borderTop = '3px solid var(--accent)';
-    } else {
-      let found = false;
-      for (let i = 0; i < cards.length; i++) {
-        const r = cards[i].getBoundingClientRect();
-        if (y >= r.top && y <= r.bottom) {
-          if (y < r.top + r.height * 0.5) {
-            // カードの上半分 → このカードの前に挿入
-            targetIdx = i < dragState.srcIdx ? i : i;
-            cards[i].style.borderTop = '3px solid var(--accent)';
-          } else {
-            // カードの下半分 → このカードの後に挿入
-            targetIdx = i < dragState.srcIdx ? i + 1 : i + 1;
-            cards[i].style.borderBottom = '3px solid var(--accent)';
-          }
-          found = true;
-          break;
-        }
+    // どのカードに最も近いか
+    let nearestIdx = -1;
+    for (let i = 0; i < cards.length; i++) {
+      const r = cards[i].getBoundingClientRect();
+      if (y >= r.top && y <= r.bottom) { nearestIdx = i; break; }
+    }
+    if (nearestIdx === -1) {
+      // どのカードの上/下にもいない → 最初の上か最後の下か
+      const firstRect = cards[0].getBoundingClientRect();
+      const lastRect = cards[cards.length - 1].getBoundingClientRect();
+      if (y < firstRect.top) {
+        targetIdx = 0; indicatorTop = firstRect.top - 6; positionLabel = '▲ 最上部へ移動';
+      } else {
+        targetIdx = allCards.indexOf(cards[cards.length-1]) + 1;
+        // drag-active を一旦取り除いた配列の長さで gym 配列上の挿入位置を考えるが、
+        // 並び順は表示通りなので「最下部」とする
+        targetIdx = gymExercises.length; // 末尾
+        indicatorTop = lastRect.bottom + 2; positionLabel = '▼ 最下部へ移動';
       }
-      if (!found) {
-        // 最後のカードより下
-        const lastRect = cards[cards.length-1].getBoundingClientRect();
-        if (y > lastRect.bottom - lastRect.height * 0.5) {
-          targetIdx = cards.length;
-          cards[cards.length-1].style.borderBottom = '3px solid var(--accent)';
-        }
+    } else {
+      const r = cards[nearestIdx].getBoundingClientRect();
+      const mid = r.top + r.height / 2;
+      // gym-exercise-card の DOM index → gymExercises 配列での実 index
+      // cards は drag-active を除いた配列なので、allCards 上の index を取り直す
+      const cardEl = cards[nearestIdx];
+      const realIdx = allCards.indexOf(cardEl); // gymExercises 配列とも対応
+      if (y < mid) {
+        // 上半分: この要素の「前」に挿入 → この要素より上に移動
+        targetIdx = realIdx;
+        indicatorTop = r.top - 6;
+        positionLabel = '▲ この上に移動';
+      } else {
+        // 下半分: この要素の「後ろ」に挿入 → この要素より下に移動
+        targetIdx = realIdx + 1;
+        indicatorTop = r.bottom + 2;
+        positionLabel = '▼ この下に移動';
       }
     }
+
     dragState.curIdx = targetIdx;
+
+    // インジケータを更新
+    if (dropIndicatorEl) {
+      const listEl = document.getElementById('gym-exercise-list');
+      const listRect = listEl ? listEl.getBoundingClientRect() : { left: 0, right: window.innerWidth };
+      dropIndicatorEl.style.display = 'flex';
+      dropIndicatorEl.style.top = indicatorTop + 'px';
+      dropIndicatorEl.style.left = listRect.left + 'px';
+      dropIndicatorEl.style.right = (window.innerWidth - listRect.right) + 'px';
+      const badge = dropIndicatorEl.querySelector('.badge');
+      if (badge) badge.textContent = positionLabel;
+    }
   }
 
   function onDragEnd(e) {
@@ -4215,10 +4515,11 @@
     if (!dragState) return;
 
     const src = dragState.srcIdx;
-    const dst = dragState.curIdx;
+    const dst = dragState.curIdx; // gymExercises 配列上での挿入位置
 
     if (floatingEl) { floatingEl.remove(); floatingEl = null; }
     if (overlayEl) { overlayEl.remove(); overlayEl = null; }
+    if (dropIndicatorEl) { dropIndicatorEl.remove(); dropIndicatorEl = null; }
 
     document.querySelectorAll('#gym-exercise-list .gym-exercise-card').forEach(c => {
       c.classList.remove('drag-active', 'drag-over', 'drag-floating');
@@ -4228,14 +4529,17 @@
 
     dragState = null;
 
-    if (src !== dst) {
-      const item = gymExercises.splice(src, 1)[0];
-      // dst はdrag-active除いたインデックスなので調整
-      const insertAt = dst > src ? dst - 1 : dst;
-      gymExercises.splice(insertAt, 0, item);
+    // src と「同じ位置」または「すぐ次の位置」へのドロップは実質変化なしなのでスキップ
+    if (dst === src || dst === src + 1) {
       renderGymExercises();
-      autoSaveGym();
+      return;
     }
+    const item = gymExercises.splice(src, 1)[0];
+    // src を取り除いた後の挿入位置を補正
+    const insertAt = dst > src ? dst - 1 : dst;
+    gymExercises.splice(insertAt, 0, item);
+    renderGymExercises();
+    autoSaveGym();
   }
 
 
@@ -4274,7 +4578,138 @@
     localStorage.setItem('gym_data', JSON.stringify(gymData));
   }
 
+  // ==================
+  // GYM ANALYSIS（種目ごとのRM推移・停滞検知）
+  // ==================
+  function toggleGymAnalysis() {
+    const body = document.getElementById('gym-analysis-body');
+    const tg = document.getElementById('gym-analysis-toggle');
+    if (!body) return;
+    const open = body.style.display === 'block';
+    body.style.display = open ? 'none' : 'block';
+    if (tg) tg.textContent = open ? '▼' : '▲';
+    if (!open) renderGymAnalysis();
+  }
+
+  // gym_data から各種目の履歴を集約。最大1RM(推定)と最終記録日を返す
+  function collectGymExerciseStats() {
+    const map = new Map(); // name → { last: {date, weight, reps, rm}, best: {date, rm, weight, reps}, count }
+    Object.keys(gymData).forEach(key => {
+      const data = gymData[key];
+      if (!data || !data.exercises) return;
+      // キーは "YYYY-MM-DD" もしくは "YYYY-MM-DD_部位"
+      const date = key.split('_')[0];
+      data.exercises.forEach(ex => {
+        if (!ex || !ex.name || !ex.sets) return;
+        const exName = ex.name;
+        let entry = map.get(exName);
+        if (!entry) {
+          entry = { name: exName, last: null, best: null, count: 0 };
+          map.set(exName, entry);
+        }
+        let bestSetRm = null, bestSet = null;
+        ex.sets.forEach(s => {
+          if (!s) return;
+          if (s.weight == null || s.reps == null) return;
+          if (s.weight === '自重' || s.weight === 'BW') return;
+          const rm = calcRM(s.weight, s.reps, exName);
+          if (rm == null) return;
+          if (bestSetRm == null || rm > bestSetRm) { bestSetRm = rm; bestSet = s; }
+        });
+        if (bestSetRm == null) return;
+        entry.count += 1;
+        // last: 日付が新しいものに更新
+        if (!entry.last || date > entry.last.date) {
+          entry.last = { date, weight: bestSet.weight, reps: bestSet.reps, rm: bestSetRm };
+        }
+        // best: rm が最大のものに更新
+        if (!entry.best || bestSetRm > entry.best.rm) {
+          entry.best = { date, weight: bestSet.weight, reps: bestSet.reps, rm: bestSetRm };
+        }
+      });
+    });
+    return [...map.values()];
+  }
+
+  function daysBetween(dateStr) {
+    const [y, m, d] = dateStr.split('-').map(Number);
+    const past = new Date(y, m-1, d); past.setHours(0,0,0,0);
+    const now = new Date(); now.setHours(0,0,0,0);
+    return Math.round((now - past) / 86400000);
+  }
+
+  // 停滞しきい値(日)。これ以上更新がないと「停滞」とみなす
+  const GYM_STALE_DAYS = 21;
+
+  function renderGymAnalysis() {
+    const el = document.getElementById('gym-analysis-content');
+    if (!el) return;
+    const stats = collectGymExerciseStats();
+    if (stats.length === 0) {
+      el.innerHTML = '<div style="color:var(--text-muted);font-size:13px;padding:8px 0;">分析できるデータがまだありません。重量とレップ数を記録すると、推定1RMと履歴が表示されます。</div>';
+      return;
+    }
+    // RMが新しい順 → 経過日が短い順
+    stats.sort((a, b) => {
+      const la = a.last?.date || '';
+      const lb = b.last?.date || '';
+      return lb.localeCompare(la);
+    });
+
+    const rows = stats.map(s => {
+      const last = s.last, best = s.best;
+      const daysSince = last ? daysBetween(last.date) : null;
+      const stale = daysSince != null && daysSince >= GYM_STALE_DAYS;
+      const isBest = last && best && last.date === best.date && last.rm === best.rm;
+      const dateLabel = (d) => {
+        const [y,m,dd] = d.split('-').map(Number);
+        return `${y}/${m}/${dd}`;
+      };
+      const lastStr = last ? `${last.weight}kg × ${last.reps}rep → 推定1RM <strong style="color:var(--accent);">${last.rm}kg</strong>` : '—';
+      const bestStr = best ? `Best 1RM <strong style="color:var(--accent2);">${best.rm}kg</strong> <span style="color:var(--text-muted);">(${best.weight}kg×${best.reps}rep / ${dateLabel(best.date)})</span>` : '';
+      const statusBadge = stale
+        ? `<span style="background:rgba(255,68,68,0.18);color:var(--danger);font-size:10px;padding:2px 8px;border-radius:6px;letter-spacing:0.05em;">停滞 ${daysSince}日更新無し</span>`
+        : (isBest ? `<span style="background:rgba(0,255,136,0.18);color:var(--success);font-size:10px;padding:2px 8px;border-radius:6px;letter-spacing:0.05em;">最新 = ベスト更新！</span>`
+                  : `<span style="background:var(--surface2);color:var(--text-muted);font-size:10px;padding:2px 8px;border-radius:6px;letter-spacing:0.05em;">${daysSince}日前</span>`);
+      return `
+        <div style="background:var(--surface2);border-radius:10px;padding:12px;margin-bottom:8px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;gap:8px;">
+            <span style="font-size:14px;font-weight:700;color:var(--text);">${s.name}</span>
+            ${statusBadge}
+          </div>
+          <div style="font-size:12px;color:var(--text);margin-bottom:4px;">最新: ${lastStr}</div>
+          ${bestStr ? `<div style="font-size:11px;color:var(--text-muted);">${bestStr}</div>` : ''}
+        </div>
+      `;
+    }).join('');
+
+    // ハイライト統計
+    const staleCount = stats.filter(s => s.last && daysBetween(s.last.date) >= GYM_STALE_DAYS).length;
+    const updatedCount = stats.filter(s => s.last && s.best && s.last.date === s.best.date && s.last.rm === s.best.rm && daysBetween(s.last.date) < 7).length;
+    const summary = `
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:12px;">
+        <div style="background:var(--surface2);border-radius:8px;padding:10px;text-align:center;">
+          <div style="font-size:9px;color:var(--text-muted);letter-spacing:0.08em;">SUM 種目数</div>
+          <div style="font-size:22px;font-family:'Bebas Neue',sans-serif;color:var(--accent);">${stats.length}</div>
+        </div>
+        <div style="background:var(--surface2);border-radius:8px;padding:10px;text-align:center;">
+          <div style="font-size:9px;color:var(--text-muted);letter-spacing:0.08em;">RECENT 更新</div>
+          <div style="font-size:22px;font-family:'Bebas Neue',sans-serif;color:var(--success);">${updatedCount}</div>
+        </div>
+        <div style="background:var(--surface2);border-radius:8px;padding:10px;text-align:center;">
+          <div style="font-size:9px;color:var(--text-muted);letter-spacing:0.08em;">STALE 停滞</div>
+          <div style="font-size:22px;font-family:'Bebas Neue',sans-serif;color:${staleCount>0?'var(--danger)':'var(--text-muted)'};">${staleCount}</div>
+        </div>
+      </div>
+      <div style="font-size:10px;color:var(--text-muted);margin-bottom:10px;">${GYM_STALE_DAYS}日以上更新がない種目は「停滞」と表示します。最新記録がベストと一致した場合は「ベスト更新」バッジが付きます。</div>
+    `;
+
+    el.innerHTML = summary + rows;
+  }
+
   function saveGym() {
+    // 保存時にストップウォッチが動いていたら停止する
+    if (swRunning) swStop();
     const key = getGymKey();
     if (!gymData[key]) gymData[key] = {};
     gymData[key].exercises = JSON.parse(JSON.stringify(gymExercises));
@@ -5498,9 +5933,23 @@
     document.getElementById('prof-age').value = userProfile.age||'';
     selectSex(userProfile.sex||'male');
     updateBMRPreview();
+    // カスタム表示名
+    const dispEl = document.getElementById('prof-display-name');
+    if (dispEl) dispEl.value = localStorage.getItem('display_name_custom') || '';
     document.getElementById('prof-contest-name').value = localStorage.getItem('contest_name') || '';
     document.getElementById('prof-contest-date').value = localStorage.getItem('contest_date') || '';
+    const peakEl = document.getElementById('prof-peak-date');
+    if (peakEl) peakEl.value = localStorage.getItem('peak_date') || '';
     document.getElementById('prof-contest-weight').value = localStorage.getItem('contest_weight') || '';
+    // 栄養目標値
+    const ng = getNutritionGoals();
+    const setIf = (id, v) => { const el = document.getElementById(id); if (el) el.value = (v == null ? '' : v); };
+    setIf('prof-goal-p', ng.p);
+    setIf('prof-goal-f', ng.f);
+    setIf('prof-goal-c', ng.c);
+    setIf('prof-goal-salt', ng.salt);
+    setIf('prof-goal-kcal', ng.kcal);
+    setIf('prof-goal-tolerance', ng.tolerance);
     loadNotifSettings();
     updateBackupVisibility();
     // プランステータス更新
@@ -5538,15 +5987,38 @@
     userProfile.height = parseFloat(document.getElementById('prof-height').value)||null;
     userProfile.age = parseInt(document.getElementById('prof-age').value)||null;
     localStorage.setItem('user_profile', JSON.stringify(userProfile));
+    // カスタム表示名
+    const dispEl = document.getElementById('prof-display-name');
+    const dispVal = dispEl ? dispEl.value.trim() : '';
+    if (dispVal) localStorage.setItem('display_name_custom', dispVal);
+    else localStorage.removeItem('display_name_custom');
+    updateWelcome();
     const cName = document.getElementById('prof-contest-name')?.value.trim() || '';
     const cDate = document.getElementById('prof-contest-date')?.value || '';
     if (cName) localStorage.setItem('contest_name', cName);
     else localStorage.removeItem('contest_name');
     if (cDate) localStorage.setItem('contest_date', cDate);
     else localStorage.removeItem('contest_date');
+    const peakDate = document.getElementById('prof-peak-date')?.value || '';
+    if (peakDate) localStorage.setItem('peak_date', peakDate);
+    else localStorage.removeItem('peak_date');
     const cWeight = document.getElementById('prof-contest-weight')?.value;
     if (cWeight) localStorage.setItem('contest_weight', cWeight);
     else localStorage.removeItem('contest_weight');
+    // 栄養目標値
+    const numOrNull = id => {
+      const v = document.getElementById(id)?.value;
+      return (v === '' || v == null) ? null : parseFloat(v);
+    };
+    const goals = {
+      p: numOrNull('prof-goal-p'),
+      f: numOrNull('prof-goal-f'),
+      c: numOrNull('prof-goal-c'),
+      salt: numOrNull('prof-goal-salt'),
+      kcal: numOrNull('prof-goal-kcal'),
+      tolerance: numOrNull('prof-goal-tolerance'),
+    };
+    localStorage.setItem('nutrition_goals', JSON.stringify(goals));
     updateContestCountdown();
     document.getElementById('profile-modal').classList.remove('open');
     showToast(t('toast_profile_saved'), false);
