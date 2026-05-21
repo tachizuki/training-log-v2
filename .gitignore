@@ -3,3 +3,15 @@ app/build/
 .idea/
 *.iml
 local.properties
+
+# ===== 署名情報（絶対にコミットしない） =====
+keystore.properties
+*.keystore
+*.jks
+release.keystore
+app/release.keystore
+
+# その他の機密
+*.pem
+*.p12
+google-services-account.json
