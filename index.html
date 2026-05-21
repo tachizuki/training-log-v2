@@ -236,9 +236,27 @@
   /* ===== PAYWALL ===== */
   .paywall-overlay { position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:300;display:none;align-items:flex-end;justify-content:center; }
   .paywall-overlay.open { display:flex; }
-  .paywall-sheet { background:var(--surface);border-radius:24px 24px 0 0;padding:32px 24px calc(32px + env(safe-area-inset-bottom));width:100%;max-width:480px;text-align:center; }
-  .paywall-feature { display:flex;align-items:center;gap:10px;padding:8px 0;font-size:13px;color:var(--text);text-align:left; }
+  .paywall-sheet { background:var(--surface);border-radius:24px 24px 0 0;padding:32px 24px calc(32px + env(safe-area-inset-bottom));width:100%;max-width:480px;text-align:center;max-height:90vh;overflow-y:auto; }
+  .paywall-feature { display:flex;align-items:center;gap:10px;padding:10px 12px;font-size:13px;color:var(--text);text-align:left;background:rgba(232,255,0,0.04);border-left:3px solid var(--accent);border-radius:6px;margin-bottom:8px; }
+  .paywall-feature-icon { font-size:18px; }
+  .paywall-feature-text { flex:1; }
+  .paywall-feature-badge { font-size:9px;background:var(--accent);color:var(--bg);padding:2px 7px;border-radius:6px;font-weight:700;letter-spacing:0.05em; }
+  .paywall-section-title { font-size:11px;color:var(--accent);letter-spacing:0.18em;font-weight:700;margin-bottom:10px;text-align:left;display:flex;align-items:center;gap:6px; }
   .paywall-list-banner { background:linear-gradient(135deg,rgba(232,255,0,0.06),rgba(0,212,255,0.04));border:1px solid rgba(232,255,0,0.2);border-radius:14px;padding:20px;text-align:center;margin-top:12px;cursor:pointer; }
+
+  /* ===== LOADING OVERLAY ===== */
+  .loading-overlay {
+    position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);
+    z-index:9999;display:none;align-items:center;justify-content:center;flex-direction:column;gap:18px;
+    backdrop-filter:blur(2px);
+  }
+  .loading-overlay.open { display:flex; }
+  .loading-spinner {
+    width:48px;height:48px;border:4px solid rgba(232,255,0,0.2);border-top-color:var(--accent);
+    border-radius:50%;animation:loading-rot 0.9s linear infinite;
+  }
+  @keyframes loading-rot { to { transform: rotate(360deg); } }
+  .loading-text { font-size:13px;color:var(--text);letter-spacing:0.05em; }
 
   .activity-add-btn { width: 100%; padding: 12px; background: rgba(0,255,136,0.06); border: 1px dashed rgba(0,255,136,0.3); border-radius: 12px; color: var(--success); font-size: 14px; cursor: pointer; }
   .activity-item { display: flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; margin-bottom: 8px; }
@@ -1038,18 +1056,59 @@
 </div>
 
 <!-- PAYWALL MODAL -->
+<!-- ===== LOADING OVERLAY ===== -->
+<div class="loading-overlay" id="loading-overlay">
+  <div class="loading-spinner"></div>
+  <div class="loading-text" id="loading-text">読み込み中...</div>
+</div>
+
+<!-- ===== お問い合わせモーダル ===== -->
+<div class="profile-modal-overlay" id="contact-modal" onclick="if(event.target===this)closeContactModal()" style="z-index:400;">
+  <div class="profile-modal-sheet" style="max-height:90vh;overflow-y:auto;">
+    <div class="profile-modal-title" data-i18n="contact_modal_title">📧 お問い合わせ</div>
+    <div style="font-size:12px;color:var(--text-muted);line-height:1.6;margin-bottom:14px;" data-i18n="contact_desc">不具合報告・機能要望・その他ご質問はこちらから送信してください。下の項目を入力して「メールを開く」をタップすると、お使いのメールアプリが起動します。</div>
+
+    <div class="profile-group full" style="margin-bottom:12px;">
+      <label class="profile-label" data-i18n="contact_category">📂 種類</label>
+      <select class="profile-input" id="contact-category" style="appearance:none;background-image:none;">
+        <option value="bug" data-i18n="contact_cat_bug">🐛 不具合報告</option>
+        <option value="feature" data-i18n="contact_cat_feature">💡 機能要望</option>
+        <option value="payment" data-i18n="contact_cat_payment">💳 課金・サブスクについて</option>
+        <option value="account" data-i18n="contact_cat_account">👤 アカウント・データについて</option>
+        <option value="other" data-i18n="contact_cat_other">❓ その他</option>
+      </select>
+    </div>
+
+    <div class="profile-group full" style="margin-bottom:12px;">
+      <label class="profile-label" data-i18n="contact_subject">タイトル</label>
+      <input type="text" class="profile-input" id="contact-subject" maxlength="80" data-i18n-ph="contact_subject_ph" placeholder="例: 体重グラフが表示されない">
+    </div>
+
+    <div class="profile-group full" style="margin-bottom:14px;">
+      <label class="profile-label" data-i18n="contact_body">詳細</label>
+      <textarea class="profile-input" id="contact-body" rows="6" maxlength="2000" data-i18n-ph="contact_body_ph" placeholder="どこで・どんな操作をしたら・何が起きたか具体的に書くと早く調査できます" style="resize:vertical;min-height:120px;"></textarea>
+    </div>
+
+    <div style="background:var(--surface2);border-radius:10px;padding:10px 12px;margin-bottom:14px;font-size:11px;color:var(--text-muted);line-height:1.6;" data-i18n="contact_info_note">送信時にメール本文の末尾にアプリのバージョン情報が自動付与されます。個人情報は含まれません。</div>
+
+    <button class="btn-submit" onclick="sendContactEmail()" data-i18n="contact_send">📨 メールアプリで送信する</button>
+    <button class="btn-submit" onclick="closeContactModal()" style="background:var(--surface2);color:var(--text-muted);border:1px solid var(--border);margin-top:8px;" data-i18n="btn_cancel">キャンセル</button>
+  </div>
+</div>
+
 <div class="paywall-overlay" id="paywall-modal">
   <div class="paywall-sheet">
     <div style="font-size:36px;margin-bottom:10px;">🔓</div>
     <div style="font-family:'Bebas Neue';font-size:30px;color:var(--accent);letter-spacing:0.1em;margin-bottom:6px;">PREMIUM</div>
     <div style="font-size:15px;color:var(--text);font-weight:700;margin-bottom:6px;" data-i18n="paywall_unlock">全期間のデータを解放する</div>
     <div style="font-size:13px;color:var(--text-muted);margin-bottom:20px;line-height:1.7;" id="paywall-desc-text">無料プランは直近30日の履歴が対象です。<br>プレミアムで大会準備のすべての記録を<br>いつでも振り返れます。</div>
-    <div style="background:var(--surface2);border-radius:14px;padding:16px 20px;margin-bottom:14px;text-align:left;">
-      <div class="paywall-feature"><span>📊</span><span data-i18n="paywall_f1">無制限の履歴閲覧・分析</span></div>
-      <div class="paywall-feature"><span>☁️</span><span data-i18n="paywall_f2">複数端末のクラウド同期</span></div>
-      <div class="paywall-feature"><span>🗺</span><span data-i18n="paywall_f3">大会ロードマップ</span></div>
-      <div class="paywall-feature"><span>📋</span><span data-i18n="paywall_f4">週レポート</span></div>
-      <div class="paywall-feature"><span>💪</span><span data-i18n="paywall_f5">筋トレ分析(RM・停滞検知)</span></div>
+    <div style="background:var(--surface2);border-radius:14px;padding:16px;margin-bottom:14px;text-align:left;">
+      <div class="paywall-section-title">🔓 <span data-i18n="paywall_unlocked_features">プレミアム登録で解放される機能</span></div>
+      <div class="paywall-feature"><span class="paywall-feature-icon">📊</span><span class="paywall-feature-text" data-i18n="paywall_f1">無制限の履歴閲覧・分析</span><span class="paywall-feature-badge" data-i18n="paywall_unlock_badge">解放</span></div>
+      <div class="paywall-feature"><span class="paywall-feature-icon">☁️</span><span class="paywall-feature-text" data-i18n="paywall_f2">複数端末のクラウド同期</span><span class="paywall-feature-badge" data-i18n="paywall_unlock_badge">解放</span></div>
+      <div class="paywall-feature"><span class="paywall-feature-icon">🗺</span><span class="paywall-feature-text" data-i18n="paywall_f3">大会ロードマップ</span><span class="paywall-feature-badge" data-i18n="paywall_unlock_badge">解放</span></div>
+      <div class="paywall-feature"><span class="paywall-feature-icon">📋</span><span class="paywall-feature-text" data-i18n="paywall_f4">週レポート</span><span class="paywall-feature-badge" data-i18n="paywall_unlock_badge">解放</span></div>
+      <div class="paywall-feature"><span class="paywall-feature-icon">💪</span><span class="paywall-feature-text" data-i18n="paywall_f5">筋トレ分析(RM・停滞検知)</span><span class="paywall-feature-badge" data-i18n="paywall_unlock_badge">解放</span></div>
     </div>
     <div style="background:rgba(0,255,136,0.08);border:1px solid rgba(0,255,136,0.25);border-radius:10px;padding:10px 12px;margin-bottom:14px;font-size:12px;color:var(--success);text-align:center;line-height:1.6;" data-i18n="paywall_trial">🎁 初回登録は <strong>14日間 無料</strong>。期間内のキャンセルなら課金なし</div>
     <button onclick="purchasePremium()" style="width:100%;padding:16px;background:var(--accent);color:var(--bg);border:none;border-radius:14px;font-size:16px;font-weight:700;cursor:pointer;margin-bottom:10px;" data-i18n="paywall_price">14日間無料で試す</button>
@@ -1364,6 +1423,25 @@
       <button onclick="openImportPicker()" style="width:100%;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;cursor:pointer;" data-i18n="btn_import">📥 データをインポート</button>
     </div>
 
+    <!-- ===== お問い合わせ ===== -->
+    <div id="contact-section" style="margin-top:20px;border-top:1px solid var(--border);padding-top:16px;">
+      <div style="font-size:11px;color:var(--text-muted);letter-spacing:0.1em;margin-bottom:10px;" data-i18n="contact_title">サポート</div>
+      <button onclick="openContactModal()" style="width:100%;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;cursor:pointer;" data-i18n="btn_contact">📧 お問い合わせ・不具合報告</button>
+    </div>
+
+    <!-- ===== 管理者専用セクション（管理者ログイン時のみ表示） ===== -->
+    <div id="admin-section" style="display:none;margin-top:20px;border-top:1px solid rgba(232,255,0,0.4);padding-top:16px;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+        <span style="font-size:11px;color:var(--accent);letter-spacing:0.15em;font-weight:700;" data-i18n="admin_title">⚙️ 管理者メニュー</span>
+        <span style="font-size:9px;background:var(--accent);color:var(--bg);padding:2px 7px;border-radius:6px;font-weight:700;letter-spacing:0.05em;">ADMIN</span>
+      </div>
+      <div style="font-size:11px;color:var(--text-muted);margin-bottom:10px;line-height:1.6;" data-i18n="admin_desc">このアカウントは管理者として認識されています。全プレミアム機能が解放されています。</div>
+      <button onclick="adminForceSync()" style="width:100%;padding:10px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:13px;cursor:pointer;margin-bottom:6px;" data-i18n="admin_force_sync">☁️ クラウドへ強制同期</button>
+      <button onclick="adminReloadCloud()" style="width:100%;padding:10px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:13px;cursor:pointer;margin-bottom:6px;" data-i18n="admin_reload_cloud">🔄 クラウドから再読み込み</button>
+      <button onclick="adminShowStats()" style="width:100%;padding:10px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:13px;cursor:pointer;margin-bottom:6px;" data-i18n="admin_show_stats">📊 データ統計を表示</button>
+      <button onclick="adminCopyDebugInfo()" style="width:100%;padding:10px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:13px;cursor:pointer;" data-i18n="admin_copy_debug">📋 デバッグ情報をコピー</button>
+    </div>
+
     <!-- ===== Danger Zone: アカウント削除 ===== -->
     <div id="danger-zone" style="margin-top:24px;border-top:1px solid #5a1a1a;padding-top:16px;">
       <div style="font-size:11px;color:#ff6b6b;letter-spacing:0.1em;margin-bottom:10px;" data-i18n="danger_title">⚠️ アカウント削除</div>
@@ -1581,6 +1659,8 @@
       chart_water: '💧 水分推移 (ml)',
       // paywall
       paywall_unlock: '全期間のデータを解放する',
+      paywall_unlocked_features: 'プレミアム登録で解放される機能',
+      paywall_unlock_badge: '解放',
       paywall_desc: '無料プランは直近30日の履歴が対象です。\nプレミアムで大会準備のすべての記録を\nいつでも振り返れます。',
       paywall_f1: '無制限の履歴閲覧・分析',
       paywall_f2: '複数端末のクラウド同期',
@@ -1662,6 +1742,36 @@
       danger_title: '⚠️ アカウント削除',
       danger_desc: 'アカウントとクラウド上のすべての記録を完全に削除します。この操作は取り消せません。端末内ローカルデータも消去されます。',
       btn_delete_account: 'アカウントとデータを削除する',
+      loading_signing_in: 'ログイン中...',
+      loading_signing_out: 'ログアウト中...',
+      loading_syncing: 'クラウドと同期中...',
+      loading_deleting: 'アカウント削除中...',
+      contact_title: 'サポート',
+      btn_contact: '📧 お問い合わせ・不具合報告',
+      contact_modal_title: '📧 お問い合わせ',
+      contact_desc: '不具合報告・機能要望・その他ご質問はこちらから送信してください。下の項目を入力して「メールを開く」をタップすると、お使いのメールアプリが起動します。',
+      contact_category: '📂 種類',
+      contact_cat_bug: '🐛 不具合報告',
+      contact_cat_feature: '💡 機能要望',
+      contact_cat_payment: '💳 課金・サブスクについて',
+      contact_cat_account: '👤 アカウント・データについて',
+      contact_cat_other: '❓ その他',
+      contact_subject: 'タイトル',
+      contact_subject_ph: '例: 体重グラフが表示されない',
+      contact_body: '詳細',
+      contact_body_ph: 'どこで・どんな操作をしたら・何が起きたか具体的に書くと早く調査できます',
+      contact_info_note: '送信時にメール本文の末尾にアプリのバージョン情報が自動付与されます。個人情報は含まれません。',
+      contact_send: '📨 メールアプリで送信する',
+      contact_subject_required: 'タイトルを入力してください',
+      contact_body_required: '詳細を入力してください',
+      admin_title: '⚙️ 管理者メニュー',
+      admin_desc: 'このアカウントは管理者として認識されています。全プレミアム機能が解放されています。',
+      admin_force_sync: '☁️ クラウドへ強制同期',
+      admin_reload_cloud: '🔄 クラウドから再読み込み',
+      admin_show_stats: '📊 データ統計を表示',
+      admin_copy_debug: '📋 デバッグ情報をコピー',
+      admin_not_logged_in: 'ログインしていません',
+      admin_copied: 'デバッグ情報をコピーしました ✓',
       confirm_delete_account_1: '本当にアカウントとすべてのデータを削除しますか？\n\nこの操作は取り消せません。',
       confirm_delete_account_2: '【最終確認】\nクラウドデータ・ローカルデータがすべて消えます。\n本当に削除しますか？',
       delete_account_done: 'アカウントを削除しました。アプリを再起動します。',
@@ -1994,6 +2104,8 @@
       chart_water: '💧 Hydration Trend (ml)',
       // paywall
       paywall_unlock: 'Unlock Full History',
+      paywall_unlocked_features: 'Features unlocked with Premium',
+      paywall_unlock_badge: 'UNLOCK',
       paywall_desc: 'Free plan includes the last 30 days.\nGo Premium to access all your contest prep records anytime.',
       paywall_f1: 'Unlimited history & analytics',
       paywall_f2: 'Multi-device cloud sync',
@@ -2075,6 +2187,36 @@
       danger_title: '⚠️ Delete Account',
       danger_desc: 'Permanently delete your account and all cloud records. This cannot be undone. Local data on this device will also be cleared.',
       btn_delete_account: 'Delete Account and All Data',
+      loading_signing_in: 'Signing in...',
+      loading_signing_out: 'Signing out...',
+      loading_syncing: 'Syncing with cloud...',
+      loading_deleting: 'Deleting account...',
+      contact_title: 'Support',
+      btn_contact: '📧 Contact & Bug Report',
+      contact_modal_title: '📧 Contact Support',
+      contact_desc: 'Send us bug reports, feature requests or general questions. Fill in the fields below and tap "Send" — your email app will open with the message prepared.',
+      contact_category: '📂 Category',
+      contact_cat_bug: '🐛 Bug Report',
+      contact_cat_feature: '💡 Feature Request',
+      contact_cat_payment: '💳 Billing / Subscription',
+      contact_cat_account: '👤 Account / Data',
+      contact_cat_other: '❓ Other',
+      contact_subject: 'Title',
+      contact_subject_ph: 'e.g., Weight graph does not show',
+      contact_body: 'Details',
+      contact_body_ph: 'Where, what you did, and what happened. Concrete steps help us investigate faster.',
+      contact_info_note: 'App version info will be appended to the email body. No personal data is included.',
+      contact_send: '📨 Open in mail app',
+      contact_subject_required: 'Please enter a title',
+      contact_body_required: 'Please enter the details',
+      admin_title: '⚙️ Admin Menu',
+      admin_desc: 'This account is recognized as administrator. All premium features are unlocked.',
+      admin_force_sync: '☁️ Force sync to cloud',
+      admin_reload_cloud: '🔄 Reload from cloud',
+      admin_show_stats: '📊 Show data stats',
+      admin_copy_debug: '📋 Copy debug info',
+      admin_not_logged_in: 'Not signed in',
+      admin_copied: 'Debug info copied ✓',
       confirm_delete_account_1: 'Are you sure you want to delete your account and all data?\n\nThis action cannot be undone.',
       confirm_delete_account_2: '[Final Confirmation]\nAll cloud and local data will be erased.\nDelete now?',
       delete_account_done: 'Account deleted. Restarting app.',
@@ -2442,16 +2584,197 @@
                         'contest_date','contest_name','contest_weight','peak_date',
                         'nutrition_goals','display_name_custom'];
 
+  // ==================
+  // 管理者専用機能（moyaki397@gmail.com 等）
+  // ==================
+  function adminForceSync() {
+    if (!isAdmin()) return;
+    if (!currentUser) { showToast(t('admin_not_logged_in')); return; }
+    // syncToCloud をデバウンスなしで即時実行
+    showLoading(t('loading_syncing'));
+    if (typeof AndroidBridge !== 'undefined') {
+      const data = {};
+      STORAGE_KEYS.forEach(k => {
+        const v = localStorage.getItem(k);
+        if (v) data[k] = v;
+      });
+      AndroidBridge.saveToFirestore(currentUser.uid, JSON.stringify(data));
+      setTimeout(() => { hideLoading(); }, 2500);
+    } else {
+      hideLoading();
+      showToast(t('toast_app_login_required'));
+    }
+  }
+
+  function adminReloadCloud() {
+    if (!isAdmin()) return;
+    if (!currentUser) { showToast(t('admin_not_logged_in')); return; }
+    showLoading(t('loading_syncing'));
+    loadFromCloud(currentUser.uid);
+    setTimeout(() => hideLoading(), 8000);
+  }
+
+  function adminShowStats() {
+    if (!isAdmin()) return;
+    const stats = {
+      records: records.length,
+      gymDays: Object.keys(gymData || {}).length,
+      waterDays: Object.keys(waterData || {}).length,
+      hasContestDate: !!localStorage.getItem('contest_date'),
+      hasPeakDate: !!localStorage.getItem('peak_date'),
+      hasContestWeight: !!localStorage.getItem('contest_weight'),
+      weeklyGoals: Object.keys(weeklyGoals || {}).length,
+      premiumState: isPremium(),
+      currentUser: currentUser ? currentUser.email : '(not logged in)',
+      lang: LANG,
+    };
+    let earliest = null, latest = null;
+    if (records.length > 0) {
+      const sorted = [...records].sort((a,b) => a.date.localeCompare(b.date));
+      earliest = sorted[0].date;
+      latest = sorted[sorted.length - 1].date;
+    }
+    const msg = [
+      '【 データ統計 】',
+      `記録件数: ${stats.records}`,
+      `最古の記録: ${earliest || '—'}`,
+      `最新の記録: ${latest || '—'}`,
+      `ジム記録日数: ${stats.gymDays}`,
+      `水分記録日数: ${stats.waterDays}`,
+      `週目標(手動)件数: ${stats.weeklyGoals}`,
+      `大会日: ${localStorage.getItem('contest_date') || '未設定'}`,
+      `仕上げ日: ${localStorage.getItem('peak_date') || '未設定'}`,
+      `大会目標体重: ${localStorage.getItem('contest_weight') || '未設定'} kg`,
+      `プレミアム状態: ${stats.premiumState ? 'はい' : 'いいえ'}`,
+      `ログインユーザー: ${stats.currentUser}`,
+      `言語: ${stats.lang}`,
+    ].join('\n');
+    alert(msg);
+  }
+
+  function adminCopyDebugInfo() {
+    if (!isAdmin()) return;
+    const info = {
+      app: 'PhysiqueLog',
+      version: (typeof APP_VERSION !== 'undefined') ? APP_VERSION : '1.0.x',
+      user: currentUser ? { email: currentUser.email, uid: currentUser.uid?.substring(0, 8) + '...' } : null,
+      premium: isPremium(),
+      records: records.length,
+      lang: LANG,
+      ua: (navigator.userAgent || '').slice(0, 200),
+      ts: new Date().toISOString(),
+    };
+    const text = JSON.stringify(info, null, 2);
+    // クリップボードコピー（WebView では permission 不要）
+    try {
+      navigator.clipboard.writeText(text).then(
+        () => showToast(t('admin_copied'), false),
+        () => {
+          // フォールバック: テキストエリア経由
+          const ta = document.createElement('textarea');
+          ta.value = text; document.body.appendChild(ta);
+          ta.select(); document.execCommand('copy');
+          document.body.removeChild(ta);
+          showToast(t('admin_copied'), false);
+        }
+      );
+    } catch(e) {
+      alert(text);
+    }
+  }
+
+  // ==================
+  // お問い合わせフォーム
+  // ==================
+  const SUPPORT_EMAIL = 'physiquelog.support@gmail.com';
+
+  function openContactModal() {
+    const m = document.getElementById('contact-modal');
+    if (!m) return;
+    // 入力フィールドはクリアしない（書きかけを保持）
+    m.classList.add('open');
+  }
+  function closeContactModal() {
+    const m = document.getElementById('contact-modal');
+    if (m) m.classList.remove('open');
+  }
+
+  function sendContactEmail() {
+    const cat = document.getElementById('contact-category')?.value || 'other';
+    const subjInput = (document.getElementById('contact-subject')?.value || '').trim();
+    const body = (document.getElementById('contact-body')?.value || '').trim();
+    if (!subjInput) {
+      showToast(t('contact_subject_required'));
+      return;
+    }
+    if (!body) {
+      showToast(t('contact_body_required'));
+      return;
+    }
+    // カテゴリラベル
+    const catLabel = {
+      bug: '[不具合]',
+      feature: '[機能要望]',
+      payment: '[課金]',
+      account: '[アカウント]',
+      other: '[その他]'
+    }[cat] || '[その他]';
+
+    // メタ情報
+    const meta = [
+      '',
+      '----- システム情報 -----',
+      'アプリ: PhysiqueLog',
+      'バージョン: ' + (typeof APP_VERSION !== 'undefined' ? APP_VERSION : '1.0.x'),
+      'ログイン: ' + (currentUser ? (currentUser.email || 'yes') : 'no'),
+      'プレミアム: ' + (isPremium() ? 'yes' : 'no'),
+      '言語: ' + LANG,
+      'UA: ' + (navigator.userAgent || '').slice(0, 150)
+    ].join('\n');
+
+    const subject = `${catLabel} ${subjInput}`;
+    const fullBody = body + meta;
+
+    const mailto = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(fullBody)}`;
+    // location.href で開くと WebView 内で動かないことがあるので window.open を併用
+    try {
+      window.location.href = mailto;
+    } catch (e) {
+      console.error('mailto open failed:', e);
+    }
+    // ユーザーがメーラーに遷移したらモーダルを閉じる（戻ってきた時のUX向上）
+    setTimeout(() => closeContactModal(), 300);
+  }
+
+  // ==================
+  // ローディングオーバーレイ
+  // ==================
+  function showLoading(message) {
+    const el = document.getElementById('loading-overlay');
+    const tx = document.getElementById('loading-text');
+    if (tx && message) tx.textContent = message;
+    if (el) el.classList.add('open');
+  }
+  function hideLoading() {
+    const el = document.getElementById('loading-overlay');
+    if (el) el.classList.remove('open');
+  }
+
   // Kotlinから呼ばれるコールバック
   function onFirebaseSignIn(uid, displayName, email) {
     currentUser = {uid, displayName, email};
     updateAuthUI(currentUser);
+    showLoading(t('loading_syncing'));
     loadFromCloud(uid);
+    // loadFromCloud は非同期で receiveFirestoreData / 何もデータが無い場合はそのまま終わる
+    // 安全装置: 10秒経っても何も返ってこなければ hideLoading
+    setTimeout(() => hideLoading(), 10000);
   }
 
   function onFirebaseSignOut() {
     currentUser = null;
     updateAuthUI(null);
+    hideLoading();
     showToast(t('toast_loggedout'), false);
   }
 
@@ -2469,6 +2792,8 @@
       showToast(t('toast_synced'), false);
     } catch(e) {
       console.error('receiveFirestoreData error:', e);
+    } finally {
+      hideLoading();
     }
   }
 
@@ -2479,7 +2804,10 @@
     if (user) {
       btn.textContent = t('btn_logout');
       btn.onclick = firebaseSignOut;
-      if (info) info.textContent = user.displayName || user.email || '';
+      if (info) {
+        const adminBadge = isAdmin() ? ' <span style="font-size:9px;background:var(--accent);color:var(--bg);padding:2px 6px;border-radius:5px;font-weight:700;letter-spacing:0.05em;margin-left:4px;">ADMIN</span>' : '';
+        info.innerHTML = (user.displayName || user.email || '') + adminBadge;
+      }
     } else {
       btn.textContent = t('btn_google_login');
       btn.onclick = firebaseSignIn;
@@ -2487,11 +2815,20 @@
     }
     updateWelcome();
     updateBackupVisibility();
+    updateAdminUI();
+  }
+
+  function updateAdminUI() {
+    const sec = document.getElementById('admin-section');
+    if (sec) sec.style.display = isAdmin() ? 'block' : 'none';
   }
 
   function firebaseSignIn() {
     if (typeof AndroidBridge !== 'undefined') {
+      showLoading(t('loading_signing_in'));
       AndroidBridge.signInWithGoogle();
+      // ユーザーがアカウント選択をキャンセルした場合に備えて20秒で自動的に隠す
+      setTimeout(() => hideLoading(), 20000);
     } else {
       showToast(t('toast_app_login_required'));
     }
@@ -2499,7 +2836,10 @@
 
   function firebaseSignOut() {
     if (typeof AndroidBridge !== 'undefined') {
+      showLoading(t('loading_signing_out'));
       AndroidBridge.signOut();
+      // onFirebaseSignOut が呼ばれて hideLoading するが、念のため5秒で自動非表示
+      setTimeout(() => hideLoading(), 5000);
     }
   }
 
@@ -2520,8 +2860,9 @@
     // 2段階確認（誤操作防止）
     if (!confirm(t('confirm_delete_account_1'))) return;
     if (!confirm(t('confirm_delete_account_2'))) return;
-    showToast('削除中...', false);
+    showLoading(t('loading_deleting'));
     AndroidBridge.deleteAccountAndData();
+    setTimeout(() => hideLoading(), 15000);
   }
 
   /**
@@ -2530,6 +2871,7 @@
    * @param {string}  errMsg 失敗理由
    */
   function onAccountDeleted(ok, errMsg) {
+    hideLoading();
     if (ok) {
       // localStorage を全消去（プロフィール・記録・通知設定など全部）
       try { localStorage.clear(); } catch(e) {}
@@ -3160,11 +3502,24 @@
   // ==================
   const PREMIUM_HISTORY_DAYS = 30;
 
+  // ==================
+  // 管理者アカウント
+  // ==================
+  // 管理者メールアドレスのリスト（小文字で完全一致比較）
+  const ADMIN_EMAILS = ['moyaki397@gmail.com'];
+
+  function isAdmin() {
+    if (!currentUser || !currentUser.email) return false;
+    return ADMIN_EMAILS.includes(currentUser.email.toLowerCase());
+  }
+
   function isPremium() {
     // 開発中フラグ: 開発者ビルドでは常にプレミアム扱い（trueを返す）
     // 本番リリース時にはこのDEV_UNLOCKを false にする
     const DEV_UNLOCK_PREMIUM = false;
     if (DEV_UNLOCK_PREMIUM) return true;
+    // 管理者は常にプレミアム扱い
+    if (isAdmin()) return true;
     if (typeof AndroidBridge !== 'undefined' && typeof AndroidBridge.isPremium === 'function') {
       const r = AndroidBridge.isPremium();
       return r === true || r === 'true';
