@@ -1357,6 +1357,13 @@
       <button onclick="exportData()" style="width:100%;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;cursor:pointer;margin-bottom:8px;" data-i18n="btn_export">📤 データをエクスポート</button>
       <button onclick="openImportPicker()" style="width:100%;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;cursor:pointer;" data-i18n="btn_import">📥 データをインポート</button>
     </div>
+
+    <!-- ===== Danger Zone: アカウント削除 ===== -->
+    <div id="danger-zone" style="margin-top:24px;border-top:1px solid #5a1a1a;padding-top:16px;">
+      <div style="font-size:11px;color:#ff6b6b;letter-spacing:0.1em;margin-bottom:10px;" data-i18n="danger_title">⚠️ アカウント削除</div>
+      <div style="font-size:11px;color:var(--text-muted);line-height:1.6;margin-bottom:10px;" data-i18n="danger_desc">アカウントとクラウド上のすべての記録を完全に削除します。この操作は取り消せません。端末内ローカルデータも消去されます。</div>
+      <button onclick="confirmDeleteAccount()" style="width:100%;padding:12px;background:transparent;border:1px solid #ff6b6b;border-radius:10px;color:#ff6b6b;font-size:13px;font-weight:700;cursor:pointer;" data-i18n="btn_delete_account">アカウントとデータを削除する</button>
+    </div>
   </div>
 </div>
 
@@ -1646,6 +1653,14 @@
       backup_title: 'データバックアップ',
       btn_export: '📤 データをエクスポート',
       btn_import: '📥 データをインポート',
+      danger_title: '⚠️ アカウント削除',
+      danger_desc: 'アカウントとクラウド上のすべての記録を完全に削除します。この操作は取り消せません。端末内ローカルデータも消去されます。',
+      btn_delete_account: 'アカウントとデータを削除する',
+      confirm_delete_account_1: '本当にアカウントとすべてのデータを削除しますか？\n\nこの操作は取り消せません。',
+      confirm_delete_account_2: '【最終確認】\nクラウドデータ・ローカルデータがすべて消えます。\n本当に削除しますか？',
+      delete_account_done: 'アカウントを削除しました。アプリを再起動します。',
+      delete_account_relogin: 'セキュリティのため、削除前に再ログインが必要です。一度ログアウトしてから再度お試しください。',
+      delete_account_failed: '削除に失敗しました: ',
       // onboarding
       ob_slide1_desc: '大会を目指す競技者のための記録パートナー\n食事・水分・トレーニングを一元管理できます',
       ob_slide2_title: '毎日の\n記録',
@@ -2051,6 +2066,14 @@
       backup_title: 'Data Backup',
       btn_export: '📤 Export Data',
       btn_import: '📥 Import Data',
+      danger_title: '⚠️ Delete Account',
+      danger_desc: 'Permanently delete your account and all cloud records. This cannot be undone. Local data on this device will also be cleared.',
+      btn_delete_account: 'Delete Account and All Data',
+      confirm_delete_account_1: 'Are you sure you want to delete your account and all data?\n\nThis action cannot be undone.',
+      confirm_delete_account_2: '[Final Confirmation]\nAll cloud and local data will be erased.\nDelete now?',
+      delete_account_done: 'Account deleted. Restarting app.',
+      delete_account_relogin: 'For security, you must sign in again before deletion. Please sign out and sign in again, then retry.',
+      delete_account_failed: 'Delete failed: ',
       // onboarding
       ob_slide1_desc: 'Your training partner for contest prep.\nTrack nutrition, hydration & workouts in one place.',
       ob_slide2_title: 'Daily\nLogging',
@@ -2451,6 +2474,49 @@
   function firebaseSignOut() {
     if (typeof AndroidBridge !== 'undefined') {
       AndroidBridge.signOut();
+    }
+  }
+
+  // ==================
+  // アカウント削除（Danger Zone）
+  // ==================
+  function confirmDeleteAccount() {
+    // ログインしていない場合はローカルデータのみ削除
+    if (typeof AndroidBridge === 'undefined') {
+      alert(t('toast_app_login_required'));
+      return;
+    }
+    if (typeof AndroidBridge.deleteAccountAndData !== 'function') {
+      // ブリッジ未対応のビルド（古い端末/旧バージョン）
+      alert('この機能は利用できません。アプリを最新版に更新してください。');
+      return;
+    }
+    // 2段階確認（誤操作防止）
+    if (!confirm(t('confirm_delete_account_1'))) return;
+    if (!confirm(t('confirm_delete_account_2'))) return;
+    showToast('削除中...', false);
+    AndroidBridge.deleteAccountAndData();
+  }
+
+  /**
+   * Android 側から呼ばれるコールバック。
+   * @param {boolean} ok 削除成功フラグ
+   * @param {string}  errMsg 失敗理由
+   */
+  function onAccountDeleted(ok, errMsg) {
+    if (ok) {
+      // localStorage を全消去（プロフィール・記録・通知設定など全部）
+      try { localStorage.clear(); } catch(e) {}
+      showToast(t('delete_account_done'), false);
+      // 少し待ってリロード
+      setTimeout(() => { location.reload(); }, 1200);
+    } else {
+      // recent-login required の典型的エラー文言を検知
+      if (errMsg && /recent login|reauthenticate/i.test(errMsg)) {
+        alert(t('delete_account_relogin'));
+      } else {
+        alert(t('delete_account_failed') + (errMsg || ''));
+      }
     }
   }
 

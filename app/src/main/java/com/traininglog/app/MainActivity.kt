@@ -136,6 +136,44 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        /**
+         * アカウントとクラウド上の全データを削除する。
+         * 1. Firestore users/{uid} ドキュメントを削除
+         * 2. Firebase Auth アカウントを削除（要: 直近ログイン。失敗時は再ログイン要求）
+         * 3. Google Sign-In セッションも切る
+         * 4. JS 側にコールバック (onAccountDeleted) → localStorage クリア + リロード
+         */
+        @JavascriptInterface
+        fun deleteAccountAndData() {
+            val user = auth.currentUser
+            if (user == null) {
+                webView.post {
+                    webView.evaluateJavascript("onAccountDeleted(false, 'ログインしていません')", null)
+                }
+                return
+            }
+            val uid = user.uid
+            db.collection("users").document(uid).delete()
+                .addOnCompleteListener {
+                    // Firestore 削除の成否に関わらず、Auth アカウント削除を試みる
+                    user.delete()
+                        .addOnSuccessListener {
+                            val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN).build()
+                            GoogleSignIn.getClient(this@MainActivity, gso).signOut()
+                            webView.post {
+                                webView.evaluateJavascript("onAccountDeleted(true, '')", null)
+                            }
+                        }
+                        .addOnFailureListener { e ->
+                            // 直近ログインが古い場合 FirebaseAuthRecentLoginRequiredException
+                            val msg = (e.message ?: "アカウント削除エラー").replace("'", " ")
+                            webView.post {
+                                webView.evaluateJavascript("onAccountDeleted(false, '$msg')", null)
+                            }
+                        }
+                }
+        }
+
         @JavascriptInterface
         fun saveToFirestore(uid: String, jsonData: String) {
             val data = hashMapOf(
