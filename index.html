@@ -1019,6 +1019,12 @@
     </div>
   </div>
   <div id="tab-graph" class="tab-content">
+    <!-- 週/月モード時の期間ナビゲーション（グラフタブでも操作できるように） -->
+    <div id="graph-period-nav" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:8px 12px;margin-bottom:12px;align-items:center;justify-content:space-between;gap:8px;">
+      <button class="cal-nav-btn" id="graph-prev-btn">‹</button>
+      <div id="graph-period-label" style="font-size:13px;color:var(--text);font-weight:600;flex:1;text-align:center;"></div>
+      <button class="cal-nav-btn" id="graph-next-btn">›</button>
+    </div>
     <div class="chart-container" id="weekly-report-card"></div>
     <div class="chart-container" id="roadmap-card">
       <div class="chart-title" data-i18n="chart_roadmap">🗺 大会ロードマップ</div>
@@ -2342,28 +2348,48 @@
   // ロードマップから週の体重目標を自動算出する。
   // 大会(または仕上げ日)と目標体重、最新の実体重から線形補間で求める。
   // 算出不可なら 0 を返す。
-  function getAutoWeekGoal(date) {
+  /**
+   * 共通: 任意の日付における「ロードマップ上の目標体重」を返す。
+   * 起点 = 最古の体重記録の日と体重
+   * 終点 = 仕上げ日(peak_date)または大会日 + 大会目標体重
+   * 起点より前: 起点体重
+   * 終点より後: 大会目標体重
+   * その間: 線形補間
+   * 計算不能なら null を返す（記録なし・設定なし等）
+   */
+  function calcRoadmapTarget(date) {
     const peakDateStr = localStorage.getItem('peak_date') || localStorage.getItem('contest_date');
     const contestWeight = parseFloat(localStorage.getItem('contest_weight'));
-    if (!peakDateStr || !contestWeight) return 0;
+    if (!peakDateStr || !contestWeight) return null;
     const [py, pm, pd] = peakDateStr.split('-').map(Number);
     const peakDate = new Date(py, pm - 1, pd); peakDate.setHours(0,0,0,0);
-    const today = new Date(); today.setHours(0,0,0,0);
-    // 期限切れ
-    if (peakDate <= today) return 0;
-    // 直近の体重を起点に
-    const sortedRecs = [...records].sort((a,b) => b.date.localeCompare(a.date));
-    const latestWeight = sortedRecs.find(r => r.weight)?.weight;
-    if (!latestWeight) return 0;
-    const totalDays = Math.round((peakDate - today) / 86400000);
-    if (totalDays <= 0) return 0;
+
+    // 起点: 最古の体重記録
+    const sortedAsc = [...records].sort((a,b) => a.date.localeCompare(b.date));
+    const oldestRec = sortedAsc.find(r => r.weight);
+    if (!oldestRec) return null;
+    const [oy, om, od] = oldestRec.date.split('-').map(Number);
+    const startDate = new Date(oy, om - 1, od); startDate.setHours(0,0,0,0);
+    const startWeight = oldestRec.weight;
+
+    if (startDate >= peakDate) return contestWeight;
+
+    const target = new Date(date); target.setHours(0,0,0,0);
+    if (target <= startDate) return parseFloat(startWeight.toFixed(1));
+    if (target >= peakDate) return parseFloat(contestWeight.toFixed(1));
+
+    const totalDays = (peakDate - startDate) / 86400000;
+    const elapsedDays = (target - startDate) / 86400000;
+    const ratio = elapsedDays / totalDays;
+    return parseFloat((startWeight - (startWeight - contestWeight) * ratio).toFixed(1));
+  }
+
+  function getAutoWeekGoal(date) {
     // 週の中央(水曜=日曜+3日)を対象に
     const base = new Date(date); base.setHours(0,0,0,0);
     base.setDate(base.getDate() - base.getDay() + 3);
-    const days = Math.round((base - today) / 86400000);
-    const ratio = Math.max(0, Math.min(1, days / totalDays));
-    const w = latestWeight - (latestWeight - contestWeight) * ratio;
-    return parseFloat(w.toFixed(1));
+    const t = calcRoadmapTarget(base);
+    return t == null ? 0 : t;
   }
 
   // 手動設定があればそれを優先、無ければ自動値を返す。
@@ -3077,7 +3103,10 @@
     document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
     document.getElementById(tabId).classList.add('active');
     btn.classList.add('active');
-    if(tabId==='tab-graph') renderCharts();
+    if(tabId==='tab-graph') {
+      renderCharts();
+      updateGraphPeriodNav();
+    }
   }
 
   function setFilter(filter, btn) {
@@ -3092,6 +3121,38 @@
     if(filter==='week'||filter==='month') renderStats();
     // グラフが表示中なら更新
     if (document.getElementById('tab-graph').classList.contains('active')) renderCharts();
+    updateGraphPeriodNav();
+  }
+
+  /**
+   * グラフタブの期間ナビゲーションを現在の filter / offset に合わせて更新。
+   * 'all' なら隠す。'week'/'month' ならラベルと矢印ハンドラを更新して表示。
+   */
+  function updateGraphPeriodNav() {
+    const nav = document.getElementById('graph-period-nav');
+    const label = document.getElementById('graph-period-label');
+    const prev = document.getElementById('graph-prev-btn');
+    const next = document.getElementById('graph-next-btn');
+    if (!nav || !label || !prev || !next) return;
+    if (currentFilter === 'week') {
+      const now = new Date();
+      const base = new Date(now);
+      base.setDate(now.getDate() - now.getDay() + weekCalOffset * 7);
+      const weekEnd = new Date(base); weekEnd.setDate(base.getDate() + 6);
+      label.textContent = `${base.getFullYear()}/${base.getMonth()+1}/${base.getDate()} 〜 ${weekEnd.getMonth()+1}/${weekEnd.getDate()}`;
+      prev.onclick = () => weekCalNav(-1);
+      next.onclick = () => weekCalNav(1);
+      nav.style.display = 'flex';
+    } else if (currentFilter === 'month') {
+      const now = new Date();
+      const target = new Date(now.getFullYear(), now.getMonth() + monthCalOffset, 1);
+      label.textContent = `${target.getFullYear()}年 ${target.getMonth()+1}月`;
+      prev.onclick = () => monthCalNav(-1);
+      next.onclick = () => monthCalNav(1);
+      nav.style.display = 'flex';
+    } else {
+      nav.style.display = 'none';
+    }
   }
 
   // ==================
@@ -3102,7 +3163,7 @@
   function isPremium() {
     // 開発中フラグ: 開発者ビルドでは常にプレミアム扱い（trueを返す）
     // 本番リリース時にはこのDEV_UNLOCKを false にする
-    const DEV_UNLOCK_PREMIUM = true;
+    const DEV_UNLOCK_PREMIUM = false;
     if (DEV_UNLOCK_PREMIUM) return true;
     if (typeof AndroidBridge !== 'undefined' && typeof AndroidBridge.isPremium === 'function') {
       const r = AndroidBridge.isPremium();
@@ -3182,6 +3243,7 @@
     weekCalOffset = newOffset;
     renderWeekCalendar();
     if (document.getElementById('tab-graph').classList.contains('active')) renderCharts();
+    updateGraphPeriodNav();
   }
   function monthCalNav(delta) {
     const newOffset = monthCalOffset + delta;
@@ -3195,6 +3257,7 @@
     monthCalOffset = newOffset;
     renderMonthCalendar();
     if (document.getElementById('tab-graph').classList.contains('active')) renderCharts();
+    updateGraphPeriodNav();
   }
 
   function renderStats() {
@@ -3855,11 +3918,12 @@
       return;
     }
 
-    // 任意の日付における目標体重（今日=latestWeight、大会日=contestWeight の線形補間）
+    // 任意の日付における目標体重: 起点=最古の体重記録、終点=仕上げ日 で線形補間
+    // calcRoadmapTarget を共通関数として使用（過去・現在・未来すべての日付に対応）
     function targetForDate(d) {
-      const days = Math.round((d - today) / 86400000);
-      const t = Math.max(0, Math.min(1, days / totalDays));
-      return parseFloat((latestWeight - (latestWeight - contestWeight) * t).toFixed(1));
+      const v = calcRoadmapTarget(d);
+      // フォールバック: ロードマップ計算不能なら latestWeight
+      return v == null ? parseFloat(latestWeight.toFixed(1)) : v;
     }
 
     const chartOpts = {responsive:true,plugins:{legend:{labels:{color:'#888',font:{size:11}}}},scales:{x:{ticks:{color:'#666',font:{size:10}},grid:{color:'#1a1a26'}},y:{ticks:{color:'#666',font:{size:10}},grid:{color:'#1a1a26'}}}};
@@ -3998,8 +4062,11 @@
       const ym = target.getFullYear() + '-' + String(target.getMonth()+1).padStart(2,'0');
       filtered = records.filter(r => r.date.startsWith(ym));
     } else {
-      // 昇順ソート後に最新30件
-      filtered = [...records].sort((a,b)=>a.date.localeCompare(b.date)).slice(-30);
+      // 全期間: 記録のある日全てを表示（昇順）
+      // 無料ユーザーは PREMIUM_HISTORY_DAYS 日以内のみ
+      const sortedAll = [...records].sort((a,b) => a.date.localeCompare(b.date));
+      const cutoff = getHistoryCutoff();
+      filtered = cutoff ? sortedAll.filter(r => r.date >= cutoff) : sortedAll;
     }
     const sorted = [...filtered].sort((a,b) => a.date.localeCompare(b.date));
     const labels=sorted.map(r=>{const d=new Date(r.date+'T00:00:00');return `${d.getMonth()+1}/${d.getDate()}`;});
