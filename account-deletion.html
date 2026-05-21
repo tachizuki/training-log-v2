@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>アカウント・データ削除方法 / Account & Data Deletion - PhysiqueLog</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Helvetica Neue', Arial, 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+    background: #0a0a0f;
+    color: #e0e0e0;
+    line-height: 1.8;
+    padding: 24px 20px 60px;
+    max-width: 720px;
+    margin: 0 auto;
+  }
+  h1 { font-size: 22px; color: #e8ff00; margin-bottom: 6px; letter-spacing: 0.05em; }
+  .updated { font-size: 12px; color: #666; margin-bottom: 24px; }
+  h2 { font-size: 16px; color: #e8ff00; margin: 28px 0 10px; border-left: 3px solid #e8ff00; padding-left: 10px; }
+  h3 { font-size: 14px; color: #b8c800; margin: 16px 0 6px; }
+  p { font-size: 14px; color: #ccc; margin-bottom: 10px; }
+  ul, ol { padding-left: 24px; margin-bottom: 10px; }
+  li { font-size: 14px; color: #ccc; margin-bottom: 6px; }
+  a { color: #00d4ff; text-decoration: none; }
+  .section { background: #12121a; border-radius: 12px; padding: 20px; margin-bottom: 14px; border: 1px solid #2a2a3a; }
+  .warning { background: #2a1a1a; border-radius: 12px; padding: 16px; border: 1px solid #5a2a2a; margin: 14px 0; }
+  .warning p { color: #ffb8b8; }
+  .contact-box { background: #1a1a26; border-radius: 12px; padding: 20px; border: 1px solid #2a2a3a; margin-top: 24px; }
+  .lang-switch { display: flex; gap: 8px; margin: 16px 0 24px; }
+  .lang-switch a {
+    flex: 1; text-align: center; padding: 8px 12px; border-radius: 8px;
+    background: #1a1a26; border: 1px solid #2a2a3a; color: #e0e0e0;
+  }
+  .lang-divider {
+    border: 0; border-top: 1px dashed #2a2a3a; margin: 48px 0 24px;
+  }
+  strong { color: #f0f0f0; }
+  .step { background: #16161e; border-left: 3px solid #e8ff00; padding: 10px 14px; margin: 8px 0; border-radius: 4px; }
+  .step-num { color: #e8ff00; font-weight: 700; margin-right: 8px; }
+</style>
+</head>
+<body>
+
+<div class="lang-switch">
+  <a href="#ja">日本語</a>
+  <a href="#en">English</a>
+</div>
+
+<!-- ============================================== -->
+<!-- 日本語版 -->
+<!-- ============================================== -->
+<section id="ja">
+
+<h1>アカウント・データ削除方法</h1>
+<div class="updated">最終更新日：2026年5月21日</div>
+
+<div class="section">
+  <p>PhysiqueLog（以下「本アプリ」）では、利用者はいつでも自身のアカウントとクラウドデータを完全に削除できます。本ページではその手順を説明します。</p>
+</div>
+
+<h2>1. アプリ内から削除する（推奨・最も簡単）</h2>
+<div class="section">
+  <p>アプリをインストールしている場合は、以下の手順で削除できます。</p>
+  <div class="step"><span class="step-num">1.</span>PhysiqueLog アプリを起動</div>
+  <div class="step"><span class="step-num">2.</span>右上の <strong>⚙ プロフィール</strong> アイコンをタップ</div>
+  <div class="step"><span class="step-num">3.</span>画面下部までスクロールし、<strong>「⚠️ アカウント削除」</strong> セクションを開く</div>
+  <div class="step"><span class="step-num">4.</span><strong>「アカウントとデータを削除する」</strong> ボタンをタップ</div>
+  <div class="step"><span class="step-num">5.</span>2回の確認ダイアログで「OK」をタップ</div>
+  <div class="warning">
+    <p><strong>⚠️ 注意</strong>：この操作は取り消せません。クラウド上のすべての記録（体重・食事・トレーニング履歴等）と端末内のローカルデータが永久に削除されます。</p>
+  </div>
+</div>
+
+<h2>2. メールで削除を依頼する</h2>
+<div class="section">
+  <p>すでにアプリをアンインストールしている場合や、アプリ内操作で削除できない場合は、メールでご連絡ください。</p>
+  <p>下記の宛先に、以下の情報を添えて削除依頼をお送りください。</p>
+  <ul>
+    <li>削除を希望するアカウントのメールアドレス（Googleログインに使用したもの）</li>
+    <li>件名: <strong>「アカウント削除依頼」</strong></li>
+  </ul>
+  <p>確認のうえ、<strong>7営業日以内</strong> にクラウド上のデータを削除します。完了後にメールで通知します。</p>
+</div>
+
+<h2>3. 削除される情報の範囲</h2>
+<div class="section">
+  <p>アカウント削除を実行すると、以下がすべて削除されます。</p>
+  <ul>
+    <li>クラウド上に保存されたすべての記録（体重・栄養・水分・睡眠・歩数・筋トレ・有酸素・大会設定など）</li>
+    <li>Firebase 認証アカウント情報（メールアドレス・表示名・ユーザーID）</li>
+    <li>端末内のローカルデータ（アプリ内削除を実行した場合のみ）</li>
+  </ul>
+</div>
+
+<h2>4. 保持される情報</h2>
+<div class="section">
+  <p>以下は、法令遵守または会計目的のために一定期間保持される場合があります。</p>
+  <ul>
+    <li>Google Play 課金システムを通じた決済記録（決済情報は Google が管理）</li>
+    <li>サポート対応の通信記録（最長6か月）</li>
+  </ul>
+  <p>これらは PhysiqueLog では直接保持しません。決済記録は Google Play、メール通信記録は Gmail にて管理されます。</p>
+</div>
+
+<h2>5. アカウントを削除せずデータのみ削除する</h2>
+<div class="section">
+  <p>アカウントを残したまま、クラウド上のデータのみを削除したい場合は、メールでご依頼ください。</p>
+  <p>件名: <strong>「データのみ削除依頼」</strong> と明記してください。</p>
+</div>
+
+<h2>6. お問い合わせ</h2>
+<div class="contact-box">
+  <p>削除依頼・ご質問は以下までお問い合わせください。</p>
+  <p style="margin-top:10px;">サービス名：<strong>PhysiqueLog（個人開発）</strong></p>
+  <p>メールアドレス：<a href="mailto:physiquelog.support@gmail.com">physiquelog.support@gmail.com</a></p>
+</div>
+
+</section>
+
+<hr class="lang-divider">
+
+<!-- ============================================== -->
+<!-- English version -->
+<!-- ============================================== -->
+<section id="en" lang="en">
+
+<h1>How to Delete Account and Data</h1>
+<div class="updated">Last updated: May 21, 2026</div>
+
+<div class="section">
+  <p>You can delete your account and cloud data from PhysiqueLog at any time. This page describes the procedure.</p>
+</div>
+
+<h2>1. Delete from within the App (recommended)</h2>
+<div class="section">
+  <p>If you still have the app installed, follow these steps:</p>
+  <div class="step"><span class="step-num">1.</span>Open the PhysiqueLog app</div>
+  <div class="step"><span class="step-num">2.</span>Tap the <strong>⚙ Profile</strong> icon in the top right</div>
+  <div class="step"><span class="step-num">3.</span>Scroll to the bottom and open the <strong>"⚠️ Delete Account"</strong> section</div>
+  <div class="step"><span class="step-num">4.</span>Tap <strong>"Delete Account and All Data"</strong></div>
+  <div class="step"><span class="step-num">5.</span>Confirm in both confirmation dialogs</div>
+  <div class="warning">
+    <p><strong>⚠️ Warning</strong>: This action cannot be undone. All cloud records (weight, nutrition, training history, etc.) and local data will be permanently deleted.</p>
+  </div>
+</div>
+
+<h2>2. Request Deletion by Email</h2>
+<div class="section">
+  <p>If you have already uninstalled the app or cannot use the in-app deletion, please email us.</p>
+  <p>Send a deletion request with:</p>
+  <ul>
+    <li>The email address of the account you want to delete (the one used for Google Sign-In)</li>
+    <li>Subject: <strong>"Account Deletion Request"</strong></li>
+  </ul>
+  <p>We will delete your cloud data within <strong>7 business days</strong> after verifying the request. A confirmation email will be sent.</p>
+</div>
+
+<h2>3. What Will Be Deleted</h2>
+<div class="section">
+  <ul>
+    <li>All cloud records (weight, nutrition, hydration, sleep, steps, training, cardio, contest settings, etc.)</li>
+    <li>Firebase Authentication account info (email, display name, user ID)</li>
+    <li>Local data on the device (only when using in-app deletion)</li>
+  </ul>
+</div>
+
+<h2>4. What Will Be Retained</h2>
+<div class="section">
+  <p>The following may be retained for legal/accounting purposes:</p>
+  <ul>
+    <li>Payment records via Google Play Billing (managed by Google)</li>
+    <li>Support communication logs (up to 6 months)</li>
+  </ul>
+  <p>PhysiqueLog does not directly store these. Payment records are managed by Google Play, and email communications by Gmail.</p>
+</div>
+
+<h2>5. Delete Data Only (Keep Account)</h2>
+<div class="section">
+  <p>If you want to delete your cloud data but keep your account, please email us with the subject <strong>"Data-Only Deletion Request"</strong>.</p>
+</div>
+
+<h2>6. Contact</h2>
+<div class="contact-box">
+  <p>For deletion requests or questions, please contact us.</p>
+  <p style="margin-top:10px;">Service name: <strong>PhysiqueLog (individual developer)</strong></p>
+  <p>Email: <a href="mailto:physiquelog.support@gmail.com">physiquelog.support@gmail.com</a></p>
+</div>
+
+</section>
+
+</body>
+</html>
