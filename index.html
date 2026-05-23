@@ -1066,7 +1066,7 @@
 <div class="profile-modal-overlay" id="contact-modal" onclick="if(event.target===this)closeContactModal()" style="z-index:400;">
   <div class="profile-modal-sheet" style="max-height:90vh;overflow-y:auto;">
     <div class="profile-modal-title" data-i18n="contact_modal_title">📧 お問い合わせ</div>
-    <div style="font-size:12px;color:var(--text-muted);line-height:1.6;margin-bottom:14px;" data-i18n="contact_desc">不具合報告・機能要望・その他ご質問はこちらから送信してください。下の項目を入力して「メールを開く」をタップすると、お使いのメールアプリが起動します。</div>
+    <div style="font-size:12px;color:var(--text-muted);line-height:1.6;margin-bottom:14px;" data-i18n="contact_desc">不具合報告・機能要望・その他ご質問はこちらから送信してください。入力後「送信する」をタップするとアプリ内から直接送信されます。</div>
 
     <div class="profile-group full" style="margin-bottom:12px;">
       <label class="profile-label" data-i18n="contact_category">📂 種類</label>
@@ -1091,7 +1091,7 @@
 
     <div style="background:var(--surface2);border-radius:10px;padding:10px 12px;margin-bottom:14px;font-size:11px;color:var(--text-muted);line-height:1.6;" data-i18n="contact_info_note">送信時にメール本文の末尾にアプリのバージョン情報が自動付与されます。個人情報は含まれません。</div>
 
-    <button class="btn-submit" onclick="sendContactEmail()" data-i18n="contact_send">📨 メールアプリで送信する</button>
+    <button class="btn-submit" onclick="sendContactEmail()" data-i18n="contact_send">📨 送信する</button>
     <button class="btn-submit" onclick="closeContactModal()" style="background:var(--surface2);color:var(--text-muted);border:1px solid var(--border);margin-top:8px;" data-i18n="btn_cancel">キャンセル</button>
   </div>
 </div>
@@ -2711,39 +2711,50 @@
       showToast(t('contact_body_required'));
       return;
     }
-    // カテゴリラベル
-    const catLabel = {
-      bug: '[不具合]',
-      feature: '[機能要望]',
-      payment: '[課金]',
-      account: '[アカウント]',
-      other: '[その他]'
-    }[cat] || '[その他]';
 
-    // メタ情報
-    const meta = [
-      '',
-      '----- システム情報 -----',
-      'アプリ: PhysiqueLog',
-      'バージョン: ' + (typeof APP_VERSION !== 'undefined' ? APP_VERSION : '1.0.x'),
-      'ログイン: ' + (currentUser ? (currentUser.email || 'yes') : 'no'),
-      'プレミアム: ' + (isPremium() ? 'yes' : 'no'),
-      '言語: ' + LANG,
-      'UA: ' + (navigator.userAgent || '').slice(0, 150)
-    ].join('\n');
+    const payload = {
+      category: cat,
+      subject: subjInput,
+      body,
+      meta: {
+        version: typeof APP_VERSION !== 'undefined' ? APP_VERSION : '1.0.x',
+        loggedIn: currentUser ? (currentUser.email || 'yes') : 'no',
+        premium: isPremium() ? 'yes' : 'no',
+        lang: LANG,
+        ua: (navigator.userAgent || '').slice(0, 150)
+      }
+    };
 
-    const subject = `${catLabel} ${subjInput}`;
-    const fullBody = body + meta;
-
-    const mailto = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(fullBody)}`;
-    // location.href で開くと WebView 内で動かないことがあるので window.open を併用
-    try {
-      window.location.href = mailto;
-    } catch (e) {
-      console.error('mailto open failed:', e);
+    // AndroidBridge 経由でFirestoreへ送信（アプリ内完結）
+    if (typeof Android !== 'undefined' && typeof Android.sendContactForm === 'function') {
+      showLoading('送信中...');
+      try {
+        Android.sendContactForm(JSON.stringify(payload));
+      } catch (e) {
+        hideLoading();
+        showToast('送信に失敗しました');
+      }
+      return;
     }
-    // ユーザーがメーラーに遷移したらモーダルを閉じる（戻ってきた時のUX向上）
+
+    // フォールバック: メールアプリ（Android外環境用）
+    const catLabel = { bug:'[不具合]', feature:'[機能要望]', payment:'[課金]', account:'[アカウント]', other:'[その他]' }[cat] || '[その他]';
+    const meta = '\n\n----- システム情報 -----\nアプリ: PhysiqueLog\nバージョン: ' + payload.meta.version + '\nログイン: ' + payload.meta.loggedIn + '\nプレミアム: ' + payload.meta.premium + '\n言語: ' + payload.meta.lang;
+    const mailto = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(catLabel + ' ' + subjInput)}&body=${encodeURIComponent(body + meta)}`;
+    try { window.location.href = mailto; } catch (e) { console.error('mailto open failed:', e); }
     setTimeout(() => closeContactModal(), 300);
+  }
+
+  function onContactSent(ok, errMsg) {
+    hideLoading();
+    if (ok) {
+      closeContactModal();
+      document.getElementById('contact-subject').value = '';
+      document.getElementById('contact-body').value = '';
+      showToast('お問い合わせを送信しました ✓');
+    } else {
+      showToast('送信エラー: ' + (errMsg || '再度お試しください'));
+    }
   }
 
   // ==================
@@ -3931,56 +3942,54 @@
       }
     }
 
-    // ⑤ カロリー収支（前日）— 目標との比較
+    // ⑤ カロリー収支（前日）→ エネルギー余剰/不足が体重に直結
     if (prevRec.kcal) {
-      const e = evalGoal(prevRec.kcal, NG.kcal, NG.tolerance);
-      if (e.state === 'over') {
-        items.push({icon:'🔥', cls: e.pct >= 20 ? 'bad' : 'warn',
-          text: `前日のカロリー ${prevRec.kcal}kcal（目標 ${NG.kcal}・+${Math.round(e.diff)}kcal）。摂りすぎ傾向です。`});
-      } else if (e.state === 'under') {
-        items.push({icon:'🔥', cls: 'warn',
-          text: `前日のカロリー ${prevRec.kcal}kcal（目標 ${NG.kcal}・${Math.round(e.diff)}kcal）。不足気味です。`});
-      } else if (e.state === 'ok') {
-        items.push({icon:'🔥', cls:'good', text:`前日のカロリー ${prevRec.kcal}kcal（目標 ${NG.kcal}）。許容範囲内です。`});
+      const surplus = prevRec.kcal - NG.kcal;
+      if (surplus > 400) {
+        items.push({icon:'🔥', cls: surplus > 800 ? 'bad' : 'warn',
+          text: `前日のカロリー ${prevRec.kcal}kcal（+${Math.round(surplus)}kcal 余剰）。余剰エネルギーは体脂肪として蓄積され体重増加の直接要因になります。`});
+      } else if (surplus < -400) {
+        items.push({icon:'🔥', cls:'good',
+          text: `前日のカロリー ${prevRec.kcal}kcal（${Math.round(surplus)}kcal 赤字）。カロリー不足により体脂肪の分解が促進され体重は下がりやすい状態です。`});
+      } else {
+        items.push({icon:'🔥', cls:'good',
+          text: `前日のカロリー ${prevRec.kcal}kcal。維持カロリーに近く、体重への直接影響は中立的です。`});
       }
     }
 
-    // ⑥ 炭水化物（前日）→ グリコーゲン＋水分貯留。目標との比較
+    // ⑥ 炭水化物（前日）→ グリコーゲン＋水分貯留で体重が変動
     if (prevRec.c != null) {
-      const e = evalGoal(prevRec.c, NG.c, NG.tolerance);
-      if (e.state === 'over') {
+      if (prevRec.c > NG.c + 40) {
         items.push({icon:'🍚', cls:'warn',
-          text: `前日の炭水化物 ${prevRec.c}g（目標 ${NG.c}g・+${e.diff.toFixed(0)}g）。グリコーゲン＋水分で一時的に増えやすい。`});
-      } else if (e.state === 'under') {
+          text: `前日の炭水化物 ${prevRec.c}g（多め）。糖質1gに対し約3〜4gの水分が筋肉に蓄積されるため体重が一時的に増えやすい状態です。脂肪増加ではなくグリコーゲン由来の変動です。`});
+      } else if (prevRec.c < NG.c - 40) {
         items.push({icon:'🍚', cls:'warn',
-          text: `前日の炭水化物 ${prevRec.c}g（目標 ${NG.c}g・${e.diff.toFixed(0)}g）。不足で枯渇気味の可能性。`});
+          text: `前日の炭水化物 ${prevRec.c}g（少なめ）。グリコーゲンが枯渇し体内水分も減るため体重は下がりやすいですが、トレーニングパフォーマンスの低下に注意が必要です。`});
+      } else {
+        items.push({icon:'🍚', cls:'good',
+          text: `前日の炭水化物 ${prevRec.c}g。適切な範囲で、グリコーゲン貯蔵と体重への影響はほぼ中立です。`});
       }
     }
 
-    // ⑦ 脂質（前日）— 目標との比較
+    // ⑦ 脂質（前日）→ 消化の遅延が翌朝体重に残る
     if (prevRec.f != null) {
-      const e = evalGoal(prevRec.f, NG.f, NG.tolerance);
-      if (e.state === 'over') {
-        items.push({icon:'🫒', cls: e.pct >= 30 ? 'bad' : 'warn',
-          text: `前日の脂質 ${prevRec.f}g（目標 ${NG.f}g・+${e.diff.toFixed(0)}g）。摂りすぎです。`});
-      } else if (e.state === 'under') {
-        items.push({icon:'🫒', cls:'',
-          text: `前日の脂質 ${prevRec.f}g（目標 ${NG.f}g）。少なめです。`});
+      if (prevRec.f > NG.f + 25) {
+        items.push({icon:'🫒', cls: prevRec.f > NG.f + 50 ? 'bad' : 'warn',
+          text: `前日の脂質 ${prevRec.f}g（多め）。脂質は消化に5〜8時間かかるため翌朝も消化物が腸内に残りやすく、体重計の数値を押し上げる要因になります。`});
+      } else if (prevRec.f < NG.f - 20) {
+        items.push({icon:'🫒', cls:'good',
+          text: `前日の脂質 ${prevRec.f}g（少なめ）。消化が速く翌朝の胃腸内残留が少ないため体重には出にくいです。ただしホルモンバランスへの影響に注意。`});
       }
     }
 
-    // ⑧ タンパク質（前日）— 目標との比較
+    // ⑧ タンパク質（前日）→ 筋肉維持・除脂肪体重に影響
     if (prevRec.p != null) {
-      const e = evalGoal(prevRec.p, NG.p, NG.tolerance);
-      if (e.state === 'under') {
+      if (prevRec.p < NG.p - 40) {
         items.push({icon:'🥩', cls:'warn',
-          text: `前日のタンパク質 ${prevRec.p}g（目標 ${NG.p}g・${e.diff.toFixed(0)}g）。不足です。`});
-      } else if (e.state === 'over') {
+          text: `前日のタンパク質 ${prevRec.p}g（不足気味）。タンパク質が少ないと筋肉分解が進み、体重が減っても除脂肪体重まで落ちるリスクがあります。`});
+      } else if (prevRec.p >= NG.p) {
         items.push({icon:'🥩', cls:'good',
-          text: `前日のタンパク質 ${prevRec.p}g（目標 ${NG.p}g・+${e.diff.toFixed(0)}g）。十分摂取できています。`});
-      } else if (e.state === 'ok') {
-        items.push({icon:'🥩', cls:'good',
-          text: `前日のタンパク質 ${prevRec.p}g（目標 ${NG.p}g）。許容範囲内です。`});
+          text: `前日のタンパク質 ${prevRec.p}g（十分）。筋肉分解を防ぎ、体重変動があっても筋量は維持されやすい状態です。`});
       }
     }
 
@@ -5161,64 +5170,84 @@
     const el = document.getElementById('gym-analysis-content');
     if (!el) return;
     const stats = collectGymExerciseStats();
-    if (stats.length === 0) {
-      el.innerHTML = '<div style="color:var(--text-muted);font-size:13px;padding:8px 0;">分析できるデータがまだありません。重量とレップ数を記録すると、推定1RMと履歴が表示されます。</div>';
+
+    // 今日（選択日）行った種目名セット
+    const todayKey = getGymKey();
+    const todayExercises = gymData[todayKey]?.exercises || [];
+    const todayNames = new Set(todayExercises.map(ex => ex.name).filter(Boolean));
+
+    if (todayNames.size === 0) {
+      el.innerHTML = '<div style="color:var(--text-muted);font-size:13px;padding:8px 0;">種目を追加・保存すると分析が表示されます。</div>';
       return;
     }
-    // RMが新しい順 → 経過日が短い順
-    stats.sort((a, b) => {
-      const la = a.last?.date || '';
-      const lb = b.last?.date || '';
-      return lb.localeCompare(la);
+
+    // 今日行った種目のみ対象
+    const todayStats = stats.filter(s => todayNames.has(s.name));
+
+    const dateLabel = (d) => {
+      const [y,m,dd] = d.split('-').map(Number);
+      return `${y}/${m}/${dd}`;
+    };
+
+    // 注目フィルター: ベスト更新 OR 長期停滞（最後にベストを出した日が21日以上前）
+    const notable = todayStats.filter(s => {
+      if (!s.last || !s.best) return false;
+      const isBest = s.last.rm === s.best.rm;
+      const staleBest = daysBetween(s.best.date) >= GYM_STALE_DAYS;
+      return isBest || staleBest;
     });
 
-    const rows = stats.map(s => {
+    // 今日の種目数・ベスト更新数・停滞数（サマリー用）
+    const todayBestCount = todayStats.filter(s => s.last && s.best && s.last.rm === s.best.rm).length;
+    const todayStaleCount = todayStats.filter(s => s.best && daysBetween(s.best.date) >= GYM_STALE_DAYS).length;
+
+    const summary = `
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:12px;">
+        <div style="background:var(--surface2);border-radius:8px;padding:10px;text-align:center;">
+          <div style="font-size:9px;color:var(--text-muted);letter-spacing:0.08em;">TODAY 種目</div>
+          <div style="font-size:22px;font-family:'Bebas Neue',sans-serif;color:var(--accent);">${todayNames.size}</div>
+        </div>
+        <div style="background:var(--surface2);border-radius:8px;padding:10px;text-align:center;">
+          <div style="font-size:9px;color:var(--text-muted);letter-spacing:0.08em;">BEST 更新</div>
+          <div style="font-size:22px;font-family:'Bebas Neue',sans-serif;color:var(--success);">${todayBestCount}</div>
+        </div>
+        <div style="background:var(--surface2);border-radius:8px;padding:10px;text-align:center;">
+          <div style="font-size:9px;color:var(--text-muted);letter-spacing:0.08em;">STALE 停滞</div>
+          <div style="font-size:22px;font-family:'Bebas Neue',sans-serif;color:${todayStaleCount>0?'var(--danger)':'var(--text-muted)'};">${todayStaleCount}</div>
+        </div>
+      </div>
+    `;
+
+    if (notable.length === 0) {
+      el.innerHTML = summary + `<div style="color:var(--text-muted);font-size:13px;padding:6px 0;">今日の${todayNames.size}種目はすべて通常範囲です。ベスト更新か長期停滞の種目があればここに表示されます。</div>`;
+      return;
+    }
+
+    const rows = notable.map(s => {
       const last = s.last, best = s.best;
-      const daysSince = last ? daysBetween(last.date) : null;
-      const stale = daysSince != null && daysSince >= GYM_STALE_DAYS;
-      const isBest = last && best && last.date === best.date && last.rm === best.rm;
-      const dateLabel = (d) => {
-        const [y,m,dd] = d.split('-').map(Number);
-        return `${y}/${m}/${dd}`;
-      };
-      const lastStr = last ? `${last.weight}kg × ${last.reps}rep → 推定1RM <strong style="color:var(--accent);">${last.rm}kg</strong>` : '—';
-      const bestStr = best ? `Best 1RM <strong style="color:var(--accent2);">${best.rm}kg</strong> <span style="color:var(--text-muted);">(${best.weight}kg×${best.reps}rep / ${dateLabel(best.date)})</span>` : '';
-      const statusBadge = stale
-        ? `<span style="background:rgba(255,68,68,0.18);color:var(--danger);font-size:10px;padding:2px 8px;border-radius:6px;letter-spacing:0.05em;">停滞 ${daysSince}日更新無し</span>`
-        : (isBest ? `<span style="background:rgba(0,255,136,0.18);color:var(--success);font-size:10px;padding:2px 8px;border-radius:6px;letter-spacing:0.05em;">最新 = ベスト更新！</span>`
-                  : `<span style="background:var(--surface2);color:var(--text-muted);font-size:10px;padding:2px 8px;border-radius:6px;letter-spacing:0.05em;">${daysSince}日前</span>`);
+      const isBest = last.rm === best.rm;
+      const daysSinceBest = daysBetween(best.date);
+
+      const lastStr = `${last.weight}kg × ${last.reps}rep → 推定1RM <strong style="color:var(--accent);">${last.rm}kg</strong>`;
+      const bestStr = isBest
+        ? ''
+        : `過去ベスト <strong style="color:var(--accent2);">${best.rm}kg</strong> <span style="color:var(--text-muted);">(${best.weight}kg×${best.reps}rep / ${dateLabel(best.date)} — ${daysSinceBest}日前)</span>`;
+
+      const statusBadge = isBest
+        ? `<span style="background:rgba(0,255,136,0.18);color:var(--success);font-size:10px;padding:2px 8px;border-radius:6px;letter-spacing:0.05em;">🏆 ベスト更新！</span>`
+        : `<span style="background:rgba(255,68,68,0.18);color:var(--danger);font-size:10px;padding:2px 8px;border-radius:6px;letter-spacing:0.05em;">⚠ ${daysSinceBest}日ぶりにベスト更新できず</span>`;
+
       return `
         <div style="background:var(--surface2);border-radius:10px;padding:12px;margin-bottom:8px;">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;gap:8px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;gap:8px;flex-wrap:wrap;">
             <span style="font-size:14px;font-weight:700;color:var(--text);">${s.name}</span>
             ${statusBadge}
           </div>
-          <div style="font-size:12px;color:var(--text);margin-bottom:4px;">最新: ${lastStr}</div>
+          <div style="font-size:12px;color:var(--text);margin-bottom:4px;">今日: ${lastStr}</div>
           ${bestStr ? `<div style="font-size:11px;color:var(--text-muted);">${bestStr}</div>` : ''}
         </div>
       `;
     }).join('');
-
-    // ハイライト統計
-    const staleCount = stats.filter(s => s.last && daysBetween(s.last.date) >= GYM_STALE_DAYS).length;
-    const updatedCount = stats.filter(s => s.last && s.best && s.last.date === s.best.date && s.last.rm === s.best.rm && daysBetween(s.last.date) < 7).length;
-    const summary = `
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:12px;">
-        <div style="background:var(--surface2);border-radius:8px;padding:10px;text-align:center;">
-          <div style="font-size:9px;color:var(--text-muted);letter-spacing:0.08em;">SUM 種目数</div>
-          <div style="font-size:22px;font-family:'Bebas Neue',sans-serif;color:var(--accent);">${stats.length}</div>
-        </div>
-        <div style="background:var(--surface2);border-radius:8px;padding:10px;text-align:center;">
-          <div style="font-size:9px;color:var(--text-muted);letter-spacing:0.08em;">RECENT 更新</div>
-          <div style="font-size:22px;font-family:'Bebas Neue',sans-serif;color:var(--success);">${updatedCount}</div>
-        </div>
-        <div style="background:var(--surface2);border-radius:8px;padding:10px;text-align:center;">
-          <div style="font-size:9px;color:var(--text-muted);letter-spacing:0.08em;">STALE 停滞</div>
-          <div style="font-size:22px;font-family:'Bebas Neue',sans-serif;color:${staleCount>0?'var(--danger)':'var(--text-muted)'};">${staleCount}</div>
-        </div>
-      </div>
-      <div style="font-size:10px;color:var(--text-muted);margin-bottom:10px;">${GYM_STALE_DAYS}日以上更新がない種目は「停滞」と表示します。最新記録がベストと一致した場合は「ベスト更新」バッジが付きます。</div>
-    `;
 
     el.innerHTML = summary + rows;
   }
