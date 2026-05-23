@@ -279,6 +279,28 @@ class MainActivity : AppCompatActivity() {
         }
 
         @JavascriptInterface
+        fun sendContactForm(jsonStr: String) {
+            val uid = auth.currentUser?.uid ?: "anonymous"
+            val data = hashMapOf(
+                "payload" to jsonStr,
+                "uid" to uid,
+                "createdAt" to System.currentTimeMillis()
+            )
+            db.collection("contacts").add(data)
+                .addOnSuccessListener {
+                    webView.post {
+                        webView.evaluateJavascript("onContactSent(true)", null)
+                    }
+                }
+                .addOnFailureListener { e ->
+                    val msg = (e.message ?: "送信エラー").replace("'", "")
+                    webView.post {
+                        webView.evaluateJavascript("onContactSent(false,'$msg')", null)
+                    }
+                }
+        }
+
+        @JavascriptInterface
         fun openFilePicker() {
             val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
                 type = "*/*"
