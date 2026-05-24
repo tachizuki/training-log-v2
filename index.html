@@ -1880,6 +1880,8 @@
       roadmap_week_unit: '週',
       roadmap_this_week_target: '今週の目標',
       roadmap_weekly_actual: '週平均実績',
+      roadmap_latest_weight: '最新体重',
+      roadmap_diff: '差分',
       label_target: '目標',
       label_actual: '実績',
       label_target_line: '目標ライン',
@@ -2327,6 +2329,8 @@
       roadmap_week_unit: 'wks',
       roadmap_this_week_target: "This Week's Target",
       roadmap_weekly_actual: 'Weekly Average',
+      roadmap_latest_weight: 'Latest',
+      roadmap_diff: 'Diff',
       label_target: 'Target',
       label_actual: 'Actual',
       label_target_line: 'Target Line',
@@ -4358,7 +4362,7 @@
 
     const chartOpts = {responsive:true,plugins:{legend:{labels:{color:'#888',font:{size:11}}}},scales:{x:{ticks:{color:'#666',font:{size:10}},grid:{color:'#1a1a26'}},y:{ticks:{color:'#666',font:{size:10}},grid:{color:'#1a1a26'}}}};
 
-    // ===== 週ビュー：今週の目標 vs 実績カード =====
+    // ===== 週ビュー：数字サマリー＋日別チャート =====
     if (currentFilter === 'week') {
       const base = new Date(today);
       base.setDate(today.getDate() - today.getDay() + weekCalOffset * 7);
@@ -4368,29 +4372,66 @@
       const weekRecs = records.filter(r => r.date >= s && r.date <= e && r.weight);
       const actual = weekRecs.length ? parseFloat((weekRecs.reduce((sum,r)=>sum+r.weight,0)/weekRecs.length).toFixed(1)) : null;
       const target = targetForDate(wMid);
-      const diff = actual !== null ? (actual - target).toFixed(1) : null;
-      const diffColor = diff === null ? 'var(--text-muted)' : parseFloat(diff) <= 0 ? 'var(--success)' : 'var(--danger)';
-      const diffLabel = diff === null ? '' : `<div style="font-size:11px;color:${diffColor};margin-top:3px;">${parseFloat(diff)>0?'+':''}${diff}kg</div>`;
+      const diff = actual !== null ? parseFloat((actual - target).toFixed(1)) : null;
+      const diffColor = diff === null ? 'var(--text-muted)' : diff <= 0 ? 'var(--success)' : 'var(--danger)';
+      const diffStr   = diff === null ? '—' : `${diff > 0 ? '+' : ''}${diff}`;
+      // 日別データ
+      const wDays = [];
+      let wCur = new Date(base);
+      while (wCur <= wEnd) {
+        const ds = formatDate(wCur);
+        const rec = records.find(r => r.date === ds);
+        wDays.push({ label:`${wCur.getMonth()+1}/${wCur.getDate()}`, target:targetForDate(new Date(wCur)), actual: rec?.weight ?? null });
+        wCur.setDate(wCur.getDate() + 1);
+      }
       container.innerHTML = `
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px;">
-          <div style="background:var(--surface2);border-radius:10px;padding:14px;text-align:center;">
-            <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px;">${t('roadmap_this_week_target')}</div>
-            <div style="font-size:28px;font-family:'Bebas Neue';color:rgba(232,255,0,0.85);">${target}<span style="font-size:13px;">kg</span></div>
+        <div style="display:flex;justify-content:space-around;align-items:center;padding:8px 0 14px;">
+          <div style="text-align:center;">
+            <div style="font-size:10px;color:var(--text-muted);margin-bottom:2px;">${t('label_target')}</div>
+            <div style="font-size:26px;font-family:'Bebas Neue';line-height:1;color:rgba(232,255,0,0.85);">${target}<span style="font-size:11px;margin-left:1px;">kg</span></div>
           </div>
-          <div style="background:var(--surface2);border-radius:10px;padding:14px;text-align:center;">
-            <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px;">${t('roadmap_weekly_actual')}</div>
-            <div style="font-size:28px;font-family:'Bebas Neue';color:var(--success);">${actual ?? '—'}<span style="font-size:13px;">${actual?'kg':''}</span></div>
-            ${diffLabel}
+          <div style="width:1px;height:36px;background:var(--border);"></div>
+          <div style="text-align:center;">
+            <div style="font-size:10px;color:var(--text-muted);margin-bottom:2px;">${t('roadmap_weekly_actual')}</div>
+            <div style="font-size:26px;font-family:'Bebas Neue';line-height:1;color:var(--success);">${actual ?? '—'}<span style="font-size:11px;margin-left:1px;">${actual ? 'kg' : ''}</span></div>
           </div>
-        </div>`;
+          <div style="width:1px;height:36px;background:var(--border);"></div>
+          <div style="text-align:center;">
+            <div style="font-size:10px;color:var(--text-muted);margin-bottom:2px;">${t('roadmap_diff')}</div>
+            <div style="font-size:26px;font-family:'Bebas Neue';line-height:1;color:${diffColor};">${diffStr}<span style="font-size:11px;margin-left:1px;">${diff !== null ? 'kg' : ''}</span></div>
+          </div>
+        </div>
+        <canvas id="roadmap-chart" height="150"></canvas>`;
+      if (window._roadmapChart) window._roadmapChart.destroy();
+      window._roadmapChart = new Chart(document.getElementById('roadmap-chart'), {
+        type:'line',
+        data:{
+          labels: wDays.map(d=>d.label),
+          datasets:[
+            {label:t('label_target'), data:wDays.map(d=>d.target), borderColor:'rgba(232,255,0,0.7)', borderDash:[6,3], borderWidth:2, pointRadius:2, pointBackgroundColor:'rgba(232,255,0,0.7)', fill:false, tension:0},
+            {label:t('label_actual'), data:wDays.map(d=>d.actual), borderColor:'#00ff88', backgroundColor:'rgba(0,255,136,0.08)', borderWidth:2, pointRadius:5, pointBackgroundColor:'#00ff88', fill:true, tension:0.3, spanGaps:false}
+          ]
+        },
+        options: chartOpts
+      });
       return;
     }
 
-    // ===== 月ビュー：日別体重 vs 目標ライン（体重推移と統合）=====
+    // ===== 月ビュー：数字サマリー＋日別チャート（体重推移と統合）=====
     if (currentFilter === 'month') {
       const now2 = new Date();
       const monthStart = new Date(now2.getFullYear(), now2.getMonth() + monthCalOffset, 1);
       const monthEnd   = new Date(now2.getFullYear(), now2.getMonth() + monthCalOffset + 1, 0);
+      // 月内の最新実績・目標
+      const mRecs = records.filter(r => r.date >= formatDate(monthStart) && r.date <= formatDate(monthEnd) && r.weight)
+                           .sort((a,b) => b.date.localeCompare(a.date));
+      const mActual = mRecs.length ? parseFloat(mRecs[0].weight.toFixed(1)) : null;
+      const mRefDate = today > monthEnd ? monthEnd : (today < monthStart ? monthStart : today);
+      const mTarget  = targetForDate(mRefDate);
+      const mDiff    = mActual !== null ? parseFloat((mActual - mTarget).toFixed(1)) : null;
+      const mDiffColor = mDiff === null ? 'var(--text-muted)' : mDiff <= 0 ? 'var(--success)' : 'var(--danger)';
+      const mDiffStr   = mDiff === null ? '—' : `${mDiff > 0 ? '+' : ''}${mDiff}`;
+      // 日別データ
       const days = [];
       let cur = new Date(monthStart);
       while (cur <= monthEnd) {
@@ -4399,7 +4440,24 @@
         days.push({ label:`${cur.getMonth()+1}/${cur.getDate()}`, target:targetForDate(new Date(cur)), actual: rec?.weight ?? null });
         cur.setDate(cur.getDate() + 1);
       }
-      container.innerHTML = '<canvas id="roadmap-chart" height="200"></canvas>';
+      container.innerHTML = `
+        <div style="display:flex;justify-content:space-around;align-items:center;padding:8px 0 14px;">
+          <div style="text-align:center;">
+            <div style="font-size:10px;color:var(--text-muted);margin-bottom:2px;">${t('label_target')}</div>
+            <div style="font-size:26px;font-family:'Bebas Neue';line-height:1;color:rgba(232,255,0,0.85);">${mTarget}<span style="font-size:11px;margin-left:1px;">kg</span></div>
+          </div>
+          <div style="width:1px;height:36px;background:var(--border);"></div>
+          <div style="text-align:center;">
+            <div style="font-size:10px;color:var(--text-muted);margin-bottom:2px;">${t('roadmap_latest_weight')}</div>
+            <div style="font-size:26px;font-family:'Bebas Neue';line-height:1;color:var(--success);">${mActual ?? '—'}<span style="font-size:11px;margin-left:1px;">${mActual ? 'kg' : ''}</span></div>
+          </div>
+          <div style="width:1px;height:36px;background:var(--border);"></div>
+          <div style="text-align:center;">
+            <div style="font-size:10px;color:var(--text-muted);margin-bottom:2px;">${t('roadmap_diff')}</div>
+            <div style="font-size:26px;font-family:'Bebas Neue';line-height:1;color:${mDiffColor};">${mDiffStr}<span style="font-size:11px;margin-left:1px;">${mDiff !== null ? 'kg' : ''}</span></div>
+          </div>
+        </div>
+        <canvas id="roadmap-chart" height="150"></canvas>`;
       if (window._roadmapChart) window._roadmapChart.destroy();
       window._roadmapChart = new Chart(document.getElementById('roadmap-chart'), {
         type:'line',
