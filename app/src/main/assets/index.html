@@ -1071,6 +1071,7 @@
     <div class="profile-group full" style="margin-bottom:12px;">
       <label class="profile-label" data-i18n="contact_category">📂 種類</label>
       <select class="profile-input" id="contact-category" style="appearance:none;background-image:none;">
+        <option value="" disabled selected data-i18n="contact_cat_placeholder">種類を選択してください</option>
         <option value="bug" data-i18n="contact_cat_bug">🐛 不具合報告</option>
         <option value="feature" data-i18n="contact_cat_feature">💡 機能要望</option>
         <option value="payment" data-i18n="contact_cat_payment">💳 課金・サブスクについて</option>
@@ -1758,7 +1759,7 @@
       contact_title: 'サポート',
       btn_contact: '📧 お問い合わせ・不具合報告',
       contact_modal_title: '📧 お問い合わせ',
-      contact_desc: '不具合報告・機能要望・その他ご質問はこちらから送信してください。下の項目を入力して「メールを開く」をタップすると、お使いのメールアプリが起動します。',
+      contact_desc: '不具合報告・機能要望・その他ご質問はこちらから送信してください。入力後「送信する」をタップするとアプリ内から直接送信されます。',
       contact_category: '📂 種類',
       contact_cat_bug: '🐛 不具合報告',
       contact_cat_feature: '💡 機能要望',
@@ -1770,7 +1771,9 @@
       contact_body: '詳細',
       contact_body_ph: 'どこで・どんな操作をしたら・何が起きたか具体的に書くと早く調査できます',
       contact_info_note: '送信時にメール本文の末尾にアプリのバージョン情報が自動付与されます。個人情報は含まれません。',
-      contact_send: '📨 メールアプリで送信する',
+      contact_cat_placeholder: '種類を選択してください',
+      contact_send: '📨 送信する',
+      contact_cat_required: '種類を選択してください',
       contact_subject_required: 'タイトルを入力してください',
       contact_body_required: '詳細を入力してください',
       admin_title: '⚙️ 管理者メニュー',
@@ -2207,7 +2210,7 @@
       contact_title: 'Support',
       btn_contact: '📧 Contact & Bug Report',
       contact_modal_title: '📧 Contact Support',
-      contact_desc: 'Send us bug reports, feature requests or general questions. Fill in the fields below and tap "Send" — your email app will open with the message prepared.',
+      contact_desc: 'Send us bug reports, feature requests or general questions. Fill in the fields below and tap "Send" to submit directly within the app.',
       contact_category: '📂 Category',
       contact_cat_bug: '🐛 Bug Report',
       contact_cat_feature: '💡 Feature Request',
@@ -2219,7 +2222,9 @@
       contact_body: 'Details',
       contact_body_ph: 'Where, what you did, and what happened. Concrete steps help us investigate faster.',
       contact_info_note: 'App version info will be appended to the email body. No personal data is included.',
-      contact_send: '📨 Open in mail app',
+      contact_cat_placeholder: 'Select a category',
+      contact_send: '📨 Send',
+      contact_cat_required: 'Please select a category',
       contact_subject_required: 'Please enter a title',
       contact_body_required: 'Please enter the details',
       admin_title: '⚙️ Admin Menu',
@@ -2713,9 +2718,13 @@
   }
 
   function sendContactEmail() {
-    const cat = document.getElementById('contact-category')?.value || 'other';
+    const cat = document.getElementById('contact-category')?.value || '';
     const subjInput = (document.getElementById('contact-subject')?.value || '').trim();
     const body = (document.getElementById('contact-body')?.value || '').trim();
+    if (!cat) {
+      showToast(t('contact_cat_required'));
+      return;
+    }
     if (!subjInput) {
       showToast(t('contact_subject_required'));
       return;
