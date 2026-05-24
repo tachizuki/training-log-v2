@@ -8,6 +8,34 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>PhysiqueLog</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<!-- Firebase JS SDK（ブラウザからのログイン用・Androidは native SDK を使用） -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+(function() {
+  // Android WebView では native Firebase SDK を使うため初期化しない
+  if (typeof Android !== 'undefined' || typeof AndroidBridge !== 'undefined') return;
+  try {
+    firebase.initializeApp({
+      apiKey:            "AIzaSyA81R9NwUI81cQO-m1mUjWFwSsXYeZ3J90",
+      authDomain:        "training-log-ccea0.firebaseapp.com",
+      projectId:         "training-log-ccea0",
+      storageBucket:     "training-log-ccea0.firebasestorage.app",
+      messagingSenderId: "211414940177",
+      appId:             "1:211414940177:web:0558ed93c9a3748b4fcfb0"
+    });
+    firebase.auth().onAuthStateChanged(function(user) {
+      if (user) {
+        if (typeof onFirebaseSignIn === 'function')
+          onFirebaseSignIn(user.uid, user.displayName || '', user.email || '');
+      } else {
+        if (typeof onFirebaseSignOut === 'function') onFirebaseSignOut();
+      }
+    });
+  } catch(e) { console.warn('Firebase init error:', e); }
+})();
+</script>
 
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+JP:wght@300;400;500;700&display=swap');
@@ -2902,10 +2930,21 @@
 
   function firebaseSignIn() {
     if (typeof AndroidBridge !== 'undefined') {
+      // Android native path
       showLoading(t('loading_signing_in'));
       AndroidBridge.signInWithGoogle();
-      // ユーザーがアカウント選択をキャンセルした場合に備えて20秒で自動的に隠す
       setTimeout(() => hideLoading(), 20000);
+    } else if (typeof firebase !== 'undefined' && firebase.auth) {
+      // ブラウザ path: signInWithPopup
+      showLoading(t('loading_signing_in'));
+      const provider = new firebase.auth.GoogleAuthProvider();
+      firebase.auth().signInWithPopup(provider)
+        .catch(err => {
+          hideLoading();
+          if (err.code !== 'auth/popup-closed-by-user') {
+            showToast('ログインに失敗しました: ' + err.message);
+          }
+        });
     } else {
       showToast(t('toast_app_login_required'));
     }
@@ -2915,8 +2954,10 @@
     if (typeof AndroidBridge !== 'undefined') {
       showLoading(t('loading_signing_out'));
       AndroidBridge.signOut();
-      // onFirebaseSignOut が呼ばれて hideLoading するが、念のため5秒で自動非表示
       setTimeout(() => hideLoading(), 5000);
+    } else if (typeof firebase !== 'undefined' && firebase.auth) {
+      showLoading(t('loading_signing_out'));
+      firebase.auth().signOut().finally(() => hideLoading());
     }
   }
 
