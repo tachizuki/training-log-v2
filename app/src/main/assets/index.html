@@ -2796,14 +2796,10 @@
         try { Android.httpPost(CONTACT_GAS_URL, JSON.stringify(payload)); } catch(e) { onContactSent(false, '送信エラー'); }
         return;
       }
-      // ブラウザ環境: fetch fallback
-      fetch(CONTACT_GAS_URL, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify(payload)
-      })
-      .then(() => onContactSent(true))
+      // ブラウザ環境: GET + ?payload= で送信（POST は GAS の 401/redirect で届かないため）
+      const gasUrl = CONTACT_GAS_URL + '?payload=' + encodeURIComponent(JSON.stringify(payload));
+      fetch(gasUrl, { method: 'GET', mode: 'no-cors' })
+        .then(() => onContactSent(true))
       .catch(() => onContactSent(false, 'ネットワークエラーが発生しました'));
       return;
     }
