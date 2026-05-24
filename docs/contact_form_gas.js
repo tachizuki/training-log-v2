@@ -25,26 +25,52 @@ const NOTIFY_EMAIL   = 'physiquelog.support@gmail.com';
 const SHEET_NAME     = 'お問い合わせ';
 
 // ───────────────────────────────
+// シート取得 or 初期化
+// ───────────────────────────────
+function getSheet() {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  let sheet = ss.getSheetByName(SHEET_NAME);
+  if (!sheet) {
+    sheet = ss.insertSheet(SHEET_NAME);
+    sheet.appendRow(['受信日時', '種類', 'タイトル', '内容', 'バージョン', 'ログイン', 'プレミアム', '言語', 'UA']);
+    sheet.getRange(1, 1, 1, 9).setFontWeight('bold').setBackground('#3c3c3c').setFontColor('#ffffff');
+    sheet.setFrozenRows(1);
+    sheet.setColumnWidth(1, 150);
+    sheet.setColumnWidth(3, 200);
+    sheet.setColumnWidth(4, 350);
+    sheet.setColumnWidth(9, 300);
+  }
+  return sheet;
+}
+
+// ───────────────────────────────
 // POST リクエスト受信
 // ───────────────────────────────
 function doPost(e) {
-  try {
-    const data = JSON.parse(e.postData.contents);
+  const sheet = getSheet();
+  const now   = new Date();
 
-    // シート取得 or 新規作成
-    const ss    = SpreadsheetApp.openById(SPREADSHEET_ID);
-    let   sheet = ss.getSheetByName(SHEET_NAME);
-    if (!sheet) {
-      sheet = ss.insertSheet(SHEET_NAME);
-      // ヘッダー行
-      sheet.appendRow(['受信日時', '種類', 'タイトル', '内容', 'バージョン', 'ログイン', 'プレミアム', '言語', 'UA']);
-      sheet.getRange(1, 1, 1, 9).setFontWeight('bold').setBackground('#3c3c3c').setFontColor('#ffffff');
-      sheet.setFrozenRows(1);
-      sheet.setColumnWidth(1, 150);
-      sheet.setColumnWidth(3, 200);
-      sheet.setColumnWidth(4, 350);
-      sheet.setColumnWidth(9, 300);
-    }
+  // ── デバッグ: doPost が呼ばれたことを即記録 ──
+  // ここに行が追加されない場合 → doPost 自体が実行されていない
+  // rawBody が空の場合 → ボディが届いていない
+  const rawBody = (e && e.postData && e.postData.contents) ? e.postData.contents : '';
+  sheet.appendRow([
+    now,
+    '📥 受信確認',
+    'doPost called',
+    rawBody.substring(0, 500),   // 最初の500文字だけ記録
+    '', '', '', '', ''
+  ]);
+
+  // ── ボディが届いていない場合はここで返す ──
+  if (!rawBody) {
+    return ContentService
+      .createTextOutput(JSON.stringify({ ok: false, error: 'no body received' }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  try {
+    const data = JSON.parse(rawBody);
 
     const catLabels = {
       bug:     '🐛 不具合報告',
@@ -54,23 +80,20 @@ function doPost(e) {
       other:   '❓ その他'
     };
     const catLabel = catLabels[data.category] || data.category || '—';
-    const now      = new Date();
 
-    // シートに行追加
-    sheet.appendRow([
-      now,
-      catLabel,
-      data.subject  || '',
-      data.body     || '',
-      data.meta?.version  || '',
-      data.meta?.loggedIn || '',
-      data.meta?.premium  || '',
-      data.meta?.lang     || '',
-      data.meta?.ua       || ''
-    ]);
+    // ── デバッグ行を上書き（正常受信に更新）──
+    const lastRow = sheet.getLastRow();
+    sheet.getRange(lastRow, 2).setValue(catLabel);
+    sheet.getRange(lastRow, 3).setValue(data.subject || '');
+    sheet.getRange(lastRow, 4).setValue(data.body    || '');
+    sheet.getRange(lastRow, 5).setValue(data.meta?.version  || '');
+    sheet.getRange(lastRow, 6).setValue(data.meta?.loggedIn || '');
+    sheet.getRange(lastRow, 7).setValue(data.meta?.premium  || '');
+    sheet.getRange(lastRow, 8).setValue(data.meta?.lang     || '');
+    sheet.getRange(lastRow, 9).setValue(data.meta?.ua       || '');
 
-    // メール通知（即時送信）
-    const subject  = `[PhysiqueLog] ${catLabel}｜${data.subject}`;
+    // メール通知
+    const subject   = `[PhysiqueLog] ${catLabel}｜${data.subject}`;
     const plainBody =
       `種類: ${catLabel}\n` +
       `タイトル: ${data.subject}\n\n` +
@@ -103,6 +126,10 @@ function doPost(e) {
       .setMimeType(ContentService.MimeType.JSON);
 
   } catch (err) {
+    // エラー内容をシートに記録
+    const lastRow = sheet.getLastRow();
+    sheet.getRange(lastRow, 2).setValue('❌ パースエラー');
+    sheet.getRange(lastRow, 3).setValue(err.message);
     console.error('doPost error:', err);
     return ContentService
       .createTextOutput(JSON.stringify({ ok: false, error: err.message }))
@@ -120,8 +147,6 @@ function doGet() {
 // ───────────────────────────────
 // ★ Gmail権限の初回認証用テスト関数
 //   GASエディタでこの関数を選択して「▶ 実行」してください。
-//   Googleアカウントの権限許可ダイアログが出たら「許可」を押す。
-//   これを一度やらないとメールが届きません。
 // ───────────────────────────────
 function testSendEmail() {
   GmailApp.sendEmail(
