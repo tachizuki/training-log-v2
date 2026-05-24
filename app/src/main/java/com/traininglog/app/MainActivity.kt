@@ -302,28 +302,47 @@ class MainActivity : AppCompatActivity() {
 
         /**
          * GAS Web App へ直接 HTTP POST する。
-         * WebView の fetch (no-cors) ではボディが届かない場合があるため
-         * Kotlin の HttpURLConnection を使って確実に送信する。
+         * HttpURLConnection はデフォルトで 302 を GET に変換して追うため、
+         * instanceFollowRedirects=false にしてリダイレクトを手動で追い、
+         * 常に POST を維持することで doPost() を確実に実行させる。
          */
         @JavascriptInterface
         fun httpPost(url: String, body: String) {
             CoroutineScope(Dispatchers.IO).launch {
                 try {
-                    val conn = java.net.URL(url).openConnection() as java.net.HttpURLConnection
-                    conn.requestMethod = "POST"
-                    conn.setRequestProperty("Content-Type", "text/plain; charset=utf-8")
-                    conn.doOutput = true
-                    conn.connectTimeout = 10_000
-                    conn.readTimeout = 10_000
-                    conn.outputStream.use { it.write(body.toByteArray(Charsets.UTF_8)) }
-                    val code = conn.responseCode
-                    conn.disconnect()
+                    val bodyBytes = body.toByteArray(Charsets.UTF_8)
+                    var targetUrl = url
+                    var finalCode = -1
+                    var attempts = 0
+                    while (attempts < 5) {
+                        val conn = java.net.URL(targetUrl).openConnection() as java.net.HttpURLConnection
+                        conn.instanceFollowRedirects = false   // 自動リダイレクト禁止
+                        conn.requestMethod = "POST"
+                        conn.setRequestProperty("Content-Type", "text/plain; charset=utf-8")
+                        conn.doOutput = true
+                        conn.connectTimeout = 15_000
+                        conn.readTimeout = 15_000
+                        conn.outputStream.use { it.write(bodyBytes) }
+                        finalCode = conn.responseCode
+                        if (finalCode in 300..399) {
+                            // リダイレクト先を取得して POST で再送
+                            val location = conn.getHeaderField("Location") ?: ""
+                            conn.disconnect()
+                            if (location.isEmpty()) break
+                            targetUrl = if (location.startsWith("http")) location
+                                        else "https://script.google.com$location"
+                            attempts++
+                        } else {
+                            conn.disconnect()
+                            break
+                        }
+                    }
                     withContext(Dispatchers.Main) {
-                        val ok = code in 200..299 || code == 302 // GAS は成功時に302を返すことがある
+                        val ok = finalCode in 200..299
                         webView.evaluateJavascript("onContactSent($ok)", null)
                     }
                 } catch (e: Exception) {
-                    val msg = (e.message ?: "通信エラー").replace("'", "")
+                    val msg = (e.message ?: "通信エラー").replace("'", "").take(80)
                     withContext(Dispatchers.Main) {
                         webView.evaluateJavascript("onContactSent(false,'$msg')", null)
                     }
