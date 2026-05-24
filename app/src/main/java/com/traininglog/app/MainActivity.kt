@@ -301,73 +301,41 @@ class MainActivity : AppCompatActivity() {
         }
 
         /**
-         * GAS Web App へ HTTP POST する。
+         * GAS Web App へデータを送信する。
          *
-         * GAS Web App の挙動:
-         *   ① POST /exec  → Google がボディ付きでリクエストを受け doPost(e) を実行
-         *   ② 302 redirect → 結果 JSON を script.googleusercontent.com から配信
-         *
-         * HttpURLConnection のデフォルト動作 (instanceFollowRedirects=true) では
-         * 302 を受けて GET に変換してリダイレクトを追うため doGet() が走ってしまう。
-         *
-         * 対策:
-         *   - ① の POST は instanceFollowRedirects=false で送信（doPost を確実に実行）
-         *   - ② の Location を取得し GET で結果 JSON を読み込んで成否を判定
+         * POST は Google のルーティングリダイレクト（認証前 302）で
+         * ボディが届かない問題があるため、GET + URL パラメータ方式を使用する。
+         * GET のリダイレクトは GET→GET で一貫するため確実に動作する。
          */
         @JavascriptInterface
         fun httpPost(url: String, body: String) {
             CoroutineScope(Dispatchers.IO).launch {
                 try {
-                    val bodyBytes = body.toByteArray(Charsets.UTF_8)
-
-                    // ── ① POST to GAS exec (doPost が実行される) ──
-                    val conn1 = java.net.URL(url).openConnection() as java.net.HttpURLConnection
-                    conn1.instanceFollowRedirects = false
-                    conn1.requestMethod = "POST"
-                    conn1.setRequestProperty("Content-Type", "text/plain; charset=utf-8")
-                    conn1.doOutput = true
-                    conn1.connectTimeout = 15_000
-                    conn1.readTimeout = 15_000
-                    conn1.outputStream.use { it.write(bodyBytes) }
-                    val firstCode  = conn1.responseCode
-                    val location   = conn1.getHeaderField("Location") ?: ""
-                    val directBody = if (firstCode in 200..299)
-                        runCatching { conn1.inputStream.bufferedReader().readText() }.getOrDefault("")
+                    val encoded = java.net.URLEncoder.encode(body, "UTF-8")
+                    val fullUrl = "$url?payload=$encoded"
+                    val conn = java.net.URL(fullUrl).openConnection() as java.net.HttpURLConnection
+                    conn.instanceFollowRedirects = true   // GET リダイレクトは問題なく追える
+                    conn.requestMethod = "GET"
+                    conn.connectTimeout = 15_000
+                    conn.readTimeout = 15_000
+                    val code = conn.responseCode
+                    val responseJson = if (code in 200..299)
+                        runCatching { conn.inputStream.bufferedReader().readText() }.getOrDefault("")
                     else ""
-                    conn1.disconnect()
-
-                    // ── ② Location が返ってきたら GET で結果 JSON を取得 ──
-                    val responseJson: String = when {
-                        directBody.isNotEmpty() -> directBody
-                        firstCode in 300..399 && location.isNotEmpty() -> runCatching {
-                            val conn2 = java.net.URL(location).openConnection() as java.net.HttpURLConnection
-                            conn2.instanceFollowRedirects = true
-                            conn2.requestMethod = "GET"
-                            conn2.connectTimeout = 10_000
-                            conn2.readTimeout = 10_000
-                            val code2 = conn2.responseCode
-                            val txt   = if (code2 in 200..299)
-                                conn2.inputStream.bufferedReader().readText()
-                            else ""
-                            conn2.disconnect()
-                            txt
-                        }.getOrDefault("")
-                        else -> ""
-                    }
+                    conn.disconnect()
 
                     withContext(Dispatchers.Main) {
-                        // GAS が {"ok":true} を返せば成功、空か {"ok":false} なら失敗
                         val gasOk = when {
                             responseJson.contains("\"ok\":true")  -> true
                             responseJson.contains("\"ok\":false") -> false
-                            else -> firstCode in 200..399   // JSON 取得できない場合はHTTPコードで判断
+                            else -> code in 200..299
                         }
                         val errMsg = if (!gasOk) {
                             val s = responseJson.indexOf("\"error\":\"")
                             if (s >= 0) {
                                 val e2 = responseJson.indexOf("\"", s + 9)
-                                if (e2 > s + 9) responseJson.substring(s + 9, e2) else "GASエラー"
-                            } else "送信に失敗しました (code=$firstCode)"
+                                if (e2 > s + 9) responseJson.substring(s + 9, e2) else "GASエラー (code=$code)"
+                            } else "送信に失敗しました (code=$code)"
                         } else ""
                         val safeErr = errMsg.replace("'", "").take(100)
                         webView.evaluateJavascript("onContactSent($gasOk,'$safeErr')", null)
