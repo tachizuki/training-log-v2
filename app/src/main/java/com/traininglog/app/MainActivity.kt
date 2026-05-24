@@ -300,6 +300,37 @@ class MainActivity : AppCompatActivity() {
                 }
         }
 
+        /**
+         * GAS Web App へ直接 HTTP POST する。
+         * WebView の fetch (no-cors) ではボディが届かない場合があるため
+         * Kotlin の HttpURLConnection を使って確実に送信する。
+         */
+        @JavascriptInterface
+        fun httpPost(url: String, body: String) {
+            CoroutineScope(Dispatchers.IO).launch {
+                try {
+                    val conn = java.net.URL(url).openConnection() as java.net.HttpURLConnection
+                    conn.requestMethod = "POST"
+                    conn.setRequestProperty("Content-Type", "text/plain; charset=utf-8")
+                    conn.doOutput = true
+                    conn.connectTimeout = 10_000
+                    conn.readTimeout = 10_000
+                    conn.outputStream.use { it.write(body.toByteArray(Charsets.UTF_8)) }
+                    val code = conn.responseCode
+                    conn.disconnect()
+                    withContext(Dispatchers.Main) {
+                        val ok = code in 200..299 || code == 302 // GAS は成功時に302を返すことがある
+                        webView.evaluateJavascript("onContactSent($ok)", null)
+                    }
+                } catch (e: Exception) {
+                    val msg = (e.message ?: "通信エラー").replace("'", "")
+                    withContext(Dispatchers.Main) {
+                        webView.evaluateJavascript("onContactSent(false,'$msg')", null)
+                    }
+                }
+            }
+        }
+
         @JavascriptInterface
         fun openFilePicker() {
             val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
