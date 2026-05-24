@@ -4446,34 +4446,28 @@
       return;
     }
 
-    // ===== 月ビュー：今月の週ごと目標 vs 実績チャート =====
+    // ===== 月ビュー：日別体重 vs 目標ライン（体重推移と統合）=====
     if (currentFilter === 'month') {
-      const now = new Date();
-      const monthStart = new Date(now.getFullYear(), now.getMonth() + monthCalOffset, 1);
-      const monthEnd = new Date(now.getFullYear(), now.getMonth() + monthCalOffset + 1, 0);
-      const weeks = [];
-      let ws = new Date(monthStart);
-      ws.setDate(monthStart.getDate() - monthStart.getDay()); // 直前の日曜
-      while (ws <= monthEnd) {
-        const we = new Date(ws); we.setDate(ws.getDate() + 6);
-        const wm = new Date(ws); wm.setDate(ws.getDate() + 3);
-        if (we >= monthStart) {
-          const s = formatDate(ws), e = formatDate(we);
-          const wr = records.filter(r => r.date >= s && r.date <= e && r.weight);
-          const actual = wr.length ? parseFloat((wr.reduce((sum,r)=>sum+r.weight,0)/wr.length).toFixed(1)) : null;
-          weeks.push({ label:`${wm.getMonth()+1}/${wm.getDate()}`, target:targetForDate(wm), actual });
-        }
-        ws.setDate(ws.getDate() + 7);
+      const now2 = new Date();
+      const monthStart = new Date(now2.getFullYear(), now2.getMonth() + monthCalOffset, 1);
+      const monthEnd   = new Date(now2.getFullYear(), now2.getMonth() + monthCalOffset + 1, 0);
+      const days = [];
+      let cur = new Date(monthStart);
+      while (cur <= monthEnd) {
+        const dateStr = formatDate(cur);
+        const rec = records.find(r => r.date === dateStr);
+        days.push({ label:`${cur.getMonth()+1}/${cur.getDate()}`, target:targetForDate(new Date(cur)), actual: rec?.weight ?? null });
+        cur.setDate(cur.getDate() + 1);
       }
       container.innerHTML = '<canvas id="roadmap-chart" height="200"></canvas>';
       if (window._roadmapChart) window._roadmapChart.destroy();
       window._roadmapChart = new Chart(document.getElementById('roadmap-chart'), {
         type:'line',
         data:{
-          labels: weeks.map(w=>w.label),
+          labels: days.map(d=>d.label),
           datasets:[
-            {label:t('label_target'), data:weeks.map(w=>w.target), borderColor:'rgba(232,255,0,0.7)', borderDash:[6,3], borderWidth:2, pointRadius:4, pointBackgroundColor:'rgba(232,255,0,0.7)', fill:false, tension:0},
-            {label:t('label_actual'), data:weeks.map(w=>w.actual), borderColor:'#00ff88', backgroundColor:'rgba(0,255,136,0.08)', borderWidth:2, pointRadius:5, pointBackgroundColor:'#00ff88', fill:true, tension:0.3, spanGaps:false}
+            {label:t('label_target'), data:days.map(d=>d.target), borderColor:'rgba(232,255,0,0.7)', borderDash:[6,3], borderWidth:2, pointRadius:2, pointBackgroundColor:'rgba(232,255,0,0.7)', fill:false, tension:0},
+            {label:t('label_actual'), data:days.map(d=>d.actual), borderColor:'#00ff88', backgroundColor:'rgba(0,255,136,0.08)', borderWidth:2, pointRadius:4, pointBackgroundColor:'#00ff88', fill:true, tension:0.3, spanGaps:false}
           ]
         },
         options: chartOpts
@@ -4562,8 +4556,19 @@
     const labels=sorted.map(r=>{const d=new Date(r.date+'T00:00:00');return `${d.getMonth()+1}/${d.getDate()}`;});
     const cd={responsive:true,plugins:{legend:{labels:{color:'#888',font:{size:11}}}},scales:{x:{ticks:{color:'#666',font:{size:10}},grid:{color:'#1a1a26'}},y:{ticks:{color:'#666',font:{size:10}},grid:{color:'#1a1a26'}}}};
 
-    if(weightChart) weightChart.destroy();
-    weightChart=new Chart(document.getElementById('weight-chart'),{type:'line',data:{labels,datasets:[{label:LANG==='ja'?'体重':'Weight',data:sorted.map(r=>r.weight),borderColor:'#00ff88',backgroundColor:'rgba(0,255,136,0.1)',tension:0.4,fill:true,pointBackgroundColor:'#00ff88',pointRadius:4,spanGaps:true}]},options:{...cd}});
+    // 月ビュー＋ロードマップ表示中は体重チャートをスキップ（ロードマップに日別体重を統合済み）
+    const _roadmapActive = currentFilter === 'month'
+      && !!localStorage.getItem('contest_date')
+      && !!localStorage.getItem('contest_weight');
+    const _weightCont = document.getElementById('weight-chart')?.closest('.chart-container');
+    if (_roadmapActive) {
+      if (_weightCont) _weightCont.style.display = 'none';
+      if (weightChart) { weightChart.destroy(); weightChart = null; }
+    } else {
+      if (_weightCont) _weightCont.style.display = '';
+      if (weightChart) weightChart.destroy();
+      weightChart = new Chart(document.getElementById('weight-chart'),{type:'line',data:{labels,datasets:[{label:LANG==='ja'?'体重':'Weight',data:sorted.map(r=>r.weight),borderColor:'#00ff88',backgroundColor:'rgba(0,255,136,0.1)',tension:0.4,fill:true,pointBackgroundColor:'#00ff88',pointRadius:4,spanGaps:true}]},options:{...cd}});
+    }
 
     if(kcalChart) kcalChart.destroy();
     kcalChart=new Chart(document.getElementById('kcal-chart'),{type:'bar',data:{labels,datasets:[{label:LANG==='ja'?'カロリー':'Calories',data:sorted.map(r=>r.kcal),backgroundColor:'rgba(232,255,0,0.5)',borderColor:'#e8ff00',borderWidth:1,borderRadius:4}]},options:{...cd}});
