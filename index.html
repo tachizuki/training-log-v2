@@ -2706,22 +2706,57 @@
     if (m) m.classList.remove('open');
   }
 
+  function setContactFieldError(id, msg) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.style.borderColor = 'var(--danger)';
+    el.style.boxShadow   = '0 0 0 2px rgba(255,68,68,0.25)';
+    const errId = id + '-err';
+    let errEl = document.getElementById(errId);
+    if (!errEl) {
+      errEl = document.createElement('div');
+      errEl.id = errId;
+      errEl.style.cssText = 'font-size:11px;color:var(--danger);margin-top:5px;padding:4px 8px;background:rgba(255,68,68,0.08);border-radius:6px;';
+      el.parentNode.insertBefore(errEl, el.nextSibling);
+    }
+    errEl.textContent = '⚠ ' + msg;
+    const clear = () => {
+      el.style.borderColor = '';
+      el.style.boxShadow   = '';
+      const e2 = document.getElementById(errId);
+      if (e2) e2.remove();
+    };
+    el.addEventListener('input',  clear, { once: true });
+    el.addEventListener('change', clear, { once: true });
+  }
+  function clearAllContactErrors() {
+    ['contact-category','contact-subject','contact-body'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) { el.style.borderColor = ''; el.style.boxShadow = ''; }
+      const e2 = document.getElementById(id + '-err');
+      if (e2) e2.remove();
+    });
+  }
+
   function sendContactEmail() {
-    const cat = document.getElementById('contact-category')?.value || '';
+    clearAllContactErrors();
+    const cat      = document.getElementById('contact-category')?.value || '';
     const subjInput = (document.getElementById('contact-subject')?.value || '').trim();
-    const body = (document.getElementById('contact-body')?.value || '').trim();
-    if (!cat) {
-      showToast(t('contact_cat_required'));
-      return;
+    const body      = (document.getElementById('contact-body')?.value || '').trim();
+    let hasError = false;
+    if (!body) {
+      setContactFieldError('contact-body', t('contact_body_required'));
+      hasError = true;
     }
     if (!subjInput) {
-      showToast(t('contact_subject_required'));
-      return;
+      setContactFieldError('contact-subject', t('contact_subject_required'));
+      hasError = true;
     }
-    if (!body) {
-      showToast(t('contact_body_required'));
-      return;
+    if (!cat) {
+      setContactFieldError('contact-category', t('contact_cat_required'));
+      hasError = true;
     }
+    if (hasError) return;
 
     const payload = {
       category: cat,
@@ -2739,10 +2774,11 @@
     // ① GAS Web App 経由（最優先：即時メール通知＋スプレッドシート保存）
     if (CONTACT_GAS_URL && CONTACT_GAS_URL !== 'YOUR_GAS_URL') {
       showLoading('送信中...');
+      // no-cors では application/json が無視されるため text/plain で送る（GAS側でJSONとして解析）
       fetch(CONTACT_GAS_URL, {
         method: 'POST',
         mode: 'no-cors',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'text/plain' },
         body: JSON.stringify(payload)
       })
       .then(() => onContactSent(true))

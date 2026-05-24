@@ -116,3 +116,18 @@ function doGet() {
     .createTextOutput('PhysiqueLog Contact Form Endpoint is running ✓')
     .setMimeType(ContentService.MimeType.TEXT);
 }
+
+// ───────────────────────────────
+// ★ Gmail権限の初回認証用テスト関数
+//   GASエディタでこの関数を選択して「▶ 実行」してください。
+//   Googleアカウントの権限許可ダイアログが出たら「許可」を押す。
+//   これを一度やらないとメールが届きません。
+// ───────────────────────────────
+function testSendEmail() {
+  GmailApp.sendEmail(
+    NOTIFY_EMAIL,
+    '[PhysiqueLog] GAS接続テスト',
+    'このメールが届いていればGASのメール送信設定は完了です。'
+  );
+  SpreadsheetApp.openById(SPREADSHEET_ID).toast('テストメールを送信しました ✓', 'GAS テスト', 5);
+}
