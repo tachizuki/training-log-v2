@@ -121,18 +121,22 @@
   }
   .phone-screen { width:100%;height:100%;background:var(--ph-bg);font-size:8px;overflow:hidden;position:relative; }
   .ph-top { padding:10px 8px 8px;display:flex;flex-direction:column; }
-  .ph-appname { font-family:monospace;font-size:18px;font-weight:900;color:var(--ph-accent);letter-spacing:0.05em;line-height:1; }
-  .ph-appsub { font-size:6px;color:var(--ph-muted);letter-spacing:0.2em;text-transform:uppercase;margin-bottom:8px; }
+  .ph-appname { font-family:'Arial Black',sans-serif;font-size:20px;font-weight:900;color:var(--ph-accent);letter-spacing:0.05em;line-height:1; }
+  .ph-appsub { font-size:5px;color:var(--ph-muted);letter-spacing:0.15em;margin-bottom:5px; }
   .ph-welcome { font-size:6px;color:var(--ph-muted);margin-bottom:6px; }
-  .ph-stats { display:grid;grid-template-columns:repeat(4,1fr);gap:3px;margin-bottom:8px; }
-  .ph-stat { background:var(--ph-surface);border:1px solid var(--ph-border);border-radius:5px;padding:4px 2px;text-align:center; }
-  .ph-stat-label { font-size:4px;color:var(--ph-muted); }
-  .ph-stat-value { font-size:8px;font-weight:700;color:var(--ph-text); }
-  .ph-stat-value.y{color:var(--ph-accent);} .ph-stat-value.g{color:var(--ph-green);} .ph-stat-value.c{color:var(--ph-accent2);}
-  .ph-btns { display:flex;flex-direction:column;gap:3px; }
-  .ph-btn { padding:6px 8px;border-radius:6px;font-size:6px;font-weight:700;text-align:left; }
-  .ph-btn-rec { background:linear-gradient(135deg,#e8ff00,#b8cc00);color:#000; }
-  .ph-btn-sec { background:var(--ph-surface);border:1px solid var(--ph-border);color:var(--ph-text); }
+  /* 2×2 stats grid to match actual app */
+  .ph-stats { display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:8px; }
+  .ph-stat { display:flex;flex-direction:column;gap:1px; }
+  .ph-stat-label { font-size:4px;color:var(--ph-muted);letter-spacing:0.1em; }
+  .ph-stat-value { font-size:11px;font-weight:900;color:var(--ph-accent);line-height:1; }
+  .ph-stat-value.g{color:#00ff88;} .ph-stat-value.c{color:var(--ph-accent2);} .ph-stat-value.w{color:var(--ph-text);}
+  /* 2×2 button grid to match actual app */
+  .ph-btns { display:grid;grid-template-columns:1fr 1fr;gap:3px; }
+  .ph-btn { padding:7px 4px;border-radius:6px;font-size:6px;font-weight:900;text-align:center;display:flex;align-items:center;justify-content:center;min-height:22px;line-height:1.2; }
+  .ph-btn-rec { background:var(--ph-accent);color:#000; }
+  .ph-btn-water { background:rgba(0,212,255,0.12);color:var(--ph-accent2);border:1px solid rgba(0,212,255,0.4); }
+  .ph-btn-gym { background:rgba(232,255,0,0.08);color:var(--ph-accent);border:1px solid rgba(232,255,0,0.3); }
+  .ph-btn-view { background:transparent;color:var(--ph-muted);border:1px solid var(--ph-border); }
   .ph-nav { position:absolute;bottom:0;left:0;right:0;background:var(--ph-surface);border-top:1px solid var(--ph-border);display:flex;padding:4px 0 6px; }
   .ph-nav-item { flex:1;display:flex;flex-direction:column;align-items:center;gap:1px;font-size:4px;color:var(--ph-muted); }
   .ph-nav-item.on{color:var(--ph-accent);} .ph-nav-item.on-c{color:var(--ph-accent2);}
@@ -215,30 +219,35 @@
         </div>
         <div class="phone-frame"><div class="phone-screen">
           <div class="ph-top">
-            <div class="ph-appname">PHYSIQUE<br>LOG</div>
-            <div class="ph-appsub">Contest Athlete Tracker</div>
+            <div class="ph-appname">PHYSIQUELOG</div>
+            <div class="ph-appsub">大会競技者向け 記録アプリ</div>
             <div class="ph-welcome">ようこそ、田中さん 👋</div>
             <div class="ph-countdown">
+              <div class="ph-count-name">🏆 東京大会 2026</div>
               <div class="ph-count-num">42</div>
               <div class="ph-count-label">DAYS TO CONTEST</div>
-              <div class="ph-count-name">🏆 東京大会 2026</div>
             </div>
-            <div class="ph-stats">
-              <div class="ph-stat"><div class="ph-stat-label">KCAL</div><div class="ph-stat-value y">2140</div></div>
-              <div class="ph-stat"><div class="ph-stat-label">WEIGHT</div><div class="ph-stat-value g">72.4kg</div></div>
-              <div class="ph-stat"><div class="ph-stat-label">PROTEIN</div><div class="ph-stat-value c">178g</div></div>
-              <div class="ph-stat"><div class="ph-stat-label">WATER</div><div class="ph-stat-value">2.1L</div></div>
+            <div style="background:var(--ph-surface);border:1px solid var(--ph-border);border-radius:8px;padding:8px 10px;margin-bottom:6px;">
+              <div style="font-size:4.5px;color:var(--ph-muted);letter-spacing:0.15em;margin-bottom:5px;">2026年5月26日</div>
+              <div class="ph-stats">
+                <div class="ph-stat"><div class="ph-stat-label">KCAL</div><div class="ph-stat-value">2,140</div></div>
+                <div class="ph-stat"><div class="ph-stat-label">WEIGHT</div><div class="ph-stat-value g">72.4 KG</div></div>
+                <div class="ph-stat"><div class="ph-stat-label">PROTEIN</div><div class="ph-stat-value c">178 G</div></div>
+                <div class="ph-stat"><div class="ph-stat-label">WATER</div><div class="ph-stat-value w">2,100 ML</div></div>
+              </div>
             </div>
             <div class="ph-btns">
-              <div class="ph-btn ph-btn-rec">📝 記録する</div>
-              <div class="ph-btn ph-btn-sec">💪 筋トレメモ</div>
+              <div class="ph-btn ph-btn-rec">記録する</div>
+              <div class="ph-btn ph-btn-water">💧 水分を記録する</div>
+              <div class="ph-btn ph-btn-gym">💪 筋トレメモ</div>
+              <div class="ph-btn ph-btn-view">表示する</div>
             </div>
           </div>
           <div class="ph-nav">
             <div class="ph-nav-item on"><div class="ph-nav-icon">🏠</div>ホーム</div>
             <div class="ph-nav-item"><div class="ph-nav-icon">📝</div>記録</div>
             <div class="ph-nav-item"><div class="ph-nav-icon">💪</div>筋トレ</div>
-            <div class="ph-nav-item"><div class="ph-nav-icon">📊</div>表示</div>
+            <div class="ph-nav-item"><div class="ph-nav-icon">📊</div>表示する</div>
             <div class="ph-nav-item on-c"><div class="ph-nav-icon">⚙️</div>設定</div>
           </div>
         </div></div>
