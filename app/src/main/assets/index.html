@@ -761,8 +761,8 @@
       <div class="form-grid">
         <div class="form-group"><label class="form-label" data-i18n="label_weight">体重 (kg)</label><input type="number" class="form-input" id="rec-weight" placeholder="62.5" step="0.1"></div>
         <div class="form-group">
-          <label class="form-label">😴 睡眠時間 (h) <span style="font-size:10px;color:var(--text-muted);">就寝・起床から自動計算</span></label>
-          <input type="number" class="form-input" id="rec-sleep" placeholder="7.5" step="0.1" readonly style="opacity:0.7;">
+          <label class="form-label">😴 睡眠時間 (h) <span style="font-size:10px;color:var(--text-muted);">直接入力 or 就寝・起床から自動計算</span></label>
+          <input type="number" class="form-input" id="rec-sleep" placeholder="7.5" step="0.1">
         </div>
       </div>
       <div class="form-grid" style="margin-top:8px;">
@@ -1226,7 +1226,7 @@
     <input type="hidden" id="edit-date-key">
     <div class="edit-grid">
       <div class="edit-group"><label class="edit-label" data-i18n="label_weight">体重 (kg)</label><input type="number" class="edit-input" id="edit-weight" step="0.1" placeholder="62.5"></div>
-      <div class="edit-group"><label class="edit-label">😴 睡眠 (h)</label><input type="number" class="edit-input" id="edit-sleep" step="0.1" placeholder="7.5" readonly style="opacity:0.7;"></div>
+      <div class="edit-group"><label class="edit-label">😴 睡眠 (h)</label><input type="number" class="edit-input" id="edit-sleep" step="0.1" placeholder="7.5"></div>
       <div class="edit-group"><label class="edit-label">🌙 就寝時刻</label><input type="time" class="edit-input" id="edit-bedtime" oninput="calcSleepFromBedWake('edit')"></div>
       <div class="edit-group"><label class="edit-label">🌅 起床時刻</label><input type="time" class="edit-input" id="edit-waketime" oninput="calcSleepFromBedWake('edit')"></div>
       <div class="edit-group"><label class="edit-label" data-i18n="label_protein">タンパク質 (g)</label><input type="number" class="edit-input" id="edit-p" placeholder="180" oninput="editCalcKcal()"></div>
@@ -4294,8 +4294,8 @@
       if(r.cardioKcal) tags.push(`<span class="tag tag-cardio">🔥 ${LANG==='ja'?'有酸素':'Cardio '}${r.cardioKcal}kcal</span>`);
       const memo=r.memo?`<div class="record-memo">${r.memo}</div>`:'';
       const analysis = buildAnalysisHTML(r, r.date);
-      return `<div class="record-card">
-        <div class="record-date">${ds}<button class="record-edit-btn" onclick="openEditModal('${r.date}')">${t('edit_btn')}</button></div>
+      return `<div class="record-card" onclick="openEditModal('${r.date}')" style="cursor:pointer;">
+        <div class="record-date">${ds}<button class="record-edit-btn" onclick="event.stopPropagation();openEditModal('${r.date}')">${t('edit_btn')}</button></div>
         <div class="record-macros">
           <div class="macro-item"><div class="macro-value kcal">${r.kcal||'—'}</div><div class="macro-label">KCAL</div></div>
           <div class="macro-item"><div class="macro-value p">${r.p||'—'}</div><div class="macro-label">P(g)</div></div>
@@ -6730,6 +6730,9 @@
     if (label) label.textContent = premium ? t('plan_premium') : t('plan_free');
     if (label) label.style.color = premium ? 'var(--accent)' : 'var(--text)';
     if (btn) btn.style.display = premium ? 'none' : '';
+    // アカウント削除はログイン済みの場合のみ表示
+    const dangerZone = document.getElementById('danger-zone');
+    if (dangerZone) dangerZone.style.display = currentUser ? '' : 'none';
   }
 
   function handleProfileOverlay(e) {
