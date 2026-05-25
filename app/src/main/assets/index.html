@@ -85,14 +85,14 @@
   .gym-link-sub { font-size:11px; color:var(--text-muted); margin-top:2px; }
   .gym-link-btn { background:var(--accent); color:var(--bg); border:none; border-radius:8px; padding:9px 16px; font-size:13px; font-weight:700; cursor:pointer; flex-shrink:0; white-space:nowrap; }
   .gym-link-btn.secondary { background:transparent; border:1px solid var(--accent); color:var(--accent); }
-  .profile-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 19; display: flex; align-items: flex-end; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.25s; }
+  .profile-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 70; display: flex; align-items: flex-end; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.25s; }
   .profile-modal-overlay.open { opacity: 1; pointer-events: all; }
   /* 設定項目が増えたので max-height + overflow-y でスクロール可能に。
      画面上端より上にはみ出してアクセスできない問題を防ぐ。 */
   .profile-modal-sheet {
     background: var(--surface);
     border-radius: 24px 24px 0 0;
-    padding: 24px 24px calc(88px + env(safe-area-inset-bottom));
+    padding: 24px 24px calc(32px + env(safe-area-inset-bottom));
     width: 100%;
     max-width: 480px;
     max-height: 90vh;
@@ -1087,7 +1087,7 @@
   <button class="nav-item" id="nav-view" onclick="showScreen('view-screen');renderView()">
     <span class="ni">📊</span><span data-i18n="nav_view">表示</span>
   </button>
-  <button class="nav-item nav-settings" id="nav-settings" onclick="openProfile()">
+  <button class="nav-item nav-settings" id="nav-settings" onclick="showScreen('settings-screen')">
     <span class="ni">⚙️</span><span data-i18n="nav_settings">設定</span>
   </button>
 </nav>
@@ -1338,12 +1338,12 @@
 </div>
 
 <!-- PROFILE MODAL -->
-<div class="profile-modal-overlay" id="profile-modal" onclick="handleProfileOverlay(event)">
-  <div class="profile-modal-sheet">
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:4px;">
-      <button class="btn-back" onclick="document.getElementById('profile-modal').classList.remove('open')">←</button>
-      <div class="profile-modal-title" style="margin-bottom:0;" data-i18n="profile_title">⚙ プロフィール設定</div>
-    </div>
+<div id="settings-screen" class="screen">
+  <div class="screen-header">
+    <button class="btn-back" onclick="showScreen(null)">←</button>
+    <div class="screen-title" data-i18n="profile_title">⚙ 設定</div>
+  </div>
+  <div class="screen-body">
     <!-- プランステータス -->
     <div id="plan-status-bar" style="background:var(--surface2);border-radius:12px;padding:12px 14px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;">
       <div>
@@ -3338,9 +3338,10 @@
       updatePremiumGatedUI();
     } else {
       document.getElementById(id).classList.add('active');
-      const navMap = {'record-screen':'nav-record','gym-screen':'nav-gym','view-screen':'nav-view'};
+      const navMap = {'record-screen':'nav-record','gym-screen':'nav-gym','view-screen':'nav-view','settings-screen':'nav-settings'};
       const navId = navMap[id];
       if (navId) { const nb = document.getElementById(navId); if (nb) nb.classList.add('active'); }
+      if (id === 'settings-screen') openProfile();
       // 記録画面を開く時に今日の既存データを読み込む
       if (id === 'record-screen') {
         const today = formatDate(new Date());
@@ -5873,10 +5874,6 @@
       document.getElementById('activity-picker').classList.remove('open');
       return true;
     }
-    if (document.getElementById('profile-modal').classList.contains('open')) {
-      document.getElementById('profile-modal').classList.remove('open');
-      return true;
-    }
     if (document.getElementById('gym-picker').classList.contains('open')) {
       closeGymPicker();
       return true;
@@ -6870,7 +6867,6 @@
   }
 
   function openProfile() {
-    document.getElementById('profile-modal').classList.add('open');
     document.getElementById('prof-height').value = userProfile.height||'';
     document.getElementById('prof-age').value = userProfile.age||'';
     selectSex(userProfile.sex||'male');
@@ -6911,10 +6907,6 @@
     if (dangerZone) dangerZone.style.display = currentUser ? '' : 'none';
   }
 
-  function handleProfileOverlay(e) {
-    if(e.target===document.getElementById('profile-modal'))
-      document.getElementById('profile-modal').classList.remove('open');
-  }
 
   function selectSex(sex) {
     userProfile.sex = sex;
@@ -6970,7 +6962,7 @@
     };
     localStorage.setItem('nutrition_goals', JSON.stringify(goals));
     updatePremiumGatedUI();
-    document.getElementById('profile-modal').classList.remove('open');
+    showScreen(null);
     showToast(t('toast_profile_saved'), false);
     if (currentUser) syncToCloud(currentUser.uid, 0); // プロフィール保存は即時同期
   }
