@@ -2,7 +2,10 @@ package com.traininglog.app
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.os.Build
 import androidx.core.app.ActivityCompat
@@ -52,6 +55,19 @@ class MainActivity : AppCompatActivity() {
     private lateinit var auth: FirebaseAuth
     private lateinit var db: FirebaseFirestore
     private lateinit var billing: BillingManager
+
+    // タイマー完了をWebViewに通知するブロードキャストレシーバー
+    private val timerDoneReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            if (intent?.action == TimerService.BROADCAST_DONE) {
+                webView.post {
+                    webView.evaluateJavascript(
+                        "if(typeof onTimerDone==='function')onTimerDone()", null
+                    )
+                }
+            }
+        }
+    }
 
     private val googleSignInLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
@@ -248,6 +264,31 @@ class MainActivity : AppCompatActivity() {
             val hour = prefs.getInt("hour", 20)
             val minute = prefs.getInt("minute", 0)
             return """{"enabled":$enabled,"hour":$hour,"minute":$minute}"""
+        }
+
+        // ──────────────────────────────────────────────
+        // タイマー（バックグラウンド動作・バイブレーション）
+        // ──────────────────────────────────────────────
+
+        @JavascriptInterface
+        fun startTimer(seconds: Int) {
+            val intent = Intent(this@MainActivity, TimerService::class.java).apply {
+                action = TimerService.ACTION_START
+                putExtra(TimerService.EXTRA_SECONDS, seconds)
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                startForegroundService(intent)
+            } else {
+                startService(intent)
+            }
+        }
+
+        @JavascriptInterface
+        fun stopTimer() {
+            val intent = Intent(this@MainActivity, TimerService::class.java).apply {
+                action = TimerService.ACTION_STOP
+            }
+            startService(intent)
         }
 
         @JavascriptInterface
@@ -518,6 +559,13 @@ class MainActivity : AppCompatActivity() {
         val url = "$REMOTE_URL?v=${System.currentTimeMillis()}"
         webView.loadUrl(url)
 
+        // タイマー完了ブロードキャストを受信（バックグラウンド完了時もJSコールバックを届ける）
+        ContextCompat.registerReceiver(
+            this, timerDoneReceiver,
+            IntentFilter(TimerService.BROADCAST_DONE),
+            ContextCompat.RECEIVER_NOT_EXPORTED
+        )
+
         // 認証状態の監視（新規ログイン・ログアウト時にJSに通知）
         // ※ページロード完了前に発火した場合はonPageFinishedで改めて復元される
         auth.addAuthStateListener { firebaseAuth ->
@@ -566,6 +614,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
+        try { unregisterReceiver(timerDoneReceiver) } catch (_: Exception) {}
         if (::billing.isInitialized) billing.endConnection()
         super.onDestroy()
     }

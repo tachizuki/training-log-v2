@@ -6060,6 +6060,8 @@
   let timerRemain = 90;
   let timerInterval = null;
   let timerRunning = false;
+  let timerStartTime = null;   // タイマー開始時刻（バックグラウンド後も正確に残り時間を計算）
+  let timerStartRemain = 90;   // タイマー開始時の残り秒数
 
   function openTimer() {
     document.getElementById('timer-overlay').classList.add('open');
@@ -6070,14 +6072,22 @@
   function closeTimer() {
     document.getElementById('timer-overlay').classList.remove('open');
     clearInterval(timerInterval);
+    timerInterval = null;
     timerRunning = false;
+    timerStartTime = null;
     document.getElementById('timer-start-btn').textContent = t('timer_start');
     document.getElementById('timer-display').classList.remove('done');
+    // ネイティブタイマー停止
+    if (typeof AndroidBridge !== 'undefined' && AndroidBridge.stopTimer) {
+      try { AndroidBridge.stopTimer(); } catch(e) {}
+    }
   }
 
   function setTimerSec(sec) {
     clearInterval(timerInterval);
+    timerInterval = null;
     timerRunning = false;
+    timerStartTime = null;
     timerSec = sec;
     timerRemain = sec;
     document.getElementById('timer-custom-input').value = sec;
@@ -6087,48 +6097,88 @@
       const m = (b.getAttribute('onclick')||'').match(/setTimerSec\((\d+)\)/);
       b.classList.toggle('active', m ? parseInt(m[1])===sec : false);
     });
+    // ネイティブタイマー停止
+    if (typeof AndroidBridge !== 'undefined' && AndroidBridge.stopTimer) {
+      try { AndroidBridge.stopTimer(); } catch(e) {}
+    }
     updateTimerDisplay();
   }
 
   function toggleTimer() {
     if (timerRunning) {
+      // ── 停止 ──
       clearInterval(timerInterval);
+      timerInterval = null;
       timerRunning = false;
+      timerStartTime = null;
       document.getElementById('timer-start-btn').textContent = t('timer_start');
+      if (typeof AndroidBridge !== 'undefined' && AndroidBridge.stopTimer) {
+        try { AndroidBridge.stopTimer(); } catch(e) {}
+      }
     } else {
-      if (timerRemain <= 0) { timerRemain = timerSec; document.getElementById('timer-display').classList.remove('done'); }
+      // ── 開始 ──
+      if (timerRemain <= 0) {
+        timerRemain = timerSec;
+        document.getElementById('timer-display').classList.remove('done');
+      }
       timerRunning = true;
+      timerStartTime = Date.now();
+      timerStartRemain = timerRemain;
       document.getElementById('timer-start-btn').textContent = t('timer_stop');
-      timerInterval = setInterval(()=>{
-        timerRemain--;
+      document.getElementById('timer-label').textContent = 'REST TIMER';
+
+      // Android: ネイティブサービスでバックグラウンド動作＋バイブを委譲
+      const hasNative = typeof AndroidBridge !== 'undefined' && AndroidBridge.startTimer;
+      if (hasNative) {
+        try { AndroidBridge.startTimer(timerRemain); } catch(e) {}
+      }
+
+      // JSインターバル: タイムスタンプ基準で表示を更新（バックグラウンド後も自己補正）
+      timerInterval = setInterval(() => {
+        const elapsed = Math.floor((Date.now() - timerStartTime) / 1000);
+        timerRemain = Math.max(0, timerStartRemain - elapsed);
         updateTimerDisplay();
         if (timerRemain <= 0) {
           clearInterval(timerInterval);
+          timerInterval = null;
           timerRunning = false;
-          document.getElementById('timer-start-btn').textContent = t('timer_start');
-          document.getElementById('timer-display').classList.add('done');
-          document.getElementById('timer-label').textContent = t('timer_done');
-          // バイブレーション
-          if (navigator.vibrate) navigator.vibrate([300,100,300,100,300,100,300,100,300,100,300,100,300,100,300,100,300]);
-          // ビープ音
-          try {
-            const ctx = new (window.AudioContext || window.webkitAudioContext)();
-            [0, 0.4, 0.8, 1.2, 1.6, 2.0, 2.4, 2.8, 3.2].forEach(t => {
-              const osc = ctx.createOscillator();
-              const gain = ctx.createGain();
-              osc.connect(gain);
-              gain.connect(ctx.destination);
-              osc.type = 'sine';
-              osc.frequency.value = 880;
-              gain.gain.setValueAtTime(0.5, ctx.currentTime + t);
-              gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + t + 0.3);
-              osc.start(ctx.currentTime + t);
-              osc.stop(ctx.currentTime + t + 0.3);
-            });
-          } catch(e) {}
+          // ネイティブなし（Web）の場合はここで完了処理
+          if (!hasNative) onTimerDone();
+          // ネイティブあり: onTimerDone() はネイティブから呼ばれる
         }
-      }, 1000);
+      }, 500);
     }
+  }
+
+  // ネイティブ Android から呼ばれるコールバック（またはWeb完了時）
+  function onTimerDone() {
+    clearInterval(timerInterval);
+    timerInterval = null;
+    timerRunning = false;
+    timerStartTime = null;
+    timerRemain = 0;
+    updateTimerDisplay();
+    document.getElementById('timer-start-btn').textContent = t('timer_start');
+    document.getElementById('timer-display').classList.add('done');
+    document.getElementById('timer-label').textContent = t('timer_done');
+    // Webバイブフォールバック（Androidは native 側でバイブ済み）
+    if (typeof AndroidBridge === 'undefined' && navigator.vibrate) {
+      navigator.vibrate([300,100,300,100,300,100,300]);
+    }
+    // ビープ音
+    try {
+      const actx = new (window.AudioContext || window.webkitAudioContext)();
+      [0, 0.4, 0.8, 1.2, 1.6, 2.0, 2.4, 2.8, 3.2].forEach(d => {
+        const osc = actx.createOscillator();
+        const gain = actx.createGain();
+        osc.connect(gain); gain.connect(actx.destination);
+        osc.type = 'sine'; osc.frequency.value = 880;
+        gain.gain.setValueAtTime(0.5, actx.currentTime + d);
+        gain.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + d + 0.3);
+        osc.start(actx.currentTime + d);
+        osc.stop(actx.currentTime + d + 0.3);
+      });
+    } catch(e) {}
   }
 
   function updateTimerDisplay() {
@@ -6136,7 +6186,7 @@
     const s = timerRemain % 60;
     document.getElementById('timer-display').textContent =
       String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
-    document.getElementById('timer-label').textContent = 'REST TIMER';
+    if (timerRemain > 0) document.getElementById('timer-label').textContent = 'REST TIMER';
   }
 
   // ==================
