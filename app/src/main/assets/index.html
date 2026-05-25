@@ -900,6 +900,17 @@
     <button class="gym-action-btn" onclick="gymShare()" data-i18n="gym_share">📷 シェア</button>
   </div>
 
+  <!-- 筋トレ分析パネル -->
+  <div style="margin:12px 16px 0;padding:14px 16px;background:var(--surface);border:1px solid var(--border);border-radius:12px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;" onclick="toggleGymAnalysis()">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--accent);letter-spacing:0.05em;">📊 筋トレ分析</div>
+      <span id="gym-analysis-toggle" style="color:var(--text-muted);font-size:14px;">▼</span>
+    </div>
+    <div id="gym-analysis-body" style="display:none;margin-top:12px;">
+      <div id="gym-analysis-content"></div>
+    </div>
+  </div>
+
   <div class="gym-body">
     <div class="gym-stopwatch">
       <div class="gym-stopwatch-time" id="sw-display">00:00:00</div>
@@ -917,16 +928,6 @@
     <button class="gym-add-exercise-btn" onclick="openGymPicker()" data-i18n="btn_add_exercise_gym">＋ 種目を追加</button>
     <button class="gym-save-btn" onclick="saveGym()" data-i18n="btn_back_save">← 戻る（自動保存済み）</button>
 
-    <!-- 筋トレ分析パネル -->
-    <div style="margin-top:18px;padding:16px;background:var(--surface);border:1px solid var(--border);border-radius:12px;">
-      <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;" onclick="toggleGymAnalysis()">
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--accent);letter-spacing:0.05em;">📊 筋トレ分析</div>
-        <span id="gym-analysis-toggle" style="color:var(--text-muted);font-size:14px;">▼</span>
-      </div>
-      <div id="gym-analysis-body" style="display:none;margin-top:12px;">
-        <div id="gym-analysis-content"></div>
-      </div>
-    </div>
   </div>
 </div>
 
@@ -3318,15 +3319,18 @@
     document.getElementById('ts-water').textContent = w.total > 0 ? w.total + ' ml' : '— ml';
   }
 
+  let _currentScreenId = null;
+
   function showScreen(id) {
+    _currentScreenId = id;
     document.getElementById('top-screen').style.display = 'none';
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     const nav = document.getElementById('bottom-nav');
+    // ナビは全画面で常に表示
+    if (nav) nav.classList.remove('hidden');
+    document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
     if (!id) {
       document.getElementById('top-screen').style.display = 'flex';
-      if (nav) nav.classList.remove('hidden');
-      // ナビアイコンのアクティブ状態をホームに戻す
-      document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
       const nh = document.getElementById('nav-home');
       if (nh) nh.classList.add('active');
       updateTodaySummary();
@@ -3334,7 +3338,9 @@
       updatePremiumGatedUI();
     } else {
       document.getElementById(id).classList.add('active');
-      if (nav) nav.classList.add('hidden');
+      const navMap = {'record-screen':'nav-record','gym-screen':'nav-gym','view-screen':'nav-view'};
+      const navId = navMap[id];
+      if (navId) { const nb = document.getElementById(navId); if (nb) nb.classList.add('active'); }
       // 記録画面を開く時に今日の既存データを読み込む
       if (id === 'record-screen') {
         const today = formatDate(new Date());
@@ -5883,10 +5889,10 @@
       document.getElementById('share-overlay').classList.remove('open');
       return true;
     }
-    // トップ画面以外なら戻る
-    const top = document.getElementById('top-screen');
-    if (top && top.style.display !== 'flex' && top.style.display !== '') {
-      if (typeof showScreen === 'function') { showScreen(null); return true; }
+    // サブ画面にいれば戻る
+    if (_currentScreenId !== null) {
+      showScreen(null);
+      return true;
     }
     return false;
   }
