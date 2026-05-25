@@ -4152,7 +4152,11 @@
       items.push({icon:'⏱️', cls:'warn', text:t('wa_salt2').replace('{0}',prev2Rec.salt)});
     }
 
-    // ⑪.5 歩数・有酸素
+    // ⑪.5 歩数・有酸素（徒歩を有酸素に統合）
+    const _stepsKcal = prevRec.steps ? Math.round((prevRec.weight||63) * prevRec.steps * 0.000539) : 0;
+    const _cardioKcal = prevRec.cardioKcal || 0;
+    const _totalCardioKcal = _cardioKcal + _stepsKcal;
+
     if (prevRec.steps) {
       if (prevRec.steps >= 10000) {
         items.push({icon:'🚶', cls:'good', text:t('wa_steps_high').replace('{0}',prevRec.steps.toLocaleString())});
@@ -4160,21 +4164,21 @@
         items.push({icon:'🚶', cls:'warn', text:t('wa_steps_low').replace('{0}',prevRec.steps.toLocaleString())});
       }
     }
-    if (prevRec.cardioKcal || prevRec.steps) {
-      if (prevRec.cardioKcal >= 300) {
-        items.push({icon:'🚴', cls:'good', text:t('wa_cardio_high').replace('{0}',prevRec.cardioKcal) + (prevRec.cardioMemo ? ` (${prevRec.cardioMemo})` : '')});
+    // 有酸素合計（ジム有酸素 + 徒歩）が 0 より大きい場合のみ表示
+    if (_totalCardioKcal > 0) {
+      const _memo = prevRec.cardioMemo ? ` (${prevRec.cardioMemo})` : '';
+      if (_totalCardioKcal >= 300) {
+        items.push({icon:'🚴', cls:'good', text:t('wa_cardio_high').replace('{0}',_totalCardioKcal) + _memo});
       } else {
-        items.push({icon:'🚴', cls:'', text:t('wa_cardio_low').replace('{0}',prevRec.cardioKcal) + (prevRec.cardioMemo ? ` (${prevRec.cardioMemo})` : '')});
+        items.push({icon:'🚴', cls:'', text:t('wa_cardio_low').replace('{0}',_totalCardioKcal) + _memo});
       }
       // カロリー収支計算
       if (prevRec.kcal) {
         const bmr = getUserBMR() || 1700;
-        const stepsKcal = prevRec.steps ? Math.round((prevRec.weight||63) * prevRec.steps * 0.000539) : 0;
-        const cardioKcal = prevRec.cardioKcal || 0;
-        const totalBurn = bmr + cardioKcal + stepsKcal;
+        const totalBurn = bmr + _cardioKcal + _stepsKcal;
         const balance = prevRec.kcal - totalBurn;
         const balanceStr = (balance > 0 ? '+' : '') + Math.round(balance);
-        const burnDetail = t('wa_balance_bmr').replace('{0}',bmr).replace('{1}',cardioKcal).replace('{2}',stepsKcal);
+        const burnDetail = t('wa_balance_bmr').replace('{0}',bmr).replace('{1}',_cardioKcal).replace('{2}',_stepsKcal);
         if (balance < -500) {
           items.push({icon:'📊', cls:'good', text:t('wa_balance_good').replace('{0}',balanceStr).replace('{1}',burnDetail)});
         } else if (balance < 0) {
