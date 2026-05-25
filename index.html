@@ -70,7 +70,7 @@
   #top-screen {
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     min-height: 100vh;
-    padding: max(20px, env(safe-area-inset-top)) 20px max(20px, env(safe-area-inset-bottom));
+    padding: max(20px, env(safe-area-inset-top)) 20px calc(75px + max(20px, env(safe-area-inset-bottom)));
     position: relative;
   }
   #top-screen::before {
@@ -83,6 +83,36 @@
   .app-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(56px,16vw,80px); letter-spacing: 0.05em; line-height: 0.9; color: var(--accent); text-shadow: 0 0 40px rgba(232,255,0,0.3); margin-bottom: 8px; }
   .app-subtitle { font-size: 11px; letter-spacing: 0.3em; color: var(--text-muted); text-transform: uppercase; margin-bottom: 48px; }
   .profile-btn { position: absolute; top: max(20px, env(safe-area-inset-top)); right: 20px; background: none; border: 1px solid var(--border); border-radius: 10px; color: var(--text-muted); font-size: 18px; padding: 6px 10px; cursor: pointer; z-index: 2; }
+  /* ===== ボトムナビゲーション ===== */
+  .bottom-nav { position:fixed; bottom:0; left:0; right:0; display:flex; background:var(--surface); border-top:1px solid var(--border); padding-bottom:env(safe-area-inset-bottom); z-index:20; transition:transform 0.25s cubic-bezier(0.4,0,0.2,1); }
+  .bottom-nav.hidden { transform:translateY(100%); }
+  .nav-item { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:10px 4px 10px; gap:3px; border:none; background:none; color:var(--text-muted); font-size:10px; cursor:pointer; position:relative; -webkit-tap-highlight-color:transparent; letter-spacing:0.02em; transition:color 0.15s; }
+  .nav-item.active { color:var(--accent); }
+  .nav-item .ni { font-size:21px; line-height:1; }
+  .nav-item::before { content:''; position:absolute; top:0; left:50%; transform:translateX(-50%); width:0; height:2px; background:var(--accent); border-radius:0 0 2px 2px; transition:width 0.2s; }
+  .nav-item.active::before { width:26px; }
+  .nav-item.nav-settings.active { color:var(--accent2); }
+  .nav-item.nav-settings.active::before { background:var(--accent2); }
+  /* ===== ジムサマリー（一覧カード内） ===== */
+  .gym-card-summary { border-top:1px solid var(--border); margin-top:10px; padding-top:10px; }
+  .gym-card-summary-header { display:flex; justify-content:space-between; align-items:center; cursor:pointer; user-select:none; }
+  .gym-card-summary-title { font-size:12px; color:var(--accent); font-weight:700; }
+  .gym-card-summary-meta { font-size:11px; color:var(--text-muted); }
+  .gym-card-summary-chevron { font-size:11px; color:var(--text-muted); transition:transform 0.2s; display:inline-block; }
+  .gym-card-summary-chevron.open { transform:rotate(180deg); }
+  .gym-card-summary-detail { display:none; margin-top:8px; }
+  .gym-card-summary-detail.open { display:block; }
+  .gym-card-ex { display:flex; justify-content:space-between; align-items:center; padding:5px 0; border-bottom:1px solid var(--border); font-size:12px; }
+  .gym-card-ex:last-child { border-bottom:none; }
+  .gym-card-ex-name { color:var(--text); }
+  .gym-card-ex-sets { color:var(--text-muted); font-size:11px; }
+  /* ===== 筋トレ連動セクション（記録画面） ===== */
+  .gym-link-box { background:var(--surface2); border:1px solid var(--border); border-radius:12px; padding:14px 16px; }
+  .gym-link-row { display:flex; justify-content:space-between; align-items:center; gap:12px; }
+  .gym-link-label { font-size:13px; color:var(--text); font-weight:600; }
+  .gym-link-sub { font-size:11px; color:var(--text-muted); margin-top:2px; }
+  .gym-link-btn { background:var(--accent); color:var(--bg); border:none; border-radius:8px; padding:9px 16px; font-size:13px; font-weight:700; cursor:pointer; flex-shrink:0; white-space:nowrap; }
+  .gym-link-btn.secondary { background:transparent; border:1px solid var(--accent); color:var(--accent); }
   .profile-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 70; display: flex; align-items: flex-end; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.25s; }
   .profile-modal-overlay.open { opacity: 1; pointer-events: all; }
   /* 設定項目が増えたので max-height + overflow-y でスクロール可能に。
@@ -743,7 +773,6 @@
 
 <!-- TOP -->
 <div id="top-screen">
-  <button class="profile-btn" onclick="openProfile()">⚙</button>
   <div class="top-content">
     <div class="app-title" id="app-title-display">TRAINING<br>LOG</div>
     <div class="app-subtitle" data-i18n="app_subtitle">大会競技者向け 記録アプリ</div>
@@ -850,6 +879,10 @@
     <div class="form-section">
       <div class="form-section-title" data-i18n="section_memo">📝 メモ</div>
       <div class="form-group full"><textarea class="form-input" id="rec-memo" data-i18n-ph="placeholder_memo" placeholder="体調・気づきなど（空欄可）"></textarea></div>
+    </div>
+    <div class="form-section" id="gym-link-section-wrap">
+      <div class="form-section-title" data-i18n="gym_link_title">💪 筋トレ連動</div>
+      <div id="gym-link-section"></div>
     </div>
     <button class="btn-submit" onclick="saveRecord()" data-i18n="btn_save">保存する</button>
   </div>
@@ -1082,6 +1115,25 @@
     <div class="chart-container"><div class="chart-title" data-i18n="chart_water">💧 水分推移 (ml)</div><canvas id="water-chart" height="180"></canvas></div>
   </div>
 </div>
+
+<!-- ===== ボトムナビゲーション ===== -->
+<nav class="bottom-nav hidden" id="bottom-nav">
+  <button class="nav-item active" id="nav-home" onclick="showScreen(null)">
+    <span class="ni">🏠</span><span data-i18n="nav_home">ホーム</span>
+  </button>
+  <button class="nav-item" id="nav-record" onclick="showScreen('record-screen')">
+    <span class="ni">📝</span><span data-i18n="nav_record">記録</span>
+  </button>
+  <button class="nav-item" id="nav-gym" onclick="showScreen('gym-screen');renderGym()">
+    <span class="ni">💪</span><span data-i18n="nav_gym">筋トレ</span>
+  </button>
+  <button class="nav-item" id="nav-view" onclick="showScreen('view-screen');renderView()">
+    <span class="ni">📊</span><span data-i18n="nav_view">表示</span>
+  </button>
+  <button class="nav-item nav-settings" id="nav-settings" onclick="openProfile()">
+    <span class="ni">⚙️</span><span data-i18n="nav_settings">設定</span>
+  </button>
+</nav>
 
 <!-- PAYWALL MODAL -->
 <!-- ===== LOADING OVERLAY ===== -->
@@ -2022,6 +2074,13 @@
       plan_status_premium_badge: '✨',
       // contest label
       days_to_contest: 'DAYS TO CONTEST',
+      // bottom nav
+      nav_home: 'ホーム', nav_record: '記録', nav_gym: '筋トレ', nav_view: '表示', nav_settings: '設定',
+      // gym link section
+      gym_link_title: '💪 筋トレ連動',
+      gym_link_has_record: '記録済み', gym_link_no_record: '本日の筋トレ記録なし',
+      gym_link_open: '開く', gym_link_record: '💪 記録する',
+      gym_summary_title: '💪 筋トレ', gym_summary_sets_suffix: 'セット', gym_summary_ex_suffix: '種目',
     },
     en: {
       app_name: 'PhysiqueLog',
@@ -2471,6 +2530,13 @@
       plan_status_premium_badge: '✨',
       // contest label
       days_to_contest: 'DAYS TO CONTEST',
+      // bottom nav
+      nav_home: 'Home', nav_record: 'Log', nav_gym: 'Gym', nav_view: 'View', nav_settings: 'Settings',
+      // gym link section
+      gym_link_title: '💪 Gym Link',
+      gym_link_has_record: 'Logged', gym_link_no_record: 'No workout today',
+      gym_link_open: 'Open', gym_link_record: '💪 Log Workout',
+      gym_summary_title: '💪 Gym', gym_summary_sets_suffix: ' sets', gym_summary_ex_suffix: ' ex',
     }
   };
 
@@ -3233,6 +3299,9 @@
     updateWelcome();
     updateContestCountdown();
     checkOnboarding();
+    // ボトムナビ表示
+    const _nav = document.getElementById('bottom-nav');
+    if (_nav) _nav.classList.remove('hidden');
   }
 
   function updateTodaySummary() {
@@ -3248,11 +3317,18 @@
   function showScreen(id) {
     document.getElementById('top-screen').style.display = 'none';
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    const nav = document.getElementById('bottom-nav');
     if (!id) {
       document.getElementById('top-screen').style.display = 'flex';
+      if (nav) nav.classList.remove('hidden');
+      document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+      const nh = document.getElementById('nav-home');
+      if (nh) nh.classList.add('active');
       updateTodaySummary();
+      updatePremiumGatedUI();
     } else {
       document.getElementById(id).classList.add('active');
+      if (nav) nav.classList.add('hidden');
       // 記録画面を開く時に今日の既存データを読み込む
       if (id === 'record-screen') {
         const today = formatDate(new Date());
@@ -3277,6 +3353,7 @@
       document.getElementById('muscle-selector').style.display = 'none';
       recActivities = [];
       renderActivityList();
+      updateGymLinkSection(date);
       return;
     }
     // 既存データを各フィールドに流し込む
@@ -3306,6 +3383,7 @@
     // 運動記録
     recActivities = JSON.parse(JSON.stringify(r.activities||[]));
     renderActivityList();
+    updateGymLinkSection(date);
   }
 
   function calcKcal() {
@@ -4275,6 +4353,28 @@
       if(r.cardioKcal) tags.push(`<span class="tag tag-cardio">🔥 ${LANG==='ja'?'有酸素':'Cardio '}${r.cardioKcal}kcal</span>`);
       const memo=r.memo?`<div class="record-memo">${r.memo}</div>`:'';
       const analysis = buildAnalysisHTML(r, r.date);
+      // ===== Concept A: ジムサマリー =====
+      const gymEntry = gymData[r.date];
+      let gymSummaryHTML = '';
+      if (gymEntry && gymEntry.exercises && gymEntry.exercises.length > 0) {
+        const exCount = gymEntry.exercises.length;
+        const totalSets = gymEntry.exercises.reduce((s,ex)=>s+(ex.sets?ex.sets.length:0),0);
+        let maxWeight = 0;
+        gymEntry.exercises.forEach(ex=>{ if(ex.sets) ex.sets.forEach(set=>{ if(set.weight&&set.weight>maxWeight) maxWeight=set.weight; }); });
+        const maxWStr = maxWeight>0 ? ` · MAX ${maxWeight}kg` : '';
+        const exListHTML = gymEntry.exercises.map(ex=>{
+          if(!ex.sets||ex.sets.length===0) return '';
+          const bestSet = ex.sets.reduce((b,s)=>((s.weight||0)>(b.weight||0)?s:b), ex.sets[0]);
+          return `<div class="gym-card-ex"><span class="gym-card-ex-name">${ex.name}</span><span class="gym-card-ex-sets">${ex.sets.length}${t('gym_summary_sets_suffix')} · ${bestSet.weight||'?'}kg×${bestSet.reps||'?'}</span></div>`;
+        }).filter(Boolean).join('');
+        gymSummaryHTML = `<div class="gym-card-summary">
+          <div class="gym-card-summary-header" onclick="event.stopPropagation();toggleGymSummary('${r.date}')">
+            <div><span class="gym-card-summary-title">${t('gym_summary_title')}</span><span class="gym-card-summary-meta"> ${exCount}${t('gym_summary_ex_suffix')} · ${totalSets}${t('gym_summary_sets_suffix')}${maxWStr}</span></div>
+            <span class="gym-card-summary-chevron" id="gym-chevron-${r.date}">▼</span>
+          </div>
+          <div class="gym-card-summary-detail" id="gym-detail-${r.date}">${exListHTML}</div>
+        </div>`;
+      }
       return `<div class="record-card" onclick="openEditModal('${r.date}')" style="cursor:pointer;">
         <div class="record-date">${ds}<button class="record-edit-btn" onclick="event.stopPropagation();openEditModal('${r.date}')">${t('edit_btn')}</button></div>
         <div class="record-macros">
@@ -4285,6 +4385,7 @@
         </div>
         ${tags.length>0?`<div class="record-tags">${tags.join('')}</div>`:''}
         ${memo}
+        ${gymSummaryHTML}
       </div>`+analysis;
     }).join('');
     // 無料ユーザー：ロックされた件数があればバナーを末尾に追加
@@ -4295,6 +4396,36 @@
         <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">${t('locked_desc')}</div>
         <div style="display:inline-block;padding:8px 24px;background:var(--accent);color:var(--bg);border-radius:20px;font-size:13px;font-weight:700;">${t('upgrade_btn')}</div>
       </div>`;
+    }
+  }
+
+  // ===== Concept A: ジムサマリー開閉 =====
+  function toggleGymSummary(date) {
+    const detail = document.getElementById('gym-detail-' + date);
+    const chevron = document.getElementById('gym-chevron-' + date);
+    if (!detail) return;
+    const isOpen = detail.classList.toggle('open');
+    if (chevron) chevron.classList.toggle('open', isOpen);
+  }
+
+  // ===== Concept C: 筋トレ連動セクション更新 =====
+  function updateGymLinkSection(date) {
+    const el = document.getElementById('gym-link-section');
+    if (!el) return;
+    const gymEntry = gymData[date];
+    const hasGym = gymEntry && gymEntry.exercises && gymEntry.exercises.length > 0;
+    if (hasGym) {
+      const exCount = gymEntry.exercises.length;
+      const totalSets = gymEntry.exercises.reduce((s,ex)=>s+(ex.sets?ex.sets.length:0),0);
+      el.innerHTML = `<div class="gym-link-box"><div class="gym-link-row">
+        <div><div class="gym-link-label">${exCount}${t('gym_summary_ex_suffix')} · ${totalSets}${t('gym_summary_sets_suffix')}</div><div class="gym-link-sub">${t('gym_link_has_record')}</div></div>
+        <button class="gym-link-btn" onclick="gymDate='${date}';showScreen('gym-screen');renderGym();">${t('gym_link_open')}</button>
+      </div></div>`;
+    } else {
+      el.innerHTML = `<div class="gym-link-box"><div class="gym-link-row">
+        <div><div class="gym-link-sub">${t('gym_link_no_record')}</div></div>
+        <button class="gym-link-btn secondary" onclick="gymDate='${date}';showScreen('gym-screen');renderGym();">${t('gym_link_record')}</button>
+      </div></div>`;
     }
   }
 

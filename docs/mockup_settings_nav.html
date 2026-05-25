@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PhysiqueLog モックアップ ⑥ 設定ボタン改善</title>
+<style>
+  :root {
+    --bg: #0a0a0a; --surface: #141414; --surface2: #1e1e1e;
+    --border: #2a2a2a; --text: #f0f0f0; --text-muted: #666;
+    --accent: #e8ff00; --accent2: #00d4ff; --danger: #ff4444;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #111827;
+    font-family: -apple-system, 'Noto Sans JP', sans-serif;
+    color: #ccc;
+    padding: 32px 24px 48px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 48px;
+  }
+
+  h1 { color: #f0f0f0; font-size: 18px; font-weight: 700; letter-spacing: 0.05em; }
+  .subtitle { color: #888; font-size: 13px; margin-top: 6px; }
+
+  .compare-row {
+    display: flex;
+    gap: 40px;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: flex-start;
+  }
+
+  .screen-wrap { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  .phone-label { color: #aaa; font-size: 13px; text-align: center; }
+  .phone-tag {
+    display: inline-block;
+    border-radius: 20px; font-size: 11px; font-weight: 700;
+    padding: 2px 12px; letter-spacing: 0.08em;
+  }
+  .tag-before { background: rgba(255,100,100,0.15); color: #ff8888; border: 1px solid rgba(255,100,100,0.3); }
+  .tag-after  { background: rgba(232,255,0,0.15); color: var(--accent); border: 1px solid rgba(232,255,0,0.3); }
+  .tag-settings { background: rgba(0,212,255,0.15); color: var(--accent2); border: 1px solid rgba(0,212,255,0.3); }
+
+  .phone {
+    width: 360px;
+    background: var(--bg);
+    border-radius: 36px;
+    border: 2px solid #2a2a2a;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.7);
+    position: relative;
+  }
+
+  /* ======= TOP SCREEN ======= */
+  .top-header {
+    background: var(--surface);
+    padding: 20px 20px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+  }
+  .app-title { font-size: 20px; font-weight: 900; color: var(--text); letter-spacing: 0.1em; line-height: 1.2; }
+  .app-subtitle { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+  .gear-btn-old {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text-muted);
+    font-size: 16px;
+    padding: 6px 10px;
+    cursor: pointer;
+    position: relative;
+  }
+  .gear-btn-old::after {
+    content: '← 小さい・見づらい';
+    position: absolute;
+    right: -140px; top: 50%; transform: translateY(-50%);
+    color: #ff8888; font-size: 10px; white-space: nowrap;
+    background: rgba(255,100,100,0.15);
+    border: 1px solid rgba(255,100,100,0.3);
+    border-radius: 6px; padding: 3px 8px;
+  }
+
+  .top-body {
+    padding: 20px;
+    background: var(--bg);
+    min-height: 340px;
+  }
+  .welcome { font-size: 14px; color: var(--text-muted); margin-bottom: 16px; }
+  .welcome span { color: var(--accent); }
+
+  .today-stats {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 8px; margin-bottom: 20px;
+  }
+  .stat-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 6px;
+    text-align: center;
+  }
+  .stat-label { font-size: 9px; color: var(--text-muted); letter-spacing: 0.1em; }
+  .stat-value { font-size: 14px; font-weight: 700; color: var(--text); margin-top: 3px; }
+  .stat-value.green { color: #4ade80; }
+  .stat-value.cyan { color: var(--accent2); }
+  .stat-value.yellow { color: var(--accent); }
+
+  .main-btns { display: flex; flex-direction: column; gap: 10px; }
+  .main-btn {
+    padding: 14px 20px;
+    border-radius: 12px;
+    border: none;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    text-align: left;
+  }
+  .btn-record { background: linear-gradient(135deg, #e8ff00, #b8cc00); color: #000; }
+  .btn-water  { background: var(--surface); border: 1px solid var(--border); color: var(--text); }
+  .btn-gym    { background: var(--surface); border: 1px solid var(--border); color: var(--text); }
+  .btn-view   { background: var(--surface); border: 1px solid var(--border); color: var(--text); }
+
+  /* BEFORE: no bottom nav */
+  .spacer { height: 20px; }
+
+  /* ======= BOTTOM NAV ======= */
+  .bottom-nav {
+    display: flex;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    padding: 0;
+  }
+  .nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 4px 12px;
+    gap: 3px;
+    cursor: pointer;
+    border: none;
+    background: none;
+    color: var(--text-muted);
+    font-size: 10px;
+    letter-spacing: 0.02em;
+    transition: color 0.15s;
+    position: relative;
+  }
+  .nav-item.active { color: var(--accent); }
+  .nav-item.active .nav-icon { color: var(--accent); }
+  .nav-item .nav-icon { font-size: 20px; line-height: 1; }
+  .nav-indicator {
+    position: absolute;
+    top: 0; left: 50%; transform: translateX(-50%);
+    width: 28px; height: 2px;
+    background: var(--accent);
+    border-radius: 0 0 2px 2px;
+  }
+  .nav-item-settings { color: var(--accent2) !important; }
+  .nav-item-settings .nav-icon { color: var(--accent2); }
+
+  /* ======= SETTINGS SCREEN ======= */
+  .settings-header {
+    background: var(--surface);
+    padding: 20px 20px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .settings-title { font-size: 17px; font-weight: 700; color: var(--text); }
+  .settings-icon { font-size: 20px; }
+  .settings-body { background: var(--bg); min-height: 380px; padding: 20px 16px; }
+
+  .setting-section-title {
+    font-size: 10px; color: var(--text-muted); letter-spacing: 0.12em;
+    text-transform: uppercase; margin: 0 0 8px 4px; margin-top: 20px;
+  }
+  .setting-section-title:first-child { margin-top: 0; }
+
+  .setting-row {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+    cursor: pointer;
+  }
+  .setting-row-left { display: flex; align-items: center; gap: 12px; }
+  .setting-row-icon { font-size: 18px; width: 28px; text-align: center; }
+  .setting-row-text { font-size: 14px; color: var(--text); }
+  .setting-row-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+  .setting-row-right { color: var(--text-muted); font-size: 16px; }
+  .setting-row-value { font-size: 12px; color: var(--accent2); margin-right: 6px; }
+
+  .setting-row.danger { border-color: rgba(255,68,68,0.3); }
+  .setting-row.danger .setting-row-text { color: var(--danger); }
+
+  /* ======= ANNOTATION ======= */
+  .annotation-box {
+    max-width: 780px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid #2a2a2a;
+    border-radius: 14px;
+    padding: 20px 24px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px 32px;
+  }
+  .ann-item { display: flex; gap: 10px; align-items: flex-start; }
+  .ann-num {
+    background: rgba(232,255,0,0.15);
+    color: var(--accent);
+    border: 1px solid rgba(232,255,0,0.3);
+    border-radius: 50%; width: 22px; height: 22px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700; flex-shrink: 0; margin-top: 1px;
+  }
+  .ann-text { font-size: 12px; color: #bbb; line-height: 1.6; }
+  .ann-text strong { color: #f0f0f0; }
+
+  .section-header {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 6px; margin-bottom: 8px;
+  }
+</style>
+</head>
+<body>
+
+<div class="section-header">
+  <h1>⑥ 設定ボタン改善モックアップ</h1>
+  <p class="subtitle">右上⚙ボタン → ボトムナビゲーション「設定」タブへ移動</p>
+</div>
+
+<!-- COMPARE ROW -->
+<div class="compare-row">
+
+  <!-- BEFORE -->
+  <div class="screen-wrap">
+    <div class="phone-label">
+      <span class="phone-tag tag-before">BEFORE — 現状</span>
+    </div>
+    <div class="phone">
+      <div class="top-header">
+        <div>
+          <div class="app-title">TRAINING<br>LOG</div>
+          <div class="app-subtitle">大会競技者向け 記録アプリ</div>
+        </div>
+        <button class="gear-btn-old">⚙</button>
+      </div>
+      <div class="top-body">
+        <div class="welcome">ようこそ、<span>田中</span>さん 👋</div>
+        <div class="today-stats">
+          <div class="stat-box"><div class="stat-label">KCAL</div><div class="stat-value yellow">2,140</div></div>
+          <div class="stat-box"><div class="stat-label">WEIGHT</div><div class="stat-value green">72.4kg</div></div>
+          <div class="stat-box"><div class="stat-label">PROTEIN</div><div class="stat-value cyan">178g</div></div>
+          <div class="stat-box"><div class="stat-label">WATER</div><div class="stat-value">2.1L</div></div>
+        </div>
+        <div class="main-btns">
+          <button class="main-btn btn-record">📝 記録する</button>
+          <button class="main-btn btn-water">💧 水分を記録する</button>
+          <button class="main-btn btn-gym">💪 筋トレメモ</button>
+          <button class="main-btn btn-view">📊 表示する</button>
+        </div>
+      </div>
+      <div class="spacer"></div>
+    </div>
+  </div>
+
+  <!-- AFTER: top screen with bottom nav -->
+  <div class="screen-wrap">
+    <div class="phone-label">
+      <span class="phone-tag tag-after">AFTER — ボトムナビ案</span>
+    </div>
+    <div class="phone">
+      <div class="top-header">
+        <div>
+          <div class="app-title">TRAINING<br>LOG</div>
+          <div class="app-subtitle">大会競技者向け 記録アプリ</div>
+        </div>
+        <!-- gear btn removed -->
+      </div>
+      <div class="top-body">
+        <div class="welcome">ようこそ、<span>田中</span>さん 👋</div>
+        <div class="today-stats">
+          <div class="stat-box"><div class="stat-label">KCAL</div><div class="stat-value yellow">2,140</div></div>
+          <div class="stat-box"><div class="stat-label">WEIGHT</div><div class="stat-value green">72.4kg</div></div>
+          <div class="stat-box"><div class="stat-label">PROTEIN</div><div class="stat-value cyan">178g</div></div>
+          <div class="stat-box"><div class="stat-label">WATER</div><div class="stat-value">2.1L</div></div>
+        </div>
+        <div class="main-btns">
+          <button class="main-btn btn-record">📝 記録する</button>
+          <button class="main-btn btn-water">💧 水分を記録する</button>
+          <button class="main-btn btn-gym">💪 筋トレメモ</button>
+          <button class="main-btn btn-view">📊 表示する</button>
+        </div>
+      </div>
+      <!-- BOTTOM NAV -->
+      <div class="bottom-nav">
+        <button class="nav-item active">
+          <div class="nav-indicator"></div>
+          <span class="nav-icon">🏠</span>
+          <span>ホーム</span>
+        </button>
+        <button class="nav-item">
+          <span class="nav-icon">📝</span>
+          <span>記録</span>
+        </button>
+        <button class="nav-item">
+          <span class="nav-icon">💪</span>
+          <span>筋トレ</span>
+        </button>
+        <button class="nav-item">
+          <span class="nav-icon">📊</span>
+          <span>表示</span>
+        </button>
+        <button class="nav-item nav-item-settings">
+          <span class="nav-icon">⚙️</span>
+          <span>設定</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SETTINGS SCREEN -->
+  <div class="screen-wrap">
+    <div class="phone-label">
+      <span class="phone-tag tag-settings">設定タブ — 中身イメージ</span>
+    </div>
+    <div class="phone">
+      <div class="settings-header">
+        <span class="settings-icon">⚙️</span>
+        <div class="settings-title">設定</div>
+      </div>
+      <div class="settings-body">
+
+        <div class="setting-section-title">アカウント</div>
+        <div class="setting-row">
+          <div class="setting-row-left">
+            <span class="setting-row-icon">👤</span>
+            <div>
+              <div class="setting-row-text">田中 太郎</div>
+              <div class="setting-row-sub">tanaka@gmail.com</div>
+            </div>
+          </div>
+          <span class="setting-row-right">›</span>
+        </div>
+        <div class="setting-row">
+          <div class="setting-row-left">
+            <span class="setting-row-icon">👑</span>
+            <div>
+              <div class="setting-row-text">プレミアム</div>
+              <div class="setting-row-sub">有効 · サブスクリプション管理</div>
+            </div>
+          </div>
+          <span class="setting-row-right">›</span>
+        </div>
+
+        <div class="setting-section-title">アプリ設定</div>
+        <div class="setting-row">
+          <div class="setting-row-left">
+            <span class="setting-row-icon">🌐</span>
+            <div><div class="setting-row-text">言語</div></div>
+          </div>
+          <div style="display:flex;align-items:center;">
+            <span class="setting-row-value">日本語</span>
+            <span class="setting-row-right">›</span>
+          </div>
+        </div>
+        <div class="setting-row">
+          <div class="setting-row-left">
+            <span class="setting-row-icon">🏆</span>
+            <div><div class="setting-row-text">大会目標</div></div>
+          </div>
+          <div style="display:flex;align-items:center;">
+            <span class="setting-row-value">2026/08/15</span>
+            <span class="setting-row-right">›</span>
+          </div>
+        </div>
+        <div class="setting-row">
+          <div class="setting-row-left">
+            <span class="setting-row-icon">📤</span>
+            <div>
+              <div class="setting-row-text">データエクスポート</div>
+              <div class="setting-row-sub">CSV形式</div>
+            </div>
+          </div>
+          <span class="setting-row-right">›</span>
+        </div>
+
+        <div class="setting-section-title">サポート</div>
+        <div class="setting-row">
+          <div class="setting-row-left">
+            <span class="setting-row-icon">📬</span>
+            <div><div class="setting-row-text">フィードバックを送る</div></div>
+          </div>
+          <span class="setting-row-right">›</span>
+        </div>
+
+        <div class="setting-section-title">危険ゾーン</div>
+        <div class="setting-row danger">
+          <div class="setting-row-left">
+            <span class="setting-row-icon">🗑️</span>
+            <div><div class="setting-row-text">アカウントを削除する</div></div>
+          </div>
+          <span class="setting-row-right">›</span>
+        </div>
+
+      </div>
+      <!-- BOTTOM NAV -->
+      <div class="bottom-nav">
+        <button class="nav-item">
+          <span class="nav-icon">🏠</span>
+          <span>ホーム</span>
+        </button>
+        <button class="nav-item">
+          <span class="nav-icon">📝</span>
+          <span>記録</span>
+        </button>
+        <button class="nav-item">
+          <span class="nav-icon">💪</span>
+          <span>筋トレ</span>
+        </button>
+        <button class="nav-item">
+          <span class="nav-icon">📊</span>
+          <span>表示</span>
+        </button>
+        <button class="nav-item nav-item-settings active">
+          <div class="nav-indicator" style="background:var(--accent2);"></div>
+          <span class="nav-icon">⚙️</span>
+          <span>設定</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ANNOTATION -->
+<div class="annotation-box">
+  <div class="ann-item">
+    <div class="ann-num">1</div>
+    <div class="ann-text"><strong>右上⚙を廃止</strong>：小さくて押しにくいボタンをなくし、ホーム画面がスッキリする</div>
+  </div>
+  <div class="ann-item">
+    <div class="ann-num">2</div>
+    <div class="ann-text"><strong>ボトムナビ5項目</strong>：ホーム／記録／筋トレ／表示／設定。親指で届きやすい位置</div>
+  </div>
+  <div class="ann-item">
+    <div class="ann-num">3</div>
+    <div class="ann-text"><strong>設定タブ</strong>：現在のプロフィール画面の内容（アカウント・言語・大会・エクスポート・フィードバック・削除）をそのまま移植</div>
+  </div>
+  <div class="ann-item">
+    <div class="ann-num">4</div>
+    <div class="ann-text"><strong>実装コスト</strong>：中程度。ナビ構造の変更はJSとCSSで対応可能。既存の<code>showScreen()</code>に統合できる</div>
+  </div>
+  <div class="ann-item">
+    <div class="ann-num">5</div>
+    <div class="ann-text"><strong>ホームに残すボタン</strong>：「記録」「水分」「筋トレ」「表示」の4つはホーム画面のボタンとして残してよい（ナビと二重でもOK）</div>
+  </div>
+  <div class="ann-item">
+    <div class="ann-num">6</div>
+    <div class="ann-text"><strong>アイコン変更可能</strong>：絵文字の代わりにSVGアイコン（Material Design等）にすると更に見やすくなる</div>
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>PhysiqueLog — Google Play スクリーンショット生成</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #0f0f1a;
+    font-family: -apple-system, 'Noto Sans JP', sans-serif;
+    color: #ccc;
+    padding: 40px 24px 80px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 48px;
+  }
+
+  h1 { color: #f0f0f0; font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+  .hint { font-size: 12px; color: #888; margin-bottom: 8px; line-height: 1.7; text-align: center; }
+  code { background: rgba(232,255,0,0.1); color: #e8ff00; border-radius: 4px; padding: 1px 6px; font-size: 11px; }
+
+  .slides-row {
+    display: flex;
+    gap: 32px;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: flex-start;
+  }
+
+  /* ============================
+     スライド本体: 1080×1920 → 表示は 270×480 (25%)
+     ============================ */
+  .slide-wrap {
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+  }
+  .slide-num {
+    font-size: 11px; color: #888; letter-spacing: 0.1em;
+  }
+
+  .slide {
+    width: 270px; height: 480px;  /* 1080×1920 × 0.25 */
+    border-radius: 20px;
+    overflow: hidden;
+    position: relative;
+    flex-shrink: 0;
+    box-shadow: 0 16px 48px rgba(0,0,0,0.6);
+    cursor: pointer;
+  }
+  .slide:hover { transform: scale(1.02); transition: transform 0.2s; }
+
+  /* ---- 背景グラデーション共通 ---- */
+  .slide-bg {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center;
+    padding: 28px 20px 20px;
+  }
+
+  /* 上部テキストエリア */
+  .slide-headline {
+    text-align: center;
+    margin-bottom: 16px;
+    z-index: 2; position: relative;
+  }
+  .slide-tag {
+    display: inline-block;
+    font-size: 9px; font-weight: 700; letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 3px 10px; border-radius: 20px;
+    margin-bottom: 8px;
+  }
+  .slide-title {
+    font-size: 18px; font-weight: 900; line-height: 1.25;
+    margin-bottom: 6px;
+  }
+  .slide-sub {
+    font-size: 10px; opacity: 0.75; line-height: 1.5;
+  }
+
+  /* 電話フレーム */
+  .phone-frame {
+    width: 140px; height: 270px;
+    background: #0a0a0a;
+    border-radius: 22px;
+    border: 2.5px solid rgba(255,255,255,0.15);
+    overflow: hidden;
+    box-shadow: 0 12px 32px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08);
+    flex-shrink: 0;
+    z-index: 2; position: relative;
+  }
+
+  /* ============================
+     各スライド固有スタイル
+     ============================ */
+
+  /* SLIDE 1: 大会に向けて管理 */
+  .s1 { background: linear-gradient(160deg, #1a1a3e 0%, #0d1b2a 50%, #0a0a14 100%); }
+  .s1 .slide-tag { background: rgba(232,255,0,0.2); color: #e8ff00; border: 1px solid rgba(232,255,0,0.4); }
+  .s1 .slide-title { color: #f0f0f0; }
+  .s1 .slide-sub { color: #aaa; }
+  /* deco dots */
+  .s1::before { content:''; position:absolute; top:20px; right:20px; width:80px; height:80px;
+    background:radial-gradient(circle, rgba(232,255,0,0.12) 0%, transparent 70%);
+    border-radius:50%; }
+
+  /* SLIDE 2: タイマー */
+  .s2 { background: linear-gradient(160deg, #0d2640 0%, #0a1a2e 50%, #060d16 100%); }
+  .s2 .slide-tag { background: rgba(0,212,255,0.15); color: #00d4ff; border: 1px solid rgba(0,212,255,0.3); }
+  .s2 .slide-title { color: #f0f0f0; }
+  .s2 .slide-sub { color: #aaa; }
+
+  /* SLIDE 3: 分析 */
+  .s3 { background: linear-gradient(160deg, #1a2e1a 0%, #0d1f0d 50%, #070d07 100%); }
+  .s3 .slide-tag { background: rgba(74,222,128,0.15); color: #4ade80; border: 1px solid rgba(74,222,128,0.3); }
+  .s3 .slide-title { color: #f0f0f0; }
+  .s3 .slide-sub { color: #aaa; }
+
+  /* SLIDE 4: 筋トレメモ */
+  .s4 { background: linear-gradient(160deg, #2a1a10 0%, #1a0d0a 50%, #0d0705 100%); }
+  .s4 .slide-tag { background: rgba(251,146,60,0.15); color: #fb923c; border: 1px solid rgba(251,146,60,0.3); }
+  .s4 .slide-title { color: #f0f0f0; }
+  .s4 .slide-sub { color: #aaa; }
+
+  /* SLIDE 5: ダッシュボード */
+  .s5 { background: linear-gradient(160deg, #1a102e 0%, #110a1f 50%, #08050f 100%); }
+  .s5 .slide-tag { background: rgba(167,139,250,0.15); color: #a78bfa; border: 1px solid rgba(167,139,250,0.3); }
+  .s5 .slide-title { color: #f0f0f0; }
+  .s5 .slide-sub { color: #aaa; }
+
+  /* ---- 電話画面コンテンツ ---- */
+  :root {
+    --ph-bg: #0a0a0a; --ph-surface: #141414; --ph-surface2: #1e1e1e;
+    --ph-border: #2a2a2a; --ph-text: #f0f0f0; --ph-muted: #666;
+    --ph-accent: #e8ff00; --ph-accent2: #00d4ff; --ph-green: #4ade80;
+    --ph-orange: #fb923c;
+  }
+  .phone-screen {
+    width: 100%; height: 100%;
+    background: var(--ph-bg);
+    font-size: 8px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* === top screen === */
+  .ph-top { padding: 10px 8px 8px; display:flex; flex-direction:column; }
+  .ph-appname { font-family:monospace; font-size:18px; font-weight:900; color:var(--ph-accent); letter-spacing:0.05em; line-height:1; }
+  .ph-appsub { font-size:6px; color:var(--ph-muted); letter-spacing:0.2em; text-transform:uppercase; margin-bottom:8px; }
+  .ph-welcome { font-size:6px; color:var(--ph-muted); margin-bottom:6px; }
+  .ph-stats { display:grid; grid-template-columns:repeat(4,1fr); gap:3px; margin-bottom:8px; }
+  .ph-stat { background:var(--ph-surface); border:1px solid var(--ph-border); border-radius:5px; padding:4px 2px; text-align:center; }
+  .ph-stat-label { font-size:4px; color:var(--ph-muted); }
+  .ph-stat-value { font-size:8px; font-weight:700; color:var(--ph-text); }
+  .ph-stat-value.y { color:var(--ph-accent); }
+  .ph-stat-value.g { color:var(--ph-green); }
+  .ph-stat-value.c { color:var(--ph-accent2); }
+  .ph-btns { display:flex; flex-direction:column; gap:3px; }
+  .ph-btn { padding:6px 8px; border-radius:6px; font-size:6px; font-weight:700; text-align:left; }
+  .ph-btn-rec { background:linear-gradient(135deg,#e8ff00,#b8cc00); color:#000; }
+  .ph-btn-sec { background:var(--ph-surface); border:1px solid var(--ph-border); color:var(--ph-text); }
+  /* bottom nav on phone */
+  .ph-nav { position:absolute; bottom:0; left:0; right:0; background:var(--ph-surface); border-top:1px solid var(--ph-border); display:flex; padding:4px 0 6px; }
+  .ph-nav-item { flex:1; display:flex; flex-direction:column; align-items:center; gap:1px; font-size:4px; color:var(--ph-muted); }
+  .ph-nav-item.on { color:var(--ph-accent); }
+  .ph-nav-item.on-c { color:var(--ph-accent2); }
+  .ph-nav-icon { font-size:9px; line-height:1; }
+
+  /* === timer screen === */
+  .ph-gym { padding:8px; }
+  .ph-screen-title { font-size:9px; font-weight:700; color:var(--ph-text); margin-bottom:6px; border-bottom:1px solid var(--ph-border); padding-bottom:4px; }
+  .ph-timer-ring { width:56px; height:56px; border-radius:50%; border:3px solid var(--ph-border); border-top-color:var(--ph-accent2); display:flex; align-items:center; justify-content:center; margin:8px auto; }
+  .ph-timer-num { font-size:12px; font-weight:900; color:var(--ph-text); letter-spacing:0.05em; }
+  .ph-timer-btn { background:var(--ph-accent2); color:#000; border:none; border-radius:6px; padding:4px 16px; font-size:7px; font-weight:700; display:block; margin:0 auto; }
+  .ph-set-row { display:flex; gap:3px; margin-top:6px; }
+  .ph-set-box { flex:1; background:var(--ph-surface); border:1px solid var(--ph-border); border-radius:5px; padding:3px 2px; text-align:center; font-size:5px; color:var(--ph-muted); }
+  .ph-set-val { font-size:9px; font-weight:700; color:var(--ph-text); }
+  .ph-prev-label { font-size:5px; color:var(--ph-muted); margin-top:2px; }
+
+  /* === analysis screen === */
+  .ph-analysis { padding:6px; }
+  .ph-an-card { background:var(--ph-surface); border:1px solid var(--ph-border); border-radius:6px; padding:6px; margin-bottom:4px; }
+  .ph-an-row { display:flex; align-items:center; gap:4px; margin-bottom:3px; font-size:5.5px; }
+  .ph-an-icon { font-size:9px; }
+  .ph-an-good { color:#4ade80; font-weight:700; }
+  .ph-an-warn { color:#fbbf24; font-weight:700; }
+  .ph-chart-bar { height:28px; background:var(--ph-surface); border-radius:4px; margin-top:4px; display:flex; align-items:flex-end; gap:2px; padding:0 3px 2px; overflow:hidden; }
+  .ph-bar { border-radius:2px 2px 0 0; }
+
+  /* === record card screen === */
+  .ph-list { padding:6px; }
+  .ph-card { background:var(--ph-surface); border:1px solid var(--ph-border); border-radius:6px; padding:6px; margin-bottom:4px; }
+  .ph-card-date { font-size:5px; color:var(--ph-muted); margin-bottom:3px; }
+  .ph-card-macros { display:grid; grid-template-columns:repeat(4,1fr); gap:2px; margin-bottom:3px; }
+  .ph-macro { background:var(--ph-surface2); border-radius:3px; padding:2px; text-align:center; }
+  .ph-macro-val { font-size:7px; font-weight:700; }
+  .ph-macro-val.y { color:var(--ph-accent); }
+  .ph-macro-val.c { color:var(--ph-accent2); }
+  .ph-macro-val.g { color:var(--ph-green); }
+  .ph-macro-val.o { color:var(--ph-orange); }
+  .ph-macro-label { font-size:4px; color:var(--ph-muted); }
+  .ph-gym-summary { border-top:1px solid var(--ph-border); margin-top:3px; padding-top:3px; display:flex; justify-content:space-between; align-items:center; }
+  .ph-gym-label { font-size:5.5px; color:var(--ph-accent); font-weight:700; }
+  .ph-gym-meta { font-size:4.5px; color:var(--ph-muted); }
+
+  /* === contest countdown === */
+  .ph-countdown { background:rgba(232,255,0,0.06); border:1px solid rgba(232,255,0,0.2); border-radius:8px; padding:8px 6px; text-align:center; margin-bottom:6px; }
+  .ph-count-num { font-size:28px; font-weight:900; color:var(--ph-accent); line-height:1; }
+  .ph-count-label { font-size:5px; color:var(--ph-muted); letter-spacing:0.15em; }
+  .ph-count-name { font-size:6px; color:var(--ph-text); margin-top:2px; }
+
+  /* ---- download button ---- */
+  .dl-btn {
+    display: inline-block;
+    background: rgba(232,255,0,0.15);
+    border: 1px solid rgba(232,255,0,0.4);
+    color: #e8ff00;
+    border-radius: 8px;
+    padding: 6px 16px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    text-decoration: none;
+    margin-top: 8px;
+  }
+
+  /* ---- instructions ---- */
+  .instructions {
+    max-width: 860px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid #2a2a2a;
+    border-radius: 12px;
+    padding: 20px 24px;
+  }
+  .instructions h2 { color: #f0f0f0; font-size: 14px; margin-bottom: 12px; }
+  .instructions ol { padding-left: 20px; }
+  .instructions li { font-size: 12px; color: #bbb; line-height: 2; }
+  .instructions li strong { color: #e8ff00; }
+</style>
+</head>
+<body>
+
+<div style="text-align:center;">
+  <h1>📱 PhysiqueLog — Google Play スクリーンショット</h1>
+  <p class="hint">
+    各カードをブラウザのズーム<code>100%</code>で表示し、DevToolsなどでキャプチャ、または<br>
+    <strong>各スライドを右クリック → 「要素をスクリーンショット」</strong>で保存してください。<br>
+    推奨サイズ: <code>1080×1920px</code>（スライドを4倍に拡大して撮影するとベスト）
+  </p>
+</div>
+
+<div class="slides-row">
+
+  <!-- SLIDE 1: ホーム / 大会カウントダウン -->
+  <div class="slide-wrap">
+    <div class="slide-num">① SLIDE 1</div>
+    <div class="slide s1">
+      <div class="slide-bg">
+        <div class="slide-headline">
+          <div class="slide-tag">Contest Athlete</div>
+          <div class="slide-title" style="color:#e8ff00;">大会まで、<br>全て管理する。</div>
+          <div class="slide-sub">体重・食事・筋トレ・水分を<br>一画面で把握</div>
+        </div>
+        <div class="phone-frame">
+          <div class="phone-screen">
+            <div class="ph-top">
+              <div class="ph-appname">PHYSIQUE<br>LOG</div>
+              <div class="ph-appsub">Contest Athlete Tracker</div>
+              <div class="ph-welcome">ようこそ、田中さん 👋</div>
+              <div class="ph-countdown">
+                <div class="ph-count-num">42</div>
+                <div class="ph-count-label">DAYS TO CONTEST</div>
+                <div class="ph-count-name">🏆 東京大会 2026</div>
+              </div>
+              <div class="ph-stats">
+                <div class="ph-stat"><div class="ph-stat-label">KCAL</div><div class="ph-stat-value y">2140</div></div>
+                <div class="ph-stat"><div class="ph-stat-label">WEIGHT</div><div class="ph-stat-value g">72.4kg</div></div>
+                <div class="ph-stat"><div class="ph-stat-label">PROTEIN</div><div class="ph-stat-value c">178g</div></div>
+                <div class="ph-stat"><div class="ph-stat-label">WATER</div><div class="ph-stat-value">2.1L</div></div>
+              </div>
+              <div class="ph-btns">
+                <div class="ph-btn ph-btn-rec">📝 記録する</div>
+                <div class="ph-btn ph-btn-sec">💪 筋トレメモ</div>
+              </div>
+            </div>
+            <div class="ph-nav">
+              <div class="ph-nav-item on"><div class="ph-nav-icon">🏠</div>ホーム</div>
+              <div class="ph-nav-item"><div class="ph-nav-icon">📝</div>記録</div>
+              <div class="ph-nav-item"><div class="ph-nav-icon">💪</div>筋トレ</div>
+              <div class="ph-nav-item"><div class="ph-nav-icon">📊</div>表示</div>
+              <div class="ph-nav-item on-c"><div class="ph-nav-icon">⚙️</div>設定</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 2: インターバルタイマー -->
+  <div class="slide-wrap">
+    <div class="slide-num">② SLIDE 2</div>
+    <div class="slide s2">
+      <div class="slide-bg">
+        <div class="slide-headline">
+          <div class="slide-tag" style="background:rgba(0,212,255,0.15);color:#00d4ff;border:1px solid rgba(0,212,255,0.3);">Rest Timer</div>
+          <div class="slide-title">インターバルを<br>正確に計る。</div>
+          <div class="slide-sub">バックグラウンドでも動作<br>終了時バイブで通知</div>
+        </div>
+        <div class="phone-frame">
+          <div class="phone-screen">
+            <div class="ph-gym" style="padding-top:10px;">
+              <div class="ph-screen-title">💪 筋トレメモ — 2026/05/26</div>
+              <!-- exercise set -->
+              <div style="background:var(--ph-surface);border:1px solid var(--ph-border);border-radius:5px;padding:5px;margin-bottom:4px;">
+                <div style="font-size:6px;color:var(--ph-text);font-weight:700;margin-bottom:3px;">ベンチプレス</div>
+                <div class="ph-set-row">
+                  <div class="ph-set-box"><div class="ph-set-val">90kg</div><div style="font-size:4px;color:var(--ph-muted);">×8</div></div>
+                  <div class="ph-set-box"><div class="ph-set-val">90kg</div><div style="font-size:4px;color:var(--ph-muted);">×6</div></div>
+                  <div class="ph-set-box"><div class="ph-set-val">85kg</div><div style="font-size:4px;color:var(--ph-muted);">×6</div></div>
+                  <div class="ph-set-box" style="border-color:var(--ph-accent);background:rgba(232,255,0,0.05);"><div class="ph-set-val" style="color:var(--ph-accent);">+</div></div>
+                </div>
+                <div class="ph-prev-label">前回: 85kg × 8</div>
+              </div>
+              <!-- timer -->
+              <div style="background:var(--ph-surface);border:1px solid rgba(0,212,255,0.4);border-radius:5px;padding:6px;text-align:center;">
+                <div style="font-size:5.5px;color:var(--ph-accent2);font-weight:700;margin-bottom:4px;">⏱ インターバル</div>
+                <div class="ph-timer-ring">
+                  <div class="ph-timer-num" style="color:var(--ph-accent2);">01:23</div>
+                </div>
+                <button class="ph-timer-btn" style="margin-top:4px;">■ 停止</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 3: 前日分析 -->
+  <div class="slide-wrap">
+    <div class="slide-num">③ SLIDE 3</div>
+    <div class="slide s3">
+      <div class="slide-bg">
+        <div class="slide-headline">
+          <div class="slide-tag" style="background:rgba(74,222,128,0.15);color:#4ade80;border:1px solid rgba(74,222,128,0.3);">AI Analysis</div>
+          <div class="slide-title">前日を振り返り、<br>今日に活かす。</div>
+          <div class="slide-sub">体重変動の原因を自動分析<br>食事・水分・睡眠を総合評価</div>
+        </div>
+        <div class="phone-frame">
+          <div class="phone-screen">
+            <div class="ph-analysis">
+              <div style="font-size:7px;font-weight:700;color:var(--ph-text);margin-bottom:5px;">📊 前日の分析</div>
+              <div class="ph-an-card">
+                <div style="font-size:5px;color:var(--ph-muted);margin-bottom:3px;">⚖️ 体重変動</div>
+                <div style="font-size:10px;font-weight:900;color:var(--ph-green);">−0.3kg</div>
+                <div class="ph-an-row"><span class="ph-an-icon">✅</span><span class="ph-an-good">カロリー管理良好</span></div>
+                <div class="ph-an-row"><span class="ph-an-icon">✅</span><span class="ph-an-good">水分2.1L 十分</span></div>
+                <div class="ph-an-row"><span class="ph-an-icon">⚠️</span><span class="ph-an-warn">睡眠6.5h やや不足</span></div>
+              </div>
+              <div class="ph-an-card">
+                <div style="font-size:5px;color:var(--ph-muted);margin-bottom:3px;">🍽️ 栄養バランス</div>
+                <div class="ph-an-row"><span class="ph-an-icon">✅</span><span class="ph-an-good">P 178g 目標達成</span></div>
+                <div class="ph-an-row"><span class="ph-an-icon">🚴</span><span style="color:var(--ph-accent2);">有酸素 380kcal</span></div>
+              </div>
+              <div class="ph-chart-bar">
+                <div class="ph-bar" style="width:14%;height:60%;background:#e8ff00;opacity:0.6;"></div>
+                <div class="ph-bar" style="width:14%;height:75%;background:#e8ff00;opacity:0.7;"></div>
+                <div class="ph-bar" style="width:14%;height:55%;background:#e8ff00;opacity:0.6;"></div>
+                <div class="ph-bar" style="width:14%;height:85%;background:#e8ff00;opacity:0.8;"></div>
+                <div class="ph-bar" style="width:14%;height:70%;background:#e8ff00;opacity:0.7;"></div>
+                <div class="ph-bar" style="width:14%;height:90%;background:#e8ff00;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 4: 記録一覧 + ジムサマリー -->
+  <div class="slide-wrap">
+    <div class="slide-num">④ SLIDE 4</div>
+    <div class="slide s4">
+      <div class="slide-bg">
+        <div class="slide-headline">
+          <div class="slide-tag" style="background:rgba(251,146,60,0.15);color:#fb923c;border:1px solid rgba(251,146,60,0.3);">Training Log</div>
+          <div class="slide-title">食事も筋トレも<br>一目でわかる。</div>
+          <div class="slide-sub">記録カードに筋トレ内容を統合<br>タップで種目詳細を確認</div>
+        </div>
+        <div class="phone-frame">
+          <div class="phone-screen">
+            <div class="ph-list">
+              <!-- card 1 -->
+              <div class="ph-card">
+                <div class="ph-card-date">2026/05/26 (火)</div>
+                <div class="ph-card-macros">
+                  <div class="ph-macro"><div class="ph-macro-val y">2140</div><div class="ph-macro-label">KCAL</div></div>
+                  <div class="ph-macro"><div class="ph-macro-val c">178</div><div class="ph-macro-label">P(g)</div></div>
+                  <div class="ph-macro"><div class="ph-macro-val o">52</div><div class="ph-macro-label">F(g)</div></div>
+                  <div class="ph-macro"><div class="ph-macro-val g">185</div><div class="ph-macro-label">C(g)</div></div>
+                </div>
+                <div style="display:flex;gap:2px;margin-bottom:3px;flex-wrap:wrap;">
+                  <div style="background:rgba(232,255,0,0.1);border:1px solid rgba(232,255,0,0.2);border-radius:3px;padding:1px 4px;font-size:4.5px;color:var(--ph-accent);">💪 胸・肩</div>
+                  <div style="background:rgba(0,212,255,0.1);border:1px solid rgba(0,212,255,0.2);border-radius:3px;padding:1px 4px;font-size:4.5px;color:var(--ph-accent2);">⚖️ 72.4kg</div>
+                </div>
+                <div class="ph-gym-summary">
+                  <div><span class="ph-gym-label">💪 筋トレ</span><span class="ph-gym-meta"> 4種目 · 12セット · MAX 100kg</span></div>
+                  <span style="font-size:6px;color:var(--ph-muted);">▼</span>
+                </div>
+              </div>
+              <!-- card 2 -->
+              <div class="ph-card">
+                <div class="ph-card-date">2026/05/25 (月)</div>
+                <div class="ph-card-macros">
+                  <div class="ph-macro"><div class="ph-macro-val y">1980</div><div class="ph-macro-label">KCAL</div></div>
+                  <div class="ph-macro"><div class="ph-macro-val c">165</div><div class="ph-macro-label">P(g)</div></div>
+                  <div class="ph-macro"><div class="ph-macro-val o">45</div><div class="ph-macro-label">F(g)</div></div>
+                  <div class="ph-macro"><div class="ph-macro-val g">172</div><div class="ph-macro-label">C(g)</div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 5: 体重グラフ -->
+  <div class="slide-wrap">
+    <div class="slide-num">⑤ SLIDE 5</div>
+    <div class="slide s5">
+      <div class="slide-bg">
+        <div class="slide-headline">
+          <div class="slide-tag" style="background:rgba(167,139,250,0.15);color:#a78bfa;border:1px solid rgba(167,139,250,0.3);">Progress Charts</div>
+          <div class="slide-title">目標に向かう<br>軌跡が見える。</div>
+          <div class="slide-sub">体重・PFC・水分の推移グラフ<br>大会ロードマップで仕上がりを把握</div>
+        </div>
+        <div class="phone-frame">
+          <div class="phone-screen">
+            <div style="padding:6px;">
+              <div style="font-size:6px;color:var(--ph-muted);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:4px;">📈 体重推移 (kg)</div>
+              <!-- chart simulation -->
+              <div style="background:var(--ph-surface);border-radius:5px;padding:6px;margin-bottom:4px;position:relative;height:60px;overflow:hidden;">
+                <svg width="100%" height="52" viewBox="0 0 120 52" preserveAspectRatio="none">
+                  <polyline points="0,40 20,38 40,35 60,33 80,30 100,28 120,26"
+                    fill="none" stroke="#4ade80" stroke-width="1.5" stroke-linecap="round"/>
+                  <polyline points="0,40 20,38 40,35 60,33 80,30 100,28 120,26"
+                    fill="rgba(74,222,128,0.1)" stroke="none"/>
+                  <!-- target line -->
+                  <line x1="0" y1="20" x2="120" y2="20" stroke="#e8ff00" stroke-width="0.8" stroke-dasharray="3,3" opacity="0.5"/>
+                  <circle cx="120" cy="26" r="2.5" fill="#4ade80"/>
+                  <text x="108" y="15" font-size="5" fill="#e8ff00" opacity="0.7">目標</text>
+                </svg>
+              </div>
+              <!-- weekly report -->
+              <div style="background:var(--ph-surface);border-radius:5px;padding:5px;margin-bottom:4px;">
+                <div style="font-size:5px;color:var(--ph-muted);margin-bottom:3px;">今週のレポート</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:3px;">
+                  <div style="background:var(--ph-surface2);border-radius:3px;padding:3px;text-align:center;">
+                    <div style="font-size:4.5px;color:var(--ph-muted);">平均体重</div>
+                    <div style="font-size:9px;font-weight:700;color:var(--ph-green);">72.2<span style="font-size:5px;">kg</span></div>
+                  </div>
+                  <div style="background:var(--ph-surface2);border-radius:3px;padding:3px;text-align:center;">
+                    <div style="font-size:4.5px;color:var(--ph-muted);">筋トレ回数</div>
+                    <div style="font-size:9px;font-weight:700;color:var(--ph-accent);">4<span style="font-size:5px;">回</span></div>
+                  </div>
+                </div>
+              </div>
+              <!-- roadmap bar -->
+              <div style="background:rgba(232,255,0,0.06);border:1px solid rgba(232,255,0,0.2);border-radius:5px;padding:5px;">
+                <div style="font-size:5px;color:var(--ph-accent);font-weight:700;margin-bottom:3px;">🗺 大会ロードマップ</div>
+                <div style="height:6px;background:var(--ph-border);border-radius:3px;overflow:hidden;">
+                  <div style="width:65%;height:100%;background:linear-gradient(90deg,#4ade80,#e8ff00);border-radius:3px;"></div>
+                </div>
+                <div style="display:flex;justify-content:space-between;margin-top:2px;">
+                  <span style="font-size:4px;color:var(--ph-muted);">開始</span>
+                  <span style="font-size:4.5px;color:var(--ph-accent);">残42日</span>
+                  <span style="font-size:4px;color:var(--ph-muted);">大会</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /slides-row -->
+
+<!-- 使い方説明 -->
+<div class="instructions">
+  <h2>📋 スクリーンショットの撮り方</h2>
+  <ol>
+    <li>このページをChromeで開き、ズームを <strong>100%</strong> に設定</li>
+    <li>撮影したいスライドを右クリック → <strong>「検証（Inspect）」</strong></li>
+    <li>Elements パネルでスライドの <code>&lt;div class="slide"&gt;</code> を右クリック</li>
+    <li><strong>「Capture node screenshot」</strong> でPNG保存（270×480px）</li>
+    <li>Figmaや他ツールで <strong>4倍拡大（1080×1920px）</strong> にリサイズして使用</li>
+    <li><strong>Google Play Console</strong> → ストアの掲載情報 → スクリーンショットにアップロード</li>
+  </ol>
+  <div style="margin-top:12px;font-size:11px;color:#888;">
+    💡 ブラウザのDevToolsで <code>body</code> に <code>zoom: 4</code> を一時的に適用すると1080px相当でキャプチャできます
+  </div>
+</div>
+
+</body>
+</html>
