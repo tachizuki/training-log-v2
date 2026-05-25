@@ -157,15 +157,6 @@
   .today-stat-value.green { color: var(--success); }
   .today-stat-value.white { color: var(--text); }
 
-  /* トップメニュー: スクロール不要で1画面に収まるよう2x2グリッドに */
-  .main-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; }
-  .btn-main { padding: 18px 10px; border: none; border-radius: 12px; font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 0.06em; cursor: pointer; transition: all 0.2s; position: relative; overflow: hidden; min-height: 78px; display: flex; align-items: center; justify-content: center; text-align: center; line-height: 1.15; }
-  .btn-main::after { content: ''; position: absolute; inset: 0; background: rgba(255,255,255,0.1); opacity: 0; transition: opacity 0.2s; }
-  .btn-main:active::after { opacity: 1; }
-  .btn-record { background: var(--accent); color: var(--bg); }
-  .btn-water { background: rgba(0,212,255,0.12); color: var(--accent2); border: 1px solid rgba(0,212,255,0.4); }
-  .btn-gym { background: rgba(232,255,0,0.08); color: var(--accent); border: 1px solid rgba(232,255,0,0.3); }
-  .btn-view { background: transparent; color: var(--text-muted); border: 1px solid var(--border); }
 
   .screen { display: none; min-height: 100vh; padding: 0 0 80px 0; }
   .screen.active { display: block; }
@@ -792,11 +783,6 @@
         <div class="today-stat"><span class="today-stat-label">WATER</span><span class="today-stat-value white" id="ts-water">— ml</span></div>
       </div>
     </div>
-    <div class="main-buttons">
-      <button class="btn-main btn-record" onclick="showScreen('record-screen')" data-i18n="btn_record">記録する</button>
-      <button class="btn-main btn-water" onclick="showScreen('water-screen'); renderWater()" data-i18n="btn_water">💧 水分を記録する</button>
-      <button class="btn-main btn-gym" onclick="showScreen('gym-screen'); renderGym()" data-i18n="btn_gym">💪 筋トレメモ</button>
-      <button class="btn-main btn-view" onclick="showScreen('view-screen'); renderView()" data-i18n="btn_view">表示する</button>
 
     </div>
   </div>
@@ -1382,7 +1368,10 @@
 <!-- PROFILE MODAL -->
 <div class="profile-modal-overlay" id="profile-modal" onclick="handleProfileOverlay(event)">
   <div class="profile-modal-sheet">
-    <div class="profile-modal-title" data-i18n="profile_title">⚙ プロフィール設定</div>
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:4px;">
+      <button class="btn-back" onclick="document.getElementById('profile-modal').classList.remove('open')">←</button>
+      <div class="profile-modal-title" style="margin-bottom:0;" data-i18n="profile_title">⚙ プロフィール設定</div>
+    </div>
     <!-- プランステータス -->
     <div id="plan-status-bar" style="background:var(--surface2);border-radius:12px;padding:12px 14px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;">
       <div>
