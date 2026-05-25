@@ -3626,9 +3626,20 @@
   // 管理者メールアドレスのリスト（小文字で完全一致比較）
   const ADMIN_EMAILS = ['moyaki397@gmail.com'];
 
+  // クローズドテスト用: プレミアムを自動付与するテスターメール一覧
+  // 正式リリース後は空配列に戻すこと
+  const TESTER_EMAILS = [
+    // 例: 'tester@gmail.com',
+  ];
+
   function isAdmin() {
     if (!currentUser || !currentUser.email) return false;
     return ADMIN_EMAILS.includes(currentUser.email.toLowerCase());
+  }
+
+  function isTester() {
+    if (!currentUser || !currentUser.email) return false;
+    return TESTER_EMAILS.includes(currentUser.email.toLowerCase());
   }
 
   function isPremium() {
@@ -3636,8 +3647,9 @@
     // 本番リリース時にはこのDEV_UNLOCKを false にする
     const DEV_UNLOCK_PREMIUM = false;
     if (DEV_UNLOCK_PREMIUM) return true;
-    // 管理者は常にプレミアム扱い
+    // 管理者・テスターは常にプレミアム扱い
     if (isAdmin()) return true;
+    if (isTester()) return true;
     if (typeof AndroidBridge !== 'undefined' && typeof AndroidBridge.isPremium === 'function') {
       const r = AndroidBridge.isPremium();
       return r === true || r === 'true';
