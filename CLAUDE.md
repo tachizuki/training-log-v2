@@ -12,7 +12,9 @@
   - `/app/src/main/assets/index.html`（ローカルフォールバック）
 
 ### git push後
-- pushしたら毎回「**ローカルで`git pull origin main`してからリビルドしてください**」と伝える
+- Kotlinコード／Manifest／build.gradleを変更したpushの後は、以下をセットで伝える
+  1. 「**ローカルで`git pull origin main`してからリビルドしてください**」
+  2. そのビルドのリリースノート（変更内容を箇条書きで）
 
 ### 実装前確認
 - 頼まれていない機能を勝手に実装しない
