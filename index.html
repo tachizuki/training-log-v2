@@ -5832,8 +5832,13 @@
   }
 
   // Androidの戻るボタン処理
+  let _lastBackMs = 0;
+
   function handleAndroidBack() {
     // モーダルが開いていれば閉じる
+    if (document.getElementById('contact-modal') && document.getElementById('contact-modal').classList.contains('open')) {
+      closeContactModal(); return true;
+    }
     if (document.getElementById('activity-preset-editor') && document.getElementById('activity-preset-editor').classList.contains('open')) {
       closeActivityPresetEditor(); return true;
     }
@@ -5876,7 +5881,14 @@
       showScreen(null);
       return true;
     }
-    return false;
+    // ホーム画面：2秒以内に2回押したら終了
+    const now = Date.now();
+    if (now - _lastBackMs < 2000) {
+      return false;
+    }
+    _lastBackMs = now;
+    showToast('もう一度押すと終了します', false);
+    return true;
   }
 
   // 種目プリセット管理（カスタマイズ可能）
