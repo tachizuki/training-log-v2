@@ -45,7 +45,7 @@ class TimerService : Service() {
                 startTimer(totalSeconds)
             }
         }
-        return START_NOT_STICKY
+        return START_REDELIVER_INTENT
     }
 
     private fun startTimer(seconds: Int) {
