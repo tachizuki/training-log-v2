@@ -78,9 +78,9 @@ class TimerService : Service() {
                 notificationManager.notify(NOTIF_ID, buildNotification(remaining, totalSeconds))
             }
             override fun onFinish() {
-                releaseWakeLock()
-                stopForeground(STOP_FOREGROUND_REMOVE)
                 vibrate()
+                stopForeground(STOP_FOREGROUND_REMOVE)
+                releaseWakeLock()
                 sendBroadcast(Intent(BROADCAST_DONE))
                 stopSelf()
             }
