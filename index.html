@@ -193,6 +193,9 @@
 
   .btn-submit { width: 100%; padding: 18px; background: var(--accent); color: var(--bg); border: none; border-radius: 12px; font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 0.1em; cursor: pointer; margin-top: 20px; transition: opacity 0.2s; }
   .btn-submit:active { opacity: 0.8; }
+  .settings-save-bar { display:none; position:fixed; bottom:60px; left:0; right:0; padding:12px 20px; background:var(--bg); border-top:2px solid var(--accent); z-index:19; }
+  .settings-save-bar.visible { display:block; }
+  .settings-save-bar button { width:100%; padding:14px; background:var(--accent); color:var(--bg); border:none; border-radius:12px; font-family:'Bebas Neue',sans-serif; font-size:20px; letter-spacing:0.1em; cursor:pointer; }
 
   /* WATER SCREEN */
   .water-hero { text-align: center; padding: 24px 20px 8px; }
@@ -1372,6 +1375,10 @@
 </div>
 
 <!-- PROFILE MODAL -->
+<div id="settings-save-bar" class="settings-save-bar">
+  <button onclick="saveProfile()" data-i18n="btn_save">保存する</button>
+</div>
+
 <div id="settings-screen" class="screen">
   <div class="screen-header">
     <button class="btn-back" onclick="showScreen(null)">←</button>
@@ -1397,24 +1404,24 @@
     <!-- 表示名（トップ画面「ようこそ◯◯さん」で使われる） -->
     <div class="profile-group full" style="margin-bottom:16px;">
       <label class="profile-label">👤 表示名（任意）</label>
-      <input type="text" class="profile-input" id="prof-display-name" placeholder="トップ画面に表示したい名前" maxlength="20">
+      <input type="text" class="profile-input" id="prof-display-name" placeholder="トップ画面に表示したい名前" maxlength="20" oninput="markProfileChanged()">
       <span style="font-size:10px;color:var(--text-muted);margin-top:2px;">空欄なら「ログイン名」または「ゲスト」が使われます</span>
     </div>
 
     <div class="profile-grid">
       <div class="profile-group">
         <label class="profile-label" data-i18n="label_height">身長 (cm)</label>
-        <input type="number" class="profile-input" id="prof-height" placeholder="168" step="0.1" oninput="updateBMRPreview()">
+        <input type="number" class="profile-input" id="prof-height" placeholder="168" step="0.1" oninput="updateBMRPreview();markProfileChanged()">
       </div>
       <div class="profile-group">
         <label class="profile-label" data-i18n="label_age">年齢</label>
-        <input type="number" class="profile-input" id="prof-age" placeholder="25" oninput="updateBMRPreview()">
+        <input type="number" class="profile-input" id="prof-age" placeholder="25" oninput="updateBMRPreview();markProfileChanged()">
       </div>
       <div class="profile-group full">
         <label class="profile-label" data-i18n="label_sex">性別</label>
         <div class="profile-sex-row">
-          <button class="profile-sex-btn selected" id="sex-male" onclick="selectSex('male')" data-i18n="sex_male">男性</button>
-          <button class="profile-sex-btn" id="sex-female" onclick="selectSex('female')" data-i18n="sex_female">女性</button>
+          <button class="profile-sex-btn selected" id="sex-male" onclick="selectSex('male');markProfileChanged()" data-i18n="sex_male">男性</button>
+          <button class="profile-sex-btn" id="sex-female" onclick="selectSex('female');markProfileChanged()" data-i18n="sex_female">女性</button>
         </div>
       </div>
     </div>
@@ -1424,20 +1431,20 @@
     </div>
     <div class="profile-group full" style="margin-top:4px;">
       <label class="profile-label" data-i18n="label_contest_name">🏆 大会名</label>
-      <input type="text" class="profile-input" id="prof-contest-name" data-i18n-ph="contest_name_ph" placeholder="例：東京クラシック2026" maxlength="40">
+      <input type="text" class="profile-input" id="prof-contest-name" data-i18n-ph="contest_name_ph" placeholder="例：東京クラシック2026" maxlength="40" oninput="markProfileChanged()">
     </div>
     <div class="profile-group full">
       <label class="profile-label" data-i18n="label_contest_date">📅 大会日</label>
-      <input type="date" class="profile-input" id="prof-contest-date">
+      <input type="date" class="profile-input" id="prof-contest-date" onchange="markProfileChanged()">
     </div>
     <div class="profile-group full">
       <label class="profile-label">🏁 仕上げ日（ピーク日）</label>
-      <input type="date" class="profile-input" id="prof-peak-date">
+      <input type="date" class="profile-input" id="prof-peak-date" onchange="markProfileChanged()">
       <span style="font-size:10px;color:var(--text-muted);margin-top:2px;">未設定なら大会日が使われます</span>
     </div>
     <div class="profile-group full">
       <label class="profile-label" data-i18n="label_contest_weight">🎯 大会目標体重 (kg)</label>
-      <input type="number" class="profile-input" id="prof-contest-weight" data-i18n-ph="contest_weight_ph" placeholder="例：75.0" step="0.1">
+      <input type="number" class="profile-input" id="prof-contest-weight" data-i18n-ph="contest_weight_ph" placeholder="例：75.0" step="0.1" oninput="markProfileChanged()">
     </div>
 
     <!-- 栄養目標 -->
@@ -1446,23 +1453,23 @@
       <div class="profile-grid">
         <div class="profile-group">
           <label class="profile-label">タンパク質 (g)</label>
-          <input type="number" class="profile-input" id="prof-goal-p" placeholder="180" step="1">
+          <input type="number" class="profile-input" id="prof-goal-p" placeholder="180" step="1" oninput="updateGoalKcal();markProfileChanged()">
         </div>
         <div class="profile-group">
           <label class="profile-label">脂質 (g)</label>
-          <input type="number" class="profile-input" id="prof-goal-f" placeholder="50" step="1">
+          <input type="number" class="profile-input" id="prof-goal-f" placeholder="50" step="1" oninput="updateGoalKcal();markProfileChanged()">
         </div>
         <div class="profile-group">
           <label class="profile-label">炭水化物 (g)</label>
-          <input type="number" class="profile-input" id="prof-goal-c" placeholder="200" step="1">
+          <input type="number" class="profile-input" id="prof-goal-c" placeholder="200" step="1" oninput="updateGoalKcal();markProfileChanged()">
         </div>
         <div class="profile-group">
           <label class="profile-label">塩分 (g)</label>
-          <input type="number" class="profile-input" id="prof-goal-salt" placeholder="6" step="0.1">
+          <input type="number" class="profile-input" id="prof-goal-salt" placeholder="6" step="0.1" oninput="markProfileChanged()">
         </div>
         <div class="profile-group">
           <label class="profile-label">許容誤差 (±%)</label>
-          <input type="number" class="profile-input" id="prof-goal-tolerance" placeholder="10" step="1">
+          <input type="number" class="profile-input" id="prof-goal-tolerance" placeholder="10" step="1" oninput="markProfileChanged()">
         </div>
       </div>
       <div style="font-size:10px;color:var(--text-muted);margin-top:-4px;margin-bottom:6px;line-height:1.5;">
@@ -1472,8 +1479,6 @@
         目標値 ± 許容誤差 の範囲内なら「OK」、外れたら「超過」「不足」として日々の分析に反映されます。
       </div>
     </div>
-
-    <button class="btn-submit" onclick="saveProfile()" data-i18n="btn_save">保存する</button>
 
     <!-- 通知設定 -->
     <div style="margin-top:20px;border-top:1px solid var(--border);padding-top:16px;">
@@ -6860,7 +6865,14 @@
     if (el) el.textContent = kcal > 0 ? kcal : '—';
   }
 
+  function markProfileChanged() {
+    if (document.getElementById('settings-save-bar'))
+      document.getElementById('settings-save-bar').classList.add('visible');
+  }
+
   function openProfile() {
+    const bar = document.getElementById('settings-save-bar');
+    if (bar) bar.classList.remove('visible');
     document.getElementById('prof-height').value = userProfile.height||'';
     document.getElementById('prof-age').value = userProfile.age||'';
     selectSex(userProfile.sex||'male');
@@ -6956,6 +6968,8 @@
     };
     localStorage.setItem('nutrition_goals', JSON.stringify(goals));
     updateContestCountdown();
+    const bar = document.getElementById('settings-save-bar');
+    if (bar) bar.classList.remove('visible');
     showScreen(null);
     showToast(t('toast_profile_saved'), false);
     if (currentUser) syncToCloud(currentUser.uid, 0); // プロフィール保存は即時同期
