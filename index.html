@@ -2072,7 +2072,7 @@
       // contest label
       days_to_contest: 'DAYS TO CONTEST',
       // bottom nav
-      nav_home: 'ホーム', nav_record: '記録', nav_gym: '筋トレ', nav_view: '表示', nav_settings: '設定',
+      nav_home: 'ホーム', nav_record: '記録', nav_water: '水分', nav_gym: '筋トレ', nav_view: '表示', nav_settings: '設定',
       // gym link section
       gym_link_title: '💪 筋トレ連動',
       gym_link_has_record: '記録済み', gym_link_no_record: '本日の筋トレ記録なし',
@@ -2528,7 +2528,7 @@
       // contest label
       days_to_contest: 'DAYS TO CONTEST',
       // bottom nav
-      nav_home: 'Home', nav_record: 'Log', nav_gym: 'Gym', nav_view: 'View', nav_settings: 'Settings',
+      nav_home: 'Home', nav_record: 'Log', nav_water: 'Water', nav_gym: 'Gym', nav_view: 'View', nav_settings: 'Settings',
       // gym link section
       gym_link_title: '💪 Gym Link',
       gym_link_has_record: 'Logged', gym_link_no_record: 'No workout today',
@@ -6261,9 +6261,7 @@
           clearInterval(timerInterval);
           timerInterval = null;
           timerRunning = false;
-          // ネイティブなし（Web）の場合はここで完了処理
-          if (!hasNative) onTimerDone();
-          // ネイティブあり: onTimerDone() はネイティブから呼ばれる
+          onTimerDone(); // UIリセット（バイブはonTimerDone内でAndroid側はスキップ）
         }
       }, 500);
     }

@@ -11,6 +11,7 @@ import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.CountDownTimer
 import android.os.IBinder
+import android.os.PowerManager
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
@@ -21,6 +22,7 @@ class TimerService : Service() {
     private var countDownTimer: CountDownTimer? = null
     private var totalSeconds: Int = 90
     private lateinit var notificationManager: NotificationManager
+    private var wakeLock: PowerManager.WakeLock? = null
 
     companion object {
         const val CHANNEL_ID    = "timer_channel"
@@ -48,8 +50,21 @@ class TimerService : Service() {
         return START_REDELIVER_INTENT
     }
 
+    private fun acquireWakeLock() {
+        val pm = getSystemService(Context.POWER_SERVICE) as PowerManager
+        wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "TrainingLog::TimerWakeLock")
+        wakeLock?.acquire(10 * 60 * 1000L) // 最大10分
+    }
+
+    private fun releaseWakeLock() {
+        wakeLock?.let { if (it.isHeld) it.release() }
+        wakeLock = null
+    }
+
     private fun startTimer(seconds: Int) {
         countDownTimer?.cancel()
+        releaseWakeLock()
+        acquireWakeLock()
         val notif = buildNotification(seconds, seconds)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             startForeground(NOTIF_ID, notif, ServiceInfo.FOREGROUND_SERVICE_TYPE_SHORT_SERVICE)
@@ -63,6 +78,7 @@ class TimerService : Service() {
                 notificationManager.notify(NOTIF_ID, buildNotification(remaining, totalSeconds))
             }
             override fun onFinish() {
+                releaseWakeLock()
                 stopForeground(STOP_FOREGROUND_REMOVE)
                 vibrate()
                 sendBroadcast(Intent(BROADCAST_DONE))
@@ -73,6 +89,7 @@ class TimerService : Service() {
 
     private fun stopTimer() {
         countDownTimer?.cancel()
+        releaseWakeLock()
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
     }
@@ -141,6 +158,7 @@ class TimerService : Service() {
 
     override fun onDestroy() {
         countDownTimer?.cancel()
+        releaseWakeLock()
         super.onDestroy()
     }
 
