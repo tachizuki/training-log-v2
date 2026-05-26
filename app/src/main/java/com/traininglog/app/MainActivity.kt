@@ -588,12 +588,9 @@ class MainActivity : AppCompatActivity() {
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 webView.evaluateJavascript(
-                    "typeof handleAndroidBack === 'function' ? handleAndroidBack() : false"
+                    "(function(){try{if(typeof handleAndroidBack==='function')return handleAndroidBack();return false;}catch(e){return false;}})()"
                 ) { result ->
-                    if (result != "true") {
-                        isEnabled = false
-                        onBackPressedDispatcher.onBackPressed()
-                    }
+                    if (result != "true") finish()
                 }
             }
         })
