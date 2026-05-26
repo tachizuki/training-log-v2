@@ -1471,11 +1471,6 @@
     </div>
 
     <!-- ===== お問い合わせ ===== -->
-    <div style="margin-top:20px;border-top:1px solid var(--border);padding-top:16px;">
-      <div style="font-size:11px;color:var(--text-muted);letter-spacing:0.1em;margin-bottom:10px;">チュートリアル</div>
-      <button onclick="showTutorial()" style="width:100%;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;cursor:pointer;">📖 チュートリアルをもう一度見る</button>
-    </div>
-
     <div id="contact-section" style="margin-top:20px;border-top:1px solid var(--border);padding-top:16px;">
       <div style="font-size:11px;color:var(--text-muted);letter-spacing:0.1em;margin-bottom:10px;" data-i18n="contact_title">サポート</div>
       <button onclick="openContactModal()" style="width:100%;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;cursor:pointer;" data-i18n="btn_contact">📧 お問い合わせ・不具合報告</button>
@@ -1491,7 +1486,8 @@
       <button onclick="adminForceSync()" style="width:100%;padding:10px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:13px;cursor:pointer;margin-bottom:6px;" data-i18n="admin_force_sync">☁️ クラウドへ強制同期</button>
       <button onclick="adminReloadCloud()" style="width:100%;padding:10px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:13px;cursor:pointer;margin-bottom:6px;" data-i18n="admin_reload_cloud">🔄 クラウドから再読み込み</button>
       <button onclick="adminShowStats()" style="width:100%;padding:10px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:13px;cursor:pointer;margin-bottom:6px;" data-i18n="admin_show_stats">📊 データ統計を表示</button>
-      <button onclick="adminCopyDebugInfo()" style="width:100%;padding:10px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:13px;cursor:pointer;" data-i18n="admin_copy_debug">📋 デバッグ情報をコピー</button>
+      <button onclick="adminCopyDebugInfo()" style="width:100%;padding:10px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:13px;cursor:pointer;margin-bottom:6px;" data-i18n="admin_copy_debug">📋 デバッグ情報をコピー</button>
+      <button onclick="showTutorial()" style="width:100%;padding:10px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:13px;cursor:pointer;">📖 チュートリアルをリセット</button>
     </div>
 
     <!-- ===== Danger Zone: アカウント削除 ===== -->
@@ -3124,15 +3120,9 @@
 
   function showTutorial() {
     localStorage.removeItem('onboarding_done');
+    obCurrentSlide = 0;
     showScreen(null);
-    const overlay = document.getElementById('onboarding-overlay');
-    overlay.style.display = '';
-    overlay.classList.remove('hidden');
-    // スライドを先頭に戻す
-    const slides = document.getElementById('ob-slides');
-    if (slides) slides.style.transform = 'translateX(0)';
-    const dots = document.querySelectorAll('.ob-dot');
-    dots.forEach((d, i) => d.classList.toggle('active', i === 0));
+    checkOnboarding();
   }
 
   function obFinishOnboarding() {
