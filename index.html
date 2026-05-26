@@ -92,6 +92,8 @@
   .nav-item .ni { font-size:21px; line-height:1; }
   .nav-item::before { content:''; position:absolute; top:0; left:50%; transform:translateX(-50%); width:0; height:2px; background:var(--accent); border-radius:0 0 2px 2px; transition:width 0.2s; }
   .nav-item.active::before { width:26px; }
+  .nav-item.nav-water.active { color:var(--accent2); }
+  .nav-item.nav-water.active::before { background:var(--accent2); }
   .nav-item.nav-settings.active { color:var(--accent2); }
   .nav-item.nav-settings.active::before { background:var(--accent2); }
   /* ===== ジムサマリー（一覧カード内） ===== */
@@ -1110,6 +1112,9 @@
   </button>
   <button class="nav-item" id="nav-record" onclick="showScreen('record-screen')">
     <span class="ni">📝</span><span data-i18n="nav_record">記録</span>
+  </button>
+  <button class="nav-item" id="nav-water" onclick="showScreen('water-screen');renderWater()">
+    <span class="ni">💧</span><span data-i18n="nav_water">水分</span>
   </button>
   <button class="nav-item" id="nav-gym" onclick="showScreen('gym-screen');renderGym()">
     <span class="ni">💪</span><span data-i18n="nav_gym">筋トレ</span>
@@ -3330,7 +3335,7 @@
       updatePremiumGatedUI();
     } else {
       document.getElementById(id).classList.add('active');
-      const navMap = {'record-screen':'nav-record','gym-screen':'nav-gym','view-screen':'nav-view','settings-screen':'nav-settings'};
+      const navMap = {'record-screen':'nav-record','water-screen':'nav-water','gym-screen':'nav-gym','view-screen':'nav-view','settings-screen':'nav-settings'};
       const navId = navMap[id];
       if (navId) { const nb = document.getElementById(navId); if (nb) nb.classList.add('active'); }
       if (id === 'settings-screen') openProfile();
