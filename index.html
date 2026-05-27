@@ -5201,6 +5201,7 @@
     const copy = {weight: src.weight, reps: src.reps, assist: src.assist, memo: ''};
     gymExercises[ei].sets.splice(si+1, 0, copy);
     renderGymExercises();
+    autoSaveGym();
   }
 
   function gymDelSet(ei, si) {
@@ -5228,6 +5229,36 @@
     if (!gymData[key]) gymData[key] = {};
     gymData[key].exercises = JSON.parse(JSON.stringify(gymExercises));
     localStorage.setItem('gym_data', JSON.stringify(gymData));
+
+    // training_records にも trained フラグ・部位を即時反映
+    const muscleMap = {
+      '胸':['ベンチプレス','フライ','ペックデック','ディップス','チェストプレス'],
+      '背中':['デッドリフト','ラットプルダウン','チンニング','ロウ','バックエクステンション','Tバー'],
+      '肩':['ショルダープレス','サイドレイズ','フロントレイズ','リアレイズ','アーノルド','フェイスプル'],
+      '腕':['カール','スカルクラッシャー','プッシュダウン','クローズグリップ'],
+      '足':['スクワット','レッグプレス','ブルガリアン','レッグエクステ','レッグカール','アウターサイ','ルーマニアン','ハック'],
+      '腹筋':['クランチ','レッグレイズ','プランク','ツイスト','アブローラー','ハンギング'],
+    };
+    const detectedMuscles = new Set();
+    gymExercises.forEach(ex => {
+      Object.entries(muscleMap).forEach(([muscle, keywords]) => {
+        if (keywords.some(kw => ex.name.includes(kw))) detectedMuscles.add(muscle);
+      });
+    });
+    const muscles = detectedMuscles.size > 0 ? [...detectedMuscles] : ['筋トレ'];
+    const recIdx = records.findIndex(r => r.date === gymDate);
+    if (recIdx >= 0) {
+      records[recIdx].trained = true;
+      records[recIdx].muscles = [...new Set([...(records[recIdx].muscles||[]), ...muscles])];
+    } else {
+      records.push({
+        date: gymDate, weight:null, sleep:null, p:null, f:null, c:null,
+        kcal:null, salt:null, steps:null, activities:[], cardioKcal:null,
+        salon:null, trained:true, muscles, memo:''
+      });
+      records.sort((a,b) => b.date.localeCompare(a.date));
+    }
+    localStorage.setItem('training_records', JSON.stringify(records));
   }
 
   // ==================
@@ -5380,46 +5411,8 @@
   }
 
   function saveGym() {
-    // 保存時にストップウォッチが動いていたら停止する
     if (swRunning) swStop();
-    const key = getGymKey();
-    if (!gymData[key]) gymData[key] = {};
-    gymData[key].exercises = JSON.parse(JSON.stringify(gymExercises));
-    localStorage.setItem('gym_data', JSON.stringify(gymData));
-
-    // 日々記録に筋トレ情報を自動反映
-    if (gymExercises.length > 0) {
-      const recIdx = records.findIndex(r => r.date === gymDate);
-      // 種目名から部位を推定
-      const muscleMap = {
-        '胸':['ベンチプレス','フライ','ペックデック','ディップス','チェストプレス'],
-        '背中':['デッドリフト','ラットプルダウン','チンニング','ロウ','バックエクステンション','Tバー'],
-        '肩':['ショルダープレス','サイドレイズ','フロントレイズ','リアレイズ','アーノルド','フェイスプル'],
-        '腕':['カール','スカルクラッシャー','プッシュダウン','クローズグリップ'],
-        '足':['スクワット','レッグプレス','ブルガリアン','レッグエクステ','レッグカール','アウターサイ','ルーマニアン','ハック'],
-        '腹筋':['クランチ','レッグレイズ','プランク','ツイスト','アブローラー','ハンギング'],
-      };
-      const detectedMuscles = new Set();
-      gymExercises.forEach(ex => {
-        Object.entries(muscleMap).forEach(([muscle, keywords]) => {
-          if (keywords.some(kw => ex.name.includes(kw))) detectedMuscles.add(muscle);
-        });
-      });
-      const muscles = detectedMuscles.size > 0 ? [...detectedMuscles] : ['筋トレ'];
-
-      if (recIdx >= 0) {
-        records[recIdx].trained = true;
-        records[recIdx].muscles = [...new Set([...(records[recIdx].muscles||[]), ...muscles])];
-      } else {
-        records.push({
-          date: gymDate, weight:null, sleep:null, p:null, f:null, c:null,
-          kcal:null, salt:null, steps:null, activities:[], cardioKcal:null,
-          salon:null, trained:true, muscles, memo:''
-        });
-        records.sort((a,b) => b.date.localeCompare(a.date));
-      }
-      localStorage.setItem('training_records', JSON.stringify(records));
-    }
+    autoSaveGym();
 
     // ストップウォッチの時間から筋トレ消費カロリーを計算して運動記録に追加
     // 時間計測がない場合は60分をデフォルトとして使用
