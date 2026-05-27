@@ -1558,8 +1558,8 @@
 
       <!-- 管理者専用（ログイン時のみ表示） -->
       <div id="admin-section" style="display:none;margin-top:6px;">
-        <div class="settings-section" style="border-color:rgba(232,255,0,0.3);">
-          <div class="settings-section-hdr" onclick="toggleSettingsSection('sacc-admin')" style="cursor:pointer;">
+        <div class="settings-section" id="sacc-admin-wrap" style="border-color:rgba(232,255,0,0.3);">
+          <div class="settings-section-hdr" onclick="toggleSettingsSection('sacc-admin-wrap')" style="cursor:pointer;">
             <div class="settings-section-info">
               <span class="settings-section-icon">⚙️</span>
               <div>
@@ -1569,7 +1569,7 @@
             </div>
             <span class="settings-section-chevron">▼</span>
           </div>
-          <div class="settings-section-body" id="sacc-admin" style="display:none;">
+          <div class="settings-section-body" id="sacc-admin">
             <button onclick="adminForceSync()" style="width:100%;padding:10px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:13px;cursor:pointer;margin-top:14px;margin-bottom:6px;" data-i18n="admin_force_sync">☁️ クラウドへ強制同期</button>
             <button onclick="adminReloadCloud()" style="width:100%;padding:10px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:13px;cursor:pointer;margin-bottom:6px;" data-i18n="admin_reload_cloud">🔄 クラウドから再読み込み</button>
             <button onclick="adminShowStats()" style="width:100%;padding:10px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:13px;cursor:pointer;margin-bottom:6px;" data-i18n="admin_show_stats">📊 データ統計を表示</button>
