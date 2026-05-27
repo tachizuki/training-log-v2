@@ -5297,7 +5297,6 @@
       records.sort((a,b) => b.date.localeCompare(a.date));
     }
     localStorage.setItem('training_records', JSON.stringify(records));
-    if (currentUser) syncToCloud(currentUser.uid);
   }
 
   // ==================
