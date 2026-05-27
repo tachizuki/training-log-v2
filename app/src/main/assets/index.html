@@ -420,7 +420,7 @@
   .gym-picker-list { flex: 1; overflow-y: auto; padding-bottom: 80px; }
   .gym-picker-item { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 16px; cursor: pointer; width: 100%; text-align: left; border-radius: 0; border-left: none; border-right: none; border-top: none; }
   .gym-picker-item:active { background: var(--surface); }
-  .gym-picker-item-drag { color: var(--text-muted); font-size: 20px; cursor: grab; padding: 4px 12px; touch-action: none; user-select: none; }
+  .gym-picker-move-btns { display:flex; flex-direction:column; gap:2px; flex-shrink:0; margin-left:6px; }
   .gym-picker-custom-btn { width: 100%; padding: 12px; background: var(--accent); color: var(--bg); border: none; border-radius: 10px; font-family: 'Bebas Neue', sans-serif; font-size: 18px; cursor: pointer; margin-top: 12px; }
   .gym-preset-item { display: flex; align-items: center; gap: 8px; padding: 10px 4px; border-bottom: 1px solid var(--border); }
   .gym-preset-item-name { flex: 1; font-size: 14px; color: var(--text); }
@@ -5925,7 +5925,9 @@
       html += `<div style="padding:10px 16px;background:var(--accent);"><span style="font-size:13px;font-weight:700;color:var(--bg);">${cat}</span></div>`;
       items.forEach((p, i) => {
         const safeCat = cat.replace(/'/g,"\\'");
-        html += `<button class="gym-picker-item" onclick="gymAddExercise('${p.replace(/'/g,"\'")}','${safeCat}')"><span style="flex:1;text-align:left;">${p}</span><span class="gym-picker-item-drag" onpointerdown="pickerDragStart(event,'${cat}',${i})" onclick="event.stopPropagation()">☰</span></button>`;
+        const actualIdx = (gymPresets[cat] || []).indexOf(p);
+        const lastIdx = (gymPresets[cat] || []).length - 1;
+        html += `<button class="gym-picker-item" onclick="gymAddExercise('${p.replace(/'/g,"\\'")}','${safeCat}')"><span style="flex:1;text-align:left;">${p}</span><div class="gym-picker-move-btns" onclick="event.stopPropagation()"><button class="gym-move-btn" onclick="event.stopPropagation();pickerMoveItem('${cat}',${actualIdx},-1)"${actualIdx<=0?' disabled':''}>▲</button><button class="gym-move-btn" onclick="event.stopPropagation();pickerMoveItem('${cat}',${actualIdx},1)"${actualIdx>=lastIdx?' disabled':''}>▼</button></div></button>`;
       });
     });
 
@@ -5949,76 +5951,17 @@
     filterGymPicker();
   }
 
-  // ピッカー内ドラッグ並び替え（即時・ハイライト表示）
-  function pickerDragStart(e, cat, fromIdx) {
-    e.preventDefault();
-    e.stopPropagation();
-    if (navigator.vibrate) navigator.vibrate(20);
-
-    pickerDragState = {cat, fromIdx, curIdx: fromIdx};
-
-    // ドラッグ中の行をハイライト
-    const allItems = [...document.querySelectorAll('#gym-picker-list .gym-picker-item')];
-    const dragItem = allItems[fromIdx];
-    if (dragItem) dragItem.style.background = 'rgba(232,255,0,0.15)';
-
-    function onMove(ev) {
-      const y = ev.clientY;
-      const items = [...document.querySelectorAll('#gym-picker-list .gym-picker-item')];
-
-      // 全アイテムのハイライトをリセット
-      items.forEach((el, i) => {
-        if (i === pickerDragState.fromIdx) {
-          el.style.background = 'rgba(232,255,0,0.15)';
-          el.style.borderBottom = '';
-        } else {
-          el.style.background = '';
-          el.style.borderBottom = '';
-        }
-      });
-
-      // ターゲット行を特定してボーダーで示す
-      let targetIdx = pickerDragState.fromIdx;
-      items.forEach((el, i) => {
-        const rect = el.getBoundingClientRect();
-        if (y >= rect.top && y <= rect.bottom && i !== pickerDragState.fromIdx) {
-          targetIdx = i;
-          // 上半分なら上に、下半分なら下にボーダー
-          const mid = rect.top + rect.height / 2;
-          el.style.borderBottom = y < mid ? '' : '2px solid var(--accent)';
-          el.style.borderTop = y < mid ? '2px solid var(--accent)' : '';
-        }
-      });
-      pickerDragState.curIdx = targetIdx;
-    }
-
-    function onEnd() {
-      document.removeEventListener('pointermove', onMove);
-      document.removeEventListener('pointerup', onEnd);
-
-      // スタイルリセット
-      document.querySelectorAll('#gym-picker-list .gym-picker-item').forEach(el => {
-        el.style.background = '';
-        el.style.borderTop = '';
-        el.style.borderBottom = '';
-      });
-
-      if (pickerDragState && pickerDragState.fromIdx !== pickerDragState.curIdx) {
-        gymPresets = gymPresets || JSON.parse(JSON.stringify(GYM_PRESETS));
-        const items = gymPresets[cat];
-        if (items) {
-          const item = items.splice(pickerDragState.fromIdx, 1)[0];
-          const toIdx = Math.max(0, Math.min(pickerDragState.curIdx, items.length));
-          items.splice(toIdx, 0, item);
-          localStorage.setItem('gym_presets', JSON.stringify(gymPresets));
-          filterGymPicker();
-        }
-      }
-      pickerDragState = null;
-    }
-
-    document.addEventListener('pointermove', onMove);
-    document.addEventListener('pointerup', onEnd, {once:true});
+  function pickerMoveItem(cat, idx, dir) {
+    gymPresets = gymPresets || JSON.parse(JSON.stringify(GYM_PRESETS));
+    const items = gymPresets[cat];
+    if (!items) return;
+    const newIdx = idx + dir;
+    if (newIdx < 0 || newIdx >= items.length) return;
+    const tmp = items[idx];
+    items[idx] = items[newIdx];
+    items[newIdx] = tmp;
+    localStorage.setItem('gym_presets', JSON.stringify(gymPresets));
+    filterGymPicker();
   }
 
   function addCustomGymExercise() {
