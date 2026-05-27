@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>設定画面 モック</title>
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --surface: #141414;
+    --surface2: #1e1e1e;
+    --border: #2a2a2a;
+    --text: #f0f0f0;
+    --text-muted: #888;
+    --accent: #e8ff00;
+    --accent2: #00d4ff;
+    --danger: #ff4444;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, sans-serif; max-width: 430px; margin: 0 auto; }
+
+  /* Header */
+  .screen-header { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--bg); z-index: 10; }
+  .btn-back { background: none; border: none; color: var(--text); font-size: 20px; cursor: pointer; padding: 4px 8px 4px 0; }
+  .screen-title { font-size: 17px; font-weight: 700; }
+
+  /* Plan bar */
+  .plan-bar { display: flex; align-items: center; justify-content: space-between; background: var(--surface2); border-radius: 12px; padding: 12px 14px; margin: 12px 16px 4px; }
+  .plan-label { font-size: 10px; color: var(--text-muted); margin-bottom: 2px; }
+  .plan-name { font-size: 14px; font-weight: 700; }
+  .btn-upgrade { padding: 7px 14px; background: var(--accent); color: var(--bg); border: none; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; }
+
+  /* Account card */
+  .account-card { background: var(--surface2); border-radius: 12px; padding: 12px 14px; margin: 8px 16px; }
+  .account-card-label { font-size: 11px; color: var(--text-muted); margin-bottom: 6px; }
+  .account-card-desc { font-size: 12px; color: var(--text); margin-bottom: 8px; }
+  .btn-login { width: 100%; padding: 10px; background: var(--accent); color: var(--bg); border: none; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; }
+
+  /* Accordion */
+  .section-list { padding: 8px 16px 32px; display: flex; flex-direction: column; gap: 6px; }
+
+  .accordion { border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: var(--surface); }
+  .accordion-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent; }
+  .accordion-header:active { background: var(--surface2); }
+  .accordion-title { display: flex; align-items: center; gap: 10px; }
+  .accordion-icon { font-size: 18px; }
+  .accordion-label { font-size: 15px; font-weight: 600; }
+  .accordion-subtitle { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+  .accordion-chevron { color: var(--text-muted); font-size: 13px; transition: transform 0.2s; }
+  .accordion.open .accordion-chevron { transform: rotate(180deg); }
+
+  .accordion-body { display: none; padding: 0 16px 16px; border-top: 1px solid var(--border); }
+  .accordion.open .accordion-body { display: block; }
+
+  /* Form elements */
+  .field-group { margin-top: 14px; }
+  .field-label { font-size: 11px; color: var(--text-muted); margin-bottom: 5px; }
+  .field-input { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; color: var(--text); font-size: 14px; outline: none; }
+  .field-input:focus { border-color: var(--accent); }
+  .field-hint { font-size: 10px; color: var(--text-muted); margin-top: 4px; }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+  .sex-row { display: flex; gap: 8px; margin-top: 6px; }
+  .sex-btn { flex: 1; padding: 9px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text-muted); font-size: 13px; cursor: pointer; }
+  .sex-btn.selected { background: var(--accent); color: var(--bg); border-color: var(--accent); font-weight: 700; }
+
+  .bmr-display { display: flex; align-items: baseline; gap: 6px; margin-top: 10px; padding: 10px 12px; background: var(--surface2); border-radius: 8px; }
+  .bmr-value { font-size: 22px; font-weight: 700; color: var(--accent); }
+  .bmr-unit { font-size: 11px; color: var(--text-muted); }
+
+  /* Toggle row */
+  .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .toggle-row:last-child { border-bottom: none; }
+  .toggle-row-label { font-size: 14px; }
+  .toggle-row-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+  .toggle { width: 44px; height: 24px; background: var(--border); border-radius: 12px; position: relative; cursor: pointer; transition: background 0.2s; border: none; outline: none; flex-shrink: 0; }
+  .toggle.on { background: var(--accent); }
+  .toggle::after { content: ''; position: absolute; width: 18px; height: 18px; background: white; border-radius: 50%; top: 3px; left: 3px; transition: transform 0.2s; }
+  .toggle.on::after { transform: translateX(20px); }
+
+  /* Buttons */
+  .action-btn { width: 100%; padding: 12px; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-size: 14px; cursor: pointer; margin-top: 8px; text-align: left; }
+  .action-btn:first-child { margin-top: 14px; }
+  .action-btn:active { background: var(--border); }
+
+  .danger-btn { width: 100%; padding: 12px; background: transparent; border: 1px solid var(--danger); border-radius: 10px; color: var(--danger); font-size: 13px; font-weight: 700; cursor: pointer; margin-top: 14px; }
+
+  /* Notif time row */
+  .notif-time-row { display: flex; align-items: center; gap: 8px; padding: 10px 0 4px; }
+  .notif-time-label { font-size: 13px; color: var(--text-muted); flex: 1; }
+  .time-input { width: 48px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 8px; color: var(--text); font-size: 16px; text-align: center; outline: none; }
+  .time-sep { color: var(--text-muted); }
+  .btn-set { padding: 8px 14px; background: var(--accent); color: var(--bg); border: none; border-radius: 8px; font-family: sans-serif; font-size: 13px; font-weight: 700; cursor: pointer; }
+
+  /* Nutrition grid */
+  .nutrition-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+  .kcal-auto { font-size: 11px; color: var(--text-muted); margin-top: 10px; line-height: 1.5; }
+  .kcal-auto strong { color: var(--accent); }
+</style>
+</head>
+<body>
+
+<div class="screen-header">
+  <button class="btn-back">←</button>
+  <div class="screen-title">⚙ 設定</div>
+</div>
+
+<!-- プランステータス（常時表示） -->
+<div class="plan-bar">
+  <div>
+    <div class="plan-label">現在のプラン</div>
+    <div class="plan-name">無料プラン（直近30日）</div>
+  </div>
+  <button class="btn-upgrade">アップグレード</button>
+</div>
+
+<!-- アカウント（常時表示） -->
+<div class="account-card">
+  <div class="account-card-label">アカウント</div>
+  <div class="account-card-desc">ログインするとデータが同期されます</div>
+  <button class="btn-login">Googleでログイン</button>
+</div>
+
+<div class="section-list">
+
+  <!-- プロフィール -->
+  <div class="accordion open" id="acc-profile">
+    <div class="accordion-header" onclick="toggle('acc-profile')">
+      <div class="accordion-title">
+        <span class="accordion-icon">👤</span>
+        <div>
+          <div class="accordion-label">プロフィール</div>
+          <div class="accordion-subtitle">表示名・身長・年齢・性別</div>
+        </div>
+      </div>
+      <span class="accordion-chevron">▼</span>
+    </div>
+    <div class="accordion-body">
+      <div class="field-group">
+        <div class="field-label">表示名（任意）</div>
+        <input class="field-input" placeholder="トップ画面に表示したい名前" maxlength="20">
+        <div class="field-hint">空欄なら「ログイン名」または「ゲスト」が使われます</div>
+      </div>
+      <div class="two-col">
+        <div class="field-group">
+          <div class="field-label">身長 (cm)</div>
+          <input class="field-input" type="number" placeholder="168">
+        </div>
+        <div class="field-group">
+          <div class="field-label">年齢</div>
+          <input class="field-input" type="number" placeholder="25">
+        </div>
+      </div>
+      <div class="field-group">
+        <div class="field-label">性別</div>
+        <div class="sex-row">
+          <button class="sex-btn selected">男性</button>
+          <button class="sex-btn">女性</button>
+        </div>
+      </div>
+      <div class="bmr-display">
+        <span class="bmr-value">1,820</span>
+        <span class="bmr-unit">kcal/日（推定基礎代謝）</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 大会設定 -->
+  <div class="accordion" id="acc-contest">
+    <div class="accordion-header" onclick="toggle('acc-contest')">
+      <div class="accordion-title">
+        <span class="accordion-icon">🏆</span>
+        <div>
+          <div class="accordion-label">大会設定</div>
+          <div class="accordion-subtitle">大会名・日程・目標体重</div>
+        </div>
+      </div>
+      <span class="accordion-chevron">▼</span>
+    </div>
+    <div class="accordion-body">
+      <div class="field-group">
+        <div class="field-label">大会名</div>
+        <input class="field-input" placeholder="例：東京クラシック2026">
+      </div>
+      <div class="two-col">
+        <div class="field-group">
+          <div class="field-label">📅 大会日</div>
+          <input class="field-input" type="date">
+        </div>
+        <div class="field-group">
+          <div class="field-label">🏁 仕上げ日</div>
+          <input class="field-input" type="date">
+          <div class="field-hint">未設定なら大会日を使用</div>
+        </div>
+      </div>
+      <div class="field-group">
+        <div class="field-label">🎯 目標体重 (kg)</div>
+        <input class="field-input" type="number" placeholder="例：75.0" step="0.1">
+      </div>
+    </div>
+  </div>
+
+  <!-- 栄養目標 -->
+  <div class="accordion" id="acc-nutrition">
+    <div class="accordion-header" onclick="toggle('acc-nutrition')">
+      <div class="accordion-title">
+        <span class="accordion-icon">🍽️</span>
+        <div>
+          <div class="accordion-label">栄養目標</div>
+          <div class="accordion-subtitle">P / F / C・塩分・許容誤差</div>
+        </div>
+      </div>
+      <span class="accordion-chevron">▼</span>
+    </div>
+    <div class="accordion-body">
+      <div class="nutrition-grid">
+        <div class="field-group">
+          <div class="field-label">タンパク質 (g)</div>
+          <input class="field-input" type="number" placeholder="180">
+        </div>
+        <div class="field-group">
+          <div class="field-label">脂質 (g)</div>
+          <input class="field-input" type="number" placeholder="50">
+        </div>
+        <div class="field-group">
+          <div class="field-label">炭水化物 (g)</div>
+          <input class="field-input" type="number" placeholder="200">
+        </div>
+        <div class="field-group">
+          <div class="field-label">塩分 (g)</div>
+          <input class="field-input" type="number" placeholder="6" step="0.1">
+        </div>
+        <div class="field-group">
+          <div class="field-label">許容誤差 (±%)</div>
+          <input class="field-input" type="number" placeholder="10">
+        </div>
+      </div>
+      <div class="kcal-auto">目標カロリー（自動）: <strong>2,270 kcal</strong></div>
+    </div>
+  </div>
+
+  <!-- 通知・オプション -->
+  <div class="accordion" id="acc-notif">
+    <div class="accordion-header" onclick="toggle('acc-notif')">
+      <div class="accordion-title">
+        <span class="accordion-icon">🔔</span>
+        <div>
+          <div class="accordion-label">通知・オプション</div>
+          <div class="accordion-subtitle">リマインダー・動作設定</div>
+        </div>
+      </div>
+      <span class="accordion-chevron">▼</span>
+    </div>
+    <div class="accordion-body">
+      <div class="toggle-row" style="padding-top:14px;">
+        <span class="toggle-row-label">毎日通知</span>
+        <button class="toggle" onclick="this.classList.toggle('on')"></button>
+      </div>
+      <div class="notif-time-row">
+        <span class="notif-time-label">通知時刻</span>
+        <input class="time-input" type="number" value="20">
+        <span class="time-sep">:</span>
+        <input class="time-input" type="number" value="0">
+        <button class="btn-set">SET</button>
+      </div>
+      <div class="toggle-row">
+        <div>
+          <div class="toggle-row-label">保存後にシェア画面を表示</div>
+          <div class="toggle-row-sub">筋トレ保存時にシェア画像を自動表示</div>
+        </div>
+        <button class="toggle on" onclick="this.classList.toggle('on')"></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- データ・サポート -->
+  <div class="accordion" id="acc-data">
+    <div class="accordion-header" onclick="toggle('acc-data')">
+      <div class="accordion-title">
+        <span class="accordion-icon">🗂️</span>
+        <div>
+          <div class="accordion-label">データ・サポート</div>
+          <div class="accordion-subtitle">バックアップ・お問い合わせ</div>
+        </div>
+      </div>
+      <span class="accordion-chevron">▼</span>
+    </div>
+    <div class="accordion-body">
+      <button class="action-btn">📤 データをエクスポート</button>
+      <button class="action-btn">📥 データをインポート</button>
+      <button class="action-btn">📧 お問い合わせ・不具合報告</button>
+      <button class="danger-btn">アカウントとデータを削除する</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  function toggle(id) {
+    document.getElementById(id).classList.toggle('open');
+  }
+</script>
+</body>
+</html>

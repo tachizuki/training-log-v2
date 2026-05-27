@@ -41,7 +41,8 @@
 
   #top-screen {
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    min-height: 100vh;
+    height: 100vh;
+    overflow: hidden;
     padding: max(20px, env(safe-area-inset-top)) 20px calc(75px + max(20px, env(safe-area-inset-bottom)));
     position: relative;
   }
@@ -63,6 +64,8 @@
   .nav-item .ni { font-size:21px; line-height:1; }
   .nav-item::before { content:''; position:absolute; top:0; left:50%; transform:translateX(-50%); width:0; height:2px; background:var(--accent); border-radius:0 0 2px 2px; transition:width 0.2s; }
   .nav-item.active::before { width:26px; }
+  .nav-item.nav-water.active { color:var(--accent2); }
+  .nav-item.nav-water.active::before { background:var(--accent2); }
   .nav-item.nav-settings.active { color:var(--accent2); }
   .nav-item.nav-settings.active::before { background:var(--accent2); }
   /* ===== ジムサマリー（一覧カード内） ===== */
@@ -119,10 +122,10 @@
   .profile-bmr-value { font-family: "Bebas Neue", sans-serif; font-size: 36px; color: var(--accent); }
   .profile-bmr-label { font-size: 11px; color: var(--text-muted); letter-spacing: 0.1em; }
 
-  .today-summary { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 20px; margin-bottom: 32px; text-align: left; }
+  .today-summary { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 20px; margin-bottom: 32px; text-align: center; }
   .today-date { font-size: 11px; letter-spacing: 0.2em; color: var(--text-muted); text-transform: uppercase; margin-bottom: 12px; }
   .today-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  .today-stat { display: flex; flex-direction: column; gap: 2px; }
+  .today-stat { display: flex; flex-direction: column; gap: 2px; align-items: center; text-align: center; }
   .today-stat-label { font-size: 10px; color: var(--text-muted); letter-spacing: 0.1em; }
   .today-stat-value { font-family: 'Bebas Neue', sans-serif; font-size: 24px; color: var(--accent); line-height: 1; }
   .today-stat-value.cyan { color: var(--accent2); }
@@ -162,6 +165,22 @@
 
   .btn-submit { width: 100%; padding: 18px; background: var(--accent); color: var(--bg); border: none; border-radius: 12px; font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 0.1em; cursor: pointer; margin-top: 20px; transition: opacity 0.2s; }
   .btn-submit:active { opacity: 0.8; }
+  .settings-save-bar { display:none; position:fixed; bottom:60px; left:0; right:0; padding:12px 20px; background:var(--bg); border-top:2px solid var(--accent); z-index:19; }
+  .settings-save-bar.visible { display:block; }
+  .settings-save-bar button { width:100%; padding:14px; background:var(--accent); color:var(--bg); border:none; border-radius:12px; font-family:'Bebas Neue',sans-serif; font-size:20px; letter-spacing:0.1em; cursor:pointer; }
+  .settings-section { border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: var(--surface); margin-bottom: 6px; }
+  .settings-section-hdr { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent; }
+  .settings-section-hdr:active { background: var(--surface2); }
+  .settings-section-info { display: flex; align-items: center; gap: 10px; }
+  .settings-section-icon { font-size: 18px; }
+  .settings-section-title { font-size: 15px; font-weight: 600; }
+  .settings-section-sub { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+  .settings-section-chevron { color: var(--text-muted); font-size: 12px; transition: transform 0.2s; flex-shrink: 0; }
+  .settings-section.open .settings-section-chevron { transform: rotate(180deg); }
+  .settings-section-body { display: none; padding: 0 16px 16px; border-top: 1px solid var(--border); }
+  .settings-section.open .settings-section-body { display: block; }
+  .settings-list { padding: 6px 16px 100px; }
+  .settings-always { padding: 0 16px; }
 
   /* WATER SCREEN */
   .water-hero { text-align: center; padding: 24px 20px 8px; }
@@ -369,11 +388,11 @@
   .gym-prev-set-assist { font-size: 10px; color: #ff8c42; }
   .gym-prev-apply-btn { width: 100%; padding: 14px; background: var(--accent2); color: var(--bg); border: none; border-radius: 12px; font-family: 'Bebas Neue', sans-serif; font-size: 20px; cursor: pointer; margin-top: 16px; }
   .gym-prev-apply-btn.partial { background: var(--surface2); color: var(--text-muted); border: 1px solid var(--border); margin-top: 8px; font-size: 16px; }
-  .gym-move-btns { display:flex; flex-direction:column; gap:2px; margin-right:6px; flex-shrink:0; }
+  .gym-exercise-card { position: relative; }
+
   .gym-move-btn { background:var(--surface2); border:1px solid var(--border); border-radius:6px; color:var(--text-muted); font-size:13px; width:26px; height:26px; display:flex; align-items:center; justify-content:center; cursor:pointer; padding:0; line-height:1; }
   .gym-move-btn:active { background:var(--accent); color:var(--bg); border-color:var(--accent); }
   .gym-move-btn:disabled { opacity:0.2; cursor:default; }
-  .gym-exercise-card { transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s; position: relative; }
   .gym-set-header { display: grid; grid-template-columns: 28px 1fr 1fr 50px 24px; gap: 4px; margin-bottom: 4px; }
   .gym-set-header-label { font-size: 9px; color: var(--text-muted); text-align: center; letter-spacing: 0.05em; }
   .gym-set-row { display: grid; grid-template-columns: 28px 1fr 1fr 50px 24px; gap: 4px; align-items: center; margin-bottom: 5px; }
@@ -414,7 +433,7 @@
   .gym-picker-list { flex: 1; overflow-y: auto; padding-bottom: 80px; }
   .gym-picker-item { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 16px; cursor: pointer; width: 100%; text-align: left; border-radius: 0; border-left: none; border-right: none; border-top: none; }
   .gym-picker-item:active { background: var(--surface); }
-  .gym-picker-item-drag { color: var(--text-muted); font-size: 20px; cursor: grab; padding: 4px 12px; touch-action: none; user-select: none; }
+  .gym-picker-move-btns { display:flex; flex-direction:column; gap:2px; flex-shrink:0; margin-left:6px; }
   .gym-picker-custom-btn { width: 100%; padding: 12px; background: var(--accent); color: var(--bg); border: none; border-radius: 10px; font-family: 'Bebas Neue', sans-serif; font-size: 18px; cursor: pointer; margin-top: 12px; }
   .gym-preset-item { display: flex; align-items: center; gap: 8px; padding: 10px 4px; border-bottom: 1px solid var(--border); }
   .gym-preset-item-name { flex: 1; font-size: 14px; color: var(--text); }
@@ -454,7 +473,7 @@
   .share-btn.download { background: var(--accent); color: var(--bg); }
   .share-btn.cancel { background: var(--surface); color: var(--text-muted); }
 
-  .toast { position: fixed; bottom: calc(68px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%) translateY(100px); background: var(--accent); color: var(--bg); padding: 12px 24px; border-radius: 30px; font-weight: 700; font-size: 13px; letter-spacing: 0.05em; z-index: 100; transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1); white-space: nowrap; }
+  .toast { position: fixed; bottom: calc(68px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%) translateY(200px); background: var(--accent); color: var(--bg); padding: 12px 24px; border-radius: 30px; font-weight: 700; font-size: 13px; letter-spacing: 0.05em; z-index: 100; transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1); white-space: nowrap; }
   .toast.show { transform: translateX(-50%) translateY(0); }
   .toast.blue { background: var(--accent2); }
 
@@ -861,6 +880,17 @@
     <button class="gym-action-btn" onclick="gymShare()" data-i18n="gym_share">📷 シェア</button>
   </div>
 
+  <!-- 筋トレ分析パネル -->
+  <div style="margin:12px 16px 0;padding:14px 16px;background:var(--surface);border:1px solid var(--border);border-radius:12px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;" onclick="toggleGymAnalysis()">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--accent);letter-spacing:0.05em;">📊 筋トレ分析</div>
+      <span id="gym-analysis-toggle" style="color:var(--text-muted);font-size:14px;">▼</span>
+    </div>
+    <div id="gym-analysis-body" style="display:none;margin-top:12px;">
+      <div id="gym-analysis-content"></div>
+    </div>
+  </div>
+
   <div class="gym-body">
     <div class="gym-stopwatch">
       <div class="gym-stopwatch-time" id="sw-display">00:00:00</div>
@@ -878,16 +908,6 @@
     <button class="gym-add-exercise-btn" onclick="openGymPicker()" data-i18n="btn_add_exercise_gym">＋ 種目を追加</button>
     <button class="gym-save-btn" onclick="saveGym()" data-i18n="btn_back_save">← 戻る（自動保存済み）</button>
 
-    <!-- 筋トレ分析パネル -->
-    <div style="margin-top:18px;padding:16px;background:var(--surface);border:1px solid var(--border);border-radius:12px;">
-      <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;" onclick="toggleGymAnalysis()">
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--accent);letter-spacing:0.05em;">📊 筋トレ分析</div>
-        <span id="gym-analysis-toggle" style="color:var(--text-muted);font-size:14px;">▼</span>
-      </div>
-      <div id="gym-analysis-body" style="display:none;margin-top:12px;">
-        <div id="gym-analysis-content"></div>
-      </div>
-    </div>
   </div>
 </div>
 
@@ -1041,13 +1061,16 @@
   <button class="nav-item" id="nav-record" onclick="showScreen('record-screen')">
     <span class="ni">📝</span><span data-i18n="nav_record">記録</span>
   </button>
+  <button class="nav-item" id="nav-water" onclick="showScreen('water-screen');renderWater()">
+    <span class="ni">💧</span><span data-i18n="nav_water">水分</span>
+  </button>
   <button class="nav-item" id="nav-gym" onclick="showScreen('gym-screen');renderGym()">
     <span class="ni">💪</span><span data-i18n="nav_gym">筋トレ</span>
   </button>
   <button class="nav-item" id="nav-view" onclick="showScreen('view-screen');renderView()">
     <span class="ni">📊</span><span data-i18n="nav_view">表示</span>
   </button>
-  <button class="nav-item nav-settings" id="nav-settings" onclick="openProfile()">
+  <button class="nav-item nav-settings" id="nav-settings" onclick="showScreen('settings-screen')">
     <span class="ni">⚙️</span><span data-i18n="nav_settings">設定</span>
   </button>
 </nav>
@@ -1298,161 +1321,237 @@
 </div>
 
 <!-- PROFILE MODAL -->
-<div class="profile-modal-overlay" id="profile-modal" onclick="handleProfileOverlay(event)">
-  <div class="profile-modal-sheet">
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:4px;">
-      <button class="btn-back" onclick="document.getElementById('profile-modal').classList.remove('open')">←</button>
-      <div class="profile-modal-title" style="margin-bottom:0;" data-i18n="profile_title">⚙ プロフィール設定</div>
-    </div>
-    <!-- プランステータス -->
-    <div id="plan-status-bar" style="background:var(--surface2);border-radius:12px;padding:12px 14px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;">
-      <div>
-        <div style="font-size:10px;color:var(--text-muted);margin-bottom:2px;" data-i18n="plan_current">現在のプラン</div>
-        <div id="plan-status-label" style="font-size:14px;font-weight:700;color:var(--text);" data-i18n="plan_free">無料プラン（直近30日）</div>
+<div id="settings-save-bar" class="settings-save-bar">
+  <button onclick="saveProfile()" data-i18n="btn_save">保存する</button>
+</div>
+
+<div id="settings-screen" class="screen">
+  <div class="screen-header">
+    <button class="btn-back" onclick="showScreen(null)">←</button>
+    <div class="screen-title" data-i18n="profile_title">⚙ 設定</div>
+  </div>
+  <div class="screen-body">
+
+    <!-- プランステータス・アカウント（常時表示） -->
+    <div class="settings-always" style="padding-top:12px;">
+      <div id="plan-status-bar" style="background:var(--surface2);border-radius:12px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;">
+        <div>
+          <div style="font-size:10px;color:var(--text-muted);margin-bottom:2px;" data-i18n="plan_current">現在のプラン</div>
+          <div id="plan-status-label" style="font-size:14px;font-weight:700;color:var(--text);" data-i18n="plan_free">無料プラン（直近30日）</div>
+        </div>
+        <button id="plan-upgrade-btn" onclick="openPaywall()" style="padding:7px 14px;background:var(--accent);color:var(--bg);border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;" data-i18n="btn_upgrade">アップグレード</button>
       </div>
-      <button id="plan-upgrade-btn" onclick="openPaywall()" style="padding:7px 14px;background:var(--accent);color:var(--bg);border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;" data-i18n="btn_upgrade">アップグレード</button>
-    </div>
-    <!-- Firebase認証UI -->
-    <div style="background:var(--surface2);border-radius:12px;padding:12px 14px;margin-bottom:16px;">
-      <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;" data-i18n="account_label">アカウント</div>
-      <div id="auth-info" style="font-size:12px;color:var(--text);margin-bottom:8px;" data-i18n="auth_desc">ログインするとデータが同期されます</div>
-      <button id="auth-btn" onclick="firebaseSignIn()" style="width:100%;padding:10px;background:var(--accent);color:var(--bg);border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;" data-i18n="btn_google_login">Googleでログイン</button>
+      <div style="background:var(--surface2);border-radius:12px;padding:12px 14px;margin-bottom:10px;">
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;" data-i18n="account_label">アカウント</div>
+        <div id="auth-info" style="font-size:12px;color:var(--text);margin-bottom:8px;" data-i18n="auth_desc">ログインするとデータが同期されます</div>
+        <button id="auth-btn" onclick="firebaseSignIn()" style="width:100%;padding:10px;background:var(--accent);color:var(--bg);border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;" data-i18n="btn_google_login">Googleでログイン</button>
+      </div>
     </div>
 
-    <!-- 表示名（トップ画面「ようこそ◯◯さん」で使われる） -->
-    <div class="profile-group full" style="margin-bottom:16px;">
-      <label class="profile-label">👤 表示名（任意）</label>
-      <input type="text" class="profile-input" id="prof-display-name" placeholder="トップ画面に表示したい名前" maxlength="20">
-      <span style="font-size:10px;color:var(--text-muted);margin-top:2px;">空欄なら「ログイン名」または「ゲスト」が使われます</span>
-    </div>
+    <!-- アコーディオンリスト -->
+    <div class="settings-list">
 
-    <div class="profile-grid">
-      <div class="profile-group">
-        <label class="profile-label" data-i18n="label_height">身長 (cm)</label>
-        <input type="number" class="profile-input" id="prof-height" placeholder="168" step="0.1" oninput="updateBMRPreview()">
-      </div>
-      <div class="profile-group">
-        <label class="profile-label" data-i18n="label_age">年齢</label>
-        <input type="number" class="profile-input" id="prof-age" placeholder="25" oninput="updateBMRPreview()">
-      </div>
-      <div class="profile-group full">
-        <label class="profile-label" data-i18n="label_sex">性別</label>
-        <div class="profile-sex-row">
-          <button class="profile-sex-btn selected" id="sex-male" onclick="selectSex('male')" data-i18n="sex_male">男性</button>
-          <button class="profile-sex-btn" id="sex-female" onclick="selectSex('female')" data-i18n="sex_female">女性</button>
+      <!-- プロフィール -->
+      <div class="settings-section open" id="sacc-profile">
+        <div class="settings-section-hdr" onclick="toggleSettingsSection('sacc-profile')">
+          <div class="settings-section-info">
+            <span class="settings-section-icon">👤</span>
+            <div>
+              <div class="settings-section-title">プロフィール</div>
+              <div class="settings-section-sub">表示名・身長・年齢・性別</div>
+            </div>
+          </div>
+          <span class="settings-section-chevron">▼</span>
+        </div>
+        <div class="settings-section-body">
+          <div class="profile-group full">
+            <label class="profile-label">表示名（任意）</label>
+            <input type="text" class="profile-input" id="prof-display-name" placeholder="トップ画面に表示したい名前" maxlength="20" oninput="markProfileChanged()">
+            <span style="font-size:10px;color:var(--text-muted);margin-top:2px;">空欄なら「ログイン名」または「ゲスト」が使われます</span>
+          </div>
+          <div class="profile-grid" style="margin-top:12px;">
+            <div class="profile-group">
+              <label class="profile-label" data-i18n="label_height">身長 (cm)</label>
+              <input type="number" class="profile-input" id="prof-height" placeholder="168" step="0.1" oninput="updateBMRPreview();markProfileChanged()">
+            </div>
+            <div class="profile-group">
+              <label class="profile-label" data-i18n="label_age">年齢</label>
+              <input type="number" class="profile-input" id="prof-age" placeholder="25" oninput="updateBMRPreview();markProfileChanged()">
+            </div>
+            <div class="profile-group full">
+              <label class="profile-label" data-i18n="label_sex">性別</label>
+              <div class="profile-sex-row">
+                <button class="profile-sex-btn selected" id="sex-male" onclick="selectSex('male');markProfileChanged()" data-i18n="sex_male">男性</button>
+                <button class="profile-sex-btn" id="sex-female" onclick="selectSex('female');markProfileChanged()" data-i18n="sex_female">女性</button>
+              </div>
+            </div>
+          </div>
+          <div class="profile-bmr-display" style="margin-top:12px;">
+            <div class="profile-bmr-value" id="prof-bmr-val">—</div>
+            <div class="profile-bmr-label" data-i18n="bmr_label">推定基礎代謝 (kcal/日)</div>
+          </div>
         </div>
       </div>
-    </div>
-    <div class="profile-bmr-display">
-      <div class="profile-bmr-value" id="prof-bmr-val">—</div>
-      <div class="profile-bmr-label" data-i18n="bmr_label">推定基礎代謝 (kcal/日)</div>
-    </div>
-    <!-- 大会関連フィールド: プレミアム機能（非プレミアムでは非表示） -->
-    <div id="profile-contest-fields">
-      <div style="margin-top:8px;padding-top:14px;border-top:1px solid var(--border);font-size:11px;color:var(--text-muted);letter-spacing:0.1em;margin-bottom:8px;" data-i18n="profile_contest_section">🏆 大会情報（競技者向け）</div>
-      <div class="profile-group full" style="margin-top:4px;">
-        <label class="profile-label" data-i18n="label_contest_name">🏆 大会名</label>
-        <input type="text" class="profile-input" id="prof-contest-name" data-i18n-ph="contest_name_ph" placeholder="例：東京クラシック2026" maxlength="40">
-      </div>
-      <div class="profile-group full">
-        <label class="profile-label" data-i18n="label_contest_date">📅 大会日</label>
-        <input type="date" class="profile-input" id="prof-contest-date">
-      </div>
-      <div class="profile-group full">
-        <label class="profile-label" data-i18n="label_peak_date">🏁 仕上げ日（ピーク日）</label>
-        <input type="date" class="profile-input" id="prof-peak-date">
-        <span style="font-size:10px;color:var(--text-muted);margin-top:2px;" data-i18n="peak_date_hint">未設定なら大会日が使われます</span>
-      </div>
-      <div class="profile-group full">
-        <label class="profile-label" data-i18n="label_contest_weight">🎯 大会目標体重 (kg)</label>
-        <input type="number" class="profile-input" id="prof-contest-weight" data-i18n-ph="contest_weight_ph" placeholder="例：75.0" step="0.1">
-      </div>
-    </div>
 
-    <!-- 栄養目標 -->
-    <div style="margin-top:8px;padding-top:16px;border-top:1px solid var(--border);">
-      <div style="font-size:11px;color:var(--text-muted);letter-spacing:0.1em;margin-bottom:12px;">🍽️ 栄養目標値（分析の基準）</div>
-      <div class="profile-grid">
-        <div class="profile-group">
-          <label class="profile-label">タンパク質 (g)</label>
-          <input type="number" class="profile-input" id="prof-goal-p" placeholder="180" step="1">
+      <!-- 大会設定 -->
+      <div class="settings-section" id="sacc-contest">
+        <div class="settings-section-hdr" onclick="toggleSettingsSection('sacc-contest')">
+          <div class="settings-section-info">
+            <span class="settings-section-icon">🏆</span>
+            <div>
+              <div class="settings-section-title">大会設定</div>
+              <div class="settings-section-sub">大会名・日程・目標体重</div>
+            </div>
+          </div>
+          <span class="settings-section-chevron">▼</span>
         </div>
-        <div class="profile-group">
-          <label class="profile-label">脂質 (g)</label>
-          <input type="number" class="profile-input" id="prof-goal-f" placeholder="50" step="1">
-        </div>
-        <div class="profile-group">
-          <label class="profile-label">炭水化物 (g)</label>
-          <input type="number" class="profile-input" id="prof-goal-c" placeholder="200" step="1">
-        </div>
-        <div class="profile-group">
-          <label class="profile-label">塩分 (g)</label>
-          <input type="number" class="profile-input" id="prof-goal-salt" placeholder="6" step="0.1">
-        </div>
-        <div class="profile-group">
-          <label class="profile-label">許容誤差 (±%)</label>
-          <input type="number" class="profile-input" id="prof-goal-tolerance" placeholder="10" step="1">
+        <div class="settings-section-body" id="profile-contest-fields">
+          <div class="profile-group full">
+            <label class="profile-label" data-i18n="label_contest_name">大会名</label>
+            <input type="text" class="profile-input" id="prof-contest-name" data-i18n-ph="contest_name_ph" placeholder="例：東京クラシック2026" maxlength="40" oninput="markProfileChanged()">
+          </div>
+          <div class="profile-grid" style="margin-top:12px;">
+            <div class="profile-group">
+              <label class="profile-label" data-i18n="label_contest_date">📅 大会日</label>
+              <input type="date" class="profile-input" id="prof-contest-date" onchange="markProfileChanged()">
+            </div>
+            <div class="profile-group">
+              <label class="profile-label">🏁 仕上げ日</label>
+              <input type="date" class="profile-input" id="prof-peak-date" onchange="markProfileChanged()">
+              <span style="font-size:10px;color:var(--text-muted);margin-top:2px;">未設定なら大会日を使用</span>
+            </div>
+          </div>
+          <div class="profile-group full">
+            <label class="profile-label" data-i18n="label_contest_weight">🎯 目標体重 (kg)</label>
+            <input type="number" class="profile-input" id="prof-contest-weight" data-i18n-ph="contest_weight_ph" placeholder="例：75.0" step="0.1" oninput="markProfileChanged()">
+          </div>
         </div>
       </div>
-      <div style="font-size:10px;color:var(--text-muted);margin-top:-4px;margin-bottom:6px;line-height:1.5;">
-        目標カロリーは P×4 + F×9 + C×4 で自動算出: <strong id="prof-goal-kcal-auto" style="color:var(--accent);">—</strong> kcal
+
+      <!-- 栄養目標 -->
+      <div class="settings-section" id="sacc-nutrition">
+        <div class="settings-section-hdr" onclick="toggleSettingsSection('sacc-nutrition')">
+          <div class="settings-section-info">
+            <span class="settings-section-icon">🍽️</span>
+            <div>
+              <div class="settings-section-title">栄養目標</div>
+              <div class="settings-section-sub">P / F / C・塩分・許容誤差</div>
+            </div>
+          </div>
+          <span class="settings-section-chevron">▼</span>
+        </div>
+        <div class="settings-section-body">
+          <div class="profile-grid" style="margin-top:12px;">
+            <div class="profile-group">
+              <label class="profile-label">タンパク質 (g)</label>
+              <input type="number" class="profile-input" id="prof-goal-p" placeholder="180" step="1" oninput="updateGoalKcal();markProfileChanged()">
+            </div>
+            <div class="profile-group">
+              <label class="profile-label">脂質 (g)</label>
+              <input type="number" class="profile-input" id="prof-goal-f" placeholder="50" step="1" oninput="updateGoalKcal();markProfileChanged()">
+            </div>
+            <div class="profile-group">
+              <label class="profile-label">炭水化物 (g)</label>
+              <input type="number" class="profile-input" id="prof-goal-c" placeholder="200" step="1" oninput="updateGoalKcal();markProfileChanged()">
+            </div>
+            <div class="profile-group">
+              <label class="profile-label">塩分 (g)</label>
+              <input type="number" class="profile-input" id="prof-goal-salt" placeholder="6" step="0.1" oninput="markProfileChanged()">
+            </div>
+            <div class="profile-group">
+              <label class="profile-label">許容誤差 (±%)</label>
+              <input type="number" class="profile-input" id="prof-goal-tolerance" placeholder="10" step="1" oninput="markProfileChanged()">
+            </div>
+          </div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:10px;line-height:1.5;">
+            目標カロリー（自動）: <strong id="prof-goal-kcal-auto" style="color:var(--accent);">—</strong> kcal
+          </div>
+        </div>
       </div>
-      <div style="font-size:10px;color:var(--text-muted);margin-bottom:12px;line-height:1.5;">
-        目標値 ± 許容誤差 の範囲内なら「OK」、外れたら「超過」「不足」として日々の分析に反映されます。
+
+      <!-- 通知・オプション -->
+      <div class="settings-section" id="sacc-notif">
+        <div class="settings-section-hdr" onclick="toggleSettingsSection('sacc-notif')">
+          <div class="settings-section-info">
+            <span class="settings-section-icon">🔔</span>
+            <div>
+              <div class="settings-section-title">通知・オプション</div>
+              <div class="settings-section-sub">リマインダー・動作設定</div>
+            </div>
+          </div>
+          <span class="settings-section-chevron">▼</span>
+        </div>
+        <div class="settings-section-body">
+          <div class="toggle-row" style="padding-top:14px;">
+            <span class="toggle-label" data-i18n="notif_daily">毎日通知</span>
+            <button class="toggle" id="notif-toggle" onclick="toggleNotif()"></button>
+          </div>
+          <div id="notif-time-row" style="display:flex;align-items:center;gap:10px;padding:10px 0;">
+            <span style="font-size:13px;color:var(--text-muted);flex:1;" data-i18n="notif_time">通知時刻</span>
+            <input type="number" id="notif-hour" min="0" max="23" value="20" style="width:52px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px;color:var(--text);font-size:16px;text-align:center;outline:none;">
+            <span style="color:var(--text-muted);">:</span>
+            <input type="number" id="notif-minute" min="0" max="59" value="0" style="width:52px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px;color:var(--text);font-size:16px;text-align:center;outline:none;">
+            <button onclick="applyNotifTime()" style="padding:8px 14px;background:var(--accent);color:var(--bg);border:none;border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:16px;cursor:pointer;">SET</button>
+          </div>
+          <div class="toggle-row" style="border-bottom:none;">
+            <div>
+              <div class="toggle-label">保存後にシェア画面を表示する</div>
+              <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">筋トレ保存時にシェア画像を自動表示</div>
+            </div>
+            <button class="toggle" id="opt-share-after-save" onclick="toggleOption('shareAfterSave')"></button>
+          </div>
+        </div>
       </div>
-    </div>
 
-    <button class="btn-submit" onclick="saveProfile()" data-i18n="btn_save">保存する</button>
-
-    <!-- 通知設定 -->
-    <div style="margin-top:20px;border-top:1px solid var(--border);padding-top:16px;">
-      <div style="font-size:11px;color:var(--text-muted);letter-spacing:0.1em;margin-bottom:12px;" data-i18n="notif_title">🔔 記録リマインダー通知</div>
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-        <span style="font-size:14px;color:var(--text);" data-i18n="notif_daily">毎日通知</span>
-        <button class="toggle" id="notif-toggle" onclick="toggleNotif()"></button>
+      <!-- データ・サポート -->
+      <div class="settings-section" id="sacc-data">
+        <div class="settings-section-hdr" onclick="toggleSettingsSection('sacc-data')">
+          <div class="settings-section-info">
+            <span class="settings-section-icon">🗂️</span>
+            <div>
+              <div class="settings-section-title">データ・サポート</div>
+              <div class="settings-section-sub">バックアップ・お問い合わせ</div>
+            </div>
+          </div>
+          <span class="settings-section-chevron">▼</span>
+        </div>
+        <div class="settings-section-body">
+          <div id="backup-section">
+            <button onclick="exportData()" style="width:100%;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;cursor:pointer;margin-top:14px;margin-bottom:8px;" data-i18n="btn_export">📤 データをエクスポート</button>
+            <button onclick="openImportPicker()" style="width:100%;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;cursor:pointer;" data-i18n="btn_import">📥 データをインポート</button>
+          </div>
+          <div id="contact-section" style="margin-top:8px;">
+            <button onclick="openContactModal()" style="width:100%;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;cursor:pointer;" data-i18n="btn_contact">📧 お問い合わせ・不具合報告</button>
+          </div>
+          <div id="danger-zone" style="margin-top:16px;padding-top:16px;border-top:1px solid #5a1a1a;">
+            <button onclick="confirmDeleteAccount()" style="width:100%;padding:12px;background:transparent;border:1px solid #ff6b6b;border-radius:10px;color:#ff6b6b;font-size:13px;font-weight:700;cursor:pointer;" data-i18n="btn_delete_account">⚠️ アカウントとデータを削除する</button>
+          </div>
+        </div>
       </div>
-      <div id="notif-time-row" style="display:flex;align-items:center;gap:10px;">
-        <span style="font-size:13px;color:var(--text-muted);flex:1;" data-i18n="notif_time">通知時刻</span>
-        <input type="number" id="notif-hour" min="0" max="23" value="20"
-          style="width:52px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px;color:var(--text);font-size:16px;text-align:center;outline:none;">
-        <span style="color:var(--text-muted);">:</span>
-        <input type="number" id="notif-minute" min="0" max="59" value="0"
-          style="width:52px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px;color:var(--text);font-size:16px;text-align:center;outline:none;">
-        <button onclick="applyNotifTime()"
-          style="padding:8px 14px;background:var(--accent);color:var(--bg);border:none;border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:16px;cursor:pointer;">SET</button>
+
+      <!-- 管理者専用（ログイン時のみ表示） -->
+      <div id="admin-section" style="display:none;margin-top:6px;">
+        <div class="settings-section" style="border-color:rgba(232,255,0,0.3);">
+          <div class="settings-section-hdr" onclick="toggleSettingsSection('sacc-admin')" style="cursor:pointer;">
+            <div class="settings-section-info">
+              <span class="settings-section-icon">⚙️</span>
+              <div>
+                <div class="settings-section-title" style="color:var(--accent);" data-i18n="admin_title">管理者メニュー</div>
+                <div class="settings-section-sub">ADMIN</div>
+              </div>
+            </div>
+            <span class="settings-section-chevron">▼</span>
+          </div>
+          <div class="settings-section-body" id="sacc-admin" style="display:none;">
+            <button onclick="adminForceSync()" style="width:100%;padding:10px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:13px;cursor:pointer;margin-top:14px;margin-bottom:6px;" data-i18n="admin_force_sync">☁️ クラウドへ強制同期</button>
+            <button onclick="adminReloadCloud()" style="width:100%;padding:10px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:13px;cursor:pointer;margin-bottom:6px;" data-i18n="admin_reload_cloud">🔄 クラウドから再読み込み</button>
+            <button onclick="adminShowStats()" style="width:100%;padding:10px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:13px;cursor:pointer;margin-bottom:6px;" data-i18n="admin_show_stats">📊 データ統計を表示</button>
+            <button onclick="adminCopyDebugInfo()" style="width:100%;padding:10px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:13px;cursor:pointer;margin-bottom:6px;" data-i18n="admin_copy_debug">📋 デバッグ情報をコピー</button>
+            <button onclick="showTutorial()" style="width:100%;padding:10px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:13px;cursor:pointer;">📖 チュートリアルをリセット</button>
+          </div>
+        </div>
       </div>
-    </div>
 
-    <div id="backup-section" style="margin-top:20px;border-top:1px solid var(--border);padding-top:16px;">
-      <div style="font-size:11px;color:var(--text-muted);letter-spacing:0.1em;margin-bottom:10px;" data-i18n="backup_title">データバックアップ</div>
-      <button onclick="exportData()" style="width:100%;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;cursor:pointer;margin-bottom:8px;" data-i18n="btn_export">📤 データをエクスポート</button>
-      <button onclick="openImportPicker()" style="width:100%;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;cursor:pointer;" data-i18n="btn_import">📥 データをインポート</button>
-    </div>
-
-    <!-- ===== お問い合わせ ===== -->
-    <div id="contact-section" style="margin-top:20px;border-top:1px solid var(--border);padding-top:16px;">
-      <div style="font-size:11px;color:var(--text-muted);letter-spacing:0.1em;margin-bottom:10px;" data-i18n="contact_title">サポート</div>
-      <button onclick="openContactModal()" style="width:100%;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;cursor:pointer;" data-i18n="btn_contact">📧 お問い合わせ・不具合報告</button>
-    </div>
-
-    <!-- ===== 管理者専用セクション（管理者ログイン時のみ表示） ===== -->
-    <div id="admin-section" style="display:none;margin-top:20px;border-top:1px solid rgba(232,255,0,0.4);padding-top:16px;">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
-        <span style="font-size:11px;color:var(--accent);letter-spacing:0.15em;font-weight:700;" data-i18n="admin_title">⚙️ 管理者メニュー</span>
-        <span style="font-size:9px;background:var(--accent);color:var(--bg);padding:2px 7px;border-radius:6px;font-weight:700;letter-spacing:0.05em;">ADMIN</span>
-      </div>
-      <div style="font-size:11px;color:var(--text-muted);margin-bottom:10px;line-height:1.6;" data-i18n="admin_desc">このアカウントは管理者として認識されています。全プレミアム機能が解放されています。</div>
-      <button onclick="adminForceSync()" style="width:100%;padding:10px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:13px;cursor:pointer;margin-bottom:6px;" data-i18n="admin_force_sync">☁️ クラウドへ強制同期</button>
-      <button onclick="adminReloadCloud()" style="width:100%;padding:10px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:13px;cursor:pointer;margin-bottom:6px;" data-i18n="admin_reload_cloud">🔄 クラウドから再読み込み</button>
-      <button onclick="adminShowStats()" style="width:100%;padding:10px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:13px;cursor:pointer;margin-bottom:6px;" data-i18n="admin_show_stats">📊 データ統計を表示</button>
-      <button onclick="adminCopyDebugInfo()" style="width:100%;padding:10px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:13px;cursor:pointer;" data-i18n="admin_copy_debug">📋 デバッグ情報をコピー</button>
-    </div>
-
-    <!-- ===== Danger Zone: アカウント削除 ===== -->
-    <div id="danger-zone" style="margin-top:24px;border-top:1px solid #5a1a1a;padding-top:16px;">
-      <div style="font-size:11px;color:#ff6b6b;letter-spacing:0.1em;margin-bottom:10px;" data-i18n="danger_title">⚠️ アカウント削除</div>
-      <div style="font-size:11px;color:var(--text-muted);line-height:1.6;margin-bottom:10px;" data-i18n="danger_desc">アカウントとクラウド上のすべての記録を完全に削除します。この操作は取り消せません。端末内ローカルデータも消去されます。</div>
-      <button onclick="confirmDeleteAccount()" style="width:100%;padding:12px;background:transparent;border:1px solid #ff6b6b;border-radius:10px;color:#ff6b6b;font-size:13px;font-weight:700;cursor:pointer;" data-i18n="btn_delete_account">アカウントとデータを削除する</button>
     </div>
   </div>
 </div>
@@ -2004,7 +2103,7 @@
       // contest label
       days_to_contest: 'DAYS TO CONTEST',
       // bottom nav
-      nav_home: 'ホーム', nav_record: '記録', nav_gym: '筋トレ', nav_view: '表示', nav_settings: '設定',
+      nav_home: 'ホーム', nav_record: '記録', nav_water: '水分', nav_gym: '筋トレ', nav_view: '表示', nav_settings: '設定',
       // gym link section (record screen)
       gym_link_title: '💪 筋トレ連動',
       gym_link_has_record: '記録済み', gym_link_no_record: '本日の筋トレ記録なし',
@@ -2465,7 +2564,7 @@
       // contest label
       days_to_contest: 'DAYS TO CONTEST',
       // bottom nav
-      nav_home: 'Home', nav_record: 'Log', nav_gym: 'Gym', nav_view: 'View', nav_settings: 'Settings',
+      nav_home: 'Home', nav_record: 'Log', nav_water: 'Water', nav_gym: 'Gym', nav_view: 'View', nav_settings: 'Settings',
       // gym link section (record screen)
       gym_link_title: '💪 Gym Link',
       gym_link_has_record: 'Logged', gym_link_no_record: 'No workout today',
@@ -2508,6 +2607,7 @@
 
 
   let records = JSON.parse(localStorage.getItem('training_records') || '[]');
+  let appOptions = JSON.parse(localStorage.getItem('app_options') || '{"shareAfterSave":true,"swAutoStop":true}');
   let weekWeightGoal = parseFloat(localStorage.getItem('week_weight_goal') || '0');
   // 週ごとの目標体重を管理 { 'YYYY-Www': weight }
   let weeklyGoals = JSON.parse(localStorage.getItem('weekly_goals') || '{}');
@@ -2888,7 +2988,15 @@
     try {
       const data = JSON.parse(jsonStr);
       STORAGE_KEYS.forEach(k => {
-        if (data[k]) localStorage.setItem(k, data[k]);
+        if (!data[k]) return;
+        if (k === 'gym_data') {
+          // ローカルを優先してマージ（未同期の入力を上書きしない）
+          const cloud = JSON.parse(data[k]);
+          const local = JSON.parse(localStorage.getItem('gym_data') || '{}');
+          localStorage.setItem('gym_data', JSON.stringify(Object.assign({}, cloud, local)));
+        } else {
+          localStorage.setItem(k, data[k]);
+        }
       });
       records = JSON.parse(localStorage.getItem('training_records') || '[]');
       waterData = JSON.parse(localStorage.getItem('water_data') || '{}');
@@ -3074,6 +3182,13 @@
     obFinishOnboarding();
     updateWelcome();
     showToast(t('toast_welcome_guest'), false);
+  }
+
+  function showTutorial() {
+    localStorage.removeItem('onboarding_done');
+    obCurrentSlide = 0;
+    showScreen(null);
+    checkOnboarding();
   }
 
   function obFinishOnboarding() {
@@ -3279,15 +3394,18 @@
     document.getElementById('ts-water').textContent = w.total > 0 ? w.total + ' ml' : '— ml';
   }
 
+  let _currentScreenId = null;
+
   function showScreen(id) {
+    _currentScreenId = id;
     document.getElementById('top-screen').style.display = 'none';
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     const nav = document.getElementById('bottom-nav');
+    // ナビは全画面で常に表示
+    if (nav) nav.classList.remove('hidden');
+    document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
     if (!id) {
       document.getElementById('top-screen').style.display = 'flex';
-      if (nav) nav.classList.remove('hidden');
-      // ナビアイコンのアクティブ状態をホームに戻す
-      document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
       const nh = document.getElementById('nav-home');
       if (nh) nh.classList.add('active');
       updateTodaySummary();
@@ -3295,7 +3413,10 @@
       updatePremiumGatedUI();
     } else {
       document.getElementById(id).classList.add('active');
-      if (nav) nav.classList.add('hidden');
+      const navMap = {'record-screen':'nav-record','water-screen':'nav-water','gym-screen':'nav-gym','view-screen':'nav-view','settings-screen':'nav-settings'};
+      const navId = navMap[id];
+      if (navId) { const nb = document.getElementById(navId); if (nb) nb.classList.add('active'); }
+      if (id === 'settings-screen') openProfile();
       // 記録画面を開く時に今日の既存データを読み込む
       if (id === 'record-screen') {
         const today = formatDate(new Date());
@@ -5025,10 +5146,6 @@
       }
       html += '<div class="gym-exercise-card">';
       html += '<div class="gym-exercise-header">';
-      html += '<div class="gym-move-btns">';
-      html += '<button class="gym-move-btn" onclick="gymMoveExercise(' + ei + ',-1)"' + (ei === 0 ? ' disabled' : '') + '>▲</button>';
-      html += '<button class="gym-move-btn" onclick="gymMoveExercise(' + ei + ',1)"' + (ei === gymExercises.length - 1 ? ' disabled' : '') + '>▼</button>';
-      html += '</div>';
       html += '<span class="gym-exercise-name">' + ex.name + '</span>';
       html += '<button class="gym-prev-btn" onclick="showPrevExercise(' + ei + ')">'+t('prev_label')+'</button>';
       html += '<button class="gym-exercise-del" onclick="gymDelExercise(' + ei + ')">✕</button>';
@@ -5188,20 +5305,6 @@
   // 画面を離れる時にストップウォッチをリセット
   const _origShowScreen = showScreen;
 
-  // ==================
-  // DRAG & DROP (長押し)
-  function gymMoveExercise(idx, dir) {
-    const newIdx = idx + dir;
-    if (newIdx < 0 || newIdx >= gymExercises.length) return;
-    const tmp = gymExercises[idx];
-    gymExercises[idx] = gymExercises[newIdx];
-    gymExercises[newIdx] = tmp;
-    renderGymExercises();
-    autoSaveGym();
-  }
-
-
-
   function gymCopySet(ei, si) {
     const src = gymExercises[ei].sets[si];
     const copy = {weight: src.weight, reps: src.reps, assist: src.assist, memo: ''};
@@ -5239,8 +5342,6 @@
     if (!gymData[key]) gymData[key] = {};
     gymData[key].exercises = JSON.parse(JSON.stringify(gymExercises));
     localStorage.setItem('gym_data', JSON.stringify(gymData));
-
-    // training_records にも trained フラグ・部位を即時反映
     const muscleMap = {
       '胸':['ベンチプレス','フライ','ペックデック','ディップス','チェストプレス'],
       '背中':['デッドリフト','ラットプルダウン','チンニング','ロウ','バックエクステンション','Tバー'],
@@ -5456,12 +5557,13 @@
       }
     }
 
-    // 保存後にシェア画面を起動してからトップに戻る
     showToast(t('toast_saved'), false);
     if (currentUser) syncToCloud(currentUser.uid);
-    setTimeout(() => {
-      gymShare();
-    }, 300);
+    if (appOptions.shareAfterSave !== false) {
+      setTimeout(() => gymShare(), 300);
+    } else {
+      setTimeout(() => showScreen(null), 300);
+    }
   }
 
   // 前回コピー
@@ -5645,8 +5747,13 @@
   }
 
   // Androidの戻るボタン処理
+  let _lastBackMs = 0;
+
   function handleAndroidBack() {
     // モーダルが開いていれば閉じる
+    if (document.getElementById('contact-modal') && document.getElementById('contact-modal').classList.contains('open')) {
+      closeContactModal(); return true;
+    }
     if (document.getElementById('activity-preset-editor') && document.getElementById('activity-preset-editor').classList.contains('open')) {
       closeActivityPresetEditor(); return true;
     }
@@ -5672,10 +5779,6 @@
       document.getElementById('activity-picker').classList.remove('open');
       return true;
     }
-    if (document.getElementById('profile-modal').classList.contains('open')) {
-      document.getElementById('profile-modal').classList.remove('open');
-      return true;
-    }
     if (document.getElementById('gym-picker').classList.contains('open')) {
       closeGymPicker();
       return true;
@@ -5688,12 +5791,19 @@
       document.getElementById('share-overlay').classList.remove('open');
       return true;
     }
-    // トップ画面以外なら戻る
-    const top = document.getElementById('top-screen');
-    if (top && top.style.display !== 'flex' && top.style.display !== '') {
-      if (typeof showScreen === 'function') { showScreen(null); return true; }
+    // サブ画面にいれば戻る
+    if (_currentScreenId !== null) {
+      showScreen(null);
+      return true;
     }
-    return false;
+    // ホーム画面：2秒以内に2回押したら終了
+    const now = Date.now();
+    if (now - _lastBackMs < 2000) {
+      return false;
+    }
+    _lastBackMs = now;
+    showToast('もう一度押すと終了します', false);
+    return true;
   }
 
   // 種目プリセット管理（カスタマイズ可能）
@@ -5868,7 +5978,9 @@
       html += `<div style="padding:10px 16px;background:var(--accent);"><span style="font-size:13px;font-weight:700;color:var(--bg);">${cat}</span></div>`;
       items.forEach((p, i) => {
         const safeCat = cat.replace(/'/g,"\\'");
-        html += `<button class="gym-picker-item" onclick="gymAddExercise('${p.replace(/'/g,"\'")}','${safeCat}')"><span style="flex:1;text-align:left;">${p}</span><span class="gym-picker-item-drag" onpointerdown="pickerDragStart(event,'${cat}',${i})" onclick="event.stopPropagation()">☰</span></button>`;
+        const actualIdx = (gymPresets[cat] || []).indexOf(p);
+        const lastIdx = (gymPresets[cat] || []).length - 1;
+        html += `<button class="gym-picker-item" onclick="gymAddExercise('${p.replace(/'/g,"\\'")}','${safeCat}')"><span style="flex:1;text-align:left;">${p}</span><div class="gym-picker-move-btns" onclick="event.stopPropagation()"><button class="gym-move-btn" onclick="event.stopPropagation();pickerMoveItem('${cat}',${actualIdx},-1)"${actualIdx<=0?' disabled':''}>▲</button><button class="gym-move-btn" onclick="event.stopPropagation();pickerMoveItem('${cat}',${actualIdx},1)"${actualIdx>=lastIdx?' disabled':''}>▼</button></div></button>`;
       });
     });
 
@@ -5892,76 +6004,17 @@
     filterGymPicker();
   }
 
-  // ピッカー内ドラッグ並び替え（即時・ハイライト表示）
-  function pickerDragStart(e, cat, fromIdx) {
-    e.preventDefault();
-    e.stopPropagation();
-    if (navigator.vibrate) navigator.vibrate(20);
-
-    pickerDragState = {cat, fromIdx, curIdx: fromIdx};
-
-    // ドラッグ中の行をハイライト
-    const allItems = [...document.querySelectorAll('#gym-picker-list .gym-picker-item')];
-    const dragItem = allItems[fromIdx];
-    if (dragItem) dragItem.style.background = 'rgba(232,255,0,0.15)';
-
-    function onMove(ev) {
-      const y = ev.clientY;
-      const items = [...document.querySelectorAll('#gym-picker-list .gym-picker-item')];
-
-      // 全アイテムのハイライトをリセット
-      items.forEach((el, i) => {
-        if (i === pickerDragState.fromIdx) {
-          el.style.background = 'rgba(232,255,0,0.15)';
-          el.style.borderBottom = '';
-        } else {
-          el.style.background = '';
-          el.style.borderBottom = '';
-        }
-      });
-
-      // ターゲット行を特定してボーダーで示す
-      let targetIdx = pickerDragState.fromIdx;
-      items.forEach((el, i) => {
-        const rect = el.getBoundingClientRect();
-        if (y >= rect.top && y <= rect.bottom && i !== pickerDragState.fromIdx) {
-          targetIdx = i;
-          // 上半分なら上に、下半分なら下にボーダー
-          const mid = rect.top + rect.height / 2;
-          el.style.borderBottom = y < mid ? '' : '2px solid var(--accent)';
-          el.style.borderTop = y < mid ? '2px solid var(--accent)' : '';
-        }
-      });
-      pickerDragState.curIdx = targetIdx;
-    }
-
-    function onEnd() {
-      document.removeEventListener('pointermove', onMove);
-      document.removeEventListener('pointerup', onEnd);
-
-      // スタイルリセット
-      document.querySelectorAll('#gym-picker-list .gym-picker-item').forEach(el => {
-        el.style.background = '';
-        el.style.borderTop = '';
-        el.style.borderBottom = '';
-      });
-
-      if (pickerDragState && pickerDragState.fromIdx !== pickerDragState.curIdx) {
-        gymPresets = gymPresets || JSON.parse(JSON.stringify(GYM_PRESETS));
-        const items = gymPresets[cat];
-        if (items) {
-          const item = items.splice(pickerDragState.fromIdx, 1)[0];
-          const toIdx = Math.max(0, Math.min(pickerDragState.curIdx, items.length));
-          items.splice(toIdx, 0, item);
-          localStorage.setItem('gym_presets', JSON.stringify(gymPresets));
-          filterGymPicker();
-        }
-      }
-      pickerDragState = null;
-    }
-
-    document.addEventListener('pointermove', onMove);
-    document.addEventListener('pointerup', onEnd, {once:true});
+  function pickerMoveItem(cat, idx, dir) {
+    gymPresets = gymPresets || JSON.parse(JSON.stringify(GYM_PRESETS));
+    const items = gymPresets[cat];
+    if (!items) return;
+    const newIdx = idx + dir;
+    if (newIdx < 0 || newIdx >= items.length) return;
+    const tmp = items[idx];
+    items[idx] = items[newIdx];
+    items[newIdx] = tmp;
+    localStorage.setItem('gym_presets', JSON.stringify(gymPresets));
+    filterGymPicker();
   }
 
   function addCustomGymExercise() {
@@ -6067,9 +6120,7 @@
           clearInterval(timerInterval);
           timerInterval = null;
           timerRunning = false;
-          // ネイティブなし（Web）の場合はここで完了処理
-          if (!hasNative) onTimerDone();
-          // ネイティブあり: onTimerDone() はネイティブから呼ばれる
+          onTimerDone(); // UIリセット（バイブはonTimerDone内でAndroid側はスキップ）
         }
       }, 500);
     }
@@ -6668,8 +6719,18 @@
     if (el) el.textContent = kcal > 0 ? kcal : '—';
   }
 
+  function markProfileChanged() {
+    if (document.getElementById('settings-save-bar'))
+      document.getElementById('settings-save-bar').classList.add('visible');
+  }
+
+  function toggleSettingsSection(id) {
+    document.getElementById(id).classList.toggle('open');
+  }
+
   function openProfile() {
-    document.getElementById('profile-modal').classList.add('open');
+    const bar = document.getElementById('settings-save-bar');
+    if (bar) bar.classList.remove('visible');
     document.getElementById('prof-height').value = userProfile.height||'';
     document.getElementById('prof-age').value = userProfile.age||'';
     selectSex(userProfile.sex||'male');
@@ -6697,6 +6758,7 @@
       if (el) el.oninput = updateGoalKcalAuto;
     });
     loadNotifSettings();
+    loadOptionToggles();
     updateBackupVisibility();
     // プランステータス更新
     const premium = isPremium();
@@ -6710,9 +6772,15 @@
     if (dangerZone) dangerZone.style.display = currentUser ? '' : 'none';
   }
 
-  function handleProfileOverlay(e) {
-    if(e.target===document.getElementById('profile-modal'))
-      document.getElementById('profile-modal').classList.remove('open');
+  function loadOptionToggles() {
+    const el = document.getElementById('opt-share-after-save');
+    if (el) el.classList.toggle('on', appOptions.shareAfterSave !== false);
+  }
+
+  function toggleOption(key) {
+    appOptions[key] = !appOptions[key];
+    localStorage.setItem('app_options', JSON.stringify(appOptions));
+    loadOptionToggles();
   }
 
   function selectSex(sex) {
@@ -6769,7 +6837,9 @@
     };
     localStorage.setItem('nutrition_goals', JSON.stringify(goals));
     updatePremiumGatedUI();
-    document.getElementById('profile-modal').classList.remove('open');
+    const bar = document.getElementById('settings-save-bar');
+    if (bar) bar.classList.remove('visible');
+    showScreen(null);
     showToast(t('toast_profile_saved'), false);
     if (currentUser) syncToCloud(currentUser.uid, 0); // プロフィール保存は即時同期
   }
@@ -7053,12 +7123,14 @@
     renderMySetList();
   }
 
+  let _toastTimer = null;
   function showToast(msg, blue=false) {
     const t=document.getElementById('toast');
     t.textContent=msg;
     t.classList.toggle('blue', blue);
     t.classList.add('show');
-    setTimeout(()=>t.classList.remove('show'),2000);
+    clearTimeout(_toastTimer);
+    _toastTimer = setTimeout(()=>t.classList.remove('show'),2000);
   }
 
   // DOM読み込み完了後に確実に初期化

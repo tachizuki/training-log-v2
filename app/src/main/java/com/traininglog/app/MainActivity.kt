@@ -272,23 +272,33 @@ class MainActivity : AppCompatActivity() {
 
         @JavascriptInterface
         fun startTimer(seconds: Int) {
-            val intent = Intent(this@MainActivity, TimerService::class.java).apply {
-                action = TimerService.ACTION_START
-                putExtra(TimerService.EXTRA_SECONDS, seconds)
-            }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                startForegroundService(intent)
-            } else {
-                startService(intent)
+            runOnUiThread {
+                try {
+                    val intent = Intent(this@MainActivity, TimerService::class.java).apply {
+                        action = TimerService.ACTION_START
+                        putExtra(TimerService.EXTRA_SECONDS, seconds)
+                    }
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        startForegroundService(intent)
+                    } else {
+                        startService(intent)
+                    }
+                } catch (e: Exception) {
+                    // startForegroundService 失敗時はJS側のタイマーのみで動作
+                }
             }
         }
 
         @JavascriptInterface
         fun stopTimer() {
-            val intent = Intent(this@MainActivity, TimerService::class.java).apply {
-                action = TimerService.ACTION_STOP
+            runOnUiThread {
+                try {
+                    val intent = Intent(this@MainActivity, TimerService::class.java).apply {
+                        action = TimerService.ACTION_STOP
+                    }
+                    startService(intent)
+                } catch (e: Exception) {}
             }
-            startService(intent)
         }
 
         @JavascriptInterface
@@ -578,12 +588,9 @@ class MainActivity : AppCompatActivity() {
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 webView.evaluateJavascript(
-                    "typeof handleAndroidBack === 'function' ? handleAndroidBack() : false"
+                    "(function(){try{if(typeof handleAndroidBack==='function')return handleAndroidBack();return false;}catch(e){return false;}})()"
                 ) { result ->
-                    if (result != "true") {
-                        isEnabled = false
-                        onBackPressedDispatcher.onBackPressed()
-                    }
+                    if (result != "true") finish()
                 }
             }
         })
