@@ -2901,7 +2901,15 @@
     try {
       const data = JSON.parse(jsonStr);
       STORAGE_KEYS.forEach(k => {
-        if (data[k]) localStorage.setItem(k, data[k]);
+        if (!data[k]) return;
+        if (k === 'gym_data') {
+          // ローカルを優先してマージ（未同期の入力を上書きしない）
+          const cloud = JSON.parse(data[k]);
+          const local = JSON.parse(localStorage.getItem('gym_data') || '{}');
+          localStorage.setItem('gym_data', JSON.stringify(Object.assign({}, cloud, local)));
+        } else {
+          localStorage.setItem(k, data[k]);
+        }
       });
       records = JSON.parse(localStorage.getItem('training_records') || '[]');
       waterData = JSON.parse(localStorage.getItem('water_data') || '{}');
@@ -5289,6 +5297,7 @@
       records.sort((a,b) => b.date.localeCompare(a.date));
     }
     localStorage.setItem('training_records', JSON.stringify(records));
+    if (currentUser) syncToCloud(currentUser.uid);
   }
 
   // ==================
