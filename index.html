@@ -1462,19 +1462,12 @@
     <!-- ===== アプリオプション ===== -->
     <div style="margin-top:20px;border-top:1px solid var(--border);padding-top:16px;">
       <div style="font-size:11px;color:var(--text-muted);letter-spacing:0.1em;margin-bottom:4px;">⚙️ オプション</div>
-      <div class="toggle-row">
+      <div class="toggle-row" style="border-bottom:none;">
         <div>
           <div class="toggle-label">保存後にシェア画面を表示する</div>
           <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">筋トレ保存時にシェア画像の作成画面を自動表示</div>
         </div>
         <button class="toggle" id="opt-share-after-save" onclick="toggleOption('shareAfterSave')"></button>
-      </div>
-      <div class="toggle-row" style="border-bottom:none;">
-        <div>
-          <div class="toggle-label">保存時にストップウォッチを自動停止する</div>
-          <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">筋トレ保存ボタンを押すと計測を自動で止める</div>
-        </div>
-        <button class="toggle" id="opt-sw-auto-stop" onclick="toggleOption('swAutoStop')"></button>
       </div>
     </div>
 
@@ -5447,7 +5440,7 @@
   }
 
   function saveGym() {
-    if (appOptions.swAutoStop !== false && swRunning) swStop();
+    if (swRunning) swStop();
     autoSaveGym();
 
     // ストップウォッチの時間から筋トレ消費カロリーを計算して運動記録に追加
@@ -6689,10 +6682,8 @@
 
 
   function loadOptionToggles() {
-    const el1 = document.getElementById('opt-share-after-save');
-    const el2 = document.getElementById('opt-sw-auto-stop');
-    if (el1) el1.classList.toggle('on', appOptions.shareAfterSave !== false);
-    if (el2) el2.classList.toggle('on', appOptions.swAutoStop !== false);
+    const el = document.getElementById('opt-share-after-save');
+    if (el) el.classList.toggle('on', appOptions.shareAfterSave !== false);
   }
 
   function toggleOption(key) {
