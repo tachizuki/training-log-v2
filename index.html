@@ -1460,6 +1460,25 @@
       </div>
     </div>
 
+    <!-- ===== アプリオプション ===== -->
+    <div style="margin-top:20px;border-top:1px solid var(--border);padding-top:16px;">
+      <div style="font-size:11px;color:var(--text-muted);letter-spacing:0.1em;margin-bottom:4px;">⚙️ オプション</div>
+      <div class="toggle-row">
+        <div>
+          <div class="toggle-label">保存後にシェア画面を表示する</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">筋トレ保存時にシェア画像の作成画面を自動表示</div>
+        </div>
+        <button class="toggle" id="opt-share-after-save" onclick="toggleOption('shareAfterSave')"></button>
+      </div>
+      <div class="toggle-row" style="border-bottom:none;">
+        <div>
+          <div class="toggle-label">保存時にストップウォッチを自動停止する</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">筋トレ保存ボタンを押すと計測を自動で止める</div>
+        </div>
+        <button class="toggle" id="opt-sw-auto-stop" onclick="toggleOption('swAutoStop')"></button>
+      </div>
+    </div>
+
     <div id="backup-section" style="margin-top:20px;border-top:1px solid var(--border);padding-top:16px;">
       <div style="font-size:11px;color:var(--text-muted);letter-spacing:0.1em;margin-bottom:10px;" data-i18n="backup_title">データバックアップ</div>
       <button onclick="exportData()" style="width:100%;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;cursor:pointer;margin-bottom:8px;" data-i18n="btn_export">📤 データをエクスポート</button>
@@ -2536,6 +2555,7 @@
 
 
   let records = JSON.parse(localStorage.getItem('training_records') || '[]');
+  let appOptions = JSON.parse(localStorage.getItem('app_options') || '{"shareAfterSave":true,"swAutoStop":true}');
   let weekWeightGoal = parseFloat(localStorage.getItem('week_weight_goal') || '0');
   // 週ごとの目標体重を管理 { 'YYYY-Www': weight }
   let weeklyGoals = JSON.parse(localStorage.getItem('weekly_goals') || '{}');
@@ -5442,7 +5462,7 @@
   }
 
   function saveGym() {
-    if (swRunning) swStop();
+    if (appOptions.swAutoStop !== false && swRunning) swStop();
     autoSaveGym();
 
     // ストップウォッチの時間から筋トレ消費カロリーを計算して運動記録に追加
@@ -5476,12 +5496,13 @@
       }
     }
 
-    // 保存後にシェア画面を起動してからトップに戻る
     showToast(t('toast_saved'), false);
     if (currentUser) syncToCloud(currentUser.uid);
-    setTimeout(() => {
-      gymShare();
-    }, 300);
+    if (appOptions.shareAfterSave !== false) {
+      setTimeout(() => gymShare(), 300);
+    } else {
+      setTimeout(() => showScreen(null), 300);
+    }
   }
 
   // 前回コピー
@@ -6724,6 +6745,7 @@
       if (el) el.oninput = updateGoalKcalAuto;
     });
     loadNotifSettings();
+    loadOptionToggles();
     updateBackupVisibility();
     // プランステータス更新
     const premium = isPremium();
@@ -6737,6 +6759,19 @@
     if (dangerZone) dangerZone.style.display = currentUser ? '' : 'none';
   }
 
+
+  function loadOptionToggles() {
+    const el1 = document.getElementById('opt-share-after-save');
+    const el2 = document.getElementById('opt-sw-auto-stop');
+    if (el1) el1.classList.toggle('on', appOptions.shareAfterSave !== false);
+    if (el2) el2.classList.toggle('on', appOptions.swAutoStop !== false);
+  }
+
+  function toggleOption(key) {
+    appOptions[key] = !appOptions[key];
+    localStorage.setItem('app_options', JSON.stringify(appOptions));
+    loadOptionToggles();
+  }
 
   function selectSex(sex) {
     userProfile.sex = sex;
