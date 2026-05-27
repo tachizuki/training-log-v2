@@ -376,7 +376,7 @@
   .gym-prev-apply-btn { width: 100%; padding: 14px; background: var(--accent2); color: var(--bg); border: none; border-radius: 12px; font-family: 'Bebas Neue', sans-serif; font-size: 20px; cursor: pointer; margin-top: 16px; }
   .gym-prev-apply-btn.partial { background: var(--surface2); color: var(--text-muted); border: 1px solid var(--border); margin-top: 8px; font-size: 16px; }
   .gym-exercise-card { position: relative; }
-  .gym-move-btns { display:flex; flex-direction:column; gap:2px; margin-right:6px; flex-shrink:0; }
+
   .gym-move-btn { background:var(--surface2); border:1px solid var(--border); border-radius:6px; color:var(--text-muted); font-size:13px; width:26px; height:26px; display:flex; align-items:center; justify-content:center; cursor:pointer; padding:0; line-height:1; }
   .gym-move-btn:active { background:var(--accent); color:var(--bg); border-color:var(--accent); }
   .gym-move-btn:disabled { opacity:0.2; cursor:default; }
@@ -5079,10 +5079,6 @@
       }
       html += '<div class="gym-exercise-card">';
       html += '<div class="gym-exercise-header">';
-      html += '<div class="gym-move-btns">';
-      html += '<button class="gym-move-btn" onclick="gymMoveExercise(' + ei + ',-1)"' + (ei === 0 ? ' disabled' : '') + '>▲</button>';
-      html += '<button class="gym-move-btn" onclick="gymMoveExercise(' + ei + ',1)"' + (ei === gymExercises.length - 1 ? ' disabled' : '') + '>▼</button>';
-      html += '</div>';
       html += '<span class="gym-exercise-name">' + ex.name + '</span>';
       html += '<button class="gym-prev-btn" onclick="showPrevExercise(' + ei + ')">'+t('prev_label')+'</button>';
       html += '<button class="gym-exercise-del" onclick="gymDelExercise(' + ei + ')">✕</button>';
@@ -5241,16 +5237,6 @@
 
   // 画面を離れる時にストップウォッチをリセット
   const _origShowScreen = showScreen;
-
-  function gymMoveExercise(idx, dir) {
-    const newIdx = idx + dir;
-    if (newIdx < 0 || newIdx >= gymExercises.length) return;
-    const tmp = gymExercises[idx];
-    gymExercises[idx] = gymExercises[newIdx];
-    gymExercises[newIdx] = tmp;
-    renderGymExercises();
-    autoSaveGym();
-  }
 
   function gymCopySet(ei, si) {
     const src = gymExercises[ei].sets[si];
