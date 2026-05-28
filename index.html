@@ -3160,7 +3160,10 @@
       if (typeof AndroidBridge !== 'undefined') {
         AndroidBridge.saveToFirestore(uid, JSON.stringify(data));
       } else {
-        firebase.firestore().collection('users').doc(uid).set(data, { merge: true });
+        firebase.firestore().collection('users').doc(uid).set({
+          data: JSON.stringify(data),
+          updatedAt: Date.now()
+        });
       }
     }, delay);
   }
@@ -3173,7 +3176,7 @@
       firebase.firestore().collection('users').doc(uid).get()
         .then(doc => {
           if (doc.exists) {
-            receiveFirestoreData(JSON.stringify(doc.data()));
+            receiveFirestoreData(doc.data().data || '{}');
           } else {
             hideLoading();
           }
