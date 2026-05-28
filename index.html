@@ -1550,7 +1550,7 @@
               <div class="toggle-label">1日の始まり時刻</div>
               <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">この時刻より前は前日として記録されます</div>
             </div>
-            <select id="day-start-hour" onchange="saveDayStartHour(this.value)" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:14px;padding:6px 10px;outline:none;cursor:pointer;">
+            <select id="day-start-hour" onchange="markProfileChanged()" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:14px;padding:6px 10px;outline:none;cursor:pointer;">
               <option value="0">0:00（デフォルト）</option>
               <option value="1">1:00</option>
               <option value="2">2:00</option>
@@ -6883,10 +6883,6 @@
   }
 
 
-  function saveDayStartHour(val) {
-    localStorage.setItem('day_start_hour', String(parseInt(val) || 0));
-  }
-
   function loadOptionToggles() {
     const el = document.getElementById('opt-share-after-save');
     if (el) el.classList.toggle('on', appOptions.shareAfterSave !== false);
@@ -6953,6 +6949,8 @@
       tolerance: numOrNull('prof-goal-tolerance'),
     };
     localStorage.setItem('nutrition_goals', JSON.stringify(goals));
+    const dshEl = document.getElementById('day-start-hour');
+    if (dshEl) localStorage.setItem('day_start_hour', dshEl.value);
     updateContestCountdown();
     const bar = document.getElementById('settings-save-bar');
     if (bar) bar.classList.remove('visible');
