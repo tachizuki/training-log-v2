@@ -209,6 +209,11 @@
   .settings-section.open .settings-section-body { display: block; }
   .settings-list { padding: 6px 16px 100px; }
   .settings-always { padding: 0 16px; }
+  .premium-lock-card { display:flex; flex-direction:column; align-items:center; gap:6px; padding:20px 16px; margin-top:8px; background:rgba(232,255,0,0.03); border:1px dashed rgba(232,255,0,0.25); border-radius:10px; cursor:pointer; text-align:center; -webkit-tap-highlight-color:transparent; }
+  .premium-lock-card:active { background:rgba(232,255,0,0.07); }
+  .premium-lock-card .plc-title { font-size:14px; font-weight:700; color:var(--text); }
+  .premium-lock-card .plc-sub { font-size:11px; color:var(--text-muted); }
+  .premium-lock-card .plc-btn { margin-top:6px; padding:6px 20px; background:var(--accent); color:var(--bg); border:none; border-radius:20px; font-size:12px; font-weight:700; pointer-events:none; }
 
   /* WATER SCREEN */
   .water-hero { text-align: center; padding: 24px 20px 8px; }
@@ -1433,24 +1438,32 @@
           <span class="settings-section-chevron">▼</span>
         </div>
         <div class="settings-section-body" id="profile-contest-fields">
-          <div class="profile-group full">
-            <label class="profile-label" data-i18n="label_contest_name">大会名</label>
-            <input type="text" class="profile-input" id="prof-contest-name" data-i18n-ph="contest_name_ph" placeholder="例：東京クラシック2026" maxlength="40" oninput="markProfileChanged()">
+          <div id="contest-fields-lock" class="premium-lock-card" onclick="openPaywall()">
+            <span style="font-size:28px;">🔒</span>
+            <div class="plc-title">大会設定</div>
+            <div class="plc-sub">大会名・日程・仕上げ日・目標体重</div>
+            <div class="plc-btn">プレミアムで解放</div>
           </div>
-          <div class="profile-grid" style="margin-top:12px;">
-            <div class="profile-group">
-              <label class="profile-label" data-i18n="label_contest_date">📅 大会日</label>
-              <input type="date" class="profile-input" id="prof-contest-date" onchange="markProfileChanged()">
+          <div id="contest-fields-inner">
+            <div class="profile-group full">
+              <label class="profile-label" data-i18n="label_contest_name">大会名</label>
+              <input type="text" class="profile-input" id="prof-contest-name" data-i18n-ph="contest_name_ph" placeholder="例：東京クラシック2026" maxlength="40" oninput="markProfileChanged()">
             </div>
-            <div class="profile-group">
-              <label class="profile-label">🏁 仕上げ日</label>
-              <input type="date" class="profile-input" id="prof-peak-date" onchange="markProfileChanged()">
-              <span style="font-size:10px;color:var(--text-muted);margin-top:2px;">未設定なら大会日を使用</span>
+            <div class="profile-grid" style="margin-top:12px;">
+              <div class="profile-group">
+                <label class="profile-label" data-i18n="label_contest_date">📅 大会日</label>
+                <input type="date" class="profile-input" id="prof-contest-date" onchange="markProfileChanged()">
+              </div>
+              <div class="profile-group">
+                <label class="profile-label">🏁 仕上げ日</label>
+                <input type="date" class="profile-input" id="prof-peak-date" onchange="markProfileChanged()">
+                <span style="font-size:10px;color:var(--text-muted);margin-top:2px;">未設定なら大会日を使用</span>
+              </div>
             </div>
-          </div>
-          <div class="profile-group full">
-            <label class="profile-label" data-i18n="label_contest_weight">🎯 目標体重 (kg)</label>
-            <input type="number" class="profile-input" id="prof-contest-weight" data-i18n-ph="contest_weight_ph" placeholder="例：75.0" step="0.1" oninput="markProfileChanged()">
+            <div class="profile-group full">
+              <label class="profile-label" data-i18n="label_contest_weight">🎯 目標体重 (kg)</label>
+              <input type="number" class="profile-input" id="prof-contest-weight" data-i18n-ph="contest_weight_ph" placeholder="例：75.0" step="0.1" oninput="markProfileChanged()">
+            </div>
           </div>
         </div>
       </div>
@@ -3136,6 +3149,7 @@
   let _syncTimer = null;
   function syncToCloud(uid, delay = 3000) {
     if (!uid) return;
+    if (!isPremium()) return;
     clearTimeout(_syncTimer);
     _syncTimer = setTimeout(() => {
       const data = {};
@@ -3239,12 +3253,10 @@
   function updatePremiumGatedUI() {
     const premium = isPremium();
     updateContestCountdown();
-    const wr = document.getElementById('weekly-report-card');
-    if (wr) wr.style.display = premium ? '' : 'none';
-    const rm = document.getElementById('roadmap-card');
-    if (rm) rm.style.display = premium ? '' : 'none';
-    const contestFields = document.getElementById('profile-contest-fields');
-    if (contestFields) contestFields.style.display = premium ? '' : 'none';
+    const lock = document.getElementById('contest-fields-lock');
+    const inner = document.getElementById('contest-fields-inner');
+    if (lock) lock.style.display = premium ? 'none' : '';
+    if (inner) inner.style.display = premium ? '' : 'none';
   }
 
   // ==================
@@ -4518,6 +4530,10 @@
   function renderWeeklyReport() {
     const card = document.getElementById('weekly-report-card');
     if (!card) return;
+    if (!isPremium()) {
+      card.innerHTML = `<div class="premium-lock-card" onclick="openPaywall()"><span style="font-size:28px;">🔒</span><div class="plc-title">週レポート</div><div class="plc-sub">週ごとの体重・カロリー・トレーニングのサマリー</div><div class="plc-btn">プレミアムで解放</div></div>`;
+      return;
+    }
     const now = new Date();
     const sunday = new Date(now);
     sunday.setDate(now.getDate() - now.getDay());
@@ -4590,6 +4606,11 @@
   function renderRoadmap() {
     const container = document.getElementById('roadmap-chart-container');
     if (!container) return;
+    if (!isPremium()) {
+      const card = document.getElementById('roadmap-card');
+      if (card) card.innerHTML = `<div class="premium-lock-card" onclick="openPaywall()"><span style="font-size:28px;">🔒</span><div class="plc-title">大会ロードマップ</div><div class="plc-sub">大会までの体重目標ラインと進捗グラフ</div><div class="plc-btn">プレミアムで解放</div></div>`;
+      return;
+    }
     const contestDateStr = localStorage.getItem('contest_date');
     // 仕上げ日（ピーク日）が設定されていればそれを基準に。未設定なら大会日を使う
     const peakDateStr = localStorage.getItem('peak_date');
@@ -5433,6 +5454,10 @@
   function renderGymAnalysis() {
     const el = document.getElementById('gym-analysis-content');
     if (!el) return;
+    if (!isPremium()) {
+      el.innerHTML = `<div class="premium-lock-card" onclick="openPaywall()"><span style="font-size:28px;">🔒</span><div class="plc-title">筋トレ分析</div><div class="plc-sub">1RM・前回比較・停滞検知</div><div class="plc-btn">プレミアムで解放</div></div>`;
+      return;
+    }
     const stats = collectGymExerciseStats();
 
     // 今日（選択日）行った種目名セット
