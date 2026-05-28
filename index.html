@@ -3078,8 +3078,11 @@
       // ブラウザ path: signInWithPopup
       showLoading(t('loading_signing_in'));
       const provider = new firebase.auth.GoogleAuthProvider();
+      const _signInTimer = setTimeout(() => hideLoading(), 8000);
       firebase.auth().signInWithPopup(provider)
+        .then(() => { clearTimeout(_signInTimer); hideLoading(); })
         .catch(err => {
+          clearTimeout(_signInTimer);
           hideLoading();
           if (err.code !== 'auth/popup-closed-by-user') {
             showToast('ログインに失敗しました: ' + err.message);
