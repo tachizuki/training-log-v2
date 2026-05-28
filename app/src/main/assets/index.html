@@ -6026,7 +6026,7 @@
       const items = (presets[cat] || []).filter(p => !q || p.toLowerCase().includes(q));
       if (items.length === 0) return;
       html += `<div style="padding:10px 16px;background:var(--accent);"><span style="font-size:13px;font-weight:700;color:var(--bg);">${cat}</span></div>`;
-      const todayExNames = new Set((gymData[getGymKey()]?.exercises || []).map(e => e.name));
+      const todayExNames = new Set(gymExercises.map(e => e.name));
       items.forEach((p, i) => {
         const safeCat = cat.replace(/'/g,"\\'");
         const actualIdx = (gymPresets[cat] || []).indexOf(p);
@@ -6061,38 +6061,51 @@
     e.stopPropagation();
     const item = e.currentTarget.closest('.gym-picker-item');
     if (!item) return;
-    _pd = { cat, idx, startY: e.clientY, item, itemH: item.offsetHeight, dy: 0, moved: false };
-    item.style.transition = 'none';
+    const startY = e.clientY;
+    const timer = setTimeout(() => {
+      if (!_pd) return;
+      _pd.active = true;
+      _pd.item.style.transition = 'none';
+      _pd.item.style.zIndex = '50';
+      _pd.item.style.boxShadow = '0 6px 20px rgba(0,0,0,0.5)';
+      _pd.item.style.opacity = '0.9';
+      if (navigator.vibrate) navigator.vibrate(30);
+    }, 400);
+    _pd = { cat, idx, startY, item, itemH: item.offsetHeight, dy: 0, active: false, timer };
     const onMove = (ev) => {
       if (!_pd) return;
       const dy = ev.clientY - _pd.startY;
-      _pd.dy = dy;
-      if (!_pd.moved && Math.abs(dy) > 4) _pd.moved = true;
-      if (_pd.moved) {
+      if (!_pd.active && Math.abs(dy) > 8) {
+        clearTimeout(_pd.timer);
+        _pd = null;
+        document.removeEventListener('pointermove', onMove);
+        return;
+      }
+      if (_pd.active) {
+        _pd.dy = dy;
         _pd.item.style.transform = `translateY(${dy}px)`;
-        _pd.item.style.zIndex = '50';
-        _pd.item.style.boxShadow = '0 6px 20px rgba(0,0,0,0.5)';
-        _pd.item.style.opacity = '0.9';
       }
     };
     const onUp = () => {
       document.removeEventListener('pointermove', onMove);
       if (!_pd) return;
-      if (_pd.moved && _pd.dy !== 0) {
+      clearTimeout(_pd.timer);
+      const { item: el, active, dy, cat: c, idx: i, itemH } = _pd;
+      _pd = null;
+      el.style.cssText = '';
+      if (active && dy !== 0) {
         gymPresets = gymPresets || JSON.parse(JSON.stringify(GYM_PRESETS));
-        const arr = gymPresets[_pd.cat];
+        const arr = gymPresets[c];
         if (arr) {
-          const steps = Math.round(_pd.dy / _pd.itemH);
-          const toIdx = Math.max(0, Math.min(arr.length - 1, _pd.idx + steps));
-          if (toIdx !== _pd.idx) {
-            const [removed] = arr.splice(_pd.idx, 1);
+          const steps = Math.round(dy / itemH);
+          const toIdx = Math.max(0, Math.min(arr.length - 1, i + steps));
+          if (toIdx !== i) {
+            const [removed] = arr.splice(i, 1);
             arr.splice(toIdx, 0, removed);
             localStorage.setItem('gym_presets', JSON.stringify(gymPresets));
           }
         }
       }
-      _pd.item.style.cssText = '';
-      _pd = null;
       filterGymPicker();
     };
     document.addEventListener('pointermove', onMove);
