@@ -5168,6 +5168,7 @@
             setsHtml += '</select></div>';
           }
           const isChinningEx = ['チンニング','懸垂','プルアップ'].some(function(kw){return ex.name.indexOf(kw)>=0;});
+          setsHtml += '<div style="padding-bottom:8px;margin-bottom:4px;border-bottom:1px solid var(--border);">';
           setsHtml += '<div class="gym-set-row">';
           setsHtml += '<span class="gym-set-label">' + (si+1) + '</span>';
           if (isChinningEx) {
@@ -5183,10 +5184,11 @@
           setsHtml += '<span class="gym-set-rm" id="gs-' + ei + '-' + si + '-rm">' + rmText + '</span>';
           setsHtml += '<div class="gym-set-assist"><div class="gym-assist-check ' + assistClass + '" onclick="gymToggleAssist(' + ei + ',' + si + ')"></div></div>';
           setsHtml += '</div>';
-          setsHtml += '<div style="display:flex;align-items:center;gap:8px;margin-top:2px;">';
+          setsHtml += '<div style="display:flex;align-items:center;gap:8px;margin-top:4px;padding-left:32px;">';
           setsHtml += '<input type="text" class="gym-set-memo" placeholder="memo" value="' + mVal + '" data-ei="' + ei + '" data-si="' + si + '" oninput="gymUpdateSet(+this.dataset.ei,+this.dataset.si,2,this.value)" style="flex:1;">';
           setsHtml += '<button class="gym-set-copy-btn" onclick="gymCopySet(' + ei + ',' + si + ')" style="flex-shrink:0;">⧉</button>';
           setsHtml += '<button class="gym-set-del" onclick="gymDelSet(' + ei + ',' + si + ')" style="flex-shrink:0;">✕</button>';
+          setsHtml += '</div>';
           setsHtml += '</div>';
         });
       }
