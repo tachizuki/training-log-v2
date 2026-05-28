@@ -1,4 +1,0 @@
-#Sun May 17 22:38:57 JST 2026
-base.0=H\:\\projects\\training-log-android\\app\\build\\intermediates\\dex\\debugAndroidTest\\mergeProjectDexDebugAndroidTest\\0\\classes.dex
-path.0=0/classes.dex
-renamed.0=classes.dex

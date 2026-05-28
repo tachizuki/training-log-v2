@@ -14,6 +14,30 @@
       },
       "oauth_client": [
         {
+          "client_id": "211414940177-g3dt46tb7u2ndiiro5ucavk5u6ovms8j.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.traininglog.app",
+            "certificate_hash": "a431bcc67336d9b617cf52baff94159b512207fa"
+          }
+        },
+        {
+          "client_id": "211414940177-i2spcnagmg5cg8ci8ml717k0oj65o186.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.traininglog.app",
+            "certificate_hash": "a6ac768a575231268a3302ef3948429788ad8967"
+          }
+        },
+        {
+          "client_id": "211414940177-v8gtlo3q2jfimgb5g8pu0s37rvlj4cgm.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.traininglog.app",
+            "certificate_hash": "95c1c15d55e1ee7262b83bf488a781e28641ea03"
+          }
+        },
+        {
           "client_id": "211414940177-a7bok6n7uki5kmkppo2t3jp0g4umfokj.apps.googleusercontent.com",
           "client_type": 3
         }

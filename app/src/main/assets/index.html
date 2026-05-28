@@ -3016,6 +3016,7 @@
       gymData = JSON.parse(localStorage.getItem('gym_data') || '{}');
       userProfile = JSON.parse(localStorage.getItem('user_profile') || '{"height":168,"age":25,"sex":"male"}');
       updateTodaySummary();
+      renderView();
       // クラウドから contest_date 等が同期された場合に表示を反映
       updatePremiumGatedUI();
       showToast(t('toast_synced'), false);
@@ -3262,10 +3263,24 @@
   function updatePremiumGatedUI() {
     const premium = isPremium();
     updateContestCountdown();
+
+    // プロフィール: 大会関連フィールドのロック表示切替
     const lock = document.getElementById('contest-fields-lock');
     const inner = document.getElementById('contest-fields-inner');
     if (lock) lock.style.display = premium ? 'none' : '';
     if (inner) inner.style.display = premium ? '' : 'none';
+
+    // 設定画面: プランステータス（ログイン後に状態が変わった場合も即時反映）
+    const planLabel = document.getElementById('plan-status-label');
+    const upgradeBtn = document.getElementById('plan-upgrade-btn');
+    if (planLabel) {
+      planLabel.textContent = premium ? t('plan_premium') : t('plan_free');
+      planLabel.style.color = premium ? 'var(--accent)' : 'var(--text)';
+    }
+    if (upgradeBtn) upgradeBtn.style.display = premium ? 'none' : '';
+
+    // 表示画面が開いている場合はロック済みバナーも即時更新
+    if (_currentScreenId === 'view-screen') renderList();
   }
 
   // ==================
