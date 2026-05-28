@@ -3411,6 +3411,7 @@
     updateTodaySummary();
     updateWelcome();
     updateContestCountdown();
+    updatePremiumGatedUI();
     checkOnboarding();
     // ボトムナビ表示
     const _nav = document.getElementById('bottom-nav');
@@ -3447,7 +3448,7 @@
       const navMap = {'record-screen':'nav-record','water-screen':'nav-water','gym-screen':'nav-gym','view-screen':'nav-view','settings-screen':'nav-settings'};
       const navId = navMap[id];
       if (navId) { const nb = document.getElementById(navId); if (nb) nb.classList.add('active'); }
-      if (id === 'settings-screen') openProfile();
+      if (id === 'settings-screen') { openProfile(); updatePremiumGatedUI(); }
       if (id === 'record-screen') {
         const today = formatDate(new Date());
         document.getElementById('rec-date').value = today;

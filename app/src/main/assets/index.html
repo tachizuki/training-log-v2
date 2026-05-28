@@ -3453,7 +3453,7 @@
       const navMap = {'record-screen':'nav-record','water-screen':'nav-water','gym-screen':'nav-gym','view-screen':'nav-view','settings-screen':'nav-settings'};
       const navId = navMap[id];
       if (navId) { const nb = document.getElementById(navId); if (nb) nb.classList.add('active'); }
-      if (id === 'settings-screen') openProfile();
+      if (id === 'settings-screen') { openProfile(); updatePremiumGatedUI(); }
       // 記録画面を開く時に今日の既存データを読み込む
       if (id === 'record-screen') {
         const today = formatDate(new Date());
