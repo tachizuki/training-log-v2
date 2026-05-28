@@ -1517,6 +1517,21 @@
             </div>
             <button class="toggle" id="opt-share-after-save" onclick="toggleOption('shareAfterSave')"></button>
           </div>
+          <div style="display:flex;align-items:center;gap:10px;padding:12px 0 4px;border-top:1px solid var(--border);margin-top:6px;">
+            <div style="flex:1;">
+              <div class="toggle-label">1日の始まり時刻</div>
+              <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">この時刻より前は前日として記録されます</div>
+            </div>
+            <select id="day-start-hour" onchange="saveDayStartHour(this.value)" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:14px;padding:6px 10px;outline:none;cursor:pointer;">
+              <option value="0">0:00（デフォルト）</option>
+              <option value="1">1:00</option>
+              <option value="2">2:00</option>
+              <option value="3">3:00</option>
+              <option value="4">4:00</option>
+              <option value="5">5:00</option>
+              <option value="6">6:00</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -2725,7 +2740,14 @@
   let weightChart, kcalChart, pfcChart, waterChartObj;
   const CIRC = 477.5;
 
-  function todayKey() { return formatDate(new Date()); }
+  function getTodayDate() {
+    const now = new Date();
+    const h = parseInt(localStorage.getItem('day_start_hour') || '0');
+    if (h > 0 && now.getHours() < h) { const d = new Date(now); d.setDate(d.getDate()-1); return d; }
+    return now;
+  }
+  function getToday() { return formatDate(getTodayDate()); }
+  function todayKey() { return getToday(); }
   function getTodayWater() { return waterData[todayKey()] || { total: 0, log: [] }; }
   function formatDate(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
   function formatDateJP(d) { return LANG === 'ja' ? `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日` : `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()} (${t('day_names_short')[d.getDay()]})`; }
@@ -3256,7 +3278,7 @@
     if (!dateStr) { el.style.display = 'none'; return; }
     const [y, m, d] = dateStr.split('-').map(Number);
     const contest = new Date(y, m - 1, d);
-    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const today = getTodayDate(); today.setHours(0, 0, 0, 0);
     const diff = Math.round((contest - today) / 86400000);
     if (diff < 0) { el.style.display = 'none'; return; }
     el.style.display = 'block';
@@ -3399,8 +3421,8 @@
 
     const verEl = document.getElementById('app-ver-display');
     if (verEl) verEl.textContent = APP_VERSION;
-    document.getElementById('rec-date').value = formatDate(new Date());
-    document.getElementById('today-date-label').textContent = formatDateJP(new Date());
+    document.getElementById('rec-date').value = getToday();
+    document.getElementById('today-date-label').textContent = formatDateJP(getTodayDate());
     updateTodaySummary();
     updateWelcome();
     updatePremiumGatedUI();
@@ -3422,7 +3444,7 @@
   }
 
   function updateTodaySummary() {
-    const today = formatDate(new Date());
+    const today = getToday();
     const rec = records.find(r => r.date === today);
     document.getElementById('ts-kcal').textContent = rec?.kcal || '—';
     document.getElementById('ts-weight').textContent = rec?.weight ? rec.weight + ' kg' : '— kg';
@@ -3456,7 +3478,7 @@
       if (id === 'settings-screen') { openProfile(); updatePremiumGatedUI(); }
       // 記録画面を開く時に今日の既存データを読み込む
       if (id === 'record-screen') {
-        const today = formatDate(new Date());
+        const today = getToday();
         document.getElementById('rec-date').value = today;
         loadRecordByDate(today);
       }
@@ -3586,13 +3608,13 @@
     document.getElementById('training-toggle').classList.remove('on');
     document.getElementById('muscle-selector').style.display='none';
     document.querySelectorAll('.muscle-btn').forEach(b=>b.classList.remove('selected'));
-    document.getElementById('rec-date').value=formatDate(new Date());
+    document.getElementById('rec-date').value=getToday();
   }
 
   // WATER
   function renderWater() {
     // 水分画面を開くたびに今日の日付にリセット
-    const todayStr = formatDate(new Date());
+    const todayStr = getToday();
     const w = waterData[todayStr] || {total:0, log:[]};
     updateRing(w.total);
     renderWaterLog(w.log);
@@ -3798,7 +3820,7 @@
     const next = document.getElementById('graph-next-btn');
     if (!nav || !label || !prev || !next) return;
     if (currentFilter === 'week') {
-      const now = new Date();
+      const now = getTodayDate();
       const base = new Date(now);
       base.setDate(now.getDate() - now.getDay() + weekCalOffset * 7);
       const weekEnd = new Date(base); weekEnd.setDate(base.getDate() + 6);
@@ -3807,7 +3829,7 @@
       next.onclick = () => weekCalNav(1);
       nav.style.display = 'flex';
     } else if (currentFilter === 'month') {
-      const now = new Date();
+      const now = getTodayDate();
       const target = new Date(now.getFullYear(), now.getMonth() + monthCalOffset, 1);
       label.textContent = `${target.getFullYear()}年 ${target.getMonth()+1}月`;
       prev.onclick = () => monthCalNav(-1);
@@ -3938,7 +3960,7 @@
   function monthCalNav(delta) {
     const newOffset = monthCalOffset + delta;
     if (!isPremium() && delta < 0) {
-      const now = new Date();
+      const now = getTodayDate();
       const target = new Date(now.getFullYear(), now.getMonth() + newOffset, 1);
       const cutoff = new Date();
       cutoff.setDate(cutoff.getDate() - PREMIUM_HISTORY_DAYS);
@@ -3958,7 +3980,7 @@
   function renderWeekCalendar() {
     const el = document.getElementById('week-calendar-view');
     if (!el) return;
-    const now = new Date();
+    const now = getTodayDate();
     // weekCalOffsetの週の月曜を計算
     const base = new Date(now);
     base.setDate(now.getDate() - now.getDay() + weekCalOffset * 7);
@@ -4065,7 +4087,7 @@
   function renderMonthCalendar() {
     const el = document.getElementById('month-calendar-view');
     if (!el) return;
-    const now = new Date();
+    const now = getTodayDate();
     const y = now.getFullYear();
     const m = now.getMonth() + monthCalOffset;
     const targetDate = new Date(y, m, 1);
@@ -4121,7 +4143,7 @@
   }
 
   function openWeightGoalModal() {
-    const now = new Date();
+    const now = getTodayDate();
     const base = new Date(now);
     base.setDate(now.getDate() - now.getDay() + weekCalOffset * 7);
     const current = getWeekGoal(base);
@@ -4139,7 +4161,7 @@
 
   // 手動の週目標を消して自動値に戻す
   function resetWeekGoalToAuto() {
-    const now = new Date();
+    const now = getTodayDate();
     const base = new Date(now);
     base.setDate(now.getDate() - now.getDay() + weekCalOffset * 7);
     const key = getWeekKey(base);
@@ -4153,7 +4175,7 @@
   function confirmWeightGoal() {
     const v = parseFloat(document.getElementById('wgoal-input').value);
     if(!v||v<=0) return;
-    const now = new Date();
+    const now = getTodayDate();
     const base = new Date(now);
     base.setDate(now.getDate() - now.getDay() + weekCalOffset * 7);
     setWeekGoal(base, v);
@@ -4566,7 +4588,7 @@
       card.innerHTML = `<div class="premium-lock-card" onclick="openPaywall()"><span style="font-size:28px;">🔒</span><div class="plc-title">週レポート</div><div class="plc-sub">週ごとの体重・カロリー・トレーニングのサマリー</div><div class="plc-btn">プレミアムで解放</div></div>`;
       return;
     }
-    const now = new Date();
+    const now = getTodayDate();
     const sunday = new Date(now);
     sunday.setDate(now.getDate() - now.getDay());
     sunday.setHours(0,0,0,0);
@@ -4658,7 +4680,7 @@
     }
     const [cy,cm,cd] = targetDateStr.split('-').map(Number);
     const contestDate = new Date(cy, cm-1, cd);
-    const today = new Date(); today.setHours(0,0,0,0);
+    const today = getTodayDate(); today.setHours(0,0,0,0);
     if (contestDate <= today) {
       container.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:20px;font-size:13px;">'+t('roadmap_ended')+'</div>';
       return;
@@ -4850,7 +4872,7 @@
   function renderCharts() {
     renderWeeklyReport();
     renderRoadmap();
-    const now = new Date();
+    const now = getTodayDate();
     let filtered;
     if (currentFilter === 'week') {
       const base = new Date(now);
@@ -5001,7 +5023,7 @@
   // GYM MEMO
   // ==================
   let gymData = JSON.parse(localStorage.getItem('gym_data') || '{}');
-  let gymDate = formatDate(new Date());
+  let gymDate = getToday();
   let gymPart = '胸';
   let gymExercises = [];
 
@@ -5048,7 +5070,7 @@
   }
 
   function renderGym() {
-    gymDate = gymDate || formatDate(new Date());
+    gymDate = gymDate || getToday();
     updateGymDateLabel();
     loadGymData();
   }
@@ -5476,7 +5498,7 @@
   function daysBetween(dateStr) {
     const [y, m, d] = dateStr.split('-').map(Number);
     const past = new Date(y, m-1, d); past.setHours(0,0,0,0);
-    const now = new Date(); now.setHours(0,0,0,0);
+    const now = getTodayDate(); now.setHours(0,0,0,0);
     return Math.round((now - past) / 86400000);
   }
 
@@ -6800,7 +6822,7 @@
   }
 
   function getUserBMR() {
-    const today = formatDate(new Date());
+    const today = getToday();
     const rec = records.find(r=>r.date===today);
     const weight = rec?.weight || null;
     return calcBMR(userProfile.height, weight, userProfile.age, userProfile.sex);
@@ -6869,9 +6891,15 @@
     if (dangerZone) dangerZone.style.display = currentUser ? '' : 'none';
   }
 
+  function saveDayStartHour(val) {
+    localStorage.setItem('day_start_hour', String(parseInt(val) || 0));
+  }
+
   function loadOptionToggles() {
     const el = document.getElementById('opt-share-after-save');
     if (el) el.classList.toggle('on', appOptions.shareAfterSave !== false);
+    const dsh = document.getElementById('day-start-hour');
+    if (dsh) dsh.value = localStorage.getItem('day_start_hour') || '0';
   }
 
   function toggleOption(key) {
@@ -6890,7 +6918,7 @@
   function updateBMRPreview() {
     const h = parseFloat(document.getElementById('prof-height').value)||0;
     const a = parseInt(document.getElementById('prof-age').value)||0;
-    const today = formatDate(new Date());
+    const today = getToday();
     const rec = records.find(r=>r.date===today);
     const w = rec?.weight || 63;
     const bmr = h&&a ? calcBMR(h, w, a, userProfile.sex) : null;
