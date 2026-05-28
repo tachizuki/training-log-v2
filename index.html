@@ -3159,6 +3159,8 @@
       });
       if (typeof AndroidBridge !== 'undefined') {
         AndroidBridge.saveToFirestore(uid, JSON.stringify(data));
+      } else {
+        firebase.firestore().collection('users').doc(uid).set(data, { merge: true });
       }
     }, delay);
   }
@@ -3167,6 +3169,16 @@
     if (!uid) return;
     if (typeof AndroidBridge !== 'undefined') {
       AndroidBridge.loadFromFirestore(uid);
+    } else {
+      firebase.firestore().collection('users').doc(uid).get()
+        .then(doc => {
+          if (doc.exists) {
+            receiveFirestoreData(JSON.stringify(doc.data()));
+          } else {
+            hideLoading();
+          }
+        })
+        .catch(() => hideLoading());
     }
   }
 
