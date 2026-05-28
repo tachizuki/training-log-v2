@@ -1664,12 +1664,39 @@
           </div>
         </div>
 
+        <!-- Slide 5: プレミアム -->
+        <div class="ob-slide">
+          <div class="ob-icon">✨</div>
+          <div class="ob-title" style="color:var(--accent);">まずは<br>無料で</div>
+          <p class="ob-desc" style="margin-bottom:14px;">主要機能はすべて無料。<br>もっと深く使いたくなったら<br>プレミアムにアップグレード。</p>
+          <div style="width:100%;max-width:320px;">
+            <div style="background:var(--surface);border-radius:12px;padding:12px 16px;margin-bottom:8px;">
+              <div style="font-size:10px;color:var(--text-muted);font-weight:700;letter-spacing:0.08em;margin-bottom:8px;">FREE</div>
+              <div style="display:flex;flex-direction:column;gap:5px;font-size:13px;color:var(--text);">
+                <div>✅ 体重・栄養・水分・睡眠の記録</div>
+                <div>✅ ジムログ・種目管理</div>
+                <div>✅ グラフ・カレンダービュー</div>
+                <div>✅ クラウド同期（要ログイン）</div>
+              </div>
+            </div>
+            <div style="background:var(--surface);border-radius:12px;padding:12px 16px;border:1px solid rgba(232,255,0,0.35);">
+              <div style="font-size:10px;color:var(--accent);font-weight:700;letter-spacing:0.08em;margin-bottom:8px;">PREMIUM ✨</div>
+              <div style="display:flex;flex-direction:column;gap:5px;font-size:13px;color:var(--text);">
+                <div>⭐ 週レポート・ジム分析</div>
+                <div>⭐ 大会ロードマップ</div>
+                <div>⭐ 大会設定の詳細管理</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
 
     <div class="ob-bottom">
       <div class="ob-dots" id="ob-dots">
         <div class="ob-dot active"></div>
+        <div class="ob-dot"></div>
         <div class="ob-dot"></div>
         <div class="ob-dot"></div>
         <div class="ob-dot"></div>
@@ -3219,7 +3246,7 @@
   // ONBOARDING
   // ==================
   let obCurrentSlide = 0;
-  const OB_TOTAL = 4;
+  const OB_TOTAL = 5;
 
   function obUpdateUI() {
     document.getElementById('ob-slides').style.transform = `translateX(-${obCurrentSlide * 100}%)`;
