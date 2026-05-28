@@ -3842,6 +3842,8 @@
       const r = AndroidBridge.isPremium();
       return r === true || r === 'true';
     }
+    // ブラウザ版はアプリリリースまで全機能無料公開
+    if (typeof AndroidBridge === 'undefined') return true;
     return localStorage.getItem('is_premium') === 'true';
   }
 
@@ -6793,7 +6795,8 @@
     const premium = isPremium();
     const label = document.getElementById('plan-status-label');
     const btn = document.getElementById('plan-upgrade-btn');
-    if (label) label.textContent = premium ? t('plan_premium') : t('plan_free');
+    const isBrowser = typeof AndroidBridge === 'undefined';
+    if (label) label.textContent = isBrowser ? '🎁 プレミアム無料公開中（アプリリリースまで）' : premium ? t('plan_premium') : t('plan_free');
     if (label) label.style.color = premium ? 'var(--accent)' : 'var(--text)';
     if (btn) btn.style.display = premium ? 'none' : '';
     // アカウント削除はログイン済みの場合のみ表示
