@@ -165,9 +165,9 @@
 
   .btn-submit { width: 100%; padding: 18px; background: var(--accent); color: var(--bg); border: none; border-radius: 12px; font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 0.1em; cursor: pointer; margin-top: 20px; transition: opacity 0.2s; }
   .btn-submit:active { opacity: 0.8; }
-  .settings-save-bar { display:none; position:fixed; bottom:60px; left:0; right:0; padding:12px 20px; background:var(--bg); border-top:2px solid var(--accent); z-index:19; }
-  .settings-save-bar.visible { display:block; }
-  .settings-save-bar button { width:100%; padding:14px; background:var(--accent); color:var(--bg); border:none; border-radius:12px; font-family:'Bebas Neue',sans-serif; font-size:20px; letter-spacing:0.1em; cursor:pointer; }
+  .settings-save-bar, .record-save-bar { display:none; position:fixed; bottom:60px; left:0; right:0; padding:12px 20px; background:var(--bg); border-top:2px solid var(--accent); z-index:19; }
+  .settings-save-bar.visible, .record-save-bar.visible { display:block; }
+  .settings-save-bar button, .record-save-bar button { width:100%; padding:14px; background:var(--accent); color:var(--bg); border:none; border-radius:12px; font-family:'Bebas Neue',sans-serif; font-size:20px; letter-spacing:0.1em; cursor:pointer; }
   .settings-section { border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: var(--surface); margin-bottom: 6px; }
   .settings-section-hdr { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent; }
   .settings-section-hdr:active { background: var(--surface2); }
@@ -739,6 +739,10 @@
 </div>
 
 <!-- RECORD SCREEN -->
+<div id="record-save-bar" class="record-save-bar">
+  <button onclick="saveRecord()" data-i18n="btn_save">保存する</button>
+</div>
+
 <div id="record-screen" class="screen">
   <div class="screen-header">
     <button class="btn-back" onclick="showScreen(null)">←</button>
@@ -752,48 +756,48 @@
     <div class="form-section">
       <div class="form-section-title" data-i18n="section_weight_sleep">⚖️ 体重・睡眠</div>
       <div class="form-grid">
-        <div class="form-group"><label class="form-label" data-i18n="label_weight">体重 (kg)</label><input type="number" class="form-input" id="rec-weight" placeholder="62.5" step="0.1"></div>
+        <div class="form-group"><label class="form-label" data-i18n="label_weight">体重 (kg)</label><input type="number" class="form-input" id="rec-weight" placeholder="62.5" step="0.1" oninput="markRecordChanged()"></div>
         <div class="form-group">
           <label class="form-label">😴 睡眠時間 (h) <span style="font-size:10px;color:var(--text-muted);">直接入力 or 就寝・起床から自動計算</span></label>
-          <input type="number" class="form-input" id="rec-sleep" placeholder="7.5" step="0.1">
+          <input type="number" class="form-input" id="rec-sleep" placeholder="7.5" step="0.1" oninput="markRecordChanged()">
         </div>
       </div>
       <div class="form-grid" style="margin-top:8px;">
         <div class="form-group">
           <label class="form-label">🌙 就寝時刻</label>
-          <input type="time" class="form-input" id="rec-bedtime" oninput="calcSleepFromBedWake('rec')">
+          <input type="time" class="form-input" id="rec-bedtime" oninput="calcSleepFromBedWake('rec');markRecordChanged()">
         </div>
         <div class="form-group">
           <label class="form-label">🌅 起床時刻</label>
-          <input type="time" class="form-input" id="rec-waketime" oninput="calcSleepFromBedWake('rec')">
+          <input type="time" class="form-input" id="rec-waketime" oninput="calcSleepFromBedWake('rec');markRecordChanged()">
         </div>
       </div>
     </div>
     <div class="form-section">
       <div class="form-section-title" data-i18n="section_pfc">🍽️ PFC</div>
       <div class="form-grid">
-        <div class="form-group"><label class="form-label" data-i18n="label_protein">タンパク質 (g)</label><input type="number" class="form-input" id="rec-p" placeholder="180" oninput="calcKcal()"></div>
-        <div class="form-group"><label class="form-label" data-i18n="label_fat">脂質 (g)</label><input type="number" class="form-input" id="rec-f" placeholder="40" oninput="calcKcal()"></div>
-        <div class="form-group"><label class="form-label" data-i18n="label_carbs">炭水化物 (g)</label><input type="number" class="form-input" id="rec-c" placeholder="180" oninput="calcKcal()"></div>
+        <div class="form-group"><label class="form-label" data-i18n="label_protein">タンパク質 (g)</label><input type="number" class="form-input" id="rec-p" placeholder="180" oninput="calcKcal();markRecordChanged()"></div>
+        <div class="form-group"><label class="form-label" data-i18n="label_fat">脂質 (g)</label><input type="number" class="form-input" id="rec-f" placeholder="40" oninput="calcKcal();markRecordChanged()"></div>
+        <div class="form-group"><label class="form-label" data-i18n="label_carbs">炭水化物 (g)</label><input type="number" class="form-input" id="rec-c" placeholder="180" oninput="calcKcal();markRecordChanged()"></div>
         <div class="form-group"><label class="form-label" data-i18n="label_kcal">カロリー (kcal)</label><input type="number" class="form-input" id="rec-kcal" data-i18n-ph="placeholder_kcal" placeholder="自動計算" readonly style="opacity:0.7"></div>
       </div>
     </div>
     <div class="form-section">
       <div class="form-section-title" data-i18n="section_salt">🧂 塩分</div>
-      <div class="form-group"><label class="form-label" data-i18n="label_salt">塩分 (g)</label><input type="number" class="form-input" id="rec-salt" placeholder="5.0" step="0.1"></div>
+      <div class="form-group"><label class="form-label" data-i18n="label_salt">塩分 (g)</label><input type="number" class="form-input" id="rec-salt" placeholder="5.0" step="0.1" oninput="markRecordChanged()"></div>
     </div>
     <div class="form-section">
       <div class="form-section-title" data-i18n="section_activity">🚶 活動・運動</div>
       <div class="form-group" style="margin-bottom:10px;">
         <label class="form-label" data-i18n="label_steps">歩数</label>
-        <input type="number" class="form-input" id="rec-steps" placeholder="8000">
+        <input type="number" class="form-input" id="rec-steps" placeholder="8000" oninput="markRecordChanged()">
       </div>
       <div id="activity-list" style="margin-bottom:10px;"></div>
       <button class="activity-add-btn" onclick="openActivityPicker()" data-i18n="btn_add_exercise">＋ 運動を追加</button>
     </div>
     <div class="form-section">
       <div class="form-section-title" data-i18n="section_salon">🌞 日サロ</div>
-      <div class="form-group"><label class="form-label" data-i18n="label_salon">日サロ時間 (分)</label><input type="number" class="form-input" id="rec-salon" placeholder="0"></div>
+      <div class="form-group"><label class="form-label" data-i18n="label_salon">日サロ時間 (分)</label><input type="number" class="form-input" id="rec-salon" placeholder="0" oninput="markRecordChanged()"></div>
     </div>
     <div class="form-section">
       <div class="form-section-title" data-i18n="section_training">💪 筋トレ部位</div>
@@ -814,13 +818,13 @@
     </div>
     <div class="form-section">
       <div class="form-section-title" data-i18n="section_memo">📝 メモ</div>
-      <div class="form-group full"><textarea class="form-input" id="rec-memo" data-i18n-ph="placeholder_memo" placeholder="体調・気づきなど（空欄可）"></textarea></div>
+      <div class="form-group full"><textarea class="form-input" id="rec-memo" data-i18n-ph="placeholder_memo" placeholder="体調・気づきなど（空欄可）" oninput="markRecordChanged()"></textarea></div>
     </div>
     <div class="form-section" id="gym-link-section-wrap">
       <div class="form-section-title" data-i18n="gym_link_title">💪 筋トレ連動</div>
       <div id="gym-link-section"></div>
     </div>
-    <button class="btn-submit" onclick="saveRecord()" data-i18n="btn_save">保存する</button>
+    <div style="height:80px;"></div><!-- record-save-bar のスペース確保 -->
   </div>
 </div>
 
@@ -3403,6 +3407,10 @@
     const nav = document.getElementById('bottom-nav');
     // ナビは全画面で常に表示
     if (nav) nav.classList.remove('hidden');
+    if (id !== 'record-screen') {
+      const rb = document.getElementById('record-save-bar');
+      if (rb) rb.classList.remove('visible');
+    }
     document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
     if (!id) {
       document.getElementById('top-screen').style.display = 'flex';
@@ -3428,6 +3436,8 @@
 
   function loadRecordByDate(date) {
     if (!date) return;
+    const bar = document.getElementById('record-save-bar');
+    if (bar) bar.classList.remove('visible');
     const r = records.find(x => x.date === date);
     // データがない日付は全フィールドをクリア
     if (!r) {
@@ -3498,17 +3508,24 @@
     sleepEl.value = hours;
   }
 
+  function markRecordChanged() {
+    const bar = document.getElementById('record-save-bar');
+    if (bar) bar.classList.add('visible');
+  }
+
   function toggleTraining() {
     trainingOn = !trainingOn;
     document.getElementById('training-toggle').classList.toggle('on', trainingOn);
     document.getElementById('muscle-selector').style.display = trainingOn ? 'block' : 'none';
     if (!trainingOn) { selectedMuscles=[]; document.querySelectorAll('.muscle-btn').forEach(b=>b.classList.remove('selected')); }
+    markRecordChanged();
   }
 
   function toggleMuscle(btn) {
     const m = btn.dataset.muscle;
     if (btn.classList.contains('selected')) { btn.classList.remove('selected'); selectedMuscles=selectedMuscles.filter(x=>x!==m); }
     else { btn.classList.add('selected'); selectedMuscles.push(m); }
+    markRecordChanged();
   }
 
   function saveRecord() {
@@ -6546,6 +6563,7 @@
     recActivities.push({name, met, icon, minutes:null, kcal:0});
     renderActivityList();
     document.getElementById('activity-picker').classList.remove('open');
+    markRecordChanged();
   }
 
   function addCustomActivity() {
@@ -6555,6 +6573,7 @@
     recActivities.push({name, kcalPerMin, icon:'🏃', minutes:null, kcal:0});
     renderActivityList();
     document.getElementById('activity-picker').classList.remove('open');
+    markRecordChanged();
   }
 
   // handleAndroidBackにアクティビティピッカーを追加（既存のprofile-modalの前）
