@@ -6040,6 +6040,7 @@
   let timerRunning = false;
   let timerStartTime = null;   // タイマー開始時刻（バックグラウンド後も正確に残り時間を計算）
   let timerStartRemain = 90;   // タイマー開始時の残り秒数
+  let _timerDoneFired = false; // 二重呼び出し防止フラグ
 
   function openTimer() {
     document.getElementById('timer-overlay').classList.add('open');
@@ -6099,6 +6100,7 @@
         timerRemain = timerSec;
         document.getElementById('timer-display').classList.remove('done');
       }
+      _timerDoneFired = false;
       timerRunning = true;
       timerStartTime = Date.now();
       timerStartRemain = timerRemain;
@@ -6128,6 +6130,8 @@
 
   // ネイティブ Android から呼ばれるコールバック（またはWeb完了時）
   function onTimerDone() {
+    if (_timerDoneFired) return; // JS完了とネイティブ放送の二重呼び出しを防ぐ
+    _timerDoneFired = true;
     clearInterval(timerInterval);
     timerInterval = null;
     timerRunning = false;
@@ -6137,24 +6141,27 @@
     document.getElementById('timer-start-btn').textContent = t('timer_start');
     document.getElementById('timer-display').classList.add('done');
     document.getElementById('timer-label').textContent = t('timer_done');
-    // Webバイブフォールバック（Androidは native 側でバイブ済み）
-    if (typeof AndroidBridge === 'undefined' && navigator.vibrate) {
-      navigator.vibrate([300,100,300,100,300,100,300]);
-    }
-    // ビープ音
-    try {
-      const actx = new (window.AudioContext || window.webkitAudioContext)();
-      [0, 0.4, 0.8, 1.2, 1.6, 2.0, 2.4, 2.8, 3.2].forEach(d => {
-        const osc = actx.createOscillator();
-        const gain = actx.createGain();
-        osc.connect(gain); gain.connect(actx.destination);
-        osc.type = 'sine'; osc.frequency.value = 880;
-        gain.gain.setValueAtTime(0.5, actx.currentTime + d);
-        gain.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + d + 0.3);
-        osc.start(actx.currentTime + d);
-        osc.stop(actx.currentTime + d + 0.3);
+    // Android はネイティブ側でバイブ＆音済み。ブラウザのみ実行
+    if (typeof AndroidBridge === 'undefined') {
+      if (navigator.vibrate) navigator.vibrate([300,100,300,100,300,100,300]);
+      // AudioContext の未来スケジュールはバックグラウンドで止まるため setTimeout で分散
+      const delays = [0, 400, 800, 1200, 1600, 2000, 2400, 2800, 3200];
+      delays.forEach(d => {
+        setTimeout(() => {
+          try {
+            const actx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = actx.createOscillator();
+            const gain = actx.createGain();
+            osc.connect(gain); gain.connect(actx.destination);
+            osc.type = 'sine'; osc.frequency.value = 880;
+            gain.gain.setValueAtTime(0.5, actx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + 0.3);
+            osc.start(actx.currentTime);
+            osc.stop(actx.currentTime + 0.3);
+          } catch(e) {}
+        }, d);
       });
-    } catch(e) {}
+    }
   }
 
   function updateTimerDisplay() {
