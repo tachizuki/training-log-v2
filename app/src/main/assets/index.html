@@ -4029,7 +4029,7 @@
 
     // 週平均
     const weights = days.filter(d => d.rec?.weight).map(d => d.rec.weight);
-    const avg = weights.length > 0 ? (weights.reduce((s,w)=>s+w,0)/weights.length).toFixed(2) : null;
+    const avg = weights.length > 0 ? (weights.reduce((s,w)=>s+w,0)/weights.length).toFixed(1) : null;
 
     const dayNames = t('day_names_short');
     const monthStr = (weekStart.getMonth()+1) + '/' + weekStart.getDate() + ' 〜 ' + (weekEnd.getMonth()+1) + '/' + weekEnd.getDate();
@@ -4044,7 +4044,7 @@
     // 週平均・差分サマリーカード
     if (avg) {
       const diff = weekGoal > 0 ? (parseFloat(avg) - weekGoal) : null;
-      const diffFixed = diff !== null ? diff.toFixed(2) : null;
+      const diffFixed = diff !== null ? diff.toFixed(1) : null;
       const diffStr = diffFixed !== null ? (diff > 0 ? '+' + diffFixed : diffFixed) + 'kg' : null;
       const diffColor = diff > 0 ? 'var(--danger)' : diff < 0 ? 'var(--success)' : 'var(--text-muted)';
       const diffBg = diff > 0 ? 'rgba(255,68,68,0.08)' : diff < 0 ? 'rgba(0,255,136,0.08)' : 'var(--surface)';
