@@ -5677,7 +5677,21 @@
     document.getElementById('gym-prev-date').textContent = t('prev_prefix') + prev.date;
 
     const setsEl = document.getElementById('gym-prev-sets');
+    const CARDIO_KW2 = ['ランニング','ウォーキング','自転車','トレッドミル','縄跳び','水泳','エアロバイク','有酸素','ジョギング'];
+    const isCardio = CARDIO_KW2.some(kw => name.indexOf(kw) >= 0);
+
     setsEl.innerHTML = prev.sets.map((s, i) => {
+      if (isCardio) {
+        const parts = [];
+        if (s.incline != null && s.incline !== '') parts.push(`${t('cardio_incline')} ${s.incline}`);
+        if (s.speed   != null && s.speed   !== '') parts.push(`${t('cardio_speed')} ${s.speed}`);
+        if (s.distance!= null && s.distance!== '') parts.push(`${t('cardio_distance')} ${s.distance}`);
+        if (s.duration!= null && s.duration!== '') parts.push(`${t('cardio_duration')} ${s.duration}`);
+        return `<div class="gym-prev-set-row">
+          <span class="gym-prev-set-num">${i+1}</span>
+          <span class="gym-prev-set-val" style="font-size:12px;">${parts.length ? parts.join(' / ') : '—'}</span>
+        </div>`;
+      }
       const rm = calcRM(s.weight, s.reps, name);
       return `<div class="gym-prev-set-row">
         <span class="gym-prev-set-num">${i+1}</span>
