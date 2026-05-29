@@ -402,7 +402,7 @@
   .gym-part-bar { display: flex; gap: 8px; padding: 12px 20px; overflow-x: auto; border-bottom: 1px solid var(--border); }
   .gym-part-btn { padding: 7px 16px; border-radius: 20px; border: 1px solid var(--border); background: transparent; color: var(--text-muted); font-size: 13px; cursor: pointer; white-space: nowrap; transition: all 0.15s; flex-shrink: 0; }
   .gym-part-btn.active { background: var(--accent); border-color: var(--accent); color: var(--bg); font-weight: 700; }
-  .gym-body { padding: 16px 20px 170px; }
+  .gym-body { padding: 16px 20px; }
   .gym-exercise-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px; margin-bottom: 10px; }
   .gym-exercise-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
   .gym-exercise-name { font-size: 14px; font-weight: 700; color: var(--text); }
@@ -447,12 +447,11 @@
   .gym-add-set-btn { width: 100%; padding: 7px; background: transparent; border: 1px dashed var(--border); border-radius: 8px; color: var(--text-muted); font-size: 12px; cursor: pointer; margin-top: 6px; }
   .gym-add-exercise-btn { width: 100%; padding: 14px; background: rgba(232,255,0,0.06); border: 1px dashed rgba(232,255,0,0.3); border-radius: 12px; color: var(--accent); font-size: 14px; cursor: pointer; margin-bottom: 16px; }
   .gym-save-btn { width: 100%; padding: 16px; background: var(--accent); color: var(--bg); border: none; border-radius: 12px; font-family: 'Bebas Neue', sans-serif; font-size: 22px; cursor: pointer; margin-top: 8px; }
-  .gym-stopwatch { position: fixed; bottom: calc(60px + env(safe-area-inset-bottom, 0px)); left: 0; right: 0; z-index: 15; background: var(--surface); border-top: 1px solid var(--border); padding: 10px 20px 12px; box-shadow: 0 -4px 20px rgba(0,0,0,0.35); }
-  #gym-screen:not(.active) .gym-stopwatch { display: none; }
-  .gym-stopwatch-time { font-family: 'Bebas Neue', sans-serif; font-size: 44px; color: var(--accent); text-align: center; line-height: 1; letter-spacing: 0.05em; }
+  .gym-stopwatch { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; margin-bottom: 12px; }
+  .gym-stopwatch-time { font-family: 'Bebas Neue', sans-serif; font-size: 48px; color: var(--accent); text-align: center; line-height: 1; letter-spacing: 0.05em; }
   .gym-stopwatch-time.running { color: var(--success); }
-  .gym-stopwatch-sub { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); margin-top: 2px; letter-spacing: 0.05em; }
-  .gym-stopwatch-btns { display: flex; gap: 8px; margin-top: 10px; }
+  .gym-stopwatch-sub { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); margin-top: 4px; letter-spacing: 0.05em; }
+  .gym-stopwatch-btns { display: flex; gap: 8px; margin-top: 12px; }
   .gym-sw-btn { flex: 1; padding: 12px; border: none; border-radius: 10px; font-family: 'Bebas Neue', sans-serif; font-size: 18px; cursor: pointer; transition: opacity 0.2s; }
   .gym-sw-btn.start { background: var(--success); color: var(--bg); }
   .gym-sw-btn.stop { background: var(--danger); color: white; }
@@ -905,19 +904,21 @@
 
 <!-- GYM SCREEN -->
 <div id="gym-screen" class="screen">
-  <div class="screen-header">
-    <button class="btn-back" onclick="showScreen(null)">←</button>
-    <div class="screen-title" data-i18n="screen_gym">💪 筋トレメモ</div>
-  </div>
-  <div class="gym-date-bar">
-    <button class="gym-date-nav" onclick="gymChangeDate(-1)">‹</button>
-    <span class="gym-date-label" id="gym-date-label"></span>
-    <button class="gym-date-nav" onclick="gymChangeDate(1)">›</button>
-  </div>
-  <div class="gym-action-bar">
-    <button class="gym-action-btn accent" onclick="openMySetModal()" data-i18n="gym_myset">📋 マイセット</button>
-    <button class="gym-action-btn" onclick="openTimer()" data-i18n="gym_timer">⏱ タイマー</button>
-    <button class="gym-action-btn" onclick="gymShare()" data-i18n="gym_share">📷 シェア</button>
+  <div style="position:sticky;top:0;z-index:10;background:var(--bg);">
+    <div class="screen-header" style="position:static;">
+      <button class="btn-back" onclick="showScreen(null)">←</button>
+      <div class="screen-title" data-i18n="screen_gym">💪 筋トレメモ</div>
+    </div>
+    <div class="gym-date-bar">
+      <button class="gym-date-nav" onclick="gymChangeDate(-1)">‹</button>
+      <span class="gym-date-label" id="gym-date-label"></span>
+      <button class="gym-date-nav" onclick="gymChangeDate(1)">›</button>
+    </div>
+    <div class="gym-action-bar">
+      <button class="gym-action-btn accent" onclick="openMySetModal()" data-i18n="gym_myset">📋 マイセット</button>
+      <button class="gym-action-btn" onclick="openTimer()" data-i18n="gym_timer">⏱ タイマー</button>
+      <button class="gym-action-btn" onclick="gymShare()" data-i18n="gym_share">📷 シェア</button>
+    </div>
   </div>
 
   <!-- 筋トレ分析パネル -->
