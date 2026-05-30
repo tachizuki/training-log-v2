@@ -4342,13 +4342,13 @@
         items.push({icon:'🚶', cls:'warn', text:t('wa_steps_low').replace('{0}',prevRec.steps.toLocaleString())});
       }
     }
-    // 有酸素合計（記録画面の有酸素 + 徒歩）が 0 より大きい場合のみ表示
-    if (_totalCardioKcal > 0) {
+    // 有酸素（記録画面の有酸素のみ。歩行は歩数インサイトで別表示）
+    if (_cardioKcal > 0) {
       const _memo = prevRec.cardioMemo ? ` (${prevRec.cardioMemo})` : '';
-      if (_totalCardioKcal >= 300) {
-        items.push({icon:'🚴', cls:'good', text:t('wa_cardio_high').replace('{0}',_totalCardioKcal) + _memo});
+      if (_cardioKcal >= 300) {
+        items.push({icon:'🚴', cls:'good', text:t('wa_cardio_high').replace('{0}',_cardioKcal) + _memo});
       } else {
-        items.push({icon:'🚴', cls:'', text:t('wa_cardio_low').replace('{0}',_totalCardioKcal) + _memo});
+        items.push({icon:'🚴', cls:'', text:t('wa_cardio_low').replace('{0}',_cardioKcal) + _memo});
       }
     }
     // カロリー収支（カロリー記録があれば常に表示・筋トレも含む）
