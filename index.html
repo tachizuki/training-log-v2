@@ -193,9 +193,9 @@
 
   .btn-submit { width: 100%; padding: 18px; background: var(--accent); color: var(--bg); border: none; border-radius: 12px; font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 0.1em; cursor: pointer; margin-top: 20px; transition: opacity 0.2s; }
   .btn-submit:active { opacity: 0.8; }
-  .settings-save-bar { display:none; position:fixed; bottom:60px; left:0; right:0; padding:12px 20px; background:var(--bg); border-top:2px solid var(--accent); z-index:19; }
-  .settings-save-bar.visible { display:block; }
-  .settings-save-bar button { width:100%; padding:14px; background:var(--accent); color:var(--bg); border:none; border-radius:12px; font-family:'Bebas Neue',sans-serif; font-size:20px; letter-spacing:0.1em; cursor:pointer; }
+  .settings-save-bar, .record-save-bar { display:none; position:fixed; bottom:60px; left:0; right:0; padding:12px 20px; background:var(--bg); border-top:2px solid var(--accent); z-index:19; }
+  .settings-save-bar.visible, .record-save-bar.visible { display:block; }
+  .settings-save-bar button, .record-save-bar button { width:100%; padding:14px; background:var(--accent); color:var(--bg); border:none; border-radius:12px; font-family:'Bebas Neue',sans-serif; font-size:20px; letter-spacing:0.1em; cursor:pointer; }
   .settings-section { border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: var(--surface); margin-bottom: 6px; }
   .settings-section-hdr { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent; }
   .settings-section-hdr:active { background: var(--surface2); }
@@ -778,6 +778,10 @@
 </div>
 
 <!-- RECORD SCREEN -->
+<div id="record-save-bar" class="record-save-bar">
+  <button onclick="saveRecord()" data-i18n="btn_save">保存する</button>
+</div>
+
 <div id="record-screen" class="screen">
   <div class="screen-header">
     <button class="btn-back" onclick="showScreen(null)">←</button>
@@ -791,48 +795,48 @@
     <div class="form-section">
       <div class="form-section-title" data-i18n="section_weight_sleep">⚖️ 体重・睡眠</div>
       <div class="form-grid">
-        <div class="form-group"><label class="form-label" data-i18n="label_weight">体重 (kg)</label><input type="number" class="form-input" id="rec-weight" placeholder="62.5" step="0.1"></div>
+        <div class="form-group"><label class="form-label" data-i18n="label_weight">体重 (kg)</label><input type="number" class="form-input" id="rec-weight" placeholder="62.5" step="0.1" oninput="markRecordChanged()"></div>
         <div class="form-group">
           <label class="form-label">😴 睡眠時間 (h) <span style="font-size:10px;color:var(--text-muted);">直接入力 or 就寝・起床から自動計算</span></label>
-          <input type="number" class="form-input" id="rec-sleep" placeholder="7.5" step="0.1">
+          <input type="number" class="form-input" id="rec-sleep" placeholder="7.5" step="0.1" oninput="markRecordChanged()">
         </div>
       </div>
       <div class="form-grid" style="margin-top:8px;">
         <div class="form-group">
           <label class="form-label">🌙 就寝時刻</label>
-          <input type="time" class="form-input" id="rec-bedtime" oninput="calcSleepFromBedWake('rec')">
+          <input type="time" class="form-input" id="rec-bedtime" oninput="calcSleepFromBedWake('rec');markRecordChanged()">
         </div>
         <div class="form-group">
           <label class="form-label">🌅 起床時刻</label>
-          <input type="time" class="form-input" id="rec-waketime" oninput="calcSleepFromBedWake('rec')">
+          <input type="time" class="form-input" id="rec-waketime" oninput="calcSleepFromBedWake('rec');markRecordChanged()">
         </div>
       </div>
     </div>
     <div class="form-section">
       <div class="form-section-title" data-i18n="section_pfc">🍽️ PFC</div>
       <div class="form-grid">
-        <div class="form-group"><label class="form-label" data-i18n="label_protein">タンパク質 (g)</label><input type="number" class="form-input" id="rec-p" placeholder="180" oninput="calcKcal()"></div>
-        <div class="form-group"><label class="form-label" data-i18n="label_fat">脂質 (g)</label><input type="number" class="form-input" id="rec-f" placeholder="40" oninput="calcKcal()"></div>
-        <div class="form-group"><label class="form-label" data-i18n="label_carbs">炭水化物 (g)</label><input type="number" class="form-input" id="rec-c" placeholder="180" oninput="calcKcal()"></div>
+        <div class="form-group"><label class="form-label" data-i18n="label_protein">タンパク質 (g)</label><input type="number" class="form-input" id="rec-p" placeholder="180" oninput="calcKcal();markRecordChanged()"></div>
+        <div class="form-group"><label class="form-label" data-i18n="label_fat">脂質 (g)</label><input type="number" class="form-input" id="rec-f" placeholder="40" oninput="calcKcal();markRecordChanged()"></div>
+        <div class="form-group"><label class="form-label" data-i18n="label_carbs">炭水化物 (g)</label><input type="number" class="form-input" id="rec-c" placeholder="180" oninput="calcKcal();markRecordChanged()"></div>
         <div class="form-group"><label class="form-label" data-i18n="label_kcal">カロリー (kcal)</label><input type="number" class="form-input" id="rec-kcal" data-i18n-ph="placeholder_kcal" placeholder="自動計算" readonly style="opacity:0.7"></div>
       </div>
     </div>
     <div class="form-section">
       <div class="form-section-title" data-i18n="section_salt">🧂 塩分</div>
-      <div class="form-group"><label class="form-label" data-i18n="label_salt">塩分 (g)</label><input type="number" class="form-input" id="rec-salt" placeholder="5.0" step="0.1"></div>
+      <div class="form-group"><label class="form-label" data-i18n="label_salt">塩分 (g)</label><input type="number" class="form-input" id="rec-salt" placeholder="5.0" step="0.1" oninput="markRecordChanged()"></div>
     </div>
     <div class="form-section">
       <div class="form-section-title" data-i18n="section_activity">🚶 活動・運動</div>
       <div class="form-group" style="margin-bottom:10px;">
         <label class="form-label" data-i18n="label_steps">歩数</label>
-        <input type="number" class="form-input" id="rec-steps" placeholder="8000">
+        <input type="number" class="form-input" id="rec-steps" placeholder="8000" oninput="markRecordChanged()">
       </div>
       <div id="activity-list" style="margin-bottom:10px;"></div>
       <button class="activity-add-btn" onclick="openActivityPicker()" data-i18n="btn_add_exercise">＋ 運動を追加</button>
     </div>
     <div class="form-section">
       <div class="form-section-title" data-i18n="section_salon">🌞 日サロ</div>
-      <div class="form-group"><label class="form-label" data-i18n="label_salon">日サロ時間 (分)</label><input type="number" class="form-input" id="rec-salon" placeholder="0"></div>
+      <div class="form-group"><label class="form-label" data-i18n="label_salon">日サロ時間 (分)</label><input type="number" class="form-input" id="rec-salon" placeholder="0" oninput="markRecordChanged()"></div>
     </div>
     <div class="form-section">
       <div class="form-section-title" data-i18n="section_training">💪 筋トレ部位</div>
@@ -853,13 +857,13 @@
     </div>
     <div class="form-section">
       <div class="form-section-title" data-i18n="section_memo">📝 メモ</div>
-      <div class="form-group full"><textarea class="form-input" id="rec-memo" data-i18n-ph="placeholder_memo" placeholder="体調・気づきなど（空欄可）"></textarea></div>
+      <div class="form-group full"><textarea class="form-input" id="rec-memo" data-i18n-ph="placeholder_memo" placeholder="体調・気づきなど（空欄可）" oninput="markRecordChanged()"></textarea></div>
     </div>
     <div class="form-section" id="gym-link-section-wrap">
       <div class="form-section-title" data-i18n="gym_link_title">💪 筋トレ連動</div>
       <div id="gym-link-section"></div>
     </div>
-    <button class="btn-submit" onclick="saveRecord()" data-i18n="btn_save">保存する</button>
+    <div style="height:80px;"></div><!-- record-save-bar のスペース確保 -->
   </div>
 </div>
 
@@ -1799,7 +1803,7 @@
       sw_start_prefix: '開始: ',
       sw_end_prefix: '終了: ',
       btn_add_exercise_gym: '＋ 種目を追加',
-      btn_back_save: '← 戻る（自動保存済み）',
+      btn_back_save: '保存する',
       prev_label: '前回',
       add_set: '＋ セットを追加',
       // gym picker
@@ -2255,7 +2259,7 @@
       sw_start_prefix: 'Start: ',
       sw_end_prefix: 'End: ',
       btn_add_exercise_gym: '+ Add Exercise',
-      btn_back_save: '← Back (Auto-saved)',
+      btn_back_save: 'Save',
       prev_label: 'Last',
       add_set: '+ Add Set',
       // gym picker
@@ -3487,6 +3491,10 @@
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     const nav = document.getElementById('bottom-nav');
     if (nav) nav.classList.remove('hidden');
+    if (id !== 'record-screen') {
+      const rb = document.getElementById('record-save-bar');
+      if (rb) rb.classList.remove('visible');
+    }
     document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
     if (!id) {
       document.getElementById('top-screen').style.display = 'flex';
@@ -3510,6 +3518,8 @@
 
   function loadRecordByDate(date) {
     if (!date) return;
+    const bar = document.getElementById('record-save-bar');
+    if (bar) bar.classList.remove('visible');
     const r = records.find(x => x.date === date);
     // データがない日付は全フィールドをクリア
     if (!r) {
@@ -3580,17 +3590,24 @@
     sleepEl.value = hours;
   }
 
+  function markRecordChanged() {
+    const bar = document.getElementById('record-save-bar');
+    if (bar) bar.classList.add('visible');
+  }
+
   function toggleTraining() {
     trainingOn = !trainingOn;
     document.getElementById('training-toggle').classList.toggle('on', trainingOn);
     document.getElementById('muscle-selector').style.display = trainingOn ? 'block' : 'none';
     if (!trainingOn) { selectedMuscles=[]; document.querySelectorAll('.muscle-btn').forEach(b=>b.classList.remove('selected')); }
+    markRecordChanged();
   }
 
   function toggleMuscle(btn) {
     const m = btn.dataset.muscle;
     if (btn.classList.contains('selected')) { btn.classList.remove('selected'); selectedMuscles=selectedMuscles.filter(x=>x!==m); }
     else { btn.classList.add('selected'); selectedMuscles.push(m); }
+    markRecordChanged();
   }
 
   function saveRecord() {
@@ -4407,28 +4424,35 @@
         items.push({icon:'🚶', cls:'warn', text:t('wa_steps_low').replace('{0}',prevRec.steps.toLocaleString())});
       }
     }
-    // 有酸素合計（ジム有酸素 + 徒歩）が 0 より大きい場合のみ表示
-    if (_totalCardioKcal > 0) {
+    // 有酸素（記録画面の有酸素のみ。歩行は歩数インサイトで別表示）
+    if (_cardioKcal > 0) {
       const _memo = prevRec.cardioMemo ? ` (${prevRec.cardioMemo})` : '';
-      if (_totalCardioKcal >= 300) {
-        items.push({icon:'🚴', cls:'good', text:t('wa_cardio_high').replace('{0}',_totalCardioKcal) + _memo});
+      if (_cardioKcal >= 300) {
+        items.push({icon:'🚴', cls:'good', text:t('wa_cardio_high').replace('{0}',_cardioKcal) + _memo});
       } else {
-        items.push({icon:'🚴', cls:'', text:t('wa_cardio_low').replace('{0}',_totalCardioKcal) + _memo});
+        items.push({icon:'🚴', cls:'', text:t('wa_cardio_low').replace('{0}',_cardioKcal) + _memo});
       }
-      // カロリー収支計算
-      if (prevRec.kcal) {
-        const bmr = getUserBMR() || 1700;
-        const totalBurn = bmr + _cardioKcal + _stepsKcal;
-        const balance = prevRec.kcal - totalBurn;
-        const balanceStr = (balance > 0 ? '+' : '') + Math.round(balance);
-        const burnDetail = t('wa_balance_bmr').replace('{0}',bmr).replace('{1}',_cardioKcal).replace('{2}',_stepsKcal);
-        if (balance < -500) {
-          items.push({icon:'📊', cls:'good', text:t('wa_balance_good').replace('{0}',balanceStr).replace('{1}',burnDetail)});
-        } else if (balance < 0) {
-          items.push({icon:'📊', cls:'', text:t('wa_balance_ok').replace('{0}',balanceStr).replace('{1}',burnDetail)});
-        } else {
-          items.push({icon:'📊', cls:'warn', text:t('wa_balance_over').replace('{0}',balanceStr).replace('{1}',burnDetail)});
-        }
+    }
+    // カロリー収支（カロリー記録があれば常に表示・筋トレも含む）
+    if (prevRec.kcal) {
+      const _prevBW = prevRec.weight || r.weight || 63;
+      const _gym = calcPrevGymKcal(prevKey, _prevBW);
+      const bmr = getUserBMR() || 1700;
+      const totalBurn = bmr + _cardioKcal + _stepsKcal + _gym.total;
+      const balance = prevRec.kcal - totalBurn;
+      const balanceStr = (balance > 0 ? '+' : '') + Math.round(balance);
+      const _parts = [LANG === 'ja' ? `基礎代謝${bmr}` : `BMR ${bmr}`];
+      if (_cardioKcal > 0) _parts.push(LANG === 'ja' ? `有酸素${_cardioKcal}` : `cardio ${_cardioKcal}`);
+      if (_stepsKcal > 0)  _parts.push(LANG === 'ja' ? `歩行${_stepsKcal}` : `steps ${_stepsKcal}`);
+      if (_gym.cardioKcal > 0)  _parts.push(LANG === 'ja' ? `ジム有酸素${_gym.cardioKcal}` : `gym cardio ${_gym.cardioKcal}`);
+      if (_gym.weightKcal > 0) _parts.push(LANG === 'ja' ? `筋トレ${_gym.weightKcal}` : `weights ${_gym.weightKcal}`);
+      const burnDetail = _parts.join('+');
+      if (balance < -500) {
+        items.push({icon:'📊', cls:'good', text:t('wa_balance_good').replace('{0}',balanceStr).replace('{1}',burnDetail)});
+      } else if (balance < 0) {
+        items.push({icon:'📊', cls:'', text:t('wa_balance_ok').replace('{0}',balanceStr).replace('{1}',burnDetail)});
+      } else {
+        items.push({icon:'📊', cls:'warn', text:t('wa_balance_over').replace('{0}',balanceStr).replace('{1}',burnDetail)});
       }
     }
 
@@ -5781,7 +5805,21 @@
     document.getElementById('gym-prev-date').textContent = t('prev_prefix') + prev.date;
 
     const setsEl = document.getElementById('gym-prev-sets');
+    const CARDIO_KW2 = ['ランニング','ウォーキング','自転車','トレッドミル','縄跳び','水泳','エアロバイク','有酸素','ジョギング'];
+    const isCardio = CARDIO_KW2.some(kw => name.indexOf(kw) >= 0);
+
     setsEl.innerHTML = prev.sets.map((s, i) => {
+      if (isCardio) {
+        const parts = [];
+        if (s.incline != null && s.incline !== '') parts.push(`${t('cardio_incline')} ${s.incline}`);
+        if (s.speed   != null && s.speed   !== '') parts.push(`${t('cardio_speed')} ${s.speed}`);
+        if (s.distance!= null && s.distance!== '') parts.push(`${t('cardio_distance')} ${s.distance}`);
+        if (s.duration!= null && s.duration!== '') parts.push(`${t('cardio_duration')} ${s.duration}`);
+        return `<div class="gym-prev-set-row">
+          <span class="gym-prev-set-num">${i+1}</span>
+          <span class="gym-prev-set-val" style="font-size:12px;">${parts.length ? parts.join(' / ') : '—'}</span>
+        </div>`;
+      }
       const rm = calcRM(s.weight, s.reps, name);
       return `<div class="gym-prev-set-row">
         <span class="gym-prev-set-num">${i+1}</span>
@@ -6178,6 +6216,7 @@
   let timerRunning = false;
   let timerStartTime = null;   // タイマー開始時刻（バックグラウンド後も正確に残り時間を計算）
   let timerStartRemain = 90;   // タイマー開始時の残り秒数
+  let _timerDoneFired = false; // 二重呼び出し防止フラグ
 
   function openTimer() {
     document.getElementById('timer-overlay').classList.add('open');
@@ -6237,6 +6276,7 @@
         timerRemain = timerSec;
         document.getElementById('timer-display').classList.remove('done');
       }
+      _timerDoneFired = false;
       timerRunning = true;
       timerStartTime = Date.now();
       timerStartRemain = timerRemain;
@@ -6266,6 +6306,8 @@
 
   // ネイティブ Android から呼ばれるコールバック（またはWeb完了時）
   function onTimerDone() {
+    if (_timerDoneFired) return; // JS完了とネイティブ放送の二重呼び出しを防ぐ
+    _timerDoneFired = true;
     clearInterval(timerInterval);
     timerInterval = null;
     timerRunning = false;
@@ -6275,24 +6317,27 @@
     document.getElementById('timer-start-btn').textContent = t('timer_start');
     document.getElementById('timer-display').classList.add('done');
     document.getElementById('timer-label').textContent = t('timer_done');
-    // Webバイブフォールバック（Androidは native 側でバイブ済み）
-    if (typeof AndroidBridge === 'undefined' && navigator.vibrate) {
-      navigator.vibrate([300,100,300,100,300,100,300]);
-    }
-    // ビープ音
-    try {
-      const actx = new (window.AudioContext || window.webkitAudioContext)();
-      [0, 0.4, 0.8, 1.2, 1.6, 2.0, 2.4, 2.8, 3.2].forEach(d => {
-        const osc = actx.createOscillator();
-        const gain = actx.createGain();
-        osc.connect(gain); gain.connect(actx.destination);
-        osc.type = 'sine'; osc.frequency.value = 880;
-        gain.gain.setValueAtTime(0.5, actx.currentTime + d);
-        gain.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + d + 0.3);
-        osc.start(actx.currentTime + d);
-        osc.stop(actx.currentTime + d + 0.3);
+    // Android はネイティブ側でバイブ＆音済み。ブラウザのみ実行
+    if (typeof AndroidBridge === 'undefined') {
+      if (navigator.vibrate) navigator.vibrate([300,100,300,100,300,100,300]);
+      // AudioContext の未来スケジュールはバックグラウンドで止まるため setTimeout で分散
+      const delays = [0, 400, 800, 1200, 1600, 2000, 2400, 2800, 3200];
+      delays.forEach(d => {
+        setTimeout(() => {
+          try {
+            const actx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = actx.createOscillator();
+            const gain = actx.createGain();
+            osc.connect(gain); gain.connect(actx.destination);
+            osc.type = 'sine'; osc.frequency.value = 880;
+            gain.gain.setValueAtTime(0.5, actx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + 0.3);
+            osc.start(actx.currentTime);
+            osc.stop(actx.currentTime + 0.3);
+          } catch(e) {}
+        }, d);
       });
-    } catch(e) {}
+    }
   }
 
   function updateTimerDisplay() {
@@ -6663,6 +6708,7 @@
     recActivities.push({name, met, icon, minutes:null, kcal:0});
     renderActivityList();
     document.getElementById('activity-picker').classList.remove('open');
+    markRecordChanged();
   }
 
   function addCustomActivity() {
@@ -6672,6 +6718,7 @@
     recActivities.push({name, kcalPerMin, icon:'🏃', minutes:null, kcal:0});
     renderActivityList();
     document.getElementById('activity-picker').classList.remove('open');
+    markRecordChanged();
   }
 
   // handleAndroidBackにアクティビティピッカーを追加（既存のprofile-modalの前）
@@ -6845,6 +6892,51 @@
     const rec = records.find(r=>r.date===today);
     const weight = rec?.weight || null;
     return calcBMR(userProfile.height, weight, userProfile.age, userProfile.sex);
+  }
+
+  function calcPrevGymKcal(dateKey, bodyWeight) {
+    const bw = bodyWeight || 63;
+    const CARDIO_KW = ['ランニング','ウォーキング','自転車','トレッドミル','縄跳び','水泳','エアロバイク','有酸素','ジョギング'];
+    const dayKeys = Object.keys(gymData).filter(k => k.split('_')[0] === dateKey);
+    let exercises = [];
+    dayKeys.forEach(k => { exercises = exercises.concat(gymData[k].exercises || []); });
+
+    let weightSets = 0;
+    let cardioKcal = 0;
+
+    exercises.forEach(ex => {
+      const isCardio = CARDIO_KW.some(kw => ex.name.indexOf(kw) >= 0);
+      if (isCardio) {
+        (ex.sets || []).forEach(s => {
+          const dur = parseFloat(s.duration) || 0;
+          const speed = parseFloat(s.speed) || 0;
+          const dist = parseFloat(s.distance) || 0;
+          if (dist > 0) {
+            // 距離が入力済み: 体重 × 距離 × 1.036
+            cardioKcal += Math.round(bw * dist * 1.036);
+          } else if (speed > 0 && dur > 0) {
+            // 速度 × 時間 → 距離換算
+            const calcDist = speed * (dur / 60);
+            cardioKcal += Math.round(bw * calcDist * 1.036);
+          } else if (dur > 0) {
+            // 時間のみ: MET × 体重 × 時間
+            const met = /縄跳び/.test(ex.name) ? 11.0
+                      : /水泳/.test(ex.name) ? 8.0
+                      : /ウォーキング/.test(ex.name) ? 4.0
+                      : 7.0;
+            cardioKcal += Math.round(met * bw * (dur / 60));
+          }
+        });
+      } else {
+        weightSets += (ex.sets || []).length;
+      }
+    });
+
+    const weightKcal = weightSets > 0
+      ? Math.round(5.0 * bw * (weightSets * 2.5 / 60))
+      : 0;
+
+    return { weightKcal, cardioKcal, total: weightKcal + cardioKcal, weightSets };
   }
 
   // 栄養目標のカロリー値をP/F/Cから自動計算してプレビュー表示

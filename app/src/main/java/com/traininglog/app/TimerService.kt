@@ -8,9 +8,13 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
+import android.media.AudioManager
+import android.media.ToneGenerator
 import android.os.Build
 import android.os.CountDownTimer
+import android.os.Handler
 import android.os.IBinder
+import android.os.Looper
 import android.os.PowerManager
 import android.os.VibrationEffect
 import android.os.Vibrator
@@ -23,6 +27,7 @@ class TimerService : Service() {
     private var totalSeconds: Int = 90
     private lateinit var notificationManager: NotificationManager
     private var wakeLock: PowerManager.WakeLock? = null
+    private var toneGenerator: ToneGenerator? = null
 
     companion object {
         const val CHANNEL_ID    = "timer_channel"
@@ -79,9 +84,11 @@ class TimerService : Service() {
             }
             override fun onFinish() {
                 vibrate()
+                playAlarmTone()
                 stopForeground(STOP_FOREGROUND_REMOVE)
-                releaseWakeLock()
+                // broadcast BEFORE releasing wake lock so CPU stays awake until JS is notified
                 sendBroadcast(Intent(BROADCAST_DONE))
+                releaseWakeLock()
                 stopSelf()
             }
         }.start()
@@ -89,6 +96,8 @@ class TimerService : Service() {
 
     private fun stopTimer() {
         countDownTimer?.cancel()
+        toneGenerator?.release()
+        toneGenerator = null
         releaseWakeLock()
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
@@ -109,6 +118,30 @@ class TimerService : Service() {
                 v.vibrate(pattern, -1)
             }
         }
+    }
+
+    // Web Audio は背景で suspend されるため、ネイティブで音を鳴らす
+    private fun playAlarmTone() {
+        try {
+            toneGenerator?.release()
+            val tg = ToneGenerator(AudioManager.STREAM_ALARM, 90)
+            toneGenerator = tg
+            val handler = Handler(Looper.getMainLooper())
+            var count = 0
+            val beep = object : Runnable {
+                override fun run() {
+                    if (count < 9) {
+                        tg.startTone(ToneGenerator.TONE_PROP_BEEP, 280)
+                        count++
+                        handler.postDelayed(this, 400)
+                    } else {
+                        tg.release()
+                        toneGenerator = null
+                    }
+                }
+            }
+            handler.post(beep)
+        } catch (e: Exception) {}
     }
 
     private fun buildNotification(remaining: Int, total: Int): Notification {
@@ -158,9 +191,12 @@ class TimerService : Service() {
 
     override fun onDestroy() {
         countDownTimer?.cancel()
+        toneGenerator?.release()
+        toneGenerator = null
         releaseWakeLock()
         super.onDestroy()
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
 }
+
