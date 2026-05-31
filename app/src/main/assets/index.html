@@ -165,7 +165,7 @@
 
   .btn-submit { width: 100%; padding: 18px; background: var(--accent); color: var(--bg); border: none; border-radius: 12px; font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 0.1em; cursor: pointer; margin-top: 20px; transition: opacity 0.2s; }
   .btn-submit:active { opacity: 0.8; }
-  .settings-save-bar, .record-save-bar { display:none; position:fixed; bottom:60px; left:0; right:0; padding:12px 20px; background:var(--bg); border-top:2px solid var(--accent); z-index:19; }
+  .settings-save-bar, .record-save-bar { display:none; position:fixed; bottom:calc(60px + env(safe-area-inset-bottom)); left:0; right:0; padding:12px 20px; background:var(--bg); border-top:2px solid var(--accent); z-index:19; }
   .settings-save-bar.visible, .record-save-bar.visible { display:block; }
   .settings-save-bar button, .record-save-bar button { width:100%; padding:14px; background:var(--accent); color:var(--bg); border:none; border-radius:12px; font-family:'Bebas Neue',sans-serif; font-size:20px; letter-spacing:0.1em; cursor:pointer; }
   .settings-section { border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: var(--surface); margin-bottom: 6px; }
@@ -3463,6 +3463,21 @@
     // ボトムナビ表示
     const _nav = document.getElementById('bottom-nav');
     if (_nav) _nav.classList.remove('hidden');
+
+    // キーボード表示時に保存バーをキーボードの上に移動 (Android WebView adjustResize バグ対策)
+    if (window.visualViewport) {
+      const _adjustSaveBars = () => {
+        const vv = window.visualViewport;
+        const kbHeight = Math.max(0, window.innerHeight - vv.height);
+        const bar = document.getElementById('record-save-bar');
+        const sbar = document.getElementById('settings-save-bar');
+        [bar, sbar].forEach(el => {
+          if (!el) return;
+          el.style.bottom = kbHeight > 100 ? kbHeight + 'px' : '';
+        });
+      };
+      window.visualViewport.addEventListener('resize', _adjustSaveBars);
+    }
 
     // バックグラウンド復帰時に大会カウントダウンを更新（日付が変わっている可能性）
     if (!window._visListenerSet) {
