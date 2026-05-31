@@ -4636,7 +4636,7 @@
     }
     const now = getTodayDate();
     const sunday = new Date(now);
-    sunday.setDate(now.getDate() - now.getDay());
+    sunday.setDate(now.getDate() - now.getDay() + weekCalOffset * 7);
     sunday.setHours(0,0,0,0);
     const saturday = new Date(sunday);
     saturday.setDate(sunday.getDate() + 6);
@@ -4647,7 +4647,7 @@
     const weightRecs = weekRecords.filter(r => r.weight);
     const avgWeight = weightRecs.length ? (weightRecs.reduce((s,r)=>s+r.weight,0)/weightRecs.length).toFixed(1) : null;
 
-    const weekKey = getWeekKey(now);
+    const weekKey = getWeekKey(sunday);
     const goals = JSON.parse(localStorage.getItem('weekly_goals')||'{}');
     const goalWeight = goals[weekKey] || null;
 
@@ -4657,7 +4657,8 @@
     const pRecs = weekRecords.filter(r => r.p);
     const avgP = pRecs.length ? Math.round(pRecs.reduce((s,r)=>s+r.p,0)/pRecs.length) : null;
 
-    const gymCount = Object.keys(gymData).filter(d => d >= weekStart && d <= weekEnd && gymData[d]?.sessions?.length > 0).length;
+    const gymDates = new Set(Object.keys(gymData).filter(k => { const d = k.split('_')[0]; return d >= weekStart && d <= weekEnd && gymData[k]?.exercises?.length > 0; }).map(k => k.split('_')[0]));
+    const gymCount = gymDates.size;
 
     const waterEntries = Object.entries(waterData).filter(([d]) => d >= weekStart && d <= weekEnd);
     const avgWater = waterEntries.length ? Math.round(waterEntries.reduce((s,[,v])=>s+(v.total||0),0)/waterEntries.length) : null;
