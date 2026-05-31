@@ -4441,11 +4441,10 @@
       const totalBurn = bmr + _cardioKcal + _stepsKcal + _gym.total;
       const balance = prevRec.kcal - totalBurn;
       const balanceStr = (balance > 0 ? '+' : '') + Math.round(balance);
+      const _allCardio = _cardioKcal + _stepsKcal + _gym.cardioKcal;
       const _parts = [LANG === 'ja' ? `基礎代謝${bmr}` : `BMR ${bmr}`];
-      if (_cardioKcal > 0) _parts.push(LANG === 'ja' ? `有酸素${_cardioKcal}` : `cardio ${_cardioKcal}`);
-      if (_stepsKcal > 0)  _parts.push(LANG === 'ja' ? `歩行${_stepsKcal}` : `steps ${_stepsKcal}`);
-      if (_gym.cardioKcal > 0)  _parts.push(LANG === 'ja' ? `ジム有酸素${_gym.cardioKcal}` : `gym cardio ${_gym.cardioKcal}`);
-      if (_gym.weightKcal > 0) _parts.push(LANG === 'ja' ? `筋トレ${_gym.weightKcal}` : `weights ${_gym.weightKcal}`);
+      if (_allCardio > 0)       _parts.push(LANG === 'ja' ? `有酸素${_allCardio}` : `cardio ${_allCardio}`);
+      if (_gym.weightKcal > 0)  _parts.push(LANG === 'ja' ? `筋トレ${_gym.weightKcal}` : `weights ${_gym.weightKcal}`);
       const burnDetail = _parts.join('+');
       if (balance < -500) {
         items.push({icon:'📊', cls:'good', text:t('wa_balance_good').replace('{0}',balanceStr).replace('{1}',burnDetail)});
