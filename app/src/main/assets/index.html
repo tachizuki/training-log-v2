@@ -3466,15 +3466,22 @@
 
     // キーボード表示時に保存バーをキーボードの上に移動 (Android WebView adjustResize バグ対策)
     if (window.visualViewport) {
+      let _kbWasOpen = false;
       const _adjustSaveBars = () => {
         const vv = window.visualViewport;
         const kbHeight = Math.max(0, window.innerHeight - vv.height);
+        const isOpen = kbHeight > 100;
         const bar = document.getElementById('record-save-bar');
         const sbar = document.getElementById('settings-save-bar');
         [bar, sbar].forEach(el => {
           if (!el) return;
-          el.style.bottom = kbHeight > 100 ? kbHeight + 'px' : '';
+          el.style.bottom = isOpen ? kbHeight + 'px' : '';
         });
+        if (_kbWasOpen && !isOpen) {
+          // キーボードが閉じた — adjustPan によるスクロールオフセットをリセット
+          setTimeout(() => window.scrollTo(0, 0), 50);
+        }
+        _kbWasOpen = isOpen;
       };
       window.visualViewport.addEventListener('resize', _adjustSaveBars);
     }
