@@ -8,6 +8,34 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>PhysiqueLog</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<!-- Firebase JS SDK（ブラウザからのログイン用・Androidは native SDK を使用） -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+(function() {
+  // Android WebView では native Firebase SDK を使うため初期化しない
+  if (typeof Android !== 'undefined' || typeof AndroidBridge !== 'undefined') return;
+  try {
+    firebase.initializeApp({
+      apiKey:            "AIzaSyA81R9NwUI81cQO-m1mUjWFwSsXYeZ3J90",
+      authDomain:        "training-log-ccea0.firebaseapp.com",
+      projectId:         "training-log-ccea0",
+      storageBucket:     "training-log-ccea0.firebasestorage.app",
+      messagingSenderId: "211414940177",
+      appId:             "1:211414940177:web:0558ed93c9a3748b4fcfb0"
+    });
+    firebase.auth().onAuthStateChanged(function(user) {
+      if (user) {
+        if (typeof onFirebaseSignIn === 'function')
+          onFirebaseSignIn(user.uid, user.displayName || '', user.email || '');
+      } else {
+        if (typeof onFirebaseSignOut === 'function') onFirebaseSignOut();
+      }
+    });
+  } catch(e) { console.warn('Firebase init error:', e); }
+})();
+</script>
 
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+JP:wght@300;400;500;700&display=swap');
@@ -393,11 +421,10 @@
   .gym-prev-set-assist { font-size: 10px; color: #ff8c42; }
   .gym-prev-apply-btn { width: 100%; padding: 14px; background: var(--accent2); color: var(--bg); border: none; border-radius: 12px; font-family: 'Bebas Neue', sans-serif; font-size: 20px; cursor: pointer; margin-top: 16px; }
   .gym-prev-apply-btn.partial { background: var(--surface2); color: var(--text-muted); border: 1px solid var(--border); margin-top: 8px; font-size: 16px; }
-  .gym-exercise-card { position: relative; }
-
   .gym-move-btn { background:var(--surface2); border:1px solid var(--border); border-radius:6px; color:var(--text-muted); font-size:13px; width:26px; height:26px; display:flex; align-items:center; justify-content:center; cursor:pointer; padding:0; line-height:1; }
   .gym-move-btn:active { background:var(--accent); color:var(--bg); border-color:var(--accent); }
   .gym-move-btn:disabled { opacity:0.2; cursor:default; }
+  .gym-exercise-card { transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s; position: relative; }
   .gym-set-header { display: grid; grid-template-columns: 28px 1fr 1fr 50px 24px; gap: 4px; margin-bottom: 4px; }
   .gym-set-header-label { font-size: 9px; color: var(--text-muted); text-align: center; letter-spacing: 0.05em; }
   .gym-set-row { display: grid; grid-template-columns: 28px 1fr 1fr 50px 24px; gap: 4px; align-items: center; margin-bottom: 5px; }
@@ -658,6 +685,7 @@
     background: none; border: none;
     color: var(--text-muted); font-size: 13px;
     cursor: pointer; padding: 4px; text-decoration: underline;
+    width: 100%; text-align: center;
   }
   .ob-login-btn {
     width: 100%; padding: 15px;
@@ -743,6 +771,8 @@
         <div class="today-stat"><span class="today-stat-label">PROTEIN</span><span class="today-stat-value cyan" id="ts-protein">— g</span></div>
         <div class="today-stat"><span class="today-stat-label">WATER</span><span class="today-stat-value white" id="ts-water">— ml</span></div>
       </div>
+    </div>
+
     </div>
   </div>
 </div>
@@ -922,7 +952,6 @@
     <div id="gym-exercise-list"></div>
     <button class="gym-add-exercise-btn" onclick="openGymPicker()" data-i18n="btn_add_exercise_gym">＋ 種目を追加</button>
     <button class="gym-save-btn" onclick="saveGym()" data-i18n="btn_back_save">← 戻る（自動保存済み）</button>
-
   </div>
 </div>
 
@@ -1136,16 +1165,15 @@
   <div class="paywall-sheet">
     <div style="font-size:36px;margin-bottom:10px;">🔓</div>
     <div style="font-family:'Bebas Neue';font-size:30px;color:var(--accent);letter-spacing:0.1em;margin-bottom:6px;">PREMIUM</div>
-    <div style="font-size:15px;color:var(--text);font-weight:700;margin-bottom:6px;" data-i18n="paywall_unlock">大会準備モードを解放する</div>
-    <div style="font-size:13px;color:var(--text-muted);margin-bottom:20px;line-height:1.7;" id="paywall-desc-text" data-i18n="paywall_desc_html">大会までのカウントダウン・ロードマップ・<br>週レポートなど、競技者向け機能が解放されます。</div>
+    <div style="font-size:15px;color:var(--text);font-weight:700;margin-bottom:6px;" data-i18n="paywall_unlock">全期間のデータを解放する</div>
+    <div style="font-size:13px;color:var(--text-muted);margin-bottom:20px;line-height:1.7;" id="paywall-desc-text">無料プランは直近30日の履歴が対象です。<br>プレミアムで大会準備のすべての記録を<br>いつでも振り返れます。</div>
     <div style="background:var(--surface2);border-radius:14px;padding:16px;margin-bottom:14px;text-align:left;">
-      <div class="paywall-section-title">🏆 <span data-i18n="paywall_unlocked_features">大会競技者向け機能を解放</span></div>
-      <div class="paywall-feature"><span class="paywall-feature-icon">⏳</span><span class="paywall-feature-text" data-i18n="paywall_f1">大会までのカウントダウン</span><span class="paywall-feature-badge" data-i18n="paywall_unlock_badge">解放</span></div>
-      <div class="paywall-feature"><span class="paywall-feature-icon">🗺</span><span class="paywall-feature-text" data-i18n="paywall_f2">大会ロードマップ（体重変動分析）</span><span class="paywall-feature-badge" data-i18n="paywall_unlock_badge">解放</span></div>
-      <div class="paywall-feature"><span class="paywall-feature-icon">📋</span><span class="paywall-feature-text" data-i18n="paywall_f3">週レポート・週目標管理</span><span class="paywall-feature-badge" data-i18n="paywall_unlock_badge">解放</span></div>
-      <div class="paywall-feature"><span class="paywall-feature-icon">📊</span><span class="paywall-feature-text" data-i18n="paywall_f4">無制限の履歴閲覧</span><span class="paywall-feature-badge" data-i18n="paywall_unlock_badge">解放</span></div>
-      <div class="paywall-feature"><span class="paywall-feature-icon">☁️</span><span class="paywall-feature-text" data-i18n="paywall_f5">複数端末のクラウド同期</span><span class="paywall-feature-badge" data-i18n="paywall_unlock_badge">解放</span></div>
-      <div style="margin-top:10px;font-size:11px;color:var(--text-muted);text-align:left;background:rgba(0,255,136,0.05);border:1px solid rgba(0,255,136,0.15);border-radius:8px;padding:8px 10px;line-height:1.6;" data-i18n="paywall_free_note">✓ 体重・食事・水分・筋トレの記録と筋トレ分析は無料でご利用いただけます。</div>
+      <div class="paywall-section-title">🔓 <span data-i18n="paywall_unlocked_features">プレミアム登録で解放される機能</span></div>
+      <div class="paywall-feature"><span class="paywall-feature-icon">📊</span><span class="paywall-feature-text" data-i18n="paywall_f1">無制限の履歴閲覧・分析</span><span class="paywall-feature-badge" data-i18n="paywall_unlock_badge">解放</span></div>
+      <div class="paywall-feature"><span class="paywall-feature-icon">☁️</span><span class="paywall-feature-text" data-i18n="paywall_f2">複数端末のクラウド同期</span><span class="paywall-feature-badge" data-i18n="paywall_unlock_badge">解放</span></div>
+      <div class="paywall-feature"><span class="paywall-feature-icon">🗺</span><span class="paywall-feature-text" data-i18n="paywall_f3">大会ロードマップ</span><span class="paywall-feature-badge" data-i18n="paywall_unlock_badge">解放</span></div>
+      <div class="paywall-feature"><span class="paywall-feature-icon">📋</span><span class="paywall-feature-text" data-i18n="paywall_f4">週レポート</span><span class="paywall-feature-badge" data-i18n="paywall_unlock_badge">解放</span></div>
+      <div class="paywall-feature"><span class="paywall-feature-icon">💪</span><span class="paywall-feature-text" data-i18n="paywall_f5">筋トレ分析(RM・停滞検知)</span><span class="paywall-feature-badge" data-i18n="paywall_unlock_badge">解放</span></div>
     </div>
     <div style="background:rgba(0,255,136,0.08);border:1px solid rgba(0,255,136,0.25);border-radius:10px;padding:10px 12px;margin-bottom:14px;font-size:12px;color:var(--success);text-align:center;line-height:1.6;" data-i18n="paywall_trial">🎁 初回登録は <strong>14日間 無料</strong>。期間内のキャンセルなら課金なし</div>
     <button onclick="purchasePremium()" style="width:100%;padding:16px;background:var(--accent);color:var(--bg);border:none;border-radius:14px;font-size:16px;font-weight:700;cursor:pointer;margin-bottom:10px;" data-i18n="paywall_price">14日間無料で試す</button>
@@ -1362,6 +1390,9 @@
         <button id="auth-btn" onclick="firebaseSignIn()" style="width:100%;padding:10px;background:var(--accent);color:var(--bg);border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;" data-i18n="btn_google_login">Googleでログイン</button>
       </div>
     </div>
+
+    <!-- アプリを評価する（常時表示） -->
+    <button onclick="rateApp()" style="width:100%;padding:13px;background:var(--surface2);border:1px solid var(--accent);border-radius:12px;color:var(--text);font-size:14px;font-weight:700;cursor:pointer;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:6px;">⭐ アプリを評価する</button>
 
     <!-- アコーディオンリスト -->
     <div class="settings-list">
@@ -1707,7 +1738,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-  const APP_VERSION = 'v20260522a';
+  const APP_VERSION = 'v20260518b';
 
   // ==================
   // i18n
@@ -1828,19 +1859,15 @@
       chart_pfc: '🥩 PFC推移 (g)',
       chart_water: '💧 水分推移 (ml)',
       // paywall
-      paywall_unlock: '大会準備モードを解放する',
-      paywall_unlocked_features: '大会競技者向け機能を解放',
+      paywall_unlock: '全期間のデータを解放する',
+      paywall_unlocked_features: 'プレミアム登録で解放される機能',
       paywall_unlock_badge: '解放',
-      paywall_desc: '大会までのカウントダウン・ロードマップ・\n週レポートなど、競技者向け機能が解放されます。',
-      paywall_f1: '大会までのカウントダウン',
-      paywall_f2: '大会ロードマップ（体重変動分析）',
-      paywall_f3: '週レポート・週目標管理',
-      paywall_f4: '無制限の履歴閲覧',
-      paywall_f5: '複数端末のクラウド同期',
-      paywall_free_note: '✓ 体重・食事・水分・筋トレの記録と筋トレ分析は無料でご利用いただけます。',
-      profile_contest_section: '🏆 大会情報（競技者向け）',
-      label_peak_date: '🏁 仕上げ日（ピーク日）',
-      peak_date_hint: '未設定なら大会日が使われます',
+      paywall_desc: '無料プランは直近30日の履歴が対象です。\nプレミアムで大会準備のすべての記録を\nいつでも振り返れます。',
+      paywall_f1: '無制限の履歴閲覧・分析',
+      paywall_f2: '複数端末のクラウド同期',
+      paywall_f3: '大会ロードマップ',
+      paywall_f4: '週レポート',
+      paywall_f5: '筋トレ分析(RM・停滞検知)',
       paywall_trial: '🎁 初回登録は 14日間 無料。期間内のキャンセルなら課金なし',
       paywall_price: '14日間無料で試す',
       paywall_price_note: '期間後は ¥400 / 月（いつでも解約可）',
@@ -2169,11 +2196,10 @@
       days_to_contest: 'DAYS TO CONTEST',
       // bottom nav
       nav_home: 'ホーム', nav_record: '記録', nav_water: '水分', nav_gym: '筋トレ', nav_view: '表示', nav_settings: '設定',
-      // gym link section (record screen)
+      // gym link section
       gym_link_title: '💪 筋トレ連動',
       gym_link_has_record: '記録済み', gym_link_no_record: '本日の筋トレ記録なし',
       gym_link_open: '開く', gym_link_record: '💪 記録する',
-      // gym summary on list card
       gym_summary_title: '💪 筋トレ', gym_summary_sets_suffix: 'セット', gym_summary_ex_suffix: '種目',
     },
     en: {
@@ -2289,19 +2315,15 @@
       chart_pfc: '🥩 PFC Trend (g)',
       chart_water: '💧 Hydration Trend (ml)',
       // paywall
-      paywall_unlock: 'Unlock Contest Prep Mode',
-      paywall_unlocked_features: 'Unlock features for contest competitors',
+      paywall_unlock: 'Unlock Full History',
+      paywall_unlocked_features: 'Features unlocked with Premium',
       paywall_unlock_badge: 'UNLOCK',
-      paywall_desc: 'Unlock contest countdown, roadmap,\nweekly report and other competitor-focused features.',
-      paywall_f1: 'Contest countdown',
-      paywall_f2: 'Contest roadmap (weight trajectory)',
-      paywall_f3: 'Weekly report & week-target tracking',
-      paywall_f4: 'Unlimited history',
-      paywall_f5: 'Multi-device cloud sync',
-      paywall_free_note: '✓ Weight, food, water, training logs and training analytics are always free.',
-      profile_contest_section: '🏆 Contest info (for competitors)',
-      label_peak_date: '🏁 Peak Date',
-      peak_date_hint: 'If unset, contest date is used',
+      paywall_desc: 'Free plan includes the last 30 days.\nGo Premium to access all your contest prep records anytime.',
+      paywall_f1: 'Unlimited history & analytics',
+      paywall_f2: 'Multi-device cloud sync',
+      paywall_f3: 'Contest roadmap',
+      paywall_f4: 'Weekly report',
+      paywall_f5: 'Training analytics (1RM & plateau detection)',
       paywall_trial: '🎁 14-day free trial. Cancel anytime before charge',
       paywall_price: 'Start 14-day free trial',
       paywall_price_note: 'Then $2.99 / month. Cancel anytime',
@@ -2630,11 +2652,10 @@
       days_to_contest: 'DAYS TO CONTEST',
       // bottom nav
       nav_home: 'Home', nav_record: 'Log', nav_water: 'Water', nav_gym: 'Gym', nav_view: 'View', nav_settings: 'Settings',
-      // gym link section (record screen)
+      // gym link section
       gym_link_title: '💪 Gym Link',
       gym_link_has_record: 'Logged', gym_link_no_record: 'No workout today',
       gym_link_open: 'Open', gym_link_record: '💪 Log Workout',
-      // gym summary on list card
       gym_summary_title: '💪 Gym', gym_summary_sets_suffix: ' sets', gym_summary_ex_suffix: ' ex',
     }
   };
@@ -2988,7 +3009,7 @@
       const gasUrl = CONTACT_GAS_URL + '?payload=' + encodeURIComponent(JSON.stringify(payload));
       fetch(gasUrl, { method: 'GET', mode: 'no-cors' })
         .then(() => onContactSent(true))
-      .catch(() => onContactSent(false, 'ネットワークエラーが発生しました'));
+        .catch(() => onContactSent(false, 'ネットワークエラーが発生しました'));
       return;
     }
 
@@ -3004,7 +3025,7 @@
       return;
     }
 
-    // フォールバック: メールアプリ（Android外環境用）
+    // ③ mailto（上記いずれも使えない環境用）
     const catLabel = { bug:'[不具合]', feature:'[機能要望]', payment:'[課金]', account:'[アカウント]', other:'[その他]' }[cat] || '[その他]';
     const meta = '\n\n----- システム情報 -----\nアプリ: PhysiqueLog\nバージョン: ' + payload.meta.version + '\nログイン: ' + payload.meta.loggedIn + '\nプレミアム: ' + payload.meta.premium + '\n言語: ' + payload.meta.lang;
     const mailto = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(catLabel + ' ' + subjInput)}&body=${encodeURIComponent(body + meta)}`;
@@ -3075,9 +3096,6 @@
       gymData = JSON.parse(localStorage.getItem('gym_data') || '{}');
       userProfile = JSON.parse(localStorage.getItem('user_profile') || '{"height":168,"age":25,"sex":"male"}');
       updateTodaySummary();
-      renderView();
-      // クラウドから contest_date 等が同期された場合に表示を反映
-      updatePremiumGatedUI();
       showToast(t('toast_synced'), false);
     } catch(e) {
       console.error('receiveFirestoreData error:', e);
@@ -3105,8 +3123,6 @@
     updateWelcome();
     updateBackupVisibility();
     updateAdminUI();
-    // ログイン状態によって isAdmin / isPremium が変わるため、ゲート対象UIを更新
-    updatePremiumGatedUI();
   }
 
   function updateAdminUI() {
@@ -3116,10 +3132,24 @@
 
   function firebaseSignIn() {
     if (typeof AndroidBridge !== 'undefined') {
+      // Android native path
       showLoading(t('loading_signing_in'));
       AndroidBridge.signInWithGoogle();
-      // ユーザーがアカウント選択をキャンセルした場合に備えて20秒で自動的に隠す
       setTimeout(() => hideLoading(), 20000);
+    } else if (typeof firebase !== 'undefined' && firebase.auth) {
+      // ブラウザ path: signInWithPopup
+      showLoading(t('loading_signing_in'));
+      const provider = new firebase.auth.GoogleAuthProvider();
+      const _signInTimer = setTimeout(() => hideLoading(), 8000);
+      firebase.auth().signInWithPopup(provider)
+        .then(() => { clearTimeout(_signInTimer); hideLoading(); })
+        .catch(err => {
+          clearTimeout(_signInTimer);
+          hideLoading();
+          if (err.code !== 'auth/popup-closed-by-user') {
+            showToast('ログインに失敗しました: ' + err.message);
+          }
+        });
     } else {
       showToast(t('toast_app_login_required'));
     }
@@ -3129,8 +3159,10 @@
     if (typeof AndroidBridge !== 'undefined') {
       showLoading(t('loading_signing_out'));
       AndroidBridge.signOut();
-      // onFirebaseSignOut が呼ばれて hideLoading するが、念のため5秒で自動非表示
       setTimeout(() => hideLoading(), 5000);
+    } else if (typeof firebase !== 'undefined' && firebase.auth) {
+      showLoading(t('loading_signing_out'));
+      firebase.auth().signOut().finally(() => hideLoading());
     }
   }
 
@@ -3194,7 +3226,10 @@
       if (typeof AndroidBridge !== 'undefined') {
         AndroidBridge.saveToFirestore(uid, JSON.stringify(data));
       } else {
-        firebase.firestore().collection('users').doc(uid).set(data, { merge: true });
+        firebase.firestore().collection('users').doc(uid).set({
+          data: JSON.stringify(data),
+          updatedAt: Date.now()
+        });
       }
     }, delay);
   }
@@ -3207,7 +3242,7 @@
       firebase.firestore().collection('users').doc(uid).get()
         .then(doc => {
           if (doc.exists) {
-            receiveFirestoreData(JSON.stringify(doc.data()));
+            receiveFirestoreData(doc.data().data || '{}');
           } else {
             hideLoading();
           }
@@ -3296,16 +3331,21 @@
     }
   }
 
+  function updatePremiumGatedUI() {
+    const premium = isPremium();
+    updateContestCountdown();
+    const lock = document.getElementById('contest-fields-lock');
+    const inner = document.getElementById('contest-fields-inner');
+    if (lock) lock.style.display = premium ? 'none' : '';
+    if (inner) inner.style.display = premium ? '' : 'none';
+  }
+
   // ==================
   // CONTEST COUNTDOWN
   // ==================
-  // 「大会までの日数」は競技者向けプレミアム機能。
-  // 無料（ライト層）では非表示にし、邪魔にならないようにする。
   function updateContestCountdown() {
     const el = document.getElementById('contest-countdown');
     if (!el) return;
-    // プレミアム or 管理者でなければ常に非表示
-    if (!isPremium()) { el.style.display = 'none'; return; }
     const dateStr = localStorage.getItem('contest_date');
     const name = localStorage.getItem('contest_name') || '';
     if (!dateStr) { el.style.display = 'none'; return; }
@@ -3315,43 +3355,13 @@
     const diff = Math.round((contest - today) / 86400000);
     if (diff < 0) { el.style.display = 'none'; return; }
     el.style.display = 'block';
-    const nameEl = document.getElementById('contest-name-display');
-    if (nameEl) {
-      nameEl.textContent = name;
-      nameEl.style.display = name ? '' : 'none';
+    document.getElementById('contest-name-display').textContent = name;
+    document.getElementById('contest-name-display').style.display = name ? '' : 'none';
+    if (diff === 0) {
+      document.getElementById('contest-days-num').textContent = '🏆 TODAY';
+    } else {
+      document.getElementById('contest-days-num').textContent = diff;
     }
-    const numEl = document.getElementById('contest-days-num');
-    if (numEl) {
-      numEl.textContent = (diff === 0) ? '🏆 TODAY' : diff;
-    }
-  }
-
-  // ==================
-  // PREMIUM-GATED UI（大会競技者向け機能の表示/非表示）
-  // ==================
-  // 思想: 無料ユーザーには大会関連の機能は「邪魔だから消す」。
-  // 課金導線ではなく非表示で、ライト層には基本機能のみ提供する。
-  function updatePremiumGatedUI() {
-    const premium = isPremium();
-    updateContestCountdown();
-
-    // プロフィール: 大会関連フィールドのロック表示切替
-    const lock = document.getElementById('contest-fields-lock');
-    const inner = document.getElementById('contest-fields-inner');
-    if (lock) lock.style.display = premium ? 'none' : '';
-    if (inner) inner.style.display = premium ? '' : 'none';
-
-    // 設定画面: プランステータス（ログイン後に状態が変わった場合も即時反映）
-    const planLabel = document.getElementById('plan-status-label');
-    const upgradeBtn = document.getElementById('plan-upgrade-btn');
-    if (planLabel) {
-      planLabel.textContent = premium ? t('plan_premium') : t('plan_free');
-      planLabel.style.color = premium ? 'var(--accent)' : 'var(--text)';
-    }
-    if (upgradeBtn) upgradeBtn.style.display = premium ? 'none' : '';
-
-    // 表示画面が開いている場合はロック済みバナーも即時更新
-    if (_currentScreenId === 'view-screen') renderList();
   }
 
   // ==================
@@ -3458,22 +3468,13 @@
     document.getElementById('today-date-label').textContent = formatDateJP(getTodayDate());
     updateTodaySummary();
     updateWelcome();
+    updateContestCountdown();
     updatePremiumGatedUI();
     checkOnboarding();
     // ボトムナビ表示
     const _nav = document.getElementById('bottom-nav');
     if (_nav) _nav.classList.remove('hidden');
 
-    // バックグラウンド復帰時に大会カウントダウンを更新（日付が変わっている可能性）
-    if (!window._visListenerSet) {
-      window._visListenerSet = true;
-      document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'visible') {
-          updatePremiumGatedUI();
-          updateTodaySummary();
-        }
-      });
-    }
   }
 
   function updateTodaySummary() {
@@ -3493,7 +3494,6 @@
     document.getElementById('top-screen').style.display = 'none';
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     const nav = document.getElementById('bottom-nav');
-    // ナビは全画面で常に表示
     if (nav) nav.classList.remove('hidden');
     if (id !== 'record-screen') {
       const rb = document.getElementById('record-save-bar');
@@ -3505,7 +3505,6 @@
       const nh = document.getElementById('nav-home');
       if (nh) nh.classList.add('active');
       updateTodaySummary();
-      // トップ画面に戻った時にカウントダウンと有料機能の表示状態を再評価
       updatePremiumGatedUI();
     } else {
       document.getElementById(id).classList.add('active');
@@ -3513,7 +3512,6 @@
       const navId = navMap[id];
       if (navId) { const nb = document.getElementById(navId); if (nb) nb.classList.add('active'); }
       if (id === 'settings-screen') { openProfile(); updatePremiumGatedUI(); }
-      // 記録画面を開く時に今日の既存データを読み込む
       if (id === 'record-screen') {
         const today = getToday();
         document.getElementById('rec-date').value = today;
@@ -3643,8 +3641,32 @@
     localStorage.setItem('training_records', JSON.stringify(records));
     showToast(t('toast_saved'), false);
     if (currentUser) syncToCloud(currentUser.uid);
+    maybeRequestReview();
     resetForm();
     setTimeout(()=>showScreen(null), 800);
+  }
+
+  // レビュー促進: 記録が一定数貯まった「良い瞬間」に In-App Review を1回だけ呼ぶ。
+  // Googleポリシー上、感情で出し分けたり何度も出すのはNGなので、未依頼かつ閾値到達時の1回限り。
+  const REVIEW_THRESHOLD = 7;
+  function maybeRequestReview() {
+    try {
+      if (typeof AndroidBridge === 'undefined' || typeof AndroidBridge.requestReview !== 'function') return;
+      if (localStorage.getItem('review_requested') === '1') return;
+      if (records.length < REVIEW_THRESHOLD) return;
+      localStorage.setItem('review_requested', '1');
+      // 保存トーストが消える頃に自然に表示させる
+      setTimeout(()=>{ try { AndroidBridge.requestReview(); } catch(e) {} }, 1500);
+    } catch(e) {}
+  }
+
+  // 設定画面「アプリを評価する」: ユーザー操作で確実にPlayストアへ。
+  function rateApp() {
+    if (typeof AndroidBridge !== 'undefined' && typeof AndroidBridge.openPlayStore === 'function') {
+      try { AndroidBridge.openPlayStore(); return; } catch(e) {}
+    }
+    // ブラウザ版フォールバック
+    window.open('https://play.google.com/store/apps/details?id=com.traininglog.app', '_blank');
   }
 
   function resetForm() {
@@ -3925,6 +3947,8 @@
       const r = AndroidBridge.isPremium();
       return r === true || r === 'true';
     }
+    // ブラウザ版はアプリリリースまで全機能無料公開
+    if (typeof AndroidBridge === 'undefined') return true;
     return localStorage.getItem('is_premium') === 'true';
   }
 
@@ -3957,7 +3981,6 @@
     localStorage.setItem('is_premium', 'true');
     closePaywall();
     renderView();
-    updatePremiumGatedUI();
     if (document.getElementById('tab-graph').classList.contains('active')) renderCharts();
     showToast(t('toast_premium_welcome'), false);
   }
@@ -3970,7 +3993,6 @@
       localStorage.removeItem('is_premium');
     }
     renderView();
-    updatePremiumGatedUI();
   }
 
   function getFilteredRecords() {
@@ -5428,6 +5450,12 @@
   // 画面を離れる時にストップウォッチをリセット
   const _origShowScreen = showScreen;
 
+  // ==================
+
+
+
+
+
   function gymCopySet(ei, si) {
     const src = gymExercises[ei].sets[si];
     const copy = {weight: src.weight, reps: src.reps, assist: src.assist, memo: ''};
@@ -5448,11 +5476,7 @@
     autoSaveGym();
   }
 
-  function gymAddExercise(name, cat) {
-    // 直前に選択した部位を覚えておく（次回ピッカー起動時の初期タブとして使う）
-    if (cat) {
-      localStorage.setItem('last_gym_muscle', cat);
-    }
+  function gymAddExercise(name) {
     gymExercises.push({name, sets:[{weight:null,reps:null,assist:false,memo:''}]});
     renderGymExercises();
     autoSaveGym();
@@ -5623,7 +5647,6 @@
       const last = s.last, best = s.best;
       const isBest = last.rm === best.rm;
       const daysSinceBest = daysBetween(best.date);
-      const staleBest = daysSinceBest >= GYM_STALE_DAYS;
 
       const lastStr = `${last.weight}kg × ${last.reps}rep → 推定1RM <strong style="color:var(--accent);">${last.rm}kg</strong>`;
       const bestStr = isBest
@@ -5867,11 +5890,7 @@
   }
 
   function openGymPicker() {
-    // 直前に記録した部位を初期表示にする。
-    // 該当する部位がプリセットに存在する場合のみ復元、なければ「すべて」。
-    const last = localStorage.getItem('last_gym_muscle');
-    const presets = gymPresets || GYM_PRESETS;
-    gymPickerCatFilter = (last && presets && presets[last]) ? last : null;
+    gymPickerCatFilter = null;
     document.getElementById('gym-picker').classList.add('open');
     document.getElementById('gym-picker-search').value = '';
     filterGymPicker();
@@ -6094,6 +6113,12 @@
   }
 
   let gymPickerCatFilter = null;
+  let gymPickerExpanded = {};
+
+  function toggleGymPickerCat(cat) {
+    gymPickerExpanded[cat] = !gymPickerExpanded[cat];
+    filterGymPicker();
+  }
 
   function filterGymPicker() {
     const q = document.getElementById('gym-picker-search').value.toLowerCase();
@@ -6111,23 +6136,27 @@
     html += '</div>';
 
     
-    // カテゴリ別プリセット
+    // カテゴリ別プリセット（部位ごとにトグルで開閉。初期は閉じる）
+    // 検索中・特定部位フィルター中は開いた状態で表示
+    const forceOpen = !!q || gymPickerCatFilter !== null;
     const displayCats = gymPickerCatFilter ? [gymPickerCatFilter] : cats;
+    const todayExNames = new Set(gymExercises.map(e => e.name));
     displayCats.forEach((cat, ci) => {
       const items = (presets[cat] || []).filter(p => !q || p.toLowerCase().includes(q));
       if (items.length === 0) return;
-      html += `<div style="padding:10px 16px;background:var(--accent);"><span style="font-size:13px;font-weight:700;color:var(--bg);">${cat}</span></div>`;
-      const todayExNames = new Set(gymExercises.map(e => e.name));
+      const isOpen = forceOpen || !!gymPickerExpanded[cat];
+      // 部位ヘッダー（タップで開閉するトグル）
+      html += `<div onclick="toggleGymPickerCat('${cat}')" style="display:flex;align-items:center;padding:10px 16px;background:var(--accent);cursor:pointer;"><span style="width:18px;font-size:12px;color:var(--bg);">${isOpen?'▼':'▶'}</span><span style="flex:1;font-size:13px;font-weight:700;color:var(--bg);">${cat}</span><span style="font-size:12px;color:var(--bg);opacity:0.8;">${items.length}</span></div>`;
+      if (!isOpen) return;
       items.forEach((p, i) => {
-        const safeCat = cat.replace(/'/g,"\\'");
         const actualIdx = (gymPresets[cat] || []).indexOf(p);
         const sel = todayExNames.has(p);
         const esc = p.replace(/'/g,"\\'");
-        html += `<button class="gym-picker-item${sel?' picker-selected':''}" onclick="gymAddExercise('${esc}','${safeCat}')"><span class="gym-drag-handle" onpointerdown="pickerDragStart(event,'${cat}',${actualIdx})" onclick="event.stopPropagation()">☰</span><span style="flex:1;text-align:left;${sel?'color:var(--accent);font-weight:600;':''}">${sel?'✓ ':''}${p}</span></button>`;
+        html += `<button class="gym-picker-item${sel?' picker-selected':''}" onclick="gymAddExercise('${esc}')"><span class="gym-drag-handle" onpointerdown="pickerDragStart(event,'${cat}',${actualIdx})" onclick="event.stopPropagation()">☰</span><span style="flex:1;text-align:left;${sel?'color:var(--accent);font-weight:600;':''}">${sel?'✓ ':''}${p}</span></button>`;
       });
     });
 
-    if (!html.includes('gym-picker-item')) {
+    if (q && !html.includes('gym-picker-item')) {
       html += '<div style="color:var(--text-muted);padding:32px;text-align:center;">—</div>';
     }
 
@@ -6214,7 +6243,7 @@
       gymPresets[cat].push(name);
       localStorage.setItem('gym_presets', JSON.stringify(gymPresets));
     }
-    gymAddExercise(name, cat);
+    gymAddExercise(name);
   }
 
   // ==================
@@ -6348,6 +6377,9 @@
         }, d);
       });
     }
+
+    // タイマー完了後は画面を開いたままにせず自動で閉じる（連続使用を想定しないため）
+    setTimeout(() => { closeTimer(); }, 1500);
   }
 
   function updateTimerDisplay() {
@@ -7004,13 +7036,15 @@
     const premium = isPremium();
     const label = document.getElementById('plan-status-label');
     const btn = document.getElementById('plan-upgrade-btn');
-    if (label) label.textContent = premium ? t('plan_premium') : t('plan_free');
+    const isBrowser = typeof AndroidBridge === 'undefined';
+    if (label) label.textContent = isBrowser ? '🎁 プレミアム無料公開中（アプリリリースまで）' : premium ? t('plan_premium') : t('plan_free');
     if (label) label.style.color = premium ? 'var(--accent)' : 'var(--text)';
     if (btn) btn.style.display = premium ? 'none' : '';
     // アカウント削除はログイン済みの場合のみ表示
     const dangerZone = document.getElementById('danger-zone');
     if (dangerZone) dangerZone.style.display = currentUser ? '' : 'none';
   }
+
 
   function loadOptionToggles() {
     const el = document.getElementById('opt-share-after-save');
@@ -7080,7 +7114,7 @@
     localStorage.setItem('nutrition_goals', JSON.stringify(goals));
     const dshEl = document.getElementById('day-start-hour');
     if (dshEl) localStorage.setItem('day_start_hour', dshEl.value);
-    updatePremiumGatedUI();
+    updateContestCountdown();
     const bar = document.getElementById('settings-save-bar');
     if (bar) bar.classList.remove('visible');
     showScreen(null);

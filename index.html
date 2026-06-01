@@ -1391,6 +1391,9 @@
       </div>
     </div>
 
+    <!-- アプリを評価する（常時表示） -->
+    <button onclick="rateApp()" style="width:100%;padding:13px;background:var(--surface2);border:1px solid var(--accent);border-radius:12px;color:var(--text);font-size:14px;font-weight:700;cursor:pointer;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:6px;">⭐ アプリを評価する</button>
+
     <!-- アコーディオンリスト -->
     <div class="settings-list">
 
@@ -3638,8 +3641,32 @@
     localStorage.setItem('training_records', JSON.stringify(records));
     showToast(t('toast_saved'), false);
     if (currentUser) syncToCloud(currentUser.uid);
+    maybeRequestReview();
     resetForm();
     setTimeout(()=>showScreen(null), 800);
+  }
+
+  // レビュー促進: 記録が一定数貯まった「良い瞬間」に In-App Review を1回だけ呼ぶ。
+  // Googleポリシー上、感情で出し分けたり何度も出すのはNGなので、未依頼かつ閾値到達時の1回限り。
+  const REVIEW_THRESHOLD = 7;
+  function maybeRequestReview() {
+    try {
+      if (typeof AndroidBridge === 'undefined' || typeof AndroidBridge.requestReview !== 'function') return;
+      if (localStorage.getItem('review_requested') === '1') return;
+      if (records.length < REVIEW_THRESHOLD) return;
+      localStorage.setItem('review_requested', '1');
+      // 保存トーストが消える頃に自然に表示させる
+      setTimeout(()=>{ try { AndroidBridge.requestReview(); } catch(e) {} }, 1500);
+    } catch(e) {}
+  }
+
+  // 設定画面「アプリを評価する」: ユーザー操作で確実にPlayストアへ。
+  function rateApp() {
+    if (typeof AndroidBridge !== 'undefined' && typeof AndroidBridge.openPlayStore === 'function') {
+      try { AndroidBridge.openPlayStore(); return; } catch(e) {}
+    }
+    // ブラウザ版フォールバック
+    window.open('https://play.google.com/store/apps/details?id=com.traininglog.app', '_blank');
   }
 
   function resetForm() {
@@ -6086,6 +6113,12 @@
   }
 
   let gymPickerCatFilter = null;
+  let gymPickerExpanded = {};
+
+  function toggleGymPickerCat(cat) {
+    gymPickerExpanded[cat] = !gymPickerExpanded[cat];
+    filterGymPicker();
+  }
 
   function filterGymPicker() {
     const q = document.getElementById('gym-picker-search').value.toLowerCase();
@@ -6103,13 +6136,18 @@
     html += '</div>';
 
     
-    // カテゴリ別プリセット
+    // カテゴリ別プリセット（部位ごとにトグルで開閉。初期は閉じる）
+    // 検索中・特定部位フィルター中は開いた状態で表示
+    const forceOpen = !!q || gymPickerCatFilter !== null;
     const displayCats = gymPickerCatFilter ? [gymPickerCatFilter] : cats;
+    const todayExNames = new Set(gymExercises.map(e => e.name));
     displayCats.forEach((cat, ci) => {
       const items = (presets[cat] || []).filter(p => !q || p.toLowerCase().includes(q));
       if (items.length === 0) return;
-      html += `<div style="padding:10px 16px;background:var(--accent);"><span style="font-size:13px;font-weight:700;color:var(--bg);">${cat}</span></div>`;
-      const todayExNames = new Set(gymExercises.map(e => e.name));
+      const isOpen = forceOpen || !!gymPickerExpanded[cat];
+      // 部位ヘッダー（タップで開閉するトグル）
+      html += `<div onclick="toggleGymPickerCat('${cat}')" style="display:flex;align-items:center;padding:10px 16px;background:var(--accent);cursor:pointer;"><span style="width:18px;font-size:12px;color:var(--bg);">${isOpen?'▼':'▶'}</span><span style="flex:1;font-size:13px;font-weight:700;color:var(--bg);">${cat}</span><span style="font-size:12px;color:var(--bg);opacity:0.8;">${items.length}</span></div>`;
+      if (!isOpen) return;
       items.forEach((p, i) => {
         const actualIdx = (gymPresets[cat] || []).indexOf(p);
         const sel = todayExNames.has(p);
@@ -6118,7 +6156,7 @@
       });
     });
 
-    if (!html.includes('gym-picker-item')) {
+    if (q && !html.includes('gym-picker-item')) {
       html += '<div style="color:var(--text-muted);padding:32px;text-align:center;">—</div>';
     }
 
@@ -6339,6 +6377,9 @@
         }, d);
       });
     }
+
+    // タイマー完了後は画面を開いたままにせず自動で閉じる（連続使用を想定しないため）
+    setTimeout(() => { closeTimer(); }, 1500);
   }
 
   function updateTimerDisplay() {

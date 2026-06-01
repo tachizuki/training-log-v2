@@ -34,6 +34,7 @@ import com.google.android.gms.common.api.ApiException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.android.play.core.review.ReviewManagerFactory
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -327,6 +328,50 @@ class MainActivity : AppCompatActivity() {
         fun restorePremium() {
             // ユーザー操作で明示的に復元したい場合用 (今は未使用だがUI側から呼び出せる)
             if (::billing.isInitialized) billing.restorePurchases()
+        }
+
+        /**
+         * Google Play In-App Review を起動する（レビュー促進）。
+         * Web側が「良い瞬間（記録が一定数貯まった等）」に1回だけ呼ぶ想定。
+         * 注意: 表示するか否かは Google 側のクォータが制御するため必ず出るとは限らず、
+         * 結果（出た／出ない・評価したか）はアプリには返らない仕様。これが公式の正しい使い方。
+         * ユーザーに明示的にストアへ飛ばしたい場合は openPlayStore() を使う。
+         */
+        @JavascriptInterface
+        fun requestReview() {
+            runOnUiThread {
+                try {
+                    val manager = ReviewManagerFactory.create(this@MainActivity)
+                    manager.requestReviewFlow().addOnCompleteListener { task ->
+                        if (task.isSuccessful) {
+                            manager.launchReviewFlow(this@MainActivity, task.result)
+                        }
+                        // 失敗時は何もしない（押し付けない）
+                    }
+                } catch (e: Exception) {
+                    // In-App Review が使えない環境では静かに無視
+                }
+            }
+        }
+
+        /**
+         * Play ストアのアプリ詳細ページを開く（設定画面の「アプリを評価する」用）。
+         * In-App Review と違い、ユーザー操作で確実にストアへ遷移させる。
+         */
+        @JavascriptInterface
+        fun openPlayStore() {
+            runOnUiThread {
+                val market = Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=$packageName")).apply {
+                    addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY or Intent.FLAG_ACTIVITY_MULTIPLE_TASK)
+                }
+                try {
+                    startActivity(market)
+                } catch (e: android.content.ActivityNotFoundException) {
+                    // Play ストアアプリが無い端末はブラウザで開く
+                    startActivity(Intent(Intent.ACTION_VIEW,
+                        Uri.parse("https://play.google.com/store/apps/details?id=$packageName")))
+                }
+            }
         }
 
         @JavascriptInterface
