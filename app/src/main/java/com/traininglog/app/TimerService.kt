@@ -8,13 +8,11 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
-import android.media.AudioManager
-import android.media.ToneGenerator
+import android.media.AudioAttributes
+import android.media.RingtoneManager
 import android.os.Build
 import android.os.CountDownTimer
-import android.os.Handler
 import android.os.IBinder
-import android.os.Looper
 import android.os.PowerManager
 import android.os.VibrationEffect
 import android.os.Vibrator
@@ -27,21 +25,22 @@ class TimerService : Service() {
     private var totalSeconds: Int = 90
     private lateinit var notificationManager: NotificationManager
     private var wakeLock: PowerManager.WakeLock? = null
-    private var toneGenerator: ToneGenerator? = null
 
     companion object {
-        const val CHANNEL_ID    = "timer_channel"
-        const val NOTIF_ID      = 2001
-        const val ACTION_START  = "com.traininglog.app.TIMER_START"
-        const val ACTION_STOP   = "com.traininglog.app.TIMER_STOP"
-        const val EXTRA_SECONDS = "seconds"
-        const val BROADCAST_DONE = "com.traininglog.app.TIMER_DONE"
+        const val CHANNEL_ID      = "timer_channel"
+        const val DONE_CHANNEL_ID = "timer_done_channel"
+        const val NOTIF_ID        = 2001
+        const val DONE_NOTIF_ID   = 2002
+        const val ACTION_START    = "com.traininglog.app.TIMER_START"
+        const val ACTION_STOP     = "com.traininglog.app.TIMER_STOP"
+        const val EXTRA_SECONDS   = "seconds"
+        const val BROADCAST_DONE  = "com.traininglog.app.TIMER_DONE"
     }
 
     override fun onCreate() {
         super.onCreate()
         notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        createChannel()
+        createChannels()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -53,6 +52,15 @@ class TimerService : Service() {
             }
         }
         return START_REDELIVER_INTENT
+    }
+
+    // Android 14 (API 34) SHORT_SERVICE のタイムアウト時に呼ばれる。
+    // デフォルト実装は ForegroundServiceDidNotStopInTimeException をスローするためオーバーライドして正常停止。
+    @Suppress("OVERRIDE_DEPRECATION")
+    override fun onTimeout(startId: Int) {
+        releaseWakeLock()
+        stopSelf()
+        // super を呼ばない — デフォルト実装はクラッシュする
     }
 
     private fun acquireWakeLock() {
@@ -83,24 +91,24 @@ class TimerService : Service() {
                 notificationManager.notify(NOTIF_ID, buildNotification(remaining, totalSeconds))
             }
             override fun onFinish() {
-                vibrate()
-                playAlarmTone()
+                // ① 直接バイブ（フォアグラウンド時の即時フィードバック）
+                try { vibrate() } catch (_: Exception) {}
+                // ② 完了通知を発行 — OS が音＋バイブを担当（バックグラウンド・画面オフでも確実）
+                notificationManager.notify(DONE_NOTIF_ID, buildDoneNotification())
+                // ③ フォアグラウンドサービスを解除してブロードキャスト
                 stopForeground(STOP_FOREGROUND_REMOVE)
                 sendBroadcast(Intent(BROADCAST_DONE))
-                // バイブ(2050ms)＋ビープ(~3900ms)が完了するまでWakeLock＆サービスを維持
-                Handler(Looper.getMainLooper()).postDelayed({
-                    releaseWakeLock()
-                    stopSelf()
-                }, 5000L)
+                // ④ WakeLock 解放 → 即座に停止（Handler.postDelayed は使わない）
+                releaseWakeLock()
+                stopSelf()
             }
         }.start()
     }
 
     private fun stopTimer() {
         countDownTimer?.cancel()
-        toneGenerator?.release()
-        toneGenerator = null
         releaseWakeLock()
+        // 完了通知は残しておく（ユーザーが閉じるまで）
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
     }
@@ -122,28 +130,23 @@ class TimerService : Service() {
         }
     }
 
-    // Web Audio は背景で suspend されるため、ネイティブで音を鳴らす
-    private fun playAlarmTone() {
-        try {
-            toneGenerator?.release()
-            val tg = ToneGenerator(AudioManager.STREAM_ALARM, 90)
-            toneGenerator = tg
-            val handler = Handler(Looper.getMainLooper())
-            var count = 0
-            val beep = object : Runnable {
-                override fun run() {
-                    if (count < 9) {
-                        tg.startTone(ToneGenerator.TONE_PROP_BEEP, 280)
-                        count++
-                        handler.postDelayed(this, 400)
-                    } else {
-                        tg.release()
-                        toneGenerator = null
-                    }
-                }
-            }
-            handler.post(beep)
-        } catch (e: Exception) {}
+    private fun buildDoneNotification(): Notification {
+        val launchIntent = Intent(this, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
+            putExtra("target_screen", "gym-screen")
+        }
+        val launchPi = PendingIntent.getActivity(
+            this, 0, launchIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        return NotificationCompat.Builder(this, DONE_CHANNEL_ID)
+            .setSmallIcon(R.mipmap.ic_launcher)
+            .setContentTitle("⏱ インターバル終了！")
+            .setContentText("次のセットを始めよう")
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setAutoCancel(true)
+            .setContentIntent(launchPi)
+            .build()
     }
 
     private fun buildNotification(remaining: Int, total: Int): Notification {
@@ -178,9 +181,10 @@ class TimerService : Service() {
             .build()
     }
 
-    private fun createChannel() {
+    private fun createChannels() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
+            // 進行中タイマー通知（サイレント）
+            val timerChannel = NotificationChannel(
                 CHANNEL_ID, "レストタイマー",
                 NotificationManager.IMPORTANCE_LOW
             ).apply {
@@ -188,18 +192,31 @@ class TimerService : Service() {
                 setSound(null, null)
                 enableVibration(false)
             }
-            notificationManager.createNotificationChannel(channel)
+            // タイマー完了通知（音＋バイブ付き）
+            val vibPattern = longArrayOf(0, 400, 150, 400, 150, 400, 150, 400)
+            val audioAttrs = AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_NOTIFICATION)
+                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                .build()
+            val doneChannel = NotificationChannel(
+                DONE_CHANNEL_ID, "タイマー完了",
+                NotificationManager.IMPORTANCE_HIGH
+            ).apply {
+                description = "インターバル終了通知"
+                enableVibration(true)
+                vibrationPattern = vibPattern
+                setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION), audioAttrs)
+            }
+            notificationManager.createNotificationChannel(timerChannel)
+            notificationManager.createNotificationChannel(doneChannel)
         }
     }
 
     override fun onDestroy() {
         countDownTimer?.cancel()
-        toneGenerator?.release()
-        toneGenerator = null
         releaseWakeLock()
         super.onDestroy()
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
 }
-
