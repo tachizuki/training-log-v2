@@ -2088,6 +2088,7 @@
       chart_now: '現在',
       chart_contest: '大会',
       chart_weeks_suffix: '週後',
+      chart_weeks_ago_suffix: '週前',
       // records list
       tag_training: 'トレーニング',
       tag_salt: '塩分',
@@ -2544,6 +2545,7 @@
       chart_now: 'Now',
       chart_contest: 'Contest',
       chart_weeks_suffix: 'wks',
+      chart_weeks_ago_suffix: 'wks ago',
       // records list
       tag_training: 'Training',
       tag_salt: 'Sodium',
@@ -4890,27 +4892,33 @@
       return;
     }
 
-    // ===== 全体ビュー：大会までのフルタイムライン =====
+    // ===== 全体ビュー：1ヶ月前〜大会までのフルタイムライン =====
+    const PAST_WEEKS = 4;
     const weekLabels = [], targetWeights = [], actualWeights = [];
-    for (let w = 0; w <= totalWeeks; w++) {
-      weekLabels.push(w === 0 ? t('chart_now') : w === totalWeeks ? t('chart_contest') : `${w}${t('chart_weeks_suffix')}`);
+    for (let w = -PAST_WEEKS; w <= totalWeeks; w++) {
+      let lbl;
+      if (w < 0)            lbl = `${-w}${t('chart_weeks_ago_suffix')}`;
+      else if (w === 0)     lbl = t('chart_now');
+      else if (w === totalWeeks) lbl = t('chart_contest');
+      else                  lbl = `${w}${t('chart_weeks_suffix')}`;
+      weekLabels.push(lbl);
       const wDate = new Date(today); wDate.setDate(today.getDate() + w * 7);
       targetWeights.push(targetForDate(wDate));
       if (w === 0) {
-        actualWeights.push(latestWeight);
-      } else if (wDate <= today) {
+        actualWeights.push(parseFloat(latestWeight.toFixed(1)));
+      } else if (w < 0 || wDate <= today) {
         const wStart = formatDate(new Date(wDate.getTime() - 7*86400000));
         const wEndStr = formatDate(wDate);
-        const wr = records.filter(r => r.date >= wStart && r.date < wEndStr && r.weight);
+        const wr = records.filter(r => r.date > wStart && r.date <= wEndStr && r.weight);
         actualWeights.push(wr.length ? parseFloat((wr.reduce((s,r)=>s+r.weight,0)/wr.length).toFixed(1)) : null);
       } else {
         actualWeights.push(null);
       }
     }
     const step = totalWeeks > 12 ? Math.ceil(totalWeeks / 12) : 1;
-    const fLabels = weekLabels.filter((_,i) => i % step === 0 || i === totalWeeks);
-    const fTarget = targetWeights.filter((_,i) => i % step === 0 || i === totalWeeks);
-    const fActual = actualWeights.filter((_,i) => i % step === 0 || i === totalWeeks);
+    const fLabels = weekLabels.filter((_,i) => { const w = i - PAST_WEEKS; return w < 0 || w % step === 0 || w === totalWeeks; });
+    const fTarget = targetWeights.filter((_,i) => { const w = i - PAST_WEEKS; return w < 0 || w % step === 0 || w === totalWeeks; });
+    const fActual = actualWeights.filter((_,i) => { const w = i - PAST_WEEKS; return w < 0 || w % step === 0 || w === totalWeeks; });
     container.innerHTML = '<canvas id="roadmap-chart" height="200"></canvas>';
     if (window._roadmapChart) window._roadmapChart.destroy();
     window._roadmapChart = new Chart(document.getElementById('roadmap-chart'), {
