@@ -86,10 +86,12 @@ class TimerService : Service() {
                 vibrate()
                 playAlarmTone()
                 stopForeground(STOP_FOREGROUND_REMOVE)
-                // broadcast BEFORE releasing wake lock so CPU stays awake until JS is notified
                 sendBroadcast(Intent(BROADCAST_DONE))
-                releaseWakeLock()
-                stopSelf()
+                // バイブ(2050ms)＋ビープ(~3900ms)が完了するまでWakeLock＆サービスを維持
+                Handler(Looper.getMainLooper()).postDelayed({
+                    releaseWakeLock()
+                    stopSelf()
+                }, 5000L)
             }
         }.start()
     }
@@ -151,6 +153,7 @@ class TimerService : Service() {
 
         val launchIntent = Intent(this, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
+            putExtra("target_screen", "gym-screen")
         }
         val launchPi = PendingIntent.getActivity(
             this, 0, launchIntent,

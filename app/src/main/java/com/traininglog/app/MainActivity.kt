@@ -52,6 +52,8 @@ class MainActivity : AppCompatActivity() {
     private var totalChunks = 0
     private var saveFilename = ""
     private var filePathCallback: ValueCallback<Array<Uri>>? = null
+    // 通知タップ時に復帰すべき画面（onPageFinishedで一度だけ使用）
+    private var pendingScreen: String? = null
 
     private lateinit var auth: FirebaseAuth
     private lateinit var db: FirebaseFirestore
@@ -525,11 +527,24 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        val screen = intent.getStringExtra("target_screen") ?: return
+        webView.post {
+            webView.evaluateJavascript(
+                "if(typeof showScreen==='function')showScreen('$screen')", null
+            )
+        }
+    }
+
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
         setContentView(R.layout.activity_main)
+        // 通知タップからの起動時は対象画面を記憶（ページロード後にonPageFinishedで遷移）
+        pendingScreen = intent?.getStringExtra("target_screen")
 
         auth = FirebaseAuth.getInstance()
         db = FirebaseFirestore.getInstance()
@@ -599,10 +614,18 @@ class MainActivity : AppCompatActivity() {
             override fun onPageFinished(view: WebView, url: String) {
                 super.onPageFinished(view, url)
                 // ページ読み込み完了後にFirebase認証状態を復元
-                // （addAuthStateListenerはページロード前に発火するためここで再通知が必要）
                 val user = auth.currentUser
                 if (user != null) {
                     notifySignIn(user.uid, user.displayName ?: "", user.email ?: "")
+                }
+                // 通知タップで再起動した場合、対象画面へ遷移（認証後データロードより後に実行）
+                pendingScreen?.let { screen ->
+                    pendingScreen = null
+                    view.postDelayed({
+                        view.evaluateJavascript(
+                            "if(typeof showScreen==='function')showScreen('$screen')", null
+                        )
+                    }, 500L)
                 }
             }
 
