@@ -27,7 +27,9 @@ import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
+import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
@@ -576,6 +578,16 @@ class MainActivity : AppCompatActivity() {
 
         webView = findViewById(R.id.webView)
         webView.clearCache(true)
+
+        // edge-to-edge 環境では adjustResize が効かないため、IME（キーボード）インセット分だけ
+        // WebView を押し上げ、保存バーがキーボードに隠れないようにする。
+        // ナビバー領域は WebView 側 CSS の safe-area-inset で処理済みなので二重に足さない。
+        ViewCompat.setOnApplyWindowInsetsListener(webView) { v, insets ->
+            val imeBottom = insets.getInsets(WindowInsetsCompat.Type.ime()).bottom
+            val navBottom = insets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom
+            v.setPadding(0, 0, 0, maxOf(0, imeBottom - navBottom))
+            insets
+        }
 
         webView.settings.apply {
             javaScriptEnabled = true

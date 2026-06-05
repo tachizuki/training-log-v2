@@ -4979,10 +4979,12 @@
     const labels=sorted.map(r=>{const d=new Date(r.date+'T00:00:00');return `${d.getMonth()+1}/${d.getDate()}`;});
     const cd={responsive:true,plugins:{legend:{labels:{color:'#888',font:{size:11}}}},scales:{x:{ticks:{color:'#666',font:{size:10}},grid:{color:'#1a1a26'}},y:{ticks:{color:'#666',font:{size:10}},grid:{color:'#1a1a26'}}}};
 
-    // 月ビュー＋ロードマップ表示中は体重チャートをスキップ（ロードマップに日別体重を統合済み）
-    const _roadmapActive = currentFilter === 'month'
+    // 今週・月ビューでロードマップ表示中は体重チャートをスキップ（ロードマップに日別体重を統合済み）
+    // ※ロードマップはプレミアム限定。無料/大会未設定ユーザーには体重推移を残す
+    const _roadmapActive = (currentFilter === 'month' || currentFilter === 'week')
       && !!localStorage.getItem('contest_date')
-      && !!localStorage.getItem('contest_weight');
+      && !!localStorage.getItem('contest_weight')
+      && isPremium();
     const _weightCont = document.getElementById('weight-chart')?.closest('.chart-container');
     if (_roadmapActive) {
       if (_weightCont) _weightCont.style.display = 'none';
