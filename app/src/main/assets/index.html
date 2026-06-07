@@ -790,7 +790,12 @@
   <div class="screen-body">
     <div class="form-section">
       <div class="form-section-title" data-i18n="section_date">📅 日付</div>
-      <div class="form-group"><input type="date" class="form-input" id="rec-date" onchange="loadRecordByDate(this.value)"></div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <button onclick="shiftRecDate(-1)" style="flex-shrink:0;width:40px;height:40px;background:var(--surface);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;">‹</button>
+        <div id="rec-date-display" onclick="openRecDatePicker()" style="flex:1;height:40px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:15px;color:var(--text);cursor:pointer;letter-spacing:0.05em;"></div>
+        <input type="date" id="rec-date" style="position:absolute;opacity:0;pointer-events:none;width:1px;height:1px;" onchange="onRecDatePickerChange(this.value)">
+        <button onclick="shiftRecDate(1)" style="flex-shrink:0;width:40px;height:40px;background:var(--surface);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;">›</button>
+      </div>
     </div>
     <div class="form-section">
       <div class="form-section-title" data-i18n="section_weight_sleep">⚖️ 体重・睡眠</div>
@@ -3467,6 +3472,7 @@
     const verEl = document.getElementById('app-ver-display');
     if (verEl) verEl.textContent = APP_VERSION;
     document.getElementById('rec-date').value = getToday();
+    updateRecDateDisplay(getToday());
     document.getElementById('today-date-label').textContent = formatDateJP(getTodayDate());
     updateTodaySummary();
     updateWelcome();
@@ -3517,9 +3523,40 @@
       if (id === 'record-screen') {
         const today = getToday();
         document.getElementById('rec-date').value = today;
+        updateRecDateDisplay(today);
         loadRecordByDate(today);
       }
     }
+  }
+
+  function updateRecDateDisplay(dateStr) {
+    const el = document.getElementById('rec-date-display');
+    if (!el || !dateStr) return;
+    const [y, m, d] = dateStr.split('-').map(Number);
+    const dt = new Date(y, m - 1, d);
+    const days = ['日','月','火','水','木','金','土'];
+    el.textContent = `${y}年${m}月${d}日（${days[dt.getDay()]}）`;
+  }
+
+  function shiftRecDate(delta) {
+    const cur = document.getElementById('rec-date').value || getToday();
+    const [y, m, d] = cur.split('-').map(Number);
+    const dt = new Date(y, m - 1, d);
+    dt.setDate(dt.getDate() + delta);
+    const next = formatDate(dt);
+    document.getElementById('rec-date').value = next;
+    updateRecDateDisplay(next);
+    loadRecordByDate(next);
+  }
+
+  function openRecDatePicker() {
+    const input = document.getElementById('rec-date');
+    if (input) input.showPicker?.();
+  }
+
+  function onRecDatePickerChange(val) {
+    updateRecDateDisplay(val);
+    loadRecordByDate(val);
   }
 
   function loadRecordByDate(date) {
@@ -3679,6 +3716,7 @@
     document.getElementById('muscle-selector').style.display='none';
     document.querySelectorAll('.muscle-btn').forEach(b=>b.classList.remove('selected'));
     document.getElementById('rec-date').value=getToday();
+    updateRecDateDisplay(getToday());
   }
 
   // WATER
