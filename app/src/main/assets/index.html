@@ -7481,6 +7481,15 @@
   } else {
     init();
   }
+
+  // キーボード表示後にフォーカス中のinputをスクロールして見えるようにする
+  document.addEventListener('focusin', function(e) {
+    const el = e.target;
+    if (el.tagName !== 'INPUT' && el.tagName !== 'TEXTAREA') return;
+    setTimeout(function() {
+      el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }, 350);
+  });
 </script>
 </body>
 </html>
