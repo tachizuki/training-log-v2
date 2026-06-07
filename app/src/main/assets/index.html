@@ -6143,6 +6143,8 @@
     if (!newName) return;
     if (!gymPresets[presetEditorPart]) gymPresets[presetEditorPart] = [];
 
+    const oldName = gymPresets[presetEditorPart][i];
+
     if (newCat && newCat !== presetEditorPart) {
       // 別の部位に移動
       gymPresets[presetEditorPart].splice(i, 1);
@@ -6152,6 +6154,25 @@
       gymPresets[presetEditorPart][i] = newName;
     }
     localStorage.setItem('gym_presets', JSON.stringify(gymPresets));
+
+    // 既存の記録データにある旧名称を新名称に一括更新
+    if (oldName && oldName !== newName) {
+      let updated = false;
+      Object.values(gymData).forEach(dayData => {
+        if (!dayData.exercises) return;
+        dayData.exercises.forEach(ex => {
+          if (ex.name === oldName) { ex.name = newName; updated = true; }
+        });
+      });
+      if (updated) {
+        localStorage.setItem('gym_data', JSON.stringify(gymData));
+        // 現在表示中のセッションにも反映
+        gymExercises.forEach(ex => { if (ex.name === oldName) ex.name = newName; });
+        if (document.getElementById('gym-screen')?.style.display !== 'none') renderGymExercises();
+        if (currentUser) syncToCloud(currentUser.uid, 0);
+      }
+    }
+
     editingPresetIdx = null;
     renderPresetEditorList();
     showToast(t('toast_preset_saved'), false);
