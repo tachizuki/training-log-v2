@@ -3483,6 +3483,15 @@
     const _nav = document.getElementById('bottom-nav');
     if (_nav) _nav.classList.remove('hidden');
 
+    // バックグラウンド復帰時のスクリーン・ストップウォッチ復元
+    restoreSwState();
+    if (localStorage.getItem('onboarding_done')) {
+      const _lastScreen = localStorage.getItem('last_screen');
+      if (_lastScreen) {
+        showScreen(_lastScreen);
+        if (_lastScreen === 'gym-screen') renderGym();
+      }
+    }
   }
 
   function updateTodaySummary() {
@@ -3499,6 +3508,7 @@
 
   function showScreen(id) {
     _currentScreenId = id;
+    localStorage.setItem('last_screen', id || '');
     document.getElementById('top-screen').style.display = 'none';
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     const nav = document.getElementById('bottom-nav');
@@ -5470,6 +5480,9 @@
     const now = swStartTime;
     document.getElementById('sw-start-label').textContent =
       t('sw_start_prefix') + `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+    localStorage.setItem('sw_start_ts', swStartTime.getTime());
+    localStorage.setItem('sw_running', '1');
+    localStorage.removeItem('sw_end_ts');
   }
 
   function swStop() {
@@ -5486,6 +5499,8 @@
     const now = swEndTime;
     document.getElementById('sw-end-label').textContent =
       t('sw_end_prefix') + `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+    localStorage.setItem('sw_running', '0');
+    localStorage.setItem('sw_end_ts', swEndTime.getTime());
   }
 
   function swReset() {
@@ -5500,6 +5515,40 @@
     document.getElementById('sw-end-label').textContent = t('sw_end_display');
     document.getElementById('sw-btn-start').style.display = 'flex';
     document.getElementById('sw-btn-stop').style.display = 'none';
+    localStorage.removeItem('sw_start_ts');
+    localStorage.removeItem('sw_running');
+    localStorage.removeItem('sw_end_ts');
+  }
+
+  function restoreSwState() {
+    const startTs = localStorage.getItem('sw_start_ts');
+    if (!startTs) return;
+    swStartTime = new Date(parseInt(startTs));
+    const startNow = swStartTime;
+    document.getElementById('sw-start-label').textContent =
+      t('sw_start_prefix') + `${String(startNow.getHours()).padStart(2,'0')}:${String(startNow.getMinutes()).padStart(2,'0')}`;
+    if (localStorage.getItem('sw_running') === '1') {
+      swRunning = true;
+      swElapsed = new Date() - swStartTime;
+      updateSwDisplay();
+      swInterval = setInterval(() => {
+        swElapsed = new Date() - swStartTime;
+        updateSwDisplay();
+      }, 1000);
+      document.getElementById('sw-btn-start').style.display = 'none';
+      document.getElementById('sw-btn-stop').style.display = 'flex';
+      document.getElementById('sw-display').classList.add('running');
+    } else {
+      const endTs = localStorage.getItem('sw_end_ts');
+      if (endTs) {
+        swEndTime = new Date(parseInt(endTs));
+        swElapsed = swEndTime - swStartTime;
+        updateSwDisplay();
+        const endNow = swEndTime;
+        document.getElementById('sw-end-label').textContent =
+          t('sw_end_prefix') + `${String(endNow.getHours()).padStart(2,'0')}:${String(endNow.getMinutes()).padStart(2,'0')}`;
+      }
+    }
   }
 
   function updateSwDisplay() {
