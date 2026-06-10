@@ -3517,6 +3517,10 @@
       const rb = document.getElementById('record-save-bar');
       if (rb) rb.classList.remove('visible');
     }
+    if (id !== 'settings-screen') {
+      const sb = document.getElementById('settings-save-bar');
+      if (sb) sb.classList.remove('visible');
+    }
     document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
     if (!id) {
       document.getElementById('top-screen').style.display = 'flex';
