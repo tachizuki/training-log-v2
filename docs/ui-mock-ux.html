@@ -610,6 +610,7 @@ const FIELDS = ['p','f','c','salt'];
 const mealVals = [142, 48, 198, null];   // P, F, C, 塩分
 const mealPrev = [146, 52, 210, 6.5];
 let mIdx = 0, mFresh = true;             // mFresh: フォーカス直後の上書き入力
+let mBuf = '';                           // 入力中の文字列バッファ（"6." など小数点入力中を保持）
 
 function calcKcal(vals) {
   return Math.round((vals[0]||0)*4 + (vals[1]||0)*9 + (vals[2]||0)*4);
@@ -625,6 +626,7 @@ function closeMealPad() {
 }
 function mealFocus(idx) {
   mIdx = idx; mFresh = true;
+  mBuf = mealVals[idx] === null ? '' : String(mealVals[idx]);
   for (let i = 0; i < 4; i++) document.getElementById('mf-' + i).classList.toggle('editing', i === idx);
   document.getElementById('mpad-ok').textContent = (idx === 3) ? '確定' : '次へ';
 }
@@ -638,16 +640,14 @@ function mRender() {
     calcKcal(mealVals).toLocaleString() + '<small style="font-size:10px;color:var(--faint);font-family:\'Noto Sans JP\';"> kcal</small>';
 }
 function mKey(k) {
-  let v = mealVals[mIdx] === null ? '' : String(mealVals[mIdx]);
-  if (k === 'back') v = v.slice(0, -1);
-  else if (k === 'clear') v = '';
-  else if (k === '.') { if (mFresh) v = '0.'; else if (!v.includes('.')) v += '.'; }
-  else { if (mFresh) v = k; else v += k; }
+  if (k === 'back') mBuf = mBuf.slice(0, -1);
+  else if (k === 'clear') mBuf = '';
+  else if (k === '.') { if (mFresh || mBuf === '') mBuf = '0.'; else if (!mBuf.includes('.')) mBuf += '.'; }
+  else { if (mFresh) mBuf = k; else mBuf += k; }
   mFresh = false;
-  mealVals[mIdx] = v === '' ? null : parseFloat(v);
-  // 入力途中の "0." などはそのまま表示
+  mealVals[mIdx] = (mBuf === '' || mBuf === '0.') ? null : parseFloat(mBuf);
   document.getElementById('mv-' + mIdx).innerHTML =
-    (v === '' ? '<span class="ph">—</span>' : v) + '<small>g</small>';
+    (mBuf === '' ? '<span class="ph">—</span>' : mBuf) + '<small>g</small>';
   document.getElementById('mpad-kcal').innerHTML =
     calcKcal(mealVals).toLocaleString() + '<small style="font-size:10px;color:var(--faint);font-family:\'Noto Sans JP\';"> kcal</small>';
 }
