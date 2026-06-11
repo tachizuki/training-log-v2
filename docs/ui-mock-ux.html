@@ -3,20 +3,20 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
-<title>PhysiqueLog — UX主導の再設計モック</title>
+<title>PhysiqueLog — UX主導の再設計モック v2</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@500;700;800&family=Noto+Sans+JP:wght@400;500;700;900&display=swap');
 
 /* ============================================================
-   UX主導の再設計 — 設計原則
-   1. 保存ボタンを廃止。全て自動保存（保存バー系バグも根絶）
-   2. OSキーボードを使わない。数値は専用キーパッド
-      （キーボードがUIを隠す問題そのものを消す）
-   3. 片手・親指圏内に主要操作。タップ目標は最低48px
-   4. ホームは「今日やることリスト」。記録済/未記録が一目で分かる
-   5. セット完了✓→レストタイマー自動開始（手動操作を1つ削る）
-   6. 暗いジムで見るのでダーク基調は維持。ただし彩度を抑え
-      アクセントは1色に統制。数字は大きく等幅で
+   UX主導の再設計 v2 — フィードバック反映
+   - 「今日」はスクロールなしで1画面に収まる（flexで自動圧縮）
+   - キーパッドの±2.5等のステップボタンを廃止（前回値のみ残す）
+   - 食事はP/F/C/塩分を入力 → カロリーは自動計算
+   - 水分の追加ボタンは✎で金額を自由に編集できる
+   - 筋トレメニューは曜日固定ではなくその場で選択（▾）
+     ※曜日でルーティンを組む人向けには設定で曜日テンプレも可
+   - 分析は「今日の分析」= 既存の体重変動分析が入る枠。
+     週単位の分析はデータ画面へ
    ============================================================ */
 :root {
   --bg: #101214;
@@ -49,16 +49,18 @@ body {
 }
 @media (max-width:430px) {
   body { padding:0; }
-  .phone { width:100%; height:100vh; border-radius:0; box-shadow:none; border:none; }
+  .phone { width:100%; height:100dvh; border-radius:0; box-shadow:none; border:none; }
 }
-.statusbar { height:42px; flex-shrink:0; display:flex; align-items:center; justify-content:space-between; padding:0 26px; font-size:12px; color:var(--faint); font-weight:700; }
-.viewport { flex:1; overflow:hidden; position:relative; }
-.page { position:absolute; inset:0; overflow-y:auto; padding:0 16px 110px; display:none; scrollbar-width:none; }
-.page::-webkit-scrollbar { display:none; }
-.page.active { display:block; }
+.statusbar { height:38px; flex-shrink:0; display:flex; align-items:center; justify-content:space-between; padding:0 26px; font-size:11px; color:var(--faint); font-weight:700; }
+.viewport { flex:1; overflow:hidden; position:relative; display:flex; flex-direction:column; }
+.page { position:absolute; inset:0; padding:0 14px 96px; display:none; }
+.page.active { display:flex; flex-direction:column; }
+.page.scrollable { overflow-y:auto; display:none; scrollbar-width:none; }
+.page.scrollable.active { display:block; }
+.page.scrollable::-webkit-scrollbar { display:none; }
 
 /* ===== 共通 ===== */
-.card { background:var(--surface); border:1px solid var(--line); border-radius:16px; margin-bottom:10px; }
+.tile { background:var(--surface); border:1px solid var(--line); border-radius:14px; }
 .toast {
   position:absolute; left:50%; bottom:170px; transform:translateX(-50%) translateY(10px);
   background:#22272d; border:1px solid var(--line); color:var(--text);
@@ -68,115 +70,123 @@ body {
 .toast.show { opacity:1; transform:translateX(-50%); }
 .toast b { color:var(--acc); }
 
-/* ============================================================
-   ヘッダー: 大会コンテキストを常時1行で（どの画面でも迷子にならない）
-   ============================================================ */
-.ctx-strip {
-  display:flex; align-items:center; gap:8px;
-  padding:10px 4px 12px; font-size:12px; color:var(--sub);
-}
-.ctx-strip .days { font-family:'Inter'; font-weight:800; font-size:13px; color:var(--acc); }
-.ctx-strip .sep { color:var(--faint); }
+.ctx-strip { flex-shrink:0; display:flex; align-items:center; gap:7px; padding:6px 4px 8px; font-size:11px; color:var(--sub); }
+.ctx-strip .days { font-family:'Inter'; font-weight:800; font-size:12px; color:var(--acc); }
 .ctx-strip .auto { margin-left:auto; font-size:10px; color:var(--faint); display:flex; align-items:center; gap:4px; }
-.ctx-strip .auto i { width:6px; height:6px; border-radius:50%; background:var(--good); display:inline-block; }
+.ctx-strip .auto i { width:6px; height:6px; border-radius:50%; background:var(--good); }
 
 /* ============================================================
-   今日 — チェックリスト型ホーム
+   今日 — 1画面完結（flexで圧縮、スクロールなし）
    ============================================================ */
-.today-title { display:flex; align-items:baseline; justify-content:space-between; padding:2px 4px 14px; }
-.today-title h1 { font-size:24px; font-weight:900; }
-.today-title h1 small { font-size:13px; color:var(--sub); font-weight:500; margin-left:8px; }
-.date-nav { display:flex; align-items:center; gap:2px; }
-.date-nav button { width:44px; height:44px; background:var(--surface); border:1px solid var(--line); border-radius:12px; color:var(--sub); font-size:18px; cursor:pointer; }
+#pg-today { gap:8px; }
+.today-title { flex-shrink:0; display:flex; align-items:center; justify-content:space-between; padding:0 2px; }
+.today-title h1 { font-size:clamp(17px,5vw,21px); font-weight:900; }
+.today-title h1 small { font-size:12px; color:var(--sub); font-weight:500; margin-left:7px; }
+.date-nav { display:flex; gap:4px; }
+.date-nav button { width:38px; height:38px; background:var(--surface); border:1px solid var(--line); border-radius:11px; color:var(--sub); font-size:16px; cursor:pointer; }
 
-.task {
-  display:flex; align-items:center; gap:14px;
-  padding:16px; min-height:72px; cursor:pointer;
-  border-bottom:1px solid var(--line);
+.grid2 { flex-shrink:0; display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.mini {
+  padding:10px 13px; cursor:pointer; position:relative;
+  display:flex; flex-direction:column; justify-content:center; min-height:64px;
 }
-.task:last-child { border-bottom:none; }
-.task:active { background:var(--surface2); }
-.task .st {
-  width:26px; height:26px; border-radius:50%; flex-shrink:0;
-  border:2px solid var(--faint);
-  display:flex; align-items:center; justify-content:center;
-  font-size:13px; color:var(--bg); font-weight:900;
-}
-.task.done .st { background:var(--acc); border-color:var(--acc); }
-.task.done .st::after { content:'✓'; }
-.task-main { flex:1; min-width:0; }
-.task-name { font-size:14px; font-weight:700; }
-.task-sub { font-size:11px; color:var(--sub); margin-top:2px; }
-.task-val { font-family:'Inter'; font-weight:800; font-size:20px; text-align:right; }
-.task-val small { font-size:11px; color:var(--sub); font-weight:500; margin-left:2px; }
-.task-val .todo { font-size:12px; color:var(--faint); font-weight:700; }
-.task-cta {
-  flex-shrink:0; background:var(--acc-dim); color:var(--acc);
-  border:1px solid rgba(201,240,77,0.3); border-radius:10px;
-  padding:10px 14px; font-size:12px; font-weight:900; cursor:pointer;
-}
+.mini:active { background:var(--surface2); }
+.mini .k { font-size:11px; font-weight:700; color:var(--sub); display:flex; align-items:center; gap:6px; }
+.mini .k .ok { color:var(--acc); font-size:12px; }
+.mini .v { font-family:'Inter'; font-weight:800; font-size:clamp(18px,5.5vw,22px); margin-top:2px; }
+.mini .v small { font-size:11px; color:var(--sub); font-weight:500; margin-left:2px; font-family:'Noto Sans JP'; }
+.mini .s { font-size:10px; color:var(--faint); margin-top:1px; }
+.mini .s .g { color:var(--good); }
+.mini .todo { color:var(--faint); font-size:13px; font-weight:700; margin-top:4px; }
 
-/* 水分はその場で完結（画面遷移させない） */
-.water-chips { display:flex; gap:8px; padding:0 16px 16px; }
-.water-chips button {
-  flex:1; height:46px; background:var(--surface2); border:1px solid var(--line);
-  border-radius:12px; color:var(--text); font-size:13px; font-weight:700; cursor:pointer;
+/* 食事タイル: PFC+塩分入力 → kcal自動計算 */
+.meal { flex-shrink:0; padding:11px 13px; }
+.meal-head { display:flex; align-items:baseline; gap:8px; margin-bottom:8px; }
+.meal-head .k { font-size:11px; font-weight:700; color:var(--sub); }
+.meal-head .kcal { margin-left:auto; font-family:'Inter'; font-weight:800; font-size:clamp(17px,5vw,20px); }
+.meal-head .kcal small { font-size:10px; color:var(--faint); font-weight:500; font-family:'Noto Sans JP'; margin-left:3px; }
+.meal-cells { display:grid; grid-template-columns:repeat(4,1fr); gap:7px; }
+.mcell {
+  background:var(--surface2); border:1px solid var(--line); border-radius:10px;
+  padding:7px 4px; text-align:center; cursor:pointer; min-height:52px;
+}
+.mcell.editing { border-color:var(--acc); background:var(--acc-dim); }
+.mcell .l { font-size:9px; color:var(--faint); font-weight:700; }
+.mcell .n { font-family:'Inter'; font-weight:800; font-size:16px; margin-top:1px; }
+.mcell .n small { font-size:9px; color:var(--faint); font-family:'Noto Sans JP'; }
+.mcell .n .ph { color:var(--faint); }
+
+/* 水分タイル: チップは✎で編集可能 */
+.water { flex-shrink:0; padding:11px 13px; }
+.water-head { display:flex; align-items:baseline; gap:8px; margin-bottom:7px; }
+.water-head .k { font-size:11px; font-weight:700; color:var(--sub); }
+.water-head .v { margin-left:auto; font-family:'Inter'; font-weight:800; font-size:clamp(17px,5vw,20px); }
+.water-head .v small { font-size:10px; color:var(--faint); font-family:'Noto Sans JP'; margin-left:2px; }
+.water-bar { height:5px; background:var(--line); border-radius:3px; overflow:hidden; margin-bottom:8px; }
+.water-bar i { display:block; height:100%; background:var(--acc); border-radius:3px; transition:width .3s; }
+.water-row { display:flex; gap:7px; }
+.wchip {
+  flex:1; height:40px; background:var(--surface2); border:1px solid var(--line);
+  border-radius:10px; color:var(--text); font-size:12px; font-weight:700; cursor:pointer;
+  font-family:'Inter';
+}
+.wchip:active { border-color:var(--acc); color:var(--acc); }
+.wchip.editing { border-color:var(--warn); color:var(--warn); }
+.wedit {
+  width:40px; height:40px; flex-shrink:0; background:none; border:1px dashed var(--faint);
+  border-radius:10px; color:var(--faint); font-size:14px; cursor:pointer;
+}
+.wedit.on { border-color:var(--warn); color:var(--warn); border-style:solid; }
+
+/* 筋トレタイル: メニューはその場で選択（曜日固定にしない） */
+.gymtile { flex-shrink:0; padding:11px 13px; display:flex; align-items:center; gap:12px; }
+.gymtile .k { font-size:11px; font-weight:700; color:var(--sub); margin-bottom:3px; }
+.menu-pick {
+  display:inline-flex; align-items:center; gap:6px;
+  font-size:14px; font-weight:700; cursor:pointer;
+}
+.menu-pick .car { color:var(--acc); font-size:11px; }
+.gymtile .s { font-size:10px; color:var(--faint); margin-top:2px; }
+.gymtile .go {
+  margin-left:auto; flex-shrink:0; background:var(--acc); color:#101214;
+  border:none; border-radius:11px; padding:12px 20px; font-size:13px; font-weight:900; cursor:pointer;
   font-family:'Noto Sans JP';
 }
-.water-chips button:active { border-color:var(--acc); color:var(--acc); }
-.water-bar-wrap { padding:0 16px 14px; }
-.water-bar { height:6px; background:var(--line); border-radius:3px; overflow:hidden; }
-.water-bar i { display:block; height:100%; background:var(--acc); border-radius:3px; transition:width .3s; }
 
-/* 進捗サマリー（言葉で評価を返す — 数字の羅列にしない） */
-.verdict { padding:16px; display:flex; gap:14px; align-items:center; }
-.verdict .face { font-size:30px; }
-.verdict .tx { font-size:13px; line-height:1.7; color:var(--sub); }
-.verdict .tx b { color:var(--text); }
-.verdict .tx .ok { color:var(--good); font-weight:700; }
+/* 今日の分析（既存の体重変動分析が入る枠）: 余った高さを使う */
+.analysis { flex:1; min-height:0; padding:12px 14px; overflow:hidden; display:flex; flex-direction:column; }
+.analysis .hd { font-size:11px; font-weight:700; color:var(--sub); margin-bottom:7px; flex-shrink:0; display:flex; justify-content:space-between; }
+.analysis .hd span { color:var(--faint); font-weight:500; }
+.analysis .body { font-size:12px; line-height:1.75; color:var(--sub); overflow:hidden; }
+.analysis .body b { color:var(--text); }
+.analysis .body .g { color:var(--good); font-weight:700; }
+.analysis .body .w { color:var(--warn); font-weight:700; }
 
 /* ============================================================
-   筋トレ — セット記録に全振り
+   筋トレ（スクロール可）
    ============================================================ */
 .gym-top { display:flex; align-items:center; justify-content:space-between; padding:2px 4px 12px; }
-.gym-top h1 { font-size:24px; font-weight:900; }
+.gym-top h1 { font-size:22px; font-weight:900; display:flex; align-items:center; gap:8px; cursor:pointer; }
+.gym-top h1 .car { color:var(--acc); font-size:13px; }
 .sw-pill { display:flex; align-items:center; gap:10px; background:var(--surface); border:1px solid var(--line); border-radius:999px; padding:8px 14px; }
 .sw-pill .t { font-family:'Inter'; font-weight:800; font-size:16px; color:var(--acc); }
 .sw-pill button { background:none; border:none; color:var(--sub); font-size:11px; font-weight:700; cursor:pointer; font-family:'Noto Sans JP'; }
-
-.ex { padding:0; overflow:hidden; }
+.card { background:var(--surface); border:1px solid var(--line); border-radius:16px; margin-bottom:10px; }
 .ex-h { display:flex; align-items:center; gap:10px; padding:14px 16px 10px; }
 .ex-h .nm { font-size:15px; font-weight:700; flex:1; }
-.copy-prev {
-  background:var(--surface2); border:1px solid var(--line); color:var(--sub);
-  border-radius:10px; padding:8px 12px; font-size:11px; font-weight:700; cursor:pointer;
-  font-family:'Noto Sans JP';
-}
+.copy-prev { background:var(--surface2); border:1px solid var(--line); color:var(--sub); border-radius:10px; padding:8px 12px; font-size:11px; font-weight:700; cursor:pointer; font-family:'Noto Sans JP'; }
 .copy-prev:active { color:var(--acc); border-color:var(--acc); }
 .srow { display:flex; align-items:center; gap:8px; padding:7px 16px; }
 .srow .n { width:22px; font-size:12px; color:var(--faint); font-weight:700; font-family:'Inter'; }
-.cell {
-  flex:1; height:52px; background:var(--surface2); border:1px solid var(--line);
-  border-radius:12px; display:flex; align-items:center; justify-content:center; gap:3px;
-  font-family:'Inter'; font-size:19px; font-weight:800; cursor:pointer;
-}
+.cell { flex:1; height:52px; background:var(--surface2); border:1px solid var(--line); border-radius:12px; display:flex; align-items:center; justify-content:center; gap:3px; font-family:'Inter'; font-size:19px; font-weight:800; cursor:pointer; }
 .cell small { font-size:10px; color:var(--faint); font-weight:500; }
 .cell.editing { border-color:var(--acc); background:var(--acc-dim); }
 .cell .ph { color:var(--faint); }
-.chk {
-  width:52px; height:52px; flex-shrink:0; border-radius:12px;
-  background:var(--surface2); border:1px solid var(--line);
-  color:var(--faint); font-size:20px; cursor:pointer; font-weight:900;
-}
+.chk { width:52px; height:52px; flex-shrink:0; border-radius:12px; background:var(--surface2); border:1px solid var(--line); color:var(--faint); font-size:20px; cursor:pointer; font-weight:900; }
 .chk.on { background:var(--acc); border-color:var(--acc); color:#101214; }
 .ex-add { width:100%; background:none; border:none; border-top:1px solid var(--line); color:var(--sub); padding:14px; font-size:12px; font-weight:700; cursor:pointer; font-family:'Noto Sans JP'; margin-top:6px; }
-.big-add {
-  width:100%; height:56px; border-radius:16px; border:1px dashed var(--faint);
-  background:none; color:var(--sub); font-size:14px; font-weight:700; cursor:pointer;
-  font-family:'Noto Sans JP'; margin-bottom:10px;
-}
+.big-add { width:100%; height:56px; border-radius:16px; border:1px dashed var(--faint); background:none; color:var(--sub); font-size:14px; font-weight:700; cursor:pointer; font-family:'Noto Sans JP'; margin-bottom:10px; }
 
-/* レストタイマー: セット✓で自動開始、画面下に常駐 */
 .rest {
   position:absolute; left:12px; right:12px; bottom:92px; z-index:30;
   background:#1c2410; border:1px solid rgba(201,240,77,0.45);
@@ -193,45 +203,55 @@ body {
 .rest button { height:44px; padding:0 14px; background:rgba(255,255,255,0.07); border:none; border-radius:10px; color:var(--text); font-size:12px; font-weight:700; cursor:pointer; font-family:'Noto Sans JP'; }
 
 /* ============================================================
-   専用数値キーパッド（OSキーボード不使用）
+   キーパッド（ステップボタン廃止・前回値のみ）
    ============================================================ */
 .pad-ov { position:absolute; inset:0; z-index:48; display:none; }
 .pad-ov.open { display:block; }
 .pad {
   position:absolute; left:0; right:0; bottom:0; z-index:50;
   background:#15181c; border-top:1px solid var(--line);
-  border-radius:24px 24px 0 0; padding:14px 14px 30px;
+  border-radius:24px 24px 0 0; padding:14px 14px 28px;
   transform:translateY(110%); transition:transform .22s ease;
 }
 .pad.open { transform:none; }
 .pad-head { display:flex; align-items:center; padding:2px 6px 12px; gap:10px; }
 .pad-head .lbl { font-size:12px; color:var(--sub); font-weight:700; }
+.pad-head .prev { background:var(--surface2); border:1px solid var(--line); color:var(--sub); border-radius:9px; padding:7px 12px; font-size:11px; font-weight:700; cursor:pointer; font-family:'Noto Sans JP'; }
+.pad-head .prev:active { color:var(--acc); border-color:var(--acc); }
 .pad-head .val { font-family:'Inter'; font-size:30px; font-weight:800; color:var(--acc); margin-left:auto; }
-.pad-quick { display:flex; gap:8px; margin-bottom:10px; }
-.pad-quick button {
-  flex:1; height:46px; background:var(--surface2); border:1px solid var(--line);
-  border-radius:12px; color:var(--text); font-size:13px; font-weight:700; cursor:pointer;
-  font-family:'Inter';
-}
-.pad-quick button.prev { font-family:'Noto Sans JP'; color:var(--sub); font-size:12px; }
 .pad-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
-.pad-grid button {
-  height:58px; background:var(--surface); border:1px solid var(--line);
-  border-radius:14px; color:var(--text); font-family:'Inter';
-  font-size:22px; font-weight:700; cursor:pointer;
-}
+.pad-grid button { height:58px; background:var(--surface); border:1px solid var(--line); border-radius:14px; color:var(--text); font-family:'Inter'; font-size:22px; font-weight:700; cursor:pointer; }
 .pad-grid button:active { background:var(--surface2); }
 .pad-grid .okbtn { grid-row:span 2; background:var(--acc); color:#101214; font-family:'Noto Sans JP'; font-size:16px; font-weight:900; border:none; }
 
-/* ============================================================
-   データ — 結論ファースト
-   ============================================================ */
-.insight {
-  padding:16px; border-left:3px solid var(--acc);
-  background:linear-gradient(90deg, var(--acc-dim), transparent 60%);
-  border-radius:0 16px 16px 0; margin-bottom:10px;
-  font-size:13px; line-height:1.8; color:var(--sub);
+/* ===== メニュー選択シート ===== */
+.sheet-ov { position:absolute; inset:0; background:rgba(0,0,0,0.6); z-index:48; display:none; }
+.sheet-ov.open { display:block; }
+.sheet {
+  position:absolute; left:0; right:0; bottom:0; z-index:50;
+  background:#15181c; border-top:1px solid var(--line);
+  border-radius:24px 24px 0 0; padding:16px 18px 30px;
+  transform:translateY(110%); transition:transform .22s ease;
 }
+.sheet.open { transform:none; }
+.sheet h3 { font-size:14px; font-weight:900; margin-bottom:4px; }
+.sheet .note { font-size:11px; color:var(--faint); margin-bottom:14px; }
+.menu-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
+.menu-grid button {
+  height:56px; background:var(--surface); border:1px solid var(--line); border-radius:13px;
+  color:var(--text); font-size:13px; font-weight:700; cursor:pointer; font-family:'Noto Sans JP';
+}
+.menu-grid button.sel { background:var(--acc-dim); border-color:var(--acc); color:var(--acc); }
+.sheet .tmpl {
+  width:100%; margin-top:10px; height:48px; background:none;
+  border:1px dashed var(--faint); border-radius:12px; color:var(--sub);
+  font-size:12px; font-weight:700; cursor:pointer; font-family:'Noto Sans JP';
+}
+
+/* ============================================================
+   データ — 週・長期の分析はこちら
+   ============================================================ */
+.insight { padding:16px; border-left:3px solid var(--acc); background:linear-gradient(90deg, var(--acc-dim), transparent 60%); border-radius:0 16px 16px 0; margin-bottom:10px; font-size:13px; line-height:1.8; color:var(--sub); }
 .insight b { color:var(--text); }
 .insight .ok { color:var(--good); font-weight:700; }
 .chart-card { padding:16px; }
@@ -244,22 +264,13 @@ body {
 .kpis .v.g { color:var(--good); }
 
 /* ============================================================
-   ナビ — 親指で届く3+1
+   ナビ
    ============================================================ */
-.nav {
-  position:absolute; left:0; right:0; bottom:0; height:82px; z-index:40;
-  background:rgba(16,18,20,0.95); backdrop-filter:blur(16px);
-  border-top:1px solid var(--line); display:flex; padding-top:8px;
-}
-.nav button {
-  flex:1; background:none; border:none; cursor:pointer;
-  color:var(--faint); font-size:10px; font-weight:700; font-family:'Noto Sans JP';
-  display:flex; flex-direction:column; align-items:center; gap:4px;
-}
+.nav { position:absolute; left:0; right:0; bottom:0; height:80px; z-index:40; background:rgba(16,18,20,0.95); backdrop-filter:blur(16px); border-top:1px solid var(--line); display:flex; padding-top:8px; }
+.nav button { flex:1; background:none; border:none; cursor:pointer; color:var(--faint); font-size:10px; font-weight:700; font-family:'Noto Sans JP'; display:flex; flex-direction:column; align-items:center; gap:4px; }
 .nav button svg { width:24px; height:24px; stroke:currentColor; fill:none; stroke-width:1.9; stroke-linecap:round; stroke-linejoin:round; }
 .nav button.on { color:var(--acc); }
 
-/* デザインノート */
 .notes-fab { position:fixed; right:24px; bottom:24px; z-index:90; background:#1d2126; color:var(--acc); border:1px solid rgba(201,240,77,0.35); border-radius:999px; padding:12px 18px; font-size:13px; font-weight:700; cursor:pointer; font-family:'Noto Sans JP'; }
 .notes-panel { position:fixed; right:24px; bottom:76px; z-index:91; width:390px; max-width:calc(100vw - 48px); max-height:72vh; overflow-y:auto; background:#14171a; border:1px solid var(--line); border-radius:18px; padding:24px; display:none; box-shadow:0 24px 80px rgba(0,0,0,0.8); }
 .notes-panel.open { display:block; }
@@ -272,14 +283,13 @@ body {
 <body>
 
 <div class="phone">
-  <div class="statusbar"><span>18:29</span><span>UX REDESIGN MOCK</span><span>61%</span></div>
+  <div class="statusbar"><span>18:29</span><span>UX MOCK v2</span><span>61%</span></div>
   <div class="viewport">
 
-    <!-- ============ 今日 ============ -->
+    <!-- ============ 今日（1画面完結・スクロールなし） ============ -->
     <div class="page active" id="pg-today">
       <div class="ctx-strip">
-        <span class="days num">D-47</span><span>東京選手権</span>
-        <span class="sep">|</span><span>減量 W8/14 ・ あと −2.1kg</span>
+        <span class="days num">D-47</span><span>東京選手権 ・ あと −2.1kg</span>
         <span class="auto"><i></i>自動保存</span>
       </div>
 
@@ -288,60 +298,91 @@ body {
         <div class="date-nav"><button>‹</button><button>›</button></div>
       </div>
 
-      <!-- 今日やることリスト: 状態が一目で分かり、未記録の行を押せばその場で入力 -->
-      <div class="card">
-        <div class="task done" id="task-weight" onclick="openPad('体重 (kg)', 'weight', '62.4', '62.7')">
-          <div class="st"></div>
-          <div class="task-main"><div class="task-name">体重</div><div class="task-sub">昨日 62.7 → <span style="color:var(--good)">−0.3kg</span></div></div>
-          <div class="task-val num" id="weight-val">62.4<small>kg</small></div>
+      <div class="grid2">
+        <div class="tile mini" onclick="openPad('体重 (kg)', 'weight', '62.4', '62.7')">
+          <div class="k">体重 <span class="ok">✓</span></div>
+          <div class="v num" id="weight-val">62.4<small>kg</small></div>
+          <div class="s">前日比 <span class="g">−0.3</span></div>
         </div>
-        <div class="task done">
-          <div class="st"></div>
-          <div class="task-main"><div class="task-name">睡眠</div><div class="task-sub">23:30 → 7:00</div></div>
-          <div class="task-val num">7.5<small>h</small></div>
-        </div>
-        <div class="task" id="task-meal" onclick="openPad('カロリー (kcal)', 'meal', '', '2,150')">
-          <div class="st"></div>
-          <div class="task-main"><div class="task-name">食事 / PFC</div><div class="task-sub">目標 2,200kcal ・ P160g</div></div>
-          <div class="task-val" id="meal-val"><span class="todo">未記録 ›</span></div>
-        </div>
-        <div class="task" style="cursor:default;">
-          <div class="st" id="water-st"></div>
-          <div class="task-main"><div class="task-name">水分</div><div class="task-sub">目標 3,000ml</div></div>
-          <div class="task-val num"><span id="water-num">1,600</span><small>ml</small></div>
-        </div>
-        <div class="water-bar-wrap"><div class="water-bar"><i id="water-fill" style="width:53%"></i></div></div>
-        <div class="water-chips">
-          <button onclick="water(250)">＋250</button>
-          <button onclick="water(500)">＋500</button>
-          <button onclick="water(1000)">＋1L</button>
-        </div>
-        <div class="task" onclick="go('gym')">
-          <div class="st"></div>
-          <div class="task-main"><div class="task-name">筋トレ — 肩の日</div><div class="task-sub">前回 6/7 ・ 5種目 18セット</div></div>
-          <div class="task-cta">開始</div>
+        <div class="tile mini" onclick="openPad('睡眠時間 (h)', 'sleep', '7.5', '7.0')">
+          <div class="k">睡眠 <span class="ok" id="sleep-ok">✓</span></div>
+          <div class="v num" id="sleep-val">7.5<small>h</small></div>
+          <div class="s">23:30 → 7:00</div>
         </div>
       </div>
 
-      <!-- 数字の羅列ではなく「言葉の評価」を返す -->
-      <div class="card verdict">
-        <div class="face">👍</div>
-        <div class="tx"><b>今週は順調。</b>減量ペース <span class="ok">−0.32kg/週</span>（適正圏内）。タンパク質も6日連続で目標達成。このまま <b>6/25 の中間チェック</b>まで継続。</div>
+      <!-- 食事: PFC+塩分を入力、カロリーは自動計算 -->
+      <div class="tile meal">
+        <div class="meal-head">
+          <span class="k">食事</span>
+          <span class="kcal num" id="kcal-auto">1,850<small>kcal 自動計算</small></span>
+        </div>
+        <div class="meal-cells">
+          <div class="mcell" id="mc-p" onclick="openPad('タンパク質 (g)', 'p', '142', '146')">
+            <div class="l">P</div><div class="n num">142<small>g</small></div>
+          </div>
+          <div class="mcell" id="mc-f" onclick="openPad('脂質 (g)', 'f', '48', '52')">
+            <div class="l">F</div><div class="n num">48<small>g</small></div>
+          </div>
+          <div class="mcell" id="mc-c" onclick="openPad('炭水化物 (g)', 'c', '198', '210')">
+            <div class="l">C</div><div class="n num">198<small>g</small></div>
+          </div>
+          <div class="mcell" id="mc-salt" onclick="openPad('塩分 (g)', 'salt', '', '6.5')">
+            <div class="l">塩分</div><div class="n num"><span class="ph">—</span><small>g</small></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 水分: チップは✎で自由に編集 -->
+      <div class="tile water">
+        <div class="water-head">
+          <span class="k">水分</span>
+          <span class="v num"><span id="water-num">1,600</span><small>/ 3,000ml</small></span>
+        </div>
+        <div class="water-bar"><i id="water-fill" style="width:53%"></i></div>
+        <div class="water-row">
+          <button class="wchip" id="wc0" onclick="waterChip(0)">＋250</button>
+          <button class="wchip" id="wc1" onclick="waterChip(1)">＋500</button>
+          <button class="wchip" id="wc2" onclick="waterChip(2)">＋1000</button>
+          <button class="wedit" id="wedit" onclick="toggleWaterEdit()">✎</button>
+        </div>
+      </div>
+
+      <!-- 筋トレ: メニューはその場で選択（曜日固定ではない） -->
+      <div class="tile gymtile">
+        <div>
+          <div class="k">筋トレ</div>
+          <div class="menu-pick" onclick="openMenuSheet()">
+            <span id="menu-name">メニュー未選択</span><span class="car">▾</span>
+          </div>
+          <div class="s" id="menu-sub">タップして部位を選択 ・ 前回 6/10 背中</div>
+        </div>
+        <button class="go" onclick="go('gym')">開始</button>
+      </div>
+
+      <!-- 今日の分析（既存の体重変動分析が入る枠） -->
+      <div class="tile analysis">
+        <div class="hd">🔍 今日の分析 <span>体重変動分析</span></div>
+        <div class="body">
+          前日比 <span class="g">−0.3kg</span> — 減量ペース内 ✓<br>
+          要因: 昨日は <b>2,080kcal</b>・トレーニングあり・水分 2.7L と良好。<br>
+          今日はあと <b>残り350kcal / P あと18g</b>。塩分が未記録です。
+        </div>
       </div>
     </div>
 
     <!-- ============ 筋トレ ============ -->
-    <div class="page" id="pg-gym">
+    <div class="page scrollable" id="pg-gym">
       <div class="ctx-strip">
         <span class="days num">D-47</span><span>東京選手権</span>
         <span class="auto"><i></i>自動保存</span>
       </div>
       <div class="gym-top">
-        <h1>肩の日</h1>
+        <h1 onclick="openMenuSheet()"><span id="gym-title">メニュー未選択</span><span class="car">▾</span></h1>
         <div class="sw-pill"><span class="t num" id="sw">42:18</span><button>終了</button></div>
       </div>
 
-      <div class="card ex">
+      <div class="card">
         <div class="ex-h">
           <span class="nm">サイドレイズ</span>
           <button class="copy-prev" onclick="toast('前回のセットをコピーしました')">前回コピー 12kg×12×3</button>
@@ -367,7 +408,7 @@ body {
         <button class="ex-add">＋ セットを追加</button>
       </div>
 
-      <div class="card ex">
+      <div class="card">
         <div class="ex-h">
           <span class="nm">ショルダープレス</span>
           <button class="copy-prev" onclick="toast('前回のセットをコピーしました')">前回コピー 40kg×10×3</button>
@@ -390,17 +431,16 @@ body {
       <button class="big-add">＋ 種目を追加</button>
     </div>
 
-    <!-- ============ データ ============ -->
-    <div class="page" id="pg-data">
+    <!-- ============ データ（週・長期分析はこちら） ============ -->
+    <div class="page scrollable" id="pg-data">
       <div class="ctx-strip">
         <span class="days num">D-47</span><span>東京選手権</span>
         <span class="auto"><i></i>自動保存</span>
       </div>
-      <div class="today-title"><h1>データ</h1></div>
+      <div class="today-title" style="padding-bottom:12px;"><h1>データ</h1></div>
 
-      <!-- 結論ファースト: グラフを読まなくても分かる -->
       <div class="insight">
-        <b>結論:</b> 減量は<span class="ok">想定ライン上</span>。このペースなら大会1週前に <b>60.8kg</b> 着地見込み → 最終週の水抜きで <b>目標60.3kg</b> に届く計算。
+        <b>直近7日:</b> 減量ペース<span class="ok"> −0.32kg/週</span>で想定ライン上。このペースなら大会1週前に <b>60.8kg</b> 着地見込み → 最終週調整で <b>目標60.3kg</b> に届く計算。
       </div>
 
       <div class="card chart-card">
@@ -411,7 +451,6 @@ body {
           <path d="M10,26 L33,31 L56,29 L79,38 L102,35 L125,44 L148,41 L171,50 L194,47 L217,55 L240,52 L263,61 L286,59 L309,67 L330,69"
                 stroke="#c9f04d" stroke-width="2.4" fill="none" stroke-linecap="round"/>
           <circle cx="330" cy="69" r="4.5" fill="#101214" stroke="#c9f04d" stroke-width="3"/>
-          <!-- 想定ライン -->
           <path d="M10,26 L330,75" stroke="#545c64" stroke-width="1.2" stroke-dasharray="3 5"/>
         </svg>
         <div class="kpis">
@@ -437,13 +476,13 @@ body {
         <div class="kpis" style="border-top:none;margin-top:0;padding-top:0;">
           <div><div class="k">摂取</div><div class="v num">2,080</div></div>
           <div><div class="k">P/体重</div><div class="v num g">2.3g</div></div>
-          <div><div class="k">目標達成</div><div class="v num">6/7日</div></div>
+          <div><div class="k">塩分平均</div><div class="v num">6.8g</div></div>
           <div><div class="k">水分平均</div><div class="v num">2.7L</div></div>
         </div>
       </div>
     </div>
 
-    <!-- レストタイマー（セット✓で自動開始） -->
+    <!-- レストタイマー -->
     <div class="rest" id="rest">
       <span class="t num" id="rest-t">1:30</span>
       <div class="meta">
@@ -454,19 +493,13 @@ body {
       <button onclick="restStop()">スキップ</button>
     </div>
 
-    <!-- 数値キーパッド -->
+    <!-- キーパッド（ステップボタンなし） -->
     <div class="pad-ov" id="pad-ov" onclick="closePad()"></div>
     <div class="pad" id="pad">
       <div class="pad-head">
         <span class="lbl" id="pad-lbl">体重 (kg)</span>
-        <span class="val num" id="pad-val">62.4</span>
-      </div>
-      <div class="pad-quick">
-        <button onclick="padStep(-2.5)">−2.5</button>
-        <button onclick="padStep(-0.5)">−0.5</button>
-        <button onclick="padStep(0.5)">＋0.5</button>
-        <button onclick="padStep(2.5)">＋2.5</button>
         <button class="prev" id="pad-prev" onclick="padPrev()">前回 62.7</button>
+        <span class="val num" id="pad-val">62.4</span>
       </div>
       <div class="pad-grid">
         <button onclick="padKey('7')">7</button><button onclick="padKey('8')">8</button><button onclick="padKey('9')">9</button>
@@ -476,6 +509,24 @@ body {
         <button onclick="padKey('1')">1</button><button onclick="padKey('2')">2</button><button onclick="padKey('3')">3</button>
         <button onclick="padKey('0')">0</button><button onclick="padKey('.')">.</button><button onclick="padKey('clear')">C</button>
       </div>
+    </div>
+
+    <!-- 筋トレメニュー選択シート -->
+    <div class="sheet-ov" id="menu-ov" onclick="closeMenuSheet()"></div>
+    <div class="sheet" id="menu-sheet">
+      <h3>今日のメニュー</h3>
+      <div class="note">曜日でルーティンを組んでいる人は設定の「曜日テンプレ」で自動選択にできます</div>
+      <div class="menu-grid">
+        <button onclick="pickMenu(this,'胸')">胸</button>
+        <button onclick="pickMenu(this,'背中')">背中</button>
+        <button onclick="pickMenu(this,'肩')">肩</button>
+        <button onclick="pickMenu(this,'腕')">腕</button>
+        <button onclick="pickMenu(this,'脚')">脚</button>
+        <button onclick="pickMenu(this,'腹筋')">腹筋</button>
+        <button onclick="pickMenu(this,'有酸素')">有酸素</button>
+        <button onclick="pickMenu(this,'自由')">自由</button>
+      </div>
+      <button class="tmpl" onclick="toast('設定 → 曜日テンプレ（モック未実装）')">⚙ 曜日テンプレを設定する</button>
     </div>
 
     <div class="toast" id="toast"></div>
@@ -497,20 +548,17 @@ body {
   </nav>
 </div>
 
-<button class="notes-fab" onclick="document.getElementById('np').classList.toggle('open')">💡 設計の意図</button>
+<button class="notes-fab" onclick="document.getElementById('np').classList.toggle('open')">💡 v2の変更点</button>
 <div class="notes-panel" id="np">
-  <h2>UX主導の再設計 — 何を変えたか</h2>
+  <h2>v2 — フィードバック反映</h2>
   <ul>
-    <li><b>保存ボタンの廃止。</b>全項目が自動保存（ヘッダーに常時「●自動保存」表示）。「保存バーがキーボードに隠れる」「保存バーが残る」系の問題はUIの工夫ではなく<b>概念ごと削除</b>して解決。</li>
-    <li><b>OSキーボードを使わない。</b>数値入力は下半分の専用キーパッド。±2.5kg/±0.5kgのステップと「前回値」が1タップ。キーボードがUIを隠す問題自体が起きない。ジムで手袋・汗ありでも押せる大型キー。</li>
-    <li><b>ホーム＝今日のチェックリスト。</b>体重・睡眠・食事・水分・筋トレが「済/未」の行で並ぶ。アプリを開く理由は毎日「今日の記録を埋める」ことなので、それをそのままUIにした。未記録の行をタップ→その場で入力→行が✓になる。</li>
-    <li><b>水分は画面遷移なし。</b>+250/+500/+1Lをホーム上で完結。専用画面もタブも持たない。</li>
-    <li><b>セット✓でレストタイマー自動開始。</b>「タイマーを開いて押す」操作を削除。バーは常駐し+30s/スキップのみ。</li>
-    <li><b>「前回コピー」を種目ごとに。</b>筋トレ記録の実態は前回の微修正。3セット分が1タップで入り、変わった所だけ直す。</li>
-    <li><b>データ画面は結論ファースト。</b>グラフの前に「順調か否か・着地予測」を日本語で表示。数字の羅列を読ませない。</li>
-    <li><b>大会コンテキストを全画面のヘッダーに常設。</b>D-47と残りkgがどの画面でも見える。競技者の意思決定は常に大会基準だから。</li>
-    <li><b>雰囲気:</b> ジム（暗所）で使う前提でダークは維持。ただし彩度を落とし、アクセント1色＋状態色（緑/黄/赤）のみ。数字は等幅・大サイズで瞬読性優先。</li>
-    <li><b>ナビは4つ。</b>記録タブを廃止（ホームが記録そのものなので）。今日・筋トレ・データ・設定。</li>
+    <li><b>「今日」は1画面完結。</b>スクロールなし。flexレイアウトで端末高さに応じて各タイルが自動圧縮。分析枠が余白を吸収。</li>
+    <li><b>±2.5などのステップボタンを全廃。</b>キーパッドは数字＋「前回値」ボタンのみ。体重も筋トレも同じ。</li>
+    <li><b>睡眠タップで入力可能に修正。</b></li>
+    <li><b>食事はP/F/C/塩分の4項目を入力 → カロリーは自動計算</b>（P×4+F×9+C×4）。塩分は大会前の塩抜き管理用。</li>
+    <li><b>水分チップは✎で編集モード</b> → チップをタップすると量を自分で設定できる（250/500/1000は初期値）。</li>
+    <li><b>筋トレメニューは曜日固定にしない。</b>「▾」でその場で部位を選択。曜日でルーティンを組む人向けには設定の「曜日テンプレ」で自動選択も可能（両対応）。</li>
+    <li><b>分析は「今日の分析」に変更</b> — 既存の体重変動分析（前日比＋前日の食事・トレ要因）がこの枠に入る。週単位・長期の分析は「データ」画面に分離。</li>
   </ul>
 </div>
 
@@ -533,14 +581,54 @@ function toast(msg) {
   _tt = setTimeout(() => t.classList.remove('show'), 1600);
 }
 
-/* ===== 水分 ===== */
+/* ===== 食事: PFC+塩分 → kcal自動計算 ===== */
+const meal = { p: 142, f: 48, c: 198, salt: null };
+function updateKcal() {
+  const kcal = Math.round((meal.p||0)*4 + (meal.f||0)*9 + (meal.c||0)*4);
+  document.getElementById('kcal-auto').innerHTML = kcal.toLocaleString() + '<small>kcal 自動計算</small>';
+}
+
+/* ===== 水分: チップ編集可能 ===== */
 let waterMl = 1600;
-function water(add) {
-  waterMl += add;
+let chipVals = [250, 500, 1000];
+let waterEditMode = false;
+function toggleWaterEdit() {
+  waterEditMode = !waterEditMode;
+  document.getElementById('wedit').classList.toggle('on', waterEditMode);
+  for (let i = 0; i < 3; i++) document.getElementById('wc' + i).classList.toggle('editing', waterEditMode);
+  if (waterEditMode) toast('編集モード: チップをタップして量を変更');
+}
+function waterChip(i) {
+  if (waterEditMode) {
+    openPad('クイック追加の量 (ml)', 'wchip' + i, String(chipVals[i]), String(chipVals[i]));
+    return;
+  }
+  waterMl += chipVals[i];
+  renderWater();
+  toast('水分 +' + chipVals[i] + 'ml — <b>自動保存 ✓</b>');
+}
+function renderWater() {
   document.getElementById('water-num').textContent = waterMl.toLocaleString();
   document.getElementById('water-fill').style.width = Math.min(100, waterMl / 3000 * 100) + '%';
-  if (waterMl >= 3000) document.getElementById('water-st').parentElement.classList.add('done');
-  toast('水分 +' + add + 'ml — <b>自動保存 ✓</b>');
+}
+
+/* ===== 筋トレメニュー選択 ===== */
+function openMenuSheet() {
+  document.getElementById('menu-sheet').classList.add('open');
+  document.getElementById('menu-ov').classList.add('open');
+}
+function closeMenuSheet() {
+  document.getElementById('menu-sheet').classList.remove('open');
+  document.getElementById('menu-ov').classList.remove('open');
+}
+function pickMenu(btn, name) {
+  document.querySelectorAll('.menu-grid button').forEach(b => b.classList.remove('sel'));
+  btn.classList.add('sel');
+  document.getElementById('menu-name').textContent = name + 'の日';
+  document.getElementById('gym-title').textContent = name + 'の日';
+  document.getElementById('menu-sub').textContent = '前回の' + name + ': 6/4 ・ 5種目 18セット';
+  closeMenuSheet();
+  toast('メニュー: ' + name + ' — <b>自動保存 ✓</b>');
 }
 
 /* ===== キーパッド ===== */
@@ -552,13 +640,13 @@ function openPad(label, target, current, prev) {
   document.getElementById('pad-prev').textContent = '前回 ' + prev;
   document.getElementById('pad').classList.add('open');
   document.getElementById('pad-ov').classList.add('open');
-  const cell = document.getElementById(target);
+  const cell = document.getElementById(target) || document.getElementById('mc-' + target);
   if (cell) cell.classList.add('editing');
 }
 function closePad() {
   document.getElementById('pad').classList.remove('open');
   document.getElementById('pad-ov').classList.remove('open');
-  document.querySelectorAll('.cell.editing').forEach(c => c.classList.remove('editing'));
+  document.querySelectorAll('.editing').forEach(c => c.classList.remove('editing'));
 }
 function padKey(k) {
   const el = document.getElementById('pad-val');
@@ -569,22 +657,25 @@ function padKey(k) {
   else v = (v === '0') ? k : v + k;
   el.textContent = v;
 }
-function padStep(d) {
-  const el = document.getElementById('pad-val');
-  const v = Math.max(0, (parseFloat(el.textContent.replace(/,/g,'')) || 0) + d);
-  el.textContent = (Math.round(v * 10) / 10).toString();
-}
 function padPrev() {
-  document.getElementById('pad-val').textContent = padPrevVal.replace(/,/g,'');
+  document.getElementById('pad-val').textContent = padPrevVal.replace(/,/g, '');
 }
 function padDone() {
   const v = document.getElementById('pad-val').textContent;
+  const n = parseFloat(v) || 0;
   if (padTarget === 'weight') {
     document.getElementById('weight-val').innerHTML = v + '<small>kg</small>';
-    document.getElementById('task-weight').classList.add('done');
-  } else if (padTarget === 'meal') {
-    document.getElementById('meal-val').innerHTML = v + '<small>kcal</small>';
-    document.getElementById('task-meal').classList.add('done');
+  } else if (padTarget === 'sleep') {
+    document.getElementById('sleep-val').innerHTML = v + '<small>h</small>';
+  } else if (['p','f','c','salt'].includes(padTarget)) {
+    meal[padTarget] = n;
+    const cell = document.getElementById('mc-' + padTarget);
+    cell.querySelector('.n').innerHTML = v + '<small>g</small>';
+    updateKcal();
+  } else if (padTarget.startsWith('wchip')) {
+    const i = parseInt(padTarget.slice(5));
+    chipVals[i] = Math.round(n);
+    document.getElementById('wc' + i).textContent = '＋' + chipVals[i];
   } else {
     const cell = document.getElementById(padTarget);
     if (cell) cell.firstElementChild.outerHTML = '<span>' + v + '</span>';
@@ -619,7 +710,6 @@ function restStop() {
   document.getElementById('rest').classList.remove('show');
 }
 
-/* ストップウォッチ（雰囲気用） */
 let swS = 42 * 60 + 18;
 setInterval(() => {
   swS++;
