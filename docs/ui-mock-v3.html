@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
+<title>PhysiqueLog v3 — UI/UX Redesign Mock</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+JP:wght@300;400;500;700;900&display=swap');
+
+/* ============================================================
+   PhysiqueLog v3 デザイントークン
+   コンセプト: "VOLT FOCUS"
+   - ホームをスプラッシュからダッシュボードへ
+   - 6タブ → 4タブ + 中央クイック記録ボタン
+   - 絵文字アイコン → ラインSVGアイコン
+   - ネオン #e8ff00 → 少し柔らかい volt #d8ff3e + 階調強化
+   ============================================================ */
+:root {
+  --bg: #07070c;
+  --surface: #0f0f17;
+  --surface2: #161620;
+  --elevated: #1c1c2a;
+  --volt: #d8ff3e;
+  --volt-dim: rgba(216,255,62,0.12);
+  --cyan: #3fd9ff;
+  --cyan-dim: rgba(63,217,255,0.12);
+  --text: #f2f2f5;
+  --text-sub: #9b9ba8;
+  --text-muted: #5a5a68;
+  --border: #23232f;
+  --danger: #ff5470;
+  --success: #34f5a1;
+  --r-card: 20px;
+  --r-input: 14px;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html,body { height:100%; }
+body {
+  background:#000;
+  font-family:'Noto Sans JP',sans-serif;
+  color:var(--text);
+  display:flex; align-items:center; justify-content:center;
+  min-height:100vh;
+  padding:24px 0;
+}
+
+/* ===== デモ用フォンフレーム（実機では不要） ===== */
+.phone {
+  width:402px; height:874px;
+  background:var(--bg);
+  border-radius:48px;
+  border:1px solid #2a2a38;
+  box-shadow:0 0 0 10px #111, 0 40px 120px rgba(0,0,0,0.8);
+  overflow:hidden;
+  position:relative;
+  display:flex; flex-direction:column;
+}
+@media (max-width:430px) {
+  body { padding:0; }
+  .phone { width:100%; height:100vh; border-radius:0; box-shadow:none; border:none; }
+}
+.statusbar {
+  height:44px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 28px; font-size:13px; font-weight:700; color:var(--text-sub);
+}
+
+/* ===== 画面共通 ===== */
+.viewport { flex:1; overflow:hidden; position:relative; }
+.screen { position:absolute; inset:0; overflow-y:auto; padding:4px 18px 120px; display:none; scrollbar-width:none; }
+.screen::-webkit-scrollbar { display:none; }
+.screen.active { display:block; animation:fadeUp .25s ease; }
+@keyframes fadeUp { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
+
+.bebas { font-family:'Bebas Neue',sans-serif; letter-spacing:0.04em; }
+
+/* ===== カード ===== */
+.card {
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--r-card);
+  padding:18px;
+  margin-bottom:14px;
+}
+.card-title { font-size:12px; font-weight:700; letter-spacing:0.12em; color:var(--text-sub); text-transform:uppercase; margin-bottom:14px; display:flex; align-items:center; justify-content:space-between; }
+.card-title .more { font-size:11px; color:var(--text-muted); font-weight:400; letter-spacing:0; }
+
+/* ============================================================
+   HOME — ダッシュボード
+   ============================================================ */
+.home-head { display:flex; align-items:flex-start; justify-content:space-between; padding:10px 2px 18px; }
+.home-date { font-size:12px; color:var(--text-muted); letter-spacing:0.1em; margin-bottom:4px; }
+.home-greet { font-size:21px; font-weight:900; line-height:1.3; }
+.home-greet em { font-style:normal; color:var(--volt); }
+.streak {
+  display:flex; align-items:center; gap:5px;
+  background:var(--volt-dim); border:1px solid rgba(216,255,62,0.25);
+  border-radius:999px; padding:7px 13px;
+  font-size:13px; font-weight:700; color:var(--volt);
+}
+
+/* 大会ヒーローカード */
+.contest-hero {
+  background:linear-gradient(140deg, #14141f 0%, #0f0f17 60%),
+             radial-gradient(circle at 85% 15%, rgba(216,255,62,0.16), transparent 55%);
+  background-blend-mode:screen;
+  border:1px solid rgba(216,255,62,0.22);
+  border-radius:var(--r-card);
+  padding:18px 20px;
+  margin-bottom:14px;
+  display:flex; align-items:center; gap:18px;
+  position:relative; overflow:hidden;
+}
+.contest-hero::after {
+  content:''; position:absolute; right:-40px; top:-40px; width:160px; height:160px;
+  background:radial-gradient(circle, rgba(216,255,62,0.12), transparent 70%);
+}
+.ring { width:92px; height:92px; flex-shrink:0; position:relative; }
+.ring svg { transform:rotate(-90deg); }
+.ring-num { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+.ring-num .n { font-family:'Bebas Neue'; font-size:34px; line-height:0.9; color:var(--volt); }
+.ring-num .u { font-size:9px; letter-spacing:0.2em; color:var(--text-muted); }
+.contest-info { flex:1; }
+.contest-phase { display:inline-block; font-size:10px; font-weight:700; letter-spacing:0.15em; color:var(--cyan); background:var(--cyan-dim); border-radius:6px; padding:3px 8px; margin-bottom:7px; }
+.contest-name { font-size:15px; font-weight:700; margin-bottom:3px; }
+.contest-sub { font-size:11px; color:var(--text-sub); line-height:1.5; }
+.contest-sub b { color:var(--volt); font-weight:700; }
+
+/* 今日のターゲット */
+.targets { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.target {
+  background:var(--surface2); border:1px solid var(--border);
+  border-radius:16px; padding:13px 14px;
+}
+.target-label { font-size:10px; letter-spacing:0.12em; color:var(--text-muted); margin-bottom:7px; display:flex; justify-content:space-between; }
+.target-val { font-family:'Bebas Neue'; font-size:26px; line-height:1; margin-bottom:2px; }
+.target-val small { font-size:13px; color:var(--text-muted); margin-left:3px; font-family:'Noto Sans JP'; }
+.target-goal { font-size:10px; color:var(--text-muted); margin-bottom:8px; }
+.bar { height:5px; background:var(--border); border-radius:3px; overflow:hidden; }
+.bar i { display:block; height:100%; border-radius:3px; }
+.bar .volt { background:linear-gradient(90deg,#aacc2c,var(--volt)); }
+.bar .cyan { background:linear-gradient(90deg,#1f9cc0,var(--cyan)); }
+.bar .green { background:linear-gradient(90deg,#1cab6e,var(--success)); }
+.bar .red { background:linear-gradient(90deg,#c03b52,var(--danger)); }
+
+/* 水分クイック追加 */
+.water-quick { display:flex; gap:8px; margin-top:12px; }
+.wq-chip {
+  flex:1; background:var(--cyan-dim); border:1px solid rgba(63,217,255,0.3);
+  color:var(--cyan); border-radius:10px; padding:9px 0;
+  font-size:12px; font-weight:700; text-align:center; cursor:pointer;
+  transition:transform .1s;
+}
+.wq-chip:active { transform:scale(0.95); }
+
+/* 今日のワークアウト */
+.workout-row { display:flex; align-items:center; gap:14px; }
+.workout-icon {
+  width:46px; height:46px; border-radius:14px; flex-shrink:0;
+  background:var(--volt-dim); border:1px solid rgba(216,255,62,0.25);
+  display:flex; align-items:center; justify-content:center;
+}
+.workout-meta { flex:1; }
+.workout-name { font-size:15px; font-weight:700; margin-bottom:2px; }
+.workout-sub { font-size:11px; color:var(--text-sub); }
+.btn-volt {
+  background:var(--volt); color:#0a0a0a; border:none;
+  border-radius:12px; padding:11px 18px;
+  font-size:13px; font-weight:900; cursor:pointer;
+  transition:transform .1s;
+}
+.btn-volt:active { transform:scale(0.96); }
+.btn-ghost {
+  background:transparent; border:1px solid var(--border); color:var(--text-sub);
+  border-radius:12px; padding:11px 18px; font-size:13px; font-weight:700; cursor:pointer;
+}
+
+/* 体重ミニグラフ */
+.weight-spark { display:flex; align-items:flex-end; justify-content:space-between; gap:14px; }
+.weight-now { }
+.weight-now .v { font-family:'Bebas Neue'; font-size:44px; line-height:0.9; }
+.weight-now .v small { font-size:18px; color:var(--text-muted); }
+.weight-now .d { font-size:11px; color:var(--success); margin-top:4px; font-weight:700; }
+.spark { flex:1; height:56px; }
+
+/* ============================================================
+   RECORD — 記録（セグメント式）
+   ============================================================ */
+.screen-title-row { display:flex; align-items:center; justify-content:space-between; padding:10px 2px 16px; }
+.screen-title-big { font-size:22px; font-weight:900; }
+.date-pill { display:flex; align-items:center; gap:4px; }
+.date-pill button {
+  width:34px; height:34px; border-radius:10px; border:1px solid var(--border);
+  background:var(--surface); color:var(--text-sub); font-size:17px; cursor:pointer;
+}
+.date-pill .d {
+  font-size:13px; font-weight:700; padding:0 12px; height:34px;
+  display:flex; align-items:center; background:var(--surface); border:1px solid var(--border); border-radius:10px;
+}
+.seg-tabs { display:flex; gap:6px; margin-bottom:16px; overflow-x:auto; scrollbar-width:none; }
+.seg-tabs::-webkit-scrollbar { display:none; }
+.seg {
+  flex-shrink:0; padding:8px 16px; border-radius:999px; font-size:12px; font-weight:700;
+  background:var(--surface); border:1px solid var(--border); color:var(--text-sub); cursor:pointer;
+}
+.seg.on { background:var(--volt); color:#0a0a0a; border-color:var(--volt); }
+.input-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px; }
+.field label { display:block; font-size:11px; color:var(--text-sub); margin-bottom:6px; font-weight:500; }
+.field input {
+  width:100%; background:var(--surface2); border:1px solid var(--border);
+  border-radius:var(--r-input); color:var(--text);
+  font-size:18px; font-weight:700; padding:13px 14px; outline:none;
+  font-family:'Noto Sans JP';
+}
+.field input:focus { border-color:var(--volt); }
+.field .unit-wrap { position:relative; }
+.field .unit-wrap span { position:absolute; right:14px; top:50%; transform:translateY(-50%); font-size:12px; color:var(--text-muted); }
+.pfc-visual { display:flex; height:10px; border-radius:5px; overflow:hidden; margin:4px 0 12px; }
+.pfc-visual i:nth-child(1){ background:var(--volt); }
+.pfc-visual i:nth-child(2){ background:var(--cyan); }
+.pfc-visual i:nth-child(3){ background:#b07cff; }
+.pfc-legend { display:flex; gap:14px; font-size:10px; color:var(--text-sub); margin-bottom:14px; }
+.pfc-legend b { color:var(--text); }
+.dot { display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:4px; }
+
+/* 保存バー: ナビ直上に固定。キーボード表示時は resizes-content で追従 */
+.save-bar {
+  position:absolute; left:0; right:0; bottom:84px;
+  padding:12px 18px;
+  background:linear-gradient(transparent, var(--bg) 35%);
+  display:none;
+}
+.save-bar.visible { display:block; }
+.save-bar button {
+  width:100%; padding:16px; background:var(--volt); color:#0a0a0a;
+  border:none; border-radius:16px;
+  font-family:'Bebas Neue'; font-size:21px; letter-spacing:0.12em; cursor:pointer;
+}
+
+/* ============================================================
+   GYM — 筋トレ
+   ============================================================ */
+.sw-chip {
+  display:flex; align-items:center; gap:10px;
+  background:var(--surface2); border:1px solid var(--border);
+  border-radius:999px; padding:8px 8px 8px 16px; margin-bottom:14px;
+}
+.sw-chip .t { font-family:'Bebas Neue'; font-size:22px; color:var(--volt); letter-spacing:0.08em; flex:1; }
+.sw-chip .lbl { font-size:10px; color:var(--text-muted); letter-spacing:0.1em; }
+.sw-chip button {
+  background:var(--volt); border:none; color:#0a0a0a;
+  border-radius:999px; padding:8px 16px; font-size:12px; font-weight:900; cursor:pointer;
+}
+.ex-card { padding:0; overflow:hidden; }
+.ex-head { display:flex; align-items:center; padding:15px 16px 12px; gap:10px; }
+.ex-name { font-size:15px; font-weight:700; flex:1; }
+.ex-prev { font-size:10px; color:var(--cyan); background:var(--cyan-dim); padding:4px 9px; border-radius:7px; font-weight:700; cursor:pointer; }
+.set-grid { width:100%; border-collapse:collapse; }
+.set-grid th { font-size:9px; letter-spacing:0.12em; color:var(--text-muted); font-weight:500; padding:4px 8px; text-align:center; }
+.set-grid td { padding:4px 6px; text-align:center; }
+.set-grid tr.done td:first-child .set-no { background:var(--volt); color:#0a0a0a; }
+.set-no {
+  width:24px; height:24px; border-radius:8px; background:var(--surface2);
+  color:var(--text-muted); font-size:11px; font-weight:700;
+  display:inline-flex; align-items:center; justify-content:center;
+}
+.set-in {
+  width:100%; max-width:74px; background:var(--surface2); border:1px solid var(--border);
+  border-radius:10px; color:var(--text); font-weight:700; font-size:14px;
+  text-align:center; padding:8px 4px; outline:none;
+}
+.rm { font-size:11px; color:var(--cyan); font-weight:700; }
+.add-set {
+  width:100%; padding:12px; background:none; border:none;
+  border-top:1px dashed var(--border); color:var(--text-muted);
+  font-size:12px; font-weight:700; cursor:pointer;
+}
+.add-ex-btn {
+  width:100%; padding:16px; border-radius:var(--r-card);
+  border:1.5px dashed rgba(216,255,62,0.35); background:var(--volt-dim);
+  color:var(--volt); font-size:14px; font-weight:900; cursor:pointer; margin-bottom:14px;
+}
+/* レストタイマー: 画面下部に常駐するミニバー */
+.rest-bar {
+  position:absolute; left:14px; right:14px; bottom:96px;
+  background:var(--elevated); border:1px solid rgba(216,255,62,0.3);
+  border-radius:18px; padding:12px 16px;
+  display:flex; align-items:center; gap:14px;
+  box-shadow:0 12px 40px rgba(0,0,0,0.6);
+}
+.rest-bar .ring { width:44px; height:44px; }
+.rest-bar .ring-num .n { font-size:15px; }
+.rest-meta { flex:1; }
+.rest-meta .l { font-size:10px; letter-spacing:0.15em; color:var(--text-muted); }
+.rest-meta .v { font-family:'Bebas Neue'; font-size:24px; color:var(--volt); letter-spacing:0.08em; line-height:1; }
+.rest-bar .skip { background:none; border:1px solid var(--border); color:var(--text-sub); border-radius:10px; padding:8px 14px; font-size:12px; font-weight:700; cursor:pointer; }
+
+/* ============================================================
+   DATA — インサイト
+   ============================================================ */
+.range-tabs { display:flex; background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:3px; margin-bottom:14px; }
+.range-tabs button { flex:1; padding:8px; border:none; background:none; color:var(--text-muted); font-size:12px; font-weight:700; border-radius:9px; cursor:pointer; }
+.range-tabs button.on { background:var(--elevated); color:var(--volt); }
+.chart-box { height:150px; margin:6px 0 4px; }
+.chart-meta { display:flex; gap:16px; font-size:10px; color:var(--text-sub); }
+.heat { display:grid; grid-template-columns:repeat(7,1fr); gap:5px; }
+.heat span { font-size:9px; color:var(--text-muted); text-align:center; }
+.heat i { aspect-ratio:1; border-radius:7px; background:var(--surface2); }
+.heat i.l1 { background:rgba(216,255,62,0.18); }
+.heat i.l2 { background:rgba(216,255,62,0.45); }
+.heat i.l3 { background:var(--volt); }
+.roadmap-item { display:flex; gap:14px; }
+.roadmap-line { display:flex; flex-direction:column; align-items:center; }
+.roadmap-dot { width:12px; height:12px; border-radius:50%; background:var(--surface2); border:2px solid var(--text-muted); flex-shrink:0; }
+.roadmap-dot.now { background:var(--volt); border-color:var(--volt); box-shadow:0 0 12px rgba(216,255,62,0.6); }
+.roadmap-bar { width:2px; flex:1; background:var(--border); margin:4px 0; }
+.roadmap-body { padding-bottom:18px; }
+.roadmap-when { font-size:10px; color:var(--text-muted); letter-spacing:0.1em; margin-bottom:2px; }
+.roadmap-what { font-size:14px; font-weight:700; }
+.roadmap-what small { display:block; font-size:11px; color:var(--text-sub); font-weight:400; margin-top:2px; }
+
+/* ============================================================
+   SETTINGS
+   ============================================================ */
+.set-group { padding:6px 0; }
+.set-item { display:flex; align-items:center; gap:14px; padding:14px 16px; border-bottom:1px solid var(--border); cursor:pointer; }
+.set-item:last-child { border-bottom:none; }
+.set-item .ic { width:34px; height:34px; border-radius:10px; background:var(--surface2); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.set-item .tx { flex:1; font-size:14px; font-weight:500; }
+.set-item .tx small { display:block; font-size:11px; color:var(--text-muted); font-weight:400; }
+.set-item .ar { color:var(--text-muted); font-size:16px; }
+.premium-banner {
+  background:linear-gradient(135deg, rgba(216,255,62,0.15), rgba(63,217,255,0.1));
+  border:1px solid rgba(216,255,62,0.3);
+}
+
+/* ============================================================
+   ボトムナビ（4タブ + 中央クイック記録）
+   ============================================================ */
+.nav {
+  position:absolute; bottom:0; left:0; right:0; height:84px;
+  background:rgba(13,13,20,0.92); backdrop-filter:blur(20px);
+  border-top:1px solid var(--border);
+  display:flex; align-items:flex-start; padding-top:10px;
+  z-index:30;
+}
+.nav button { flex:1; background:none; border:none; display:flex; flex-direction:column; align-items:center; gap:4px; color:var(--text-muted); font-size:10px; font-weight:500; cursor:pointer; font-family:'Noto Sans JP'; }
+.nav button svg { width:23px; height:23px; stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+.nav button.on { color:var(--volt); }
+.nav .fab-slot { flex:1.1; position:relative; }
+.fab {
+  position:absolute; left:50%; top:-26px; transform:translateX(-50%);
+  width:58px; height:58px; border-radius:20px;
+  background:var(--volt); border:none; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  box-shadow:0 8px 28px rgba(216,255,62,0.35);
+  transition:transform .15s;
+}
+.fab:active { transform:translateX(-50%) scale(0.92); }
+.fab svg { width:26px; height:26px; stroke:#0a0a0a; stroke-width:2.4; stroke-linecap:round; }
+
+/* クイック記録シート */
+.sheet-overlay { position:absolute; inset:0; background:rgba(0,0,0,0.6); z-index:40; opacity:0; pointer-events:none; transition:opacity .25s; }
+.sheet-overlay.open { opacity:1; pointer-events:all; }
+.sheet {
+  position:absolute; left:0; right:0; bottom:0; z-index:41;
+  background:var(--surface); border-radius:28px 28px 0 0;
+  border-top:1px solid var(--border);
+  padding:14px 22px 38px;
+  transform:translateY(110%); transition:transform .3s cubic-bezier(0.34,1.3,0.64,1);
+}
+.sheet.open { transform:none; }
+.sheet-grip { width:40px; height:4px; border-radius:2px; background:var(--border); margin:0 auto 18px; }
+.sheet h3 { font-size:15px; font-weight:900; margin-bottom:16px; }
+.quick-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.quick-act {
+  background:var(--surface2); border:1px solid var(--border); border-radius:16px;
+  padding:16px; cursor:pointer; text-align:left;
+  font-family:'Noto Sans JP'; color:var(--text);
+}
+.quick-act:active { border-color:var(--volt); }
+.quick-act .qi { font-size:22px; margin-bottom:8px; }
+.quick-act .qt { font-size:13px; font-weight:700; }
+.quick-act .qs { font-size:10px; color:var(--text-muted); margin-top:2px; }
+
+/* ===== デザインノート ===== */
+.notes-fab {
+  position:fixed; right:24px; bottom:24px; z-index:90;
+  background:#1c1c2a; color:var(--volt); border:1px solid rgba(216,255,62,0.4);
+  border-radius:999px; padding:12px 18px; font-size:13px; font-weight:700; cursor:pointer;
+  font-family:'Noto Sans JP';
+}
+.notes-panel {
+  position:fixed; right:24px; bottom:76px; z-index:91; width:360px; max-width:calc(100vw - 48px);
+  max-height:70vh; overflow-y:auto;
+  background:#13131d; border:1px solid var(--border); border-radius:20px; padding:22px;
+  display:none; box-shadow:0 24px 80px rgba(0,0,0,0.8);
+}
+.notes-panel.open { display:block; }
+.notes-panel h2 { font-size:15px; color:var(--volt); margin-bottom:12px; }
+.notes-panel li { font-size:12px; color:var(--text-sub); line-height:1.8; margin-left:18px; margin-bottom:8px; }
+.notes-panel b { color:var(--text); }
+@media (max-width:430px){ .notes-fab,.notes-panel{ display:none!important; } }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="statusbar"><span>18:29</span><span>PhysiqueLog v3 MOCK</span><span>🔋61</span></div>
+  <div class="viewport">
+
+    <!-- ============ HOME ============ -->
+    <div class="screen active" id="scr-home">
+      <div class="home-head">
+        <div>
+          <div class="home-date">6月11日（木）</div>
+          <div class="home-greet">おかえり、<em>タチ</em>さん。<br>今日は<em>肩の日</em>。</div>
+        </div>
+        <div class="streak">🔥 12日</div>
+      </div>
+
+      <!-- 大会ヒーロー -->
+      <div class="contest-hero">
+        <div class="ring">
+          <svg width="92" height="92" viewBox="0 0 92 92">
+            <circle cx="46" cy="46" r="40" stroke="#23232f" stroke-width="7" fill="none"/>
+            <circle cx="46" cy="46" r="40" stroke="#d8ff3e" stroke-width="7" fill="none"
+                    stroke-linecap="round" stroke-dasharray="251" stroke-dashoffset="88"/>
+          </svg>
+          <div class="ring-num"><span class="n">47</span><span class="u">DAYS</span></div>
+        </div>
+        <div class="contest-info">
+          <span class="contest-phase">減量期 · WEEK 8/14</span>
+          <div class="contest-name">JBBF 東京選手権</div>
+          <div class="contest-sub">目標まであと <b>-2.1kg</b> ／ 週ペース順調 ✓</div>
+        </div>
+      </div>
+
+      <!-- 今日のターゲット -->
+      <div class="card">
+        <div class="card-title">今日のターゲット <span class="more">記録を編集 ›</span></div>
+        <div class="targets">
+          <div class="target">
+            <div class="target-label"><span>カロリー</span><span>84%</span></div>
+            <div class="target-val">1,850<small>kcal</small></div>
+            <div class="target-goal">目標 2,200</div>
+            <div class="bar"><i class="volt" style="width:84%"></i></div>
+          </div>
+          <div class="target">
+            <div class="target-label"><span>タンパク質</span><span>89%</span></div>
+            <div class="target-val">142<small>g</small></div>
+            <div class="target-goal">目標 160</div>
+            <div class="bar"><i class="green" style="width:89%"></i></div>
+          </div>
+          <div class="target">
+            <div class="target-label"><span>水分</span><span id="water-pct">53%</span></div>
+            <div class="target-val"><span id="water-val">1.6</span><small>L</small></div>
+            <div class="target-goal">目標 3.0</div>
+            <div class="bar"><i class="cyan" id="water-bar" style="width:53%"></i></div>
+          </div>
+          <div class="target">
+            <div class="target-label"><span>睡眠</span><span>昨夜</span></div>
+            <div class="target-val">7.5<small>h</small></div>
+            <div class="target-goal">23:30 → 7:00</div>
+            <div class="bar"><i class="green" style="width:94%"></i></div>
+          </div>
+        </div>
+        <div class="water-quick">
+          <div class="wq-chip" onclick="addWater(0.25)">💧 +250ml</div>
+          <div class="wq-chip" onclick="addWater(0.5)">💧 +500ml</div>
+          <div class="wq-chip" onclick="addWater(1.0)">💧 +1L</div>
+        </div>
+      </div>
+
+      <!-- 体重トレンド -->
+      <div class="card">
+        <div class="card-title">体重トレンド <span class="more">直近14日</span></div>
+        <div class="weight-spark">
+          <div class="weight-now">
+            <div class="v">62.4<small>kg</small></div>
+            <div class="d">▼ -0.3kg / 週</div>
+          </div>
+          <svg class="spark" viewBox="0 0 200 56" preserveAspectRatio="none">
+            <defs><linearGradient id="wg" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#d8ff3e" stop-opacity="0.25"/>
+              <stop offset="1" stop-color="#d8ff3e" stop-opacity="0"/>
+            </linearGradient></defs>
+            <path d="M0,14 L15,18 L31,16 L46,24 L62,21 L77,28 L92,26 L108,33 L123,30 L138,38 L154,35 L169,41 L185,40 L200,44 L200,56 L0,56 Z" fill="url(#wg)"/>
+            <path d="M0,14 L15,18 L31,16 L46,24 L62,21 L77,28 L92,26 L108,33 L123,30 L138,38 L154,35 L169,41 L185,40 L200,44"
+                  stroke="#d8ff3e" stroke-width="2" fill="none" stroke-linecap="round"/>
+            <circle cx="200" cy="44" r="3.5" fill="#d8ff3e"/>
+          </svg>
+        </div>
+      </div>
+
+      <!-- 今日のワークアウト -->
+      <div class="card">
+        <div class="card-title">今日のワークアウト</div>
+        <div class="workout-row">
+          <div class="workout-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#d8ff3e" stroke-width="1.8" stroke-linecap="round">
+              <path d="M6.5 6.5v11M17.5 6.5v11M3 9v6M21 9v6M6.5 12h11"/>
+            </svg>
+          </div>
+          <div class="workout-meta">
+            <div class="workout-name">肩・サイド集中</div>
+            <div class="workout-sub">前回: 6/7 · 5種目 18セット · 7,420kg</div>
+          </div>
+          <button class="btn-volt" onclick="go('gym')">開始</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ RECORD ============ -->
+    <div class="screen" id="scr-record">
+      <div class="screen-title-row">
+        <div class="screen-title-big">記録</div>
+        <div class="date-pill">
+          <button>‹</button><div class="d">6月11日（木）</div><button>›</button>
+        </div>
+      </div>
+
+      <div class="seg-tabs">
+        <div class="seg on">⚖️ 体重・睡眠</div>
+        <div class="seg">🍽 食事 / PFC</div>
+        <div class="seg">📷 写真</div>
+        <div class="seg">📝 メモ</div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">体重・睡眠</div>
+        <div class="input-row">
+          <div class="field"><label>体重</label>
+            <div class="unit-wrap"><input type="number" value="62.4" oninput="showSave()"><span>kg</span></div>
+          </div>
+          <div class="field"><label>睡眠時間</label>
+            <div class="unit-wrap"><input type="number" value="7.5" oninput="showSave()"><span>h</span></div>
+          </div>
+        </div>
+        <div class="input-row" style="margin-bottom:0;">
+          <div class="field"><label>🌙 就寝</label><input type="time" value="23:30" oninput="showSave()"></div>
+          <div class="field"><label>🌅 起床</label><input type="time" value="07:00" oninput="showSave()"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">食事 / PFC</div>
+        <div class="pfc-visual"><i style="width:33%"></i><i style="width:24%"></i><i style="width:43%"></i></div>
+        <div class="pfc-legend">
+          <span><span class="dot" style="background:var(--volt)"></span>P <b>142g</b></span>
+          <span><span class="dot" style="background:var(--cyan)"></span>F <b>48g</b></span>
+          <span><span class="dot" style="background:#b07cff"></span>C <b>198g</b></span>
+          <span style="margin-left:auto;">計 <b>1,850 kcal</b></span>
+        </div>
+        <div class="input-row">
+          <div class="field"><label>カロリー</label>
+            <div class="unit-wrap"><input type="number" value="1850" oninput="showSave()"><span>kcal</span></div>
+          </div>
+          <div class="field"><label>タンパク質</label>
+            <div class="unit-wrap"><input type="number" value="142" oninput="showSave()"><span>g</span></div>
+          </div>
+        </div>
+        <div class="input-row" style="margin-bottom:0;">
+          <div class="field"><label>脂質</label>
+            <div class="unit-wrap"><input type="number" value="48" oninput="showSave()"><span>g</span></div>
+          </div>
+          <div class="field"><label>炭水化物</label>
+            <div class="unit-wrap"><input type="number" value="198" oninput="showSave()"><span>g</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ GYM ============ -->
+    <div class="screen" id="scr-gym">
+      <div class="screen-title-row">
+        <div class="screen-title-big">筋トレ</div>
+        <div class="date-pill">
+          <button>‹</button><div class="d">6月11日（木）</div><button>›</button>
+        </div>
+      </div>
+
+      <div class="sw-chip">
+        <div>
+          <div class="lbl">WORKOUT TIME</div>
+          <div class="t">00:42:18</div>
+        </div>
+        <div style="flex:1;text-align:right;font-size:11px;color:var(--text-muted);">開始 17:47<br>3種目 / 11セット</div>
+        <button>終了</button>
+      </div>
+
+      <div class="card ex-card">
+        <div class="ex-head">
+          <div class="ex-name">サイドレイズ</div>
+          <div class="ex-prev">前回 12kg×12</div>
+        </div>
+        <table class="set-grid">
+          <tr><th>SET</th><th>KG</th><th>REP</th><th>1RM</th><th>✓</th></tr>
+          <tr class="done"><td><span class="set-no">1</span></td><td><input class="set-in" value="12"></td><td><input class="set-in" value="14"></td><td class="rm">17.6</td><td>✓</td></tr>
+          <tr class="done"><td><span class="set-no">2</span></td><td><input class="set-in" value="12"></td><td><input class="set-in" value="12"></td><td class="rm">16.8</td><td>✓</td></tr>
+          <tr><td><span class="set-no">3</span></td><td><input class="set-in" placeholder="12"></td><td><input class="set-in" placeholder="12"></td><td class="rm">—</td><td></td></tr>
+        </table>
+        <button class="add-set">＋ セットを追加</button>
+      </div>
+
+      <div class="card ex-card">
+        <div class="ex-head">
+          <div class="ex-name">ショルダープレス</div>
+          <div class="ex-prev">前回 40kg×10</div>
+        </div>
+        <table class="set-grid">
+          <tr><th>SET</th><th>KG</th><th>REP</th><th>1RM</th><th>✓</th></tr>
+          <tr class="done"><td><span class="set-no">1</span></td><td><input class="set-in" value="40"></td><td><input class="set-in" value="10"></td><td class="rm">53.3</td><td>✓</td></tr>
+          <tr><td><span class="set-no">2</span></td><td><input class="set-in" placeholder="40"></td><td><input class="set-in" placeholder="10"></td><td class="rm">—</td><td></td></tr>
+        </table>
+        <button class="add-set">＋ セットを追加</button>
+      </div>
+
+      <button class="add-ex-btn">＋ 種目を追加</button>
+
+      <!-- レストタイマー常駐バー -->
+      <div class="rest-bar">
+        <div class="ring">
+          <svg width="44" height="44" viewBox="0 0 44 44">
+            <circle cx="22" cy="22" r="18" stroke="#23232f" stroke-width="4" fill="none"/>
+            <circle cx="22" cy="22" r="18" stroke="#d8ff3e" stroke-width="4" fill="none"
+                    stroke-linecap="round" stroke-dasharray="113" stroke-dashoffset="42"/>
+          </svg>
+          <div class="ring-num"><span class="n" style="font-family:'Bebas Neue';color:var(--volt);">63</span></div>
+        </div>
+        <div class="rest-meta">
+          <div class="l">REST TIMER</div>
+          <div class="v">01:03</div>
+        </div>
+        <button class="skip">スキップ</button>
+        <button class="skip" style="border-color:rgba(216,255,62,0.4);color:var(--volt);">+30s</button>
+      </div>
+    </div>
+
+    <!-- ============ DATA ============ -->
+    <div class="screen" id="scr-data">
+      <div class="screen-title-row">
+        <div class="screen-title-big">データ</div>
+      </div>
+
+      <div class="range-tabs">
+        <button>1週</button><button class="on">1ヶ月</button><button>3ヶ月</button><button>全期間</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title">体重 × カロリー <span class="more">5月11日 — 6月11日</span></div>
+        <svg class="chart-box" viewBox="0 0 320 150" preserveAspectRatio="none">
+          <defs><linearGradient id="cg" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#d8ff3e" stop-opacity="0.2"/>
+            <stop offset="1" stop-color="#d8ff3e" stop-opacity="0"/>
+          </linearGradient></defs>
+          <g stroke="#1c1c28" stroke-width="1">
+            <line x1="0" y1="30" x2="320" y2="30"/><line x1="0" y1="70" x2="320" y2="70"/><line x1="0" y1="110" x2="320" y2="110"/>
+          </g>
+          <!-- kcal bars -->
+          <g fill="rgba(63,217,255,0.25)">
+            <rect x="8" y="95" width="7" height="55" rx="2"/><rect x="29" y="88" width="7" height="62" rx="2"/>
+            <rect x="50" y="100" width="7" height="50" rx="2"/><rect x="71" y="84" width="7" height="66" rx="2"/>
+            <rect x="92" y="92" width="7" height="58" rx="2"/><rect x="113" y="97" width="7" height="53" rx="2"/>
+            <rect x="134" y="86" width="7" height="64" rx="2"/><rect x="155" y="94" width="7" height="56" rx="2"/>
+            <rect x="176" y="90" width="7" height="60" rx="2"/><rect x="197" y="99" width="7" height="51" rx="2"/>
+            <rect x="218" y="93" width="7" height="57" rx="2"/><rect x="239" y="89" width="7" height="61" rx="2"/>
+            <rect x="260" y="96" width="7" height="54" rx="2"/><rect x="281" y="91" width="7" height="59" rx="2"/>
+            <rect x="302" y="98" width="7" height="52" rx="2"/>
+          </g>
+          <!-- weight line -->
+          <path d="M10,38 L32,42 L54,40 L76,48 L98,46 L120,54 L142,52 L164,60 L186,58 L208,66 L230,63 L252,72 L274,70 L296,78 L312,80 L312,150 L10,150 Z" fill="url(#cg)"/>
+          <path d="M10,38 L32,42 L54,40 L76,48 L98,46 L120,54 L142,52 L164,60 L186,58 L208,66 L230,63 L252,72 L274,70 L296,78 L312,80"
+                stroke="#d8ff3e" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+        </svg>
+        <div class="chart-meta">
+          <span><span class="dot" style="background:var(--volt)"></span>体重 63.8 → 62.4kg</span>
+          <span><span class="dot" style="background:rgba(63,217,255,0.6)"></span>摂取カロリー（平均 2,080）</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">トレーニング頻度 <span class="more">6月</span></div>
+        <div class="heat">
+          <span>月</span><span>火</span><span>水</span><span>木</span><span>金</span><span>土</span><span>日</span>
+          <i class="l2"></i><i></i><i class="l3"></i><i class="l1"></i><i class="l2"></i><i></i><i class="l3"></i>
+          <i class="l3"></i><i class="l1"></i><i></i><i class="l2"></i><i class="l3"></i><i class="l1"></i><i></i>
+          <i class="l2"></i><i class="l3"></i><i class="l1"></i><i class="l3"></i><i></i><i class="l2"></i><i class="l1"></i>
+          <i class="l1"></i><i class="l2"></i><i class="l3"></i><i></i><i></i><i></i><i></i>
+        </div>
+        <div style="font-size:11px;color:var(--text-sub);margin-top:12px;">今月 <b style="color:var(--volt)">14回</b> · 総ボリューム <b style="color:var(--volt)">96.4t</b> · 平均 58分</div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">大会ロードマップ</div>
+        <div class="roadmap-item">
+          <div class="roadmap-line"><div class="roadmap-dot"></div><div class="roadmap-bar"></div></div>
+          <div class="roadmap-body">
+            <div class="roadmap-when">4週前 · 5/14</div>
+            <div class="roadmap-what">減量ペース確認<small>64.2kg → 想定ライン上</small></div>
+          </div>
+        </div>
+        <div class="roadmap-item">
+          <div class="roadmap-line"><div class="roadmap-dot now"></div><div class="roadmap-bar"></div></div>
+          <div class="roadmap-body">
+            <div class="roadmap-when">現在 · WEEK 8</div>
+            <div class="roadmap-what" style="color:var(--volt)">62.4kg<small>目標まで -2.1kg ／ 残り47日</small></div>
+          </div>
+        </div>
+        <div class="roadmap-item">
+          <div class="roadmap-line"><div class="roadmap-dot"></div><div class="roadmap-bar"></div></div>
+          <div class="roadmap-body">
+            <div class="roadmap-when">2週後 · 6/25</div>
+            <div class="roadmap-what">カーボディプリート開始<small>水抜き・塩抜きスケジュール確認</small></div>
+          </div>
+        </div>
+        <div class="roadmap-item">
+          <div class="roadmap-line"><div class="roadmap-dot"></div></div>
+          <div class="roadmap-body" style="padding-bottom:0;">
+            <div class="roadmap-when">7/28</div>
+            <div class="roadmap-what">🏆 JBBF 東京選手権<small>目標 60.3kg</small></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ SETTINGS ============ -->
+    <div class="screen" id="scr-settings">
+      <div class="screen-title-row">
+        <div class="screen-title-big">設定</div>
+      </div>
+      <div class="card premium-banner">
+        <div style="display:flex;align-items:center;gap:14px;">
+          <div style="font-size:28px;">👑</div>
+          <div style="flex:1;">
+            <div style="font-size:14px;font-weight:900;">PREMIUM</div>
+            <div style="font-size:11px;color:var(--text-sub);">クラウド同期 · 全期間グラフ · 大会機能</div>
+          </div>
+          <button class="btn-volt">加入中</button>
+        </div>
+      </div>
+      <div class="card set-group" style="padding:0;">
+        <div class="set-item"><div class="ic">👤</div><div class="tx">プロフィール<small>タチ · 173cm · 目標 60.3kg</small></div><div class="ar">›</div></div>
+        <div class="set-item"><div class="ic">🎯</div><div class="tx">目標設定<small>カロリー · PFC · 水分 · 体重</small></div><div class="ar">›</div></div>
+        <div class="set-item"><div class="ic">🏆</div><div class="tx">大会設定<small>JBBF 東京選手権 · 7/28</small></div><div class="ar">›</div></div>
+        <div class="set-item"><div class="ic">⏱</div><div class="tx">レストタイマー<small>デフォルト 90秒 · バイブ＋音</small></div><div class="ar">›</div></div>
+        <div class="set-item"><div class="ic">🌐</div><div class="tx">言語 / Language<small>日本語</small></div><div class="ar">›</div></div>
+        <div class="set-item"><div class="ic">📤</div><div class="tx">データのエクスポート</div><div class="ar">›</div></div>
+      </div>
+    </div>
+
+    <!-- 保存バー（記録画面用） -->
+    <div class="save-bar" id="save-bar"><button onclick="hideSave()">保存する</button></div>
+
+    <!-- クイック記録シート -->
+    <div class="sheet-overlay" id="sheet-ov" onclick="toggleSheet(false)"></div>
+    <div class="sheet" id="sheet">
+      <div class="sheet-grip"></div>
+      <h3>クイック記録</h3>
+      <div class="quick-grid">
+        <button class="quick-act" onclick="toggleSheet(false);go('record')"><div class="qi">⚖️</div><div class="qt">体重を記録</div><div class="qs">昨日 62.7kg</div></button>
+        <button class="quick-act" onclick="toggleSheet(false);go('record')"><div class="qi">🍽</div><div class="qt">食事 / PFC</div><div class="qs">残り 350kcal</div></button>
+        <button class="quick-act" onclick="toggleSheet(false);addWater(0.25)"><div class="qi">💧</div><div class="qt">水分 +250ml</div><div class="qs">今日 1.6 / 3.0L</div></button>
+        <button class="quick-act" onclick="toggleSheet(false);go('gym')"><div class="qi">💪</div><div class="qt">筋トレ開始</div><div class="qs">今日: 肩・サイド集中</div></button>
+      </div>
+    </div>
+
+  </div><!-- /viewport -->
+
+  <!-- ボトムナビ -->
+  <nav class="nav">
+    <button class="on" id="nv-home" onclick="go('home')">
+      <svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8M5 9.5V21h5v-6h4v6h5V9.5"/></svg>ホーム
+    </button>
+    <button id="nv-record" onclick="go('record')">
+      <svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg>記録
+    </button>
+    <div class="fab-slot">
+      <button class="fab" onclick="toggleSheet(true)"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+    </div>
+    <button id="nv-gym" onclick="go('gym')">
+      <svg viewBox="0 0 24 24"><path d="M6.5 6.5v11M17.5 6.5v11M3 9v6M21 9v6M6.5 12h11"/></svg>筋トレ
+    </button>
+    <button id="nv-data" onclick="go('data')">
+      <svg viewBox="0 0 24 24"><path d="M3 21h18M7 16v-5M12 16V8M17 16v-8"/></svg>データ
+    </button>
+  </nav>
+</div>
+
+<!-- デザインノート -->
+<button class="notes-fab" onclick="document.getElementById('np').classList.toggle('open')">💡 デザインノート</button>
+<div class="notes-panel" id="np">
+  <h2>PhysiqueLog v3 — 再設計の要点</h2>
+  <ul>
+    <li><b>ホーム = ダッシュボード化。</b>ロゴ中心のスプラッシュをやめ、今日のターゲット進捗（kcal/P/水分/睡眠）・体重トレンド・今日のワークアウトを一画面に集約。アプリを開いた瞬間に「今日やること」が分かる。</li>
+    <li><b>大会カウントダウンをヒーローに昇格。</b>競技者向けアプリの核なので、リング型プログレス＋減量フェーズ＋目標までの残量を最上部に常設。</li>
+    <li><b>ナビを6→4タブ＋中央FABに削減。</b>「水分」タブは廃止し、ホームのクイックチップとFABシートに統合（水分記録は1タップ動作であり、専用画面は過剰）。「設定」はナビから外しホーム右上へ。</li>
+    <li><b>クイック記録FAB。</b>最頻出の4操作（体重・食事・水分・筋トレ開始）をどの画面からも2タップで。</li>
+    <li><b>記録画面をセグメント式に。</b>長い縦フォームをチップで章分けし、スクロール量を削減。保存バーはナビ直上に固定。</li>
+    <li><b>筋トレ画面はセッション主体。</b>セット表に1RM列と完了チェックを統合、前回記録をチップでインライン表示。レストタイマーは画面遷移なしの常駐ミニバー（リング進捗＋スキップ/+30s）。</li>
+    <li><b>絵文字 → ラインSVGアイコン。</b>ナビと主要アクションの視覚ノイズを低減し、プロ向けの精悍さを出す。</li>
+    <li><b>カラー微調整。</b>#e8ff00 → #d8ff3e（眩しさ軽減）、サブカラー階層（text-sub/muted）を追加して情報密度を上げても読めるように。</li>
+    <li><b>ストリーク🔥で継続動機付け。</b>連続記録日数をヘッダーに常設。</li>
+  </ul>
+</div>
+
+<script>
+function go(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('scr-' + name).classList.add('active');
+  document.querySelectorAll('.nav > button, .nav .fab-slot ~ button').forEach(b => b.classList.remove('on'));
+  const nv = document.getElementById('nv-' + name);
+  if (nv) nv.classList.add('on');
+  document.getElementById('save-bar').classList.remove('visible');
+}
+function toggleSheet(open) {
+  document.getElementById('sheet').classList.toggle('open', open);
+  document.getElementById('sheet-ov').classList.toggle('open', open);
+}
+let water = 1.6;
+function addWater(l) {
+  water = Math.min(3.0, +(water + l).toFixed(2));
+  const pct = Math.round(water / 3.0 * 100);
+  document.getElementById('water-val').textContent = water.toFixed(1);
+  document.getElementById('water-pct').textContent = pct + '%';
+  document.getElementById('water-bar').style.width = pct + '%';
+}
+function showSave() { document.getElementById('save-bar').classList.add('visible'); }
+function hideSave() { document.getElementById('save-bar').classList.remove('visible'); }
+</script>
+</body>
+</html>
