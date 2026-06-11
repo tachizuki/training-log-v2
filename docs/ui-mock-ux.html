@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
+<title>PhysiqueLog — UX主導の再設計モック</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@500;700;800&family=Noto+Sans+JP:wght@400;500;700;900&display=swap');
+
+/* ============================================================
+   UX主導の再設計 — 設計原則
+   1. 保存ボタンを廃止。全て自動保存（保存バー系バグも根絶）
+   2. OSキーボードを使わない。数値は専用キーパッド
+      （キーボードがUIを隠す問題そのものを消す）
+   3. 片手・親指圏内に主要操作。タップ目標は最低48px
+   4. ホームは「今日やることリスト」。記録済/未記録が一目で分かる
+   5. セット完了✓→レストタイマー自動開始（手動操作を1つ削る）
+   6. 暗いジムで見るのでダーク基調は維持。ただし彩度を抑え
+      アクセントは1色に統制。数字は大きく等幅で
+   ============================================================ */
+:root {
+  --bg: #101214;
+  --surface: #16191d;
+  --surface2: #1d2126;
+  --line: #262b31;
+  --acc: #c9f04d;
+  --acc-dim: rgba(201,240,77,0.1);
+  --text: #edf0f2;
+  --sub: #8b939b;
+  --faint: #545c64;
+  --good: #4ade80;
+  --warn: #fbbf24;
+  --bad: #f87171;
+}
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+body {
+  background:#000; color:var(--text);
+  font-family:'Noto Sans JP',sans-serif;
+  display:flex; align-items:center; justify-content:center;
+  min-height:100vh; padding:24px 0;
+}
+.num { font-family:'Inter',sans-serif; font-variant-numeric:tabular-nums; }
+
+.phone {
+  width:402px; height:874px; background:var(--bg);
+  border-radius:48px; border:1px solid #23272c;
+  box-shadow:0 0 0 10px #15171a, 0 40px 120px rgba(0,0,0,0.8);
+  overflow:hidden; position:relative; display:flex; flex-direction:column;
+}
+@media (max-width:430px) {
+  body { padding:0; }
+  .phone { width:100%; height:100vh; border-radius:0; box-shadow:none; border:none; }
+}
+.statusbar { height:42px; flex-shrink:0; display:flex; align-items:center; justify-content:space-between; padding:0 26px; font-size:12px; color:var(--faint); font-weight:700; }
+.viewport { flex:1; overflow:hidden; position:relative; }
+.page { position:absolute; inset:0; overflow-y:auto; padding:0 16px 110px; display:none; scrollbar-width:none; }
+.page::-webkit-scrollbar { display:none; }
+.page.active { display:block; }
+
+/* ===== 共通 ===== */
+.card { background:var(--surface); border:1px solid var(--line); border-radius:16px; margin-bottom:10px; }
+.toast {
+  position:absolute; left:50%; bottom:170px; transform:translateX(-50%) translateY(10px);
+  background:#22272d; border:1px solid var(--line); color:var(--text);
+  border-radius:999px; padding:9px 18px; font-size:12px; font-weight:700;
+  opacity:0; pointer-events:none; transition:all .25s; z-index:60; white-space:nowrap;
+}
+.toast.show { opacity:1; transform:translateX(-50%); }
+.toast b { color:var(--acc); }
+
+/* ============================================================
+   ヘッダー: 大会コンテキストを常時1行で（どの画面でも迷子にならない）
+   ============================================================ */
+.ctx-strip {
+  display:flex; align-items:center; gap:8px;
+  padding:10px 4px 12px; font-size:12px; color:var(--sub);
+}
+.ctx-strip .days { font-family:'Inter'; font-weight:800; font-size:13px; color:var(--acc); }
+.ctx-strip .sep { color:var(--faint); }
+.ctx-strip .auto { margin-left:auto; font-size:10px; color:var(--faint); display:flex; align-items:center; gap:4px; }
+.ctx-strip .auto i { width:6px; height:6px; border-radius:50%; background:var(--good); display:inline-block; }
+
+/* ============================================================
+   今日 — チェックリスト型ホーム
+   ============================================================ */
+.today-title { display:flex; align-items:baseline; justify-content:space-between; padding:2px 4px 14px; }
+.today-title h1 { font-size:24px; font-weight:900; }
+.today-title h1 small { font-size:13px; color:var(--sub); font-weight:500; margin-left:8px; }
+.date-nav { display:flex; align-items:center; gap:2px; }
+.date-nav button { width:44px; height:44px; background:var(--surface); border:1px solid var(--line); border-radius:12px; color:var(--sub); font-size:18px; cursor:pointer; }
+
+.task {
+  display:flex; align-items:center; gap:14px;
+  padding:16px; min-height:72px; cursor:pointer;
+  border-bottom:1px solid var(--line);
+}
+.task:last-child { border-bottom:none; }
+.task:active { background:var(--surface2); }
+.task .st {
+  width:26px; height:26px; border-radius:50%; flex-shrink:0;
+  border:2px solid var(--faint);
+  display:flex; align-items:center; justify-content:center;
+  font-size:13px; color:var(--bg); font-weight:900;
+}
+.task.done .st { background:var(--acc); border-color:var(--acc); }
+.task.done .st::after { content:'✓'; }
+.task-main { flex:1; min-width:0; }
+.task-name { font-size:14px; font-weight:700; }
+.task-sub { font-size:11px; color:var(--sub); margin-top:2px; }
+.task-val { font-family:'Inter'; font-weight:800; font-size:20px; text-align:right; }
+.task-val small { font-size:11px; color:var(--sub); font-weight:500; margin-left:2px; }
+.task-val .todo { font-size:12px; color:var(--faint); font-weight:700; }
+.task-cta {
+  flex-shrink:0; background:var(--acc-dim); color:var(--acc);
+  border:1px solid rgba(201,240,77,0.3); border-radius:10px;
+  padding:10px 14px; font-size:12px; font-weight:900; cursor:pointer;
+}
+
+/* 水分はその場で完結（画面遷移させない） */
+.water-chips { display:flex; gap:8px; padding:0 16px 16px; }
+.water-chips button {
+  flex:1; height:46px; background:var(--surface2); border:1px solid var(--line);
+  border-radius:12px; color:var(--text); font-size:13px; font-weight:700; cursor:pointer;
+  font-family:'Noto Sans JP';
+}
+.water-chips button:active { border-color:var(--acc); color:var(--acc); }
+.water-bar-wrap { padding:0 16px 14px; }
+.water-bar { height:6px; background:var(--line); border-radius:3px; overflow:hidden; }
+.water-bar i { display:block; height:100%; background:var(--acc); border-radius:3px; transition:width .3s; }
+
+/* 進捗サマリー（言葉で評価を返す — 数字の羅列にしない） */
+.verdict { padding:16px; display:flex; gap:14px; align-items:center; }
+.verdict .face { font-size:30px; }
+.verdict .tx { font-size:13px; line-height:1.7; color:var(--sub); }
+.verdict .tx b { color:var(--text); }
+.verdict .tx .ok { color:var(--good); font-weight:700; }
+
+/* ============================================================
+   筋トレ — セット記録に全振り
+   ============================================================ */
+.gym-top { display:flex; align-items:center; justify-content:space-between; padding:2px 4px 12px; }
+.gym-top h1 { font-size:24px; font-weight:900; }
+.sw-pill { display:flex; align-items:center; gap:10px; background:var(--surface); border:1px solid var(--line); border-radius:999px; padding:8px 14px; }
+.sw-pill .t { font-family:'Inter'; font-weight:800; font-size:16px; color:var(--acc); }
+.sw-pill button { background:none; border:none; color:var(--sub); font-size:11px; font-weight:700; cursor:pointer; font-family:'Noto Sans JP'; }
+
+.ex { padding:0; overflow:hidden; }
+.ex-h { display:flex; align-items:center; gap:10px; padding:14px 16px 10px; }
+.ex-h .nm { font-size:15px; font-weight:700; flex:1; }
+.copy-prev {
+  background:var(--surface2); border:1px solid var(--line); color:var(--sub);
+  border-radius:10px; padding:8px 12px; font-size:11px; font-weight:700; cursor:pointer;
+  font-family:'Noto Sans JP';
+}
+.copy-prev:active { color:var(--acc); border-color:var(--acc); }
+.srow { display:flex; align-items:center; gap:8px; padding:7px 16px; }
+.srow .n { width:22px; font-size:12px; color:var(--faint); font-weight:700; font-family:'Inter'; }
+.cell {
+  flex:1; height:52px; background:var(--surface2); border:1px solid var(--line);
+  border-radius:12px; display:flex; align-items:center; justify-content:center; gap:3px;
+  font-family:'Inter'; font-size:19px; font-weight:800; cursor:pointer;
+}
+.cell small { font-size:10px; color:var(--faint); font-weight:500; }
+.cell.editing { border-color:var(--acc); background:var(--acc-dim); }
+.cell .ph { color:var(--faint); }
+.chk {
+  width:52px; height:52px; flex-shrink:0; border-radius:12px;
+  background:var(--surface2); border:1px solid var(--line);
+  color:var(--faint); font-size:20px; cursor:pointer; font-weight:900;
+}
+.chk.on { background:var(--acc); border-color:var(--acc); color:#101214; }
+.ex-add { width:100%; background:none; border:none; border-top:1px solid var(--line); color:var(--sub); padding:14px; font-size:12px; font-weight:700; cursor:pointer; font-family:'Noto Sans JP'; margin-top:6px; }
+.big-add {
+  width:100%; height:56px; border-radius:16px; border:1px dashed var(--faint);
+  background:none; color:var(--sub); font-size:14px; font-weight:700; cursor:pointer;
+  font-family:'Noto Sans JP'; margin-bottom:10px;
+}
+
+/* レストタイマー: セット✓で自動開始、画面下に常駐 */
+.rest {
+  position:absolute; left:12px; right:12px; bottom:92px; z-index:30;
+  background:#1c2410; border:1px solid rgba(201,240,77,0.45);
+  border-radius:16px; padding:12px 16px;
+  display:none; align-items:center; gap:14px;
+  box-shadow:0 14px 40px rgba(0,0,0,0.6);
+}
+.rest.show { display:flex; }
+.rest .t { font-family:'Inter'; font-size:28px; font-weight:800; color:var(--acc); min-width:74px; }
+.rest .meta { flex:1; }
+.rest .meta .l { font-size:10px; color:var(--sub); font-weight:700; letter-spacing:0.1em; }
+.rest .bar { height:4px; background:rgba(255,255,255,0.12); border-radius:2px; margin-top:6px; overflow:hidden; }
+.rest .bar i { display:block; height:100%; background:var(--acc); transition:width 1s linear; }
+.rest button { height:44px; padding:0 14px; background:rgba(255,255,255,0.07); border:none; border-radius:10px; color:var(--text); font-size:12px; font-weight:700; cursor:pointer; font-family:'Noto Sans JP'; }
+
+/* ============================================================
+   専用数値キーパッド（OSキーボード不使用）
+   ============================================================ */
+.pad-ov { position:absolute; inset:0; z-index:48; display:none; }
+.pad-ov.open { display:block; }
+.pad {
+  position:absolute; left:0; right:0; bottom:0; z-index:50;
+  background:#15181c; border-top:1px solid var(--line);
+  border-radius:24px 24px 0 0; padding:14px 14px 30px;
+  transform:translateY(110%); transition:transform .22s ease;
+}
+.pad.open { transform:none; }
+.pad-head { display:flex; align-items:center; padding:2px 6px 12px; gap:10px; }
+.pad-head .lbl { font-size:12px; color:var(--sub); font-weight:700; }
+.pad-head .val { font-family:'Inter'; font-size:30px; font-weight:800; color:var(--acc); margin-left:auto; }
+.pad-quick { display:flex; gap:8px; margin-bottom:10px; }
+.pad-quick button {
+  flex:1; height:46px; background:var(--surface2); border:1px solid var(--line);
+  border-radius:12px; color:var(--text); font-size:13px; font-weight:700; cursor:pointer;
+  font-family:'Inter';
+}
+.pad-quick button.prev { font-family:'Noto Sans JP'; color:var(--sub); font-size:12px; }
+.pad-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
+.pad-grid button {
+  height:58px; background:var(--surface); border:1px solid var(--line);
+  border-radius:14px; color:var(--text); font-family:'Inter';
+  font-size:22px; font-weight:700; cursor:pointer;
+}
+.pad-grid button:active { background:var(--surface2); }
+.pad-grid .okbtn { grid-row:span 2; background:var(--acc); color:#101214; font-family:'Noto Sans JP'; font-size:16px; font-weight:900; border:none; }
+
+/* ============================================================
+   データ — 結論ファースト
+   ============================================================ */
+.insight {
+  padding:16px; border-left:3px solid var(--acc);
+  background:linear-gradient(90deg, var(--acc-dim), transparent 60%);
+  border-radius:0 16px 16px 0; margin-bottom:10px;
+  font-size:13px; line-height:1.8; color:var(--sub);
+}
+.insight b { color:var(--text); }
+.insight .ok { color:var(--good); font-weight:700; }
+.chart-card { padding:16px; }
+.chart-card h3 { font-size:12px; color:var(--sub); font-weight:700; margin-bottom:12px; display:flex; justify-content:space-between; }
+.chart-card h3 span { font-weight:500; color:var(--faint); }
+.kpis { display:flex; border-top:1px solid var(--line); margin-top:14px; padding-top:12px; }
+.kpis > div { flex:1; text-align:center; }
+.kpis .k { font-size:10px; color:var(--faint); margin-bottom:3px; }
+.kpis .v { font-family:'Inter'; font-size:17px; font-weight:800; }
+.kpis .v.g { color:var(--good); }
+
+/* ============================================================
+   ナビ — 親指で届く3+1
+   ============================================================ */
+.nav {
+  position:absolute; left:0; right:0; bottom:0; height:82px; z-index:40;
+  background:rgba(16,18,20,0.95); backdrop-filter:blur(16px);
+  border-top:1px solid var(--line); display:flex; padding-top:8px;
+}
+.nav button {
+  flex:1; background:none; border:none; cursor:pointer;
+  color:var(--faint); font-size:10px; font-weight:700; font-family:'Noto Sans JP';
+  display:flex; flex-direction:column; align-items:center; gap:4px;
+}
+.nav button svg { width:24px; height:24px; stroke:currentColor; fill:none; stroke-width:1.9; stroke-linecap:round; stroke-linejoin:round; }
+.nav button.on { color:var(--acc); }
+
+/* デザインノート */
+.notes-fab { position:fixed; right:24px; bottom:24px; z-index:90; background:#1d2126; color:var(--acc); border:1px solid rgba(201,240,77,0.35); border-radius:999px; padding:12px 18px; font-size:13px; font-weight:700; cursor:pointer; font-family:'Noto Sans JP'; }
+.notes-panel { position:fixed; right:24px; bottom:76px; z-index:91; width:390px; max-width:calc(100vw - 48px); max-height:72vh; overflow-y:auto; background:#14171a; border:1px solid var(--line); border-radius:18px; padding:24px; display:none; box-shadow:0 24px 80px rgba(0,0,0,0.8); }
+.notes-panel.open { display:block; }
+.notes-panel h2 { font-size:15px; color:var(--acc); margin-bottom:12px; }
+.notes-panel li { font-size:12px; color:var(--sub); line-height:1.9; margin-left:18px; margin-bottom:9px; }
+.notes-panel b { color:var(--text); }
+@media (max-width:430px){ .notes-fab,.notes-panel{ display:none!important; } }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="statusbar"><span>18:29</span><span>UX REDESIGN MOCK</span><span>61%</span></div>
+  <div class="viewport">
+
+    <!-- ============ 今日 ============ -->
+    <div class="page active" id="pg-today">
+      <div class="ctx-strip">
+        <span class="days num">D-47</span><span>東京選手権</span>
+        <span class="sep">|</span><span>減量 W8/14 ・ あと −2.1kg</span>
+        <span class="auto"><i></i>自動保存</span>
+      </div>
+
+      <div class="today-title">
+        <h1>今日<small>6月11日（木）</small></h1>
+        <div class="date-nav"><button>‹</button><button>›</button></div>
+      </div>
+
+      <!-- 今日やることリスト: 状態が一目で分かり、未記録の行を押せばその場で入力 -->
+      <div class="card">
+        <div class="task done" id="task-weight" onclick="openPad('体重 (kg)', 'weight', '62.4', '62.7')">
+          <div class="st"></div>
+          <div class="task-main"><div class="task-name">体重</div><div class="task-sub">昨日 62.7 → <span style="color:var(--good)">−0.3kg</span></div></div>
+          <div class="task-val num" id="weight-val">62.4<small>kg</small></div>
+        </div>
+        <div class="task done">
+          <div class="st"></div>
+          <div class="task-main"><div class="task-name">睡眠</div><div class="task-sub">23:30 → 7:00</div></div>
+          <div class="task-val num">7.5<small>h</small></div>
+        </div>
+        <div class="task" id="task-meal" onclick="openPad('カロリー (kcal)', 'meal', '', '2,150')">
+          <div class="st"></div>
+          <div class="task-main"><div class="task-name">食事 / PFC</div><div class="task-sub">目標 2,200kcal ・ P160g</div></div>
+          <div class="task-val" id="meal-val"><span class="todo">未記録 ›</span></div>
+        </div>
+        <div class="task" style="cursor:default;">
+          <div class="st" id="water-st"></div>
+          <div class="task-main"><div class="task-name">水分</div><div class="task-sub">目標 3,000ml</div></div>
+          <div class="task-val num"><span id="water-num">1,600</span><small>ml</small></div>
+        </div>
+        <div class="water-bar-wrap"><div class="water-bar"><i id="water-fill" style="width:53%"></i></div></div>
+        <div class="water-chips">
+          <button onclick="water(250)">＋250</button>
+          <button onclick="water(500)">＋500</button>
+          <button onclick="water(1000)">＋1L</button>
+        </div>
+        <div class="task" onclick="go('gym')">
+          <div class="st"></div>
+          <div class="task-main"><div class="task-name">筋トレ — 肩の日</div><div class="task-sub">前回 6/7 ・ 5種目 18セット</div></div>
+          <div class="task-cta">開始</div>
+        </div>
+      </div>
+
+      <!-- 数字の羅列ではなく「言葉の評価」を返す -->
+      <div class="card verdict">
+        <div class="face">👍</div>
+        <div class="tx"><b>今週は順調。</b>減量ペース <span class="ok">−0.32kg/週</span>（適正圏内）。タンパク質も6日連続で目標達成。このまま <b>6/25 の中間チェック</b>まで継続。</div>
+      </div>
+    </div>
+
+    <!-- ============ 筋トレ ============ -->
+    <div class="page" id="pg-gym">
+      <div class="ctx-strip">
+        <span class="days num">D-47</span><span>東京選手権</span>
+        <span class="auto"><i></i>自動保存</span>
+      </div>
+      <div class="gym-top">
+        <h1>肩の日</h1>
+        <div class="sw-pill"><span class="t num" id="sw">42:18</span><button>終了</button></div>
+      </div>
+
+      <div class="card ex">
+        <div class="ex-h">
+          <span class="nm">サイドレイズ</span>
+          <button class="copy-prev" onclick="toast('前回のセットをコピーしました')">前回コピー 12kg×12×3</button>
+        </div>
+        <div class="srow">
+          <span class="n">1</span>
+          <div class="cell" onclick="openPad('サイドレイズ — kg','s1k','12','12')"><span>12</span><small>kg</small></div>
+          <div class="cell" onclick="openPad('サイドレイズ — rep','s1r','14','12')"><span>14</span><small>rep</small></div>
+          <button class="chk on" onclick="event.stopPropagation()">✓</button>
+        </div>
+        <div class="srow">
+          <span class="n">2</span>
+          <div class="cell" onclick="openPad('サイドレイズ — kg','s2k','12','12')"><span>12</span><small>kg</small></div>
+          <div class="cell" onclick="openPad('サイドレイズ — rep','s2r','12','12')"><span>12</span><small>rep</small></div>
+          <button class="chk on" onclick="event.stopPropagation()">✓</button>
+        </div>
+        <div class="srow">
+          <span class="n">3</span>
+          <div class="cell" id="s3k" onclick="openPad('サイドレイズ — kg','s3k','','12')"><span class="ph">12</span><small>kg</small></div>
+          <div class="cell" id="s3r" onclick="openPad('サイドレイズ — rep','s3r','','12')"><span class="ph">12</span><small>rep</small></div>
+          <button class="chk" id="chk3" onclick="checkSet(this)">✓</button>
+        </div>
+        <button class="ex-add">＋ セットを追加</button>
+      </div>
+
+      <div class="card ex">
+        <div class="ex-h">
+          <span class="nm">ショルダープレス</span>
+          <button class="copy-prev" onclick="toast('前回のセットをコピーしました')">前回コピー 40kg×10×3</button>
+        </div>
+        <div class="srow">
+          <span class="n">1</span>
+          <div class="cell"><span>40</span><small>kg</small></div>
+          <div class="cell"><span>10</span><small>rep</small></div>
+          <button class="chk on">✓</button>
+        </div>
+        <div class="srow">
+          <span class="n">2</span>
+          <div class="cell"><span class="ph">40</span><small>kg</small></div>
+          <div class="cell"><span class="ph">10</span><small>rep</small></div>
+          <button class="chk" onclick="checkSet(this)">✓</button>
+        </div>
+        <button class="ex-add">＋ セットを追加</button>
+      </div>
+
+      <button class="big-add">＋ 種目を追加</button>
+    </div>
+
+    <!-- ============ データ ============ -->
+    <div class="page" id="pg-data">
+      <div class="ctx-strip">
+        <span class="days num">D-47</span><span>東京選手権</span>
+        <span class="auto"><i></i>自動保存</span>
+      </div>
+      <div class="today-title"><h1>データ</h1></div>
+
+      <!-- 結論ファースト: グラフを読まなくても分かる -->
+      <div class="insight">
+        <b>結論:</b> 減量は<span class="ok">想定ライン上</span>。このペースなら大会1週前に <b>60.8kg</b> 着地見込み → 最終週の水抜きで <b>目標60.3kg</b> に届く計算。
+      </div>
+
+      <div class="card chart-card">
+        <h3>体重の推移 <span>直近30日</span></h3>
+        <svg width="100%" height="140" viewBox="0 0 340 140" preserveAspectRatio="none">
+          <line x1="0" y1="112" x2="340" y2="112" stroke="#f87171" stroke-width="1" stroke-dasharray="5 4" opacity="0.5"/>
+          <text x="6" y="107" font-size="9" fill="#f87171" font-family="Inter">目標 60.3</text>
+          <path d="M10,26 L33,31 L56,29 L79,38 L102,35 L125,44 L148,41 L171,50 L194,47 L217,55 L240,52 L263,61 L286,59 L309,67 L330,69"
+                stroke="#c9f04d" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+          <circle cx="330" cy="69" r="4.5" fill="#101214" stroke="#c9f04d" stroke-width="3"/>
+          <!-- 想定ライン -->
+          <path d="M10,26 L330,75" stroke="#545c64" stroke-width="1.2" stroke-dasharray="3 5"/>
+        </svg>
+        <div class="kpis">
+          <div><div class="k">現在</div><div class="v num">62.4</div></div>
+          <div><div class="k">週ペース</div><div class="v num g">−0.32</div></div>
+          <div><div class="k">30日変化</div><div class="v num">−1.4</div></div>
+          <div><div class="k">着地予測</div><div class="v num">60.8</div></div>
+        </div>
+      </div>
+
+      <div class="card chart-card">
+        <h3>トレーニング <span>今月</span></h3>
+        <div class="kpis" style="border-top:none;margin-top:0;padding-top:0;">
+          <div><div class="k">回数</div><div class="v num">8</div></div>
+          <div><div class="k">総ボリューム</div><div class="v num">54.2t</div></div>
+          <div><div class="k">平均時間</div><div class="v num">56分</div></div>
+          <div><div class="k">PR更新</div><div class="v num g">3件</div></div>
+        </div>
+      </div>
+
+      <div class="card chart-card">
+        <h3>栄養 <span>直近7日平均</span></h3>
+        <div class="kpis" style="border-top:none;margin-top:0;padding-top:0;">
+          <div><div class="k">摂取</div><div class="v num">2,080</div></div>
+          <div><div class="k">P/体重</div><div class="v num g">2.3g</div></div>
+          <div><div class="k">目標達成</div><div class="v num">6/7日</div></div>
+          <div><div class="k">水分平均</div><div class="v num">2.7L</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- レストタイマー（セット✓で自動開始） -->
+    <div class="rest" id="rest">
+      <span class="t num" id="rest-t">1:30</span>
+      <div class="meta">
+        <div class="l">休憩中 — 次: サイドレイズ 4セット目</div>
+        <div class="bar"><i id="rest-bar" style="width:100%"></i></div>
+      </div>
+      <button onclick="restAdd()">＋30s</button>
+      <button onclick="restStop()">スキップ</button>
+    </div>
+
+    <!-- 数値キーパッド -->
+    <div class="pad-ov" id="pad-ov" onclick="closePad()"></div>
+    <div class="pad" id="pad">
+      <div class="pad-head">
+        <span class="lbl" id="pad-lbl">体重 (kg)</span>
+        <span class="val num" id="pad-val">62.4</span>
+      </div>
+      <div class="pad-quick">
+        <button onclick="padStep(-2.5)">−2.5</button>
+        <button onclick="padStep(-0.5)">−0.5</button>
+        <button onclick="padStep(0.5)">＋0.5</button>
+        <button onclick="padStep(2.5)">＋2.5</button>
+        <button class="prev" id="pad-prev" onclick="padPrev()">前回 62.7</button>
+      </div>
+      <div class="pad-grid">
+        <button onclick="padKey('7')">7</button><button onclick="padKey('8')">8</button><button onclick="padKey('9')">9</button>
+        <button onclick="padKey('back')">⌫</button>
+        <button onclick="padKey('4')">4</button><button onclick="padKey('5')">5</button><button onclick="padKey('6')">6</button>
+        <button class="okbtn" onclick="padDone()">確定</button>
+        <button onclick="padKey('1')">1</button><button onclick="padKey('2')">2</button><button onclick="padKey('3')">3</button>
+        <button onclick="padKey('0')">0</button><button onclick="padKey('.')">.</button><button onclick="padKey('clear')">C</button>
+      </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+  </div><!-- /viewport -->
+
+  <nav class="nav">
+    <button class="on" id="nv-today" onclick="go('today')">
+      <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>今日
+    </button>
+    <button id="nv-gym" onclick="go('gym')">
+      <svg viewBox="0 0 24 24"><path d="M6.5 6.5v11M17.5 6.5v11M3 9v6M21 9v6M6.5 12h11"/></svg>筋トレ
+    </button>
+    <button id="nv-data" onclick="go('data')">
+      <svg viewBox="0 0 24 24"><path d="M3 21h18M7 16v-5M12 16V8M17 16v-8"/></svg>データ
+    </button>
+    <button id="nv-set" onclick="toast('設定（モック未実装）')">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 00-.1-1.2l2-1.5-2-3.5-2.4 1a7 7 0 00-2-1.2L14 3h-4l-.5 2.6a7 7 0 00-2 1.2l-2.4-1-2 3.5 2 1.5A7 7 0 005 12a7 7 0 00.1 1.2l-2 1.5 2 3.5 2.4-1a7 7 0 002 1.2L10 21h4l.5-2.6a7 7 0 002-1.2l2.4 1 2-3.5-2-1.5A7 7 0 0019 12z"/></svg>設定
+    </button>
+  </nav>
+</div>
+
+<button class="notes-fab" onclick="document.getElementById('np').classList.toggle('open')">💡 設計の意図</button>
+<div class="notes-panel" id="np">
+  <h2>UX主導の再設計 — 何を変えたか</h2>
+  <ul>
+    <li><b>保存ボタンの廃止。</b>全項目が自動保存（ヘッダーに常時「●自動保存」表示）。「保存バーがキーボードに隠れる」「保存バーが残る」系の問題はUIの工夫ではなく<b>概念ごと削除</b>して解決。</li>
+    <li><b>OSキーボードを使わない。</b>数値入力は下半分の専用キーパッド。±2.5kg/±0.5kgのステップと「前回値」が1タップ。キーボードがUIを隠す問題自体が起きない。ジムで手袋・汗ありでも押せる大型キー。</li>
+    <li><b>ホーム＝今日のチェックリスト。</b>体重・睡眠・食事・水分・筋トレが「済/未」の行で並ぶ。アプリを開く理由は毎日「今日の記録を埋める」ことなので、それをそのままUIにした。未記録の行をタップ→その場で入力→行が✓になる。</li>
+    <li><b>水分は画面遷移なし。</b>+250/+500/+1Lをホーム上で完結。専用画面もタブも持たない。</li>
+    <li><b>セット✓でレストタイマー自動開始。</b>「タイマーを開いて押す」操作を削除。バーは常駐し+30s/スキップのみ。</li>
+    <li><b>「前回コピー」を種目ごとに。</b>筋トレ記録の実態は前回の微修正。3セット分が1タップで入り、変わった所だけ直す。</li>
+    <li><b>データ画面は結論ファースト。</b>グラフの前に「順調か否か・着地予測」を日本語で表示。数字の羅列を読ませない。</li>
+    <li><b>大会コンテキストを全画面のヘッダーに常設。</b>D-47と残りkgがどの画面でも見える。競技者の意思決定は常に大会基準だから。</li>
+    <li><b>雰囲気:</b> ジム（暗所）で使う前提でダークは維持。ただし彩度を落とし、アクセント1色＋状態色（緑/黄/赤）のみ。数字は等幅・大サイズで瞬読性優先。</li>
+    <li><b>ナビは4つ。</b>記録タブを廃止（ホームが記録そのものなので）。今日・筋トレ・データ・設定。</li>
+  </ul>
+</div>
+
+<script>
+function go(n) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const pg = document.getElementById('pg-' + n);
+  if (pg) pg.classList.add('active');
+  document.querySelectorAll('.nav button').forEach(b => b.classList.remove('on'));
+  const nv = document.getElementById('nv-' + n);
+  if (nv) nv.classList.add('on');
+}
+
+let _tt;
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.innerHTML = msg;
+  t.classList.add('show');
+  clearTimeout(_tt);
+  _tt = setTimeout(() => t.classList.remove('show'), 1600);
+}
+
+/* ===== 水分 ===== */
+let waterMl = 1600;
+function water(add) {
+  waterMl += add;
+  document.getElementById('water-num').textContent = waterMl.toLocaleString();
+  document.getElementById('water-fill').style.width = Math.min(100, waterMl / 3000 * 100) + '%';
+  if (waterMl >= 3000) document.getElementById('water-st').parentElement.classList.add('done');
+  toast('水分 +' + add + 'ml — <b>自動保存 ✓</b>');
+}
+
+/* ===== キーパッド ===== */
+let padTarget = null, padPrevVal = '';
+function openPad(label, target, current, prev) {
+  padTarget = target; padPrevVal = prev;
+  document.getElementById('pad-lbl').textContent = label;
+  document.getElementById('pad-val').textContent = current || '0';
+  document.getElementById('pad-prev').textContent = '前回 ' + prev;
+  document.getElementById('pad').classList.add('open');
+  document.getElementById('pad-ov').classList.add('open');
+  const cell = document.getElementById(target);
+  if (cell) cell.classList.add('editing');
+}
+function closePad() {
+  document.getElementById('pad').classList.remove('open');
+  document.getElementById('pad-ov').classList.remove('open');
+  document.querySelectorAll('.cell.editing').forEach(c => c.classList.remove('editing'));
+}
+function padKey(k) {
+  const el = document.getElementById('pad-val');
+  let v = el.textContent;
+  if (k === 'back') v = v.length > 1 ? v.slice(0, -1) : '0';
+  else if (k === 'clear') v = '0';
+  else if (k === '.') { if (!v.includes('.')) v += '.'; }
+  else v = (v === '0') ? k : v + k;
+  el.textContent = v;
+}
+function padStep(d) {
+  const el = document.getElementById('pad-val');
+  const v = Math.max(0, (parseFloat(el.textContent.replace(/,/g,'')) || 0) + d);
+  el.textContent = (Math.round(v * 10) / 10).toString();
+}
+function padPrev() {
+  document.getElementById('pad-val').textContent = padPrevVal.replace(/,/g,'');
+}
+function padDone() {
+  const v = document.getElementById('pad-val').textContent;
+  if (padTarget === 'weight') {
+    document.getElementById('weight-val').innerHTML = v + '<small>kg</small>';
+    document.getElementById('task-weight').classList.add('done');
+  } else if (padTarget === 'meal') {
+    document.getElementById('meal-val').innerHTML = v + '<small>kcal</small>';
+    document.getElementById('task-meal').classList.add('done');
+  } else {
+    const cell = document.getElementById(padTarget);
+    if (cell) cell.firstElementChild.outerHTML = '<span>' + v + '</span>';
+  }
+  closePad();
+  toast('記録しました — <b>自動保存 ✓</b>');
+}
+
+/* ===== セット✓ → レスト自動開始 ===== */
+let restSec = 90, restTimer = null;
+function checkSet(btn) {
+  btn.classList.toggle('on');
+  if (btn.classList.contains('on')) startRest();
+}
+function startRest() {
+  restSec = 90;
+  document.getElementById('rest').classList.add('show');
+  clearInterval(restTimer);
+  tickRest();
+  restTimer = setInterval(tickRest, 1000);
+}
+function tickRest() {
+  if (restSec <= 0) { restStop(); toast('休憩終了！次のセットへ 💪'); return; }
+  const m = Math.floor(restSec / 60), s = restSec % 60;
+  document.getElementById('rest-t').textContent = m + ':' + String(s).padStart(2, '0');
+  document.getElementById('rest-bar').style.width = (restSec / 90 * 100) + '%';
+  restSec--;
+}
+function restAdd() { restSec += 30; }
+function restStop() {
+  clearInterval(restTimer);
+  document.getElementById('rest').classList.remove('show');
+}
+
+/* ストップウォッチ（雰囲気用） */
+let swS = 42 * 60 + 18;
+setInterval(() => {
+  swS++;
+  const m = Math.floor(swS / 60), s = swS % 60;
+  document.getElementById('sw').textContent = m + ':' + String(s).padStart(2, '0');
+}, 1000);
+</script>
+</body>
+</html>
