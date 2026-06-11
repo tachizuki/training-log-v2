@@ -311,23 +311,23 @@ body {
         </div>
       </div>
 
-      <!-- 食事: PFC+塩分を入力、カロリーは自動計算 -->
-      <div class="tile meal">
+      <!-- 食事: カードタップで一括入力（P→F→C→塩分）、カロリーは自動計算 -->
+      <div class="tile meal" onclick="openMealPad(0)">
         <div class="meal-head">
           <span class="k">食事</span>
           <span class="kcal num" id="kcal-auto">1,850<small>kcal 自動計算</small></span>
         </div>
         <div class="meal-cells">
-          <div class="mcell" id="mc-p" onclick="openPad('タンパク質 (g)', 'p', '142', '146')">
+          <div class="mcell" id="mc-p" onclick="event.stopPropagation();openMealPad(0)">
             <div class="l">P</div><div class="n num">142<small>g</small></div>
           </div>
-          <div class="mcell" id="mc-f" onclick="openPad('脂質 (g)', 'f', '48', '52')">
+          <div class="mcell" id="mc-f" onclick="event.stopPropagation();openMealPad(1)">
             <div class="l">F</div><div class="n num">48<small>g</small></div>
           </div>
-          <div class="mcell" id="mc-c" onclick="openPad('炭水化物 (g)', 'c', '198', '210')">
+          <div class="mcell" id="mc-c" onclick="event.stopPropagation();openMealPad(2)">
             <div class="l">C</div><div class="n num">198<small>g</small></div>
           </div>
-          <div class="mcell" id="mc-salt" onclick="openPad('塩分 (g)', 'salt', '', '6.5')">
+          <div class="mcell" id="mc-salt" onclick="event.stopPropagation();openMealPad(3)">
             <div class="l">塩分</div><div class="n num"><span class="ph">—</span><small>g</small></div>
           </div>
         </div>
@@ -511,6 +511,30 @@ body {
       </div>
     </div>
 
+    <!-- 食事一括入力パッド: P→F→C→塩分 を「次へ」で連続入力 -->
+    <div class="pad-ov" id="mpad-ov" onclick="closeMealPad()"></div>
+    <div class="pad" id="mpad">
+      <div class="pad-head" style="padding-bottom:8px;">
+        <span class="lbl">食事を入力</span>
+        <button class="prev" onclick="mealCopyPrev()">前回コピー</button>
+        <span class="val num" id="mpad-kcal" style="font-size:20px;">1,850<small style="font-size:10px;color:var(--faint);font-family:'Noto Sans JP';"> kcal</small></span>
+      </div>
+      <div class="meal-cells" style="margin-bottom:10px;">
+        <div class="mcell" id="mf-0" onclick="mealFocus(0)"><div class="l">P</div><div class="n num" id="mv-0">142<small>g</small></div></div>
+        <div class="mcell" id="mf-1" onclick="mealFocus(1)"><div class="l">F</div><div class="n num" id="mv-1">48<small>g</small></div></div>
+        <div class="mcell" id="mf-2" onclick="mealFocus(2)"><div class="l">C</div><div class="n num" id="mv-2">198<small>g</small></div></div>
+        <div class="mcell" id="mf-3" onclick="mealFocus(3)"><div class="l">塩分</div><div class="n num" id="mv-3"><span class="ph">—</span><small>g</small></div></div>
+      </div>
+      <div class="pad-grid">
+        <button onclick="mKey('7')">7</button><button onclick="mKey('8')">8</button><button onclick="mKey('9')">9</button>
+        <button onclick="mKey('back')">⌫</button>
+        <button onclick="mKey('4')">4</button><button onclick="mKey('5')">5</button><button onclick="mKey('6')">6</button>
+        <button class="okbtn" id="mpad-ok" onclick="mealNext()">次へ</button>
+        <button onclick="mKey('1')">1</button><button onclick="mKey('2')">2</button><button onclick="mKey('3')">3</button>
+        <button onclick="mKey('0')">0</button><button onclick="mKey('.')">.</button><button onclick="mKey('clear')">C</button>
+      </div>
+    </div>
+
     <!-- 筋トレメニュー選択シート -->
     <div class="sheet-ov" id="menu-ov" onclick="closeMenuSheet()"></div>
     <div class="sheet" id="menu-sheet">
@@ -581,11 +605,69 @@ function toast(msg) {
   _tt = setTimeout(() => t.classList.remove('show'), 1600);
 }
 
-/* ===== 食事: PFC+塩分 → kcal自動計算 ===== */
-const meal = { p: 142, f: 48, c: 198, salt: null };
-function updateKcal() {
-  const kcal = Math.round((meal.p||0)*4 + (meal.f||0)*9 + (meal.c||0)*4);
-  document.getElementById('kcal-auto').innerHTML = kcal.toLocaleString() + '<small>kcal 自動計算</small>';
+/* ===== 食事: 一括入力（P→F→C→塩分）→ kcal自動計算 ===== */
+const FIELDS = ['p','f','c','salt'];
+const mealVals = [142, 48, 198, null];   // P, F, C, 塩分
+const mealPrev = [146, 52, 210, 6.5];
+let mIdx = 0, mFresh = true;             // mFresh: フォーカス直後の上書き入力
+
+function calcKcal(vals) {
+  return Math.round((vals[0]||0)*4 + (vals[1]||0)*9 + (vals[2]||0)*4);
+}
+function openMealPad(idx) {
+  document.getElementById('mpad').classList.add('open');
+  document.getElementById('mpad-ov').classList.add('open');
+  mealFocus(idx);
+}
+function closeMealPad() {
+  document.getElementById('mpad').classList.remove('open');
+  document.getElementById('mpad-ov').classList.remove('open');
+}
+function mealFocus(idx) {
+  mIdx = idx; mFresh = true;
+  for (let i = 0; i < 4; i++) document.getElementById('mf-' + i).classList.toggle('editing', i === idx);
+  document.getElementById('mpad-ok').textContent = (idx === 3) ? '確定' : '次へ';
+}
+function mRender() {
+  for (let i = 0; i < 4; i++) {
+    const v = mealVals[i];
+    document.getElementById('mv-' + i).innerHTML =
+      (v === null ? '<span class="ph">—</span>' : v) + '<small>g</small>';
+  }
+  document.getElementById('mpad-kcal').innerHTML =
+    calcKcal(mealVals).toLocaleString() + '<small style="font-size:10px;color:var(--faint);font-family:\'Noto Sans JP\';"> kcal</small>';
+}
+function mKey(k) {
+  let v = mealVals[mIdx] === null ? '' : String(mealVals[mIdx]);
+  if (k === 'back') v = v.slice(0, -1);
+  else if (k === 'clear') v = '';
+  else if (k === '.') { if (mFresh) v = '0.'; else if (!v.includes('.')) v += '.'; }
+  else { if (mFresh) v = k; else v += k; }
+  mFresh = false;
+  mealVals[mIdx] = v === '' ? null : parseFloat(v);
+  // 入力途中の "0." などはそのまま表示
+  document.getElementById('mv-' + mIdx).innerHTML =
+    (v === '' ? '<span class="ph">—</span>' : v) + '<small>g</small>';
+  document.getElementById('mpad-kcal').innerHTML =
+    calcKcal(mealVals).toLocaleString() + '<small style="font-size:10px;color:var(--faint);font-family:\'Noto Sans JP\';"> kcal</small>';
+}
+function mealNext() {
+  if (mIdx < 3) { mealFocus(mIdx + 1); return; }
+  // 確定: ホームのカードへ反映
+  const labels = ['mc-p','mc-f','mc-c','mc-salt'];
+  for (let i = 0; i < 4; i++) {
+    const v = mealVals[i];
+    document.getElementById(labels[i]).querySelector('.n').innerHTML =
+      (v === null ? '<span class="ph">—</span>' : v) + '<small>g</small>';
+  }
+  document.getElementById('kcal-auto').innerHTML = calcKcal(mealVals).toLocaleString() + '<small>kcal 自動計算</small>';
+  closeMealPad();
+  toast('食事を記録 — <b>自動保存 ✓</b>');
+}
+function mealCopyPrev() {
+  for (let i = 0; i < 4; i++) mealVals[i] = mealPrev[i];
+  mRender();
+  toast('前回の食事をコピーしました');
 }
 
 /* ===== 水分: チップ編集可能 ===== */
@@ -667,11 +749,6 @@ function padDone() {
     document.getElementById('weight-val').innerHTML = v + '<small>kg</small>';
   } else if (padTarget === 'sleep') {
     document.getElementById('sleep-val').innerHTML = v + '<small>h</small>';
-  } else if (['p','f','c','salt'].includes(padTarget)) {
-    meal[padTarget] = n;
-    const cell = document.getElementById('mc-' + padTarget);
-    cell.querySelector('.n').innerHTML = v + '<small>g</small>';
-    updateKcal();
   } else if (padTarget.startsWith('wchip')) {
     const i = parseInt(padTarget.slice(5));
     chipVals[i] = Math.round(n);
