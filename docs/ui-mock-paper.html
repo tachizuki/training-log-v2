@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
+<title>稽古帳 — まっさら再設計モック</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@400;600;800&family=IBM+Plex+Mono:wght@400;600&family=Noto+Sans+JP:wght@300;400;500;700&display=swap');
+
+/* ============================================================
+   コンセプト「稽古帳」
+   既存デザインを一切引き継がない、ゼロベースの設計。
+   メタファー: 競技者が大会まで毎日つける紙のトレーニングノート。
+   - 紙×墨×朱印。ダークでもネオンでもない。
+   - 数字は等幅(IBM Plex Mono)、見出しは明朝。
+   - 飾りのカードを廃し、罫線(ルール)だけで構造を作る。
+   - 記録を「つけ終える」儀式として朱の済印を押す。
+   ============================================================ */
+:root {
+  --paper: #f7f3ec;
+  --paper2: #efe9de;
+  --ink: #1b1813;
+  --ink-sub: #6f6859;
+  --ink-faint: #a89f8d;
+  --rule: #ddd5c4;
+  --shu: #cf3a17;        /* 朱 */
+  --shu-soft: rgba(207,58,23,0.08);
+  --ai: #2c4770;         /* 藍 */
+}
+
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+body {
+  background:#dcd5c8;
+  font-family:'Noto Sans JP',sans-serif;
+  color:var(--ink);
+  display:flex; align-items:center; justify-content:center;
+  min-height:100vh; padding:24px 0;
+}
+.mincho { font-family:'Shippori Mincho B1',serif; }
+.mono { font-family:'IBM Plex Mono',monospace; }
+
+/* ===== デモ用フォンフレーム ===== */
+.phone {
+  width:402px; height:874px;
+  background:var(--paper);
+  border-radius:48px;
+  box-shadow:0 0 0 10px #2a2620, 0 40px 100px rgba(30,25,15,0.45);
+  overflow:hidden; position:relative;
+  display:flex; flex-direction:column;
+}
+@media (max-width:430px) {
+  body { padding:0; }
+  .phone { width:100%; height:100vh; border-radius:0; box-shadow:none; }
+}
+/* 紙の質感（うっすら） */
+.phone::before {
+  content:''; position:absolute; inset:0; pointer-events:none; z-index:1;
+  background:
+    radial-gradient(ellipse at 20% 10%, rgba(120,100,60,0.04), transparent 60%),
+    radial-gradient(ellipse at 80% 90%, rgba(120,100,60,0.05), transparent 60%);
+}
+.statusbar {
+  height:44px; flex-shrink:0; position:relative; z-index:2;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 28px; font-size:12px; color:var(--ink-faint);
+  font-family:'IBM Plex Mono',monospace;
+}
+
+.viewport { flex:1; overflow:hidden; position:relative; z-index:2; }
+.page { position:absolute; inset:0; overflow-y:auto; padding:6px 26px 110px; display:none; scrollbar-width:none; }
+.page::-webkit-scrollbar { display:none; }
+.page.active { display:block; animation:inkIn .3s ease; }
+@keyframes inkIn { from { opacity:0; } to { opacity:1; } }
+
+/* ============================================================
+   今日 — 日誌ページ
+   ============================================================ */
+.day-head { display:flex; align-items:flex-start; justify-content:space-between; padding:14px 0 6px; }
+.day-era { font-size:11px; letter-spacing:0.35em; color:var(--ink-sub); margin-bottom:6px; }
+.day-date { font-family:'Shippori Mincho B1',serif; font-size:40px; font-weight:800; line-height:1; letter-spacing:0.02em; }
+.day-date small { font-size:16px; font-weight:600; color:var(--ink-sub); margin-left:8px; }
+.day-nav { display:flex; gap:2px; margin-top:10px; }
+.day-nav button { background:none; border:none; font-size:18px; color:var(--ink-faint); cursor:pointer; padding:2px 10px; font-family:'Shippori Mincho B1',serif; }
+.day-nav button:active { color:var(--shu); }
+/* 縦書きカウントダウン */
+.tate {
+  writing-mode:vertical-rl; text-orientation:mixed;
+  font-family:'Shippori Mincho B1',serif; font-weight:600;
+  font-size:15px; letter-spacing:0.18em; color:var(--shu);
+  border-right:1px solid var(--rule); padding-right:10px; margin-top:4px;
+  height:128px;
+}
+.tate b { font-weight:800; font-size:19px; }
+
+.rule-thick { border:none; border-top:2px solid var(--ink); margin:14px 0 0; }
+.rule-thin  { border:none; border-top:1px solid var(--rule); }
+
+/* 日誌の行 */
+.entry { display:flex; align-items:baseline; gap:14px; padding:15px 2px 13px; border-bottom:1px solid var(--rule); }
+.entry-label { font-family:'Shippori Mincho B1',serif; font-weight:600; font-size:14px; width:58px; flex-shrink:0; letter-spacing:0.1em; }
+.entry-val { font-family:'IBM Plex Mono',monospace; font-size:22px; font-weight:600; letter-spacing:-0.02em; }
+.entry-val small { font-size:12px; color:var(--ink-sub); font-weight:400; margin-left:2px; }
+.entry-note { font-size:11px; color:var(--ink-sub); margin-left:auto; text-align:right; line-height:1.5; font-family:'IBM Plex Mono',monospace; }
+.entry-note .up { color:var(--ai); }
+.entry-note .down { color:var(--shu); }
+
+/* PFC 細インクバー */
+.pfc-bar { display:flex; height:4px; margin-top:8px; background:var(--paper2); }
+.pfc-bar i:nth-child(1){ background:var(--ink); }
+.pfc-bar i:nth-child(2){ background:var(--ink-faint); }
+.pfc-bar i:nth-child(3){ background:var(--shu); }
+.entry-block { padding:15px 2px 13px; border-bottom:1px solid var(--rule); }
+.entry-block .row1 { display:flex; align-items:baseline; gap:14px; }
+
+/* 水分: 正の字タリー */
+.tally-row { display:flex; align-items:center; gap:10px; margin-top:10px; }
+.tally { display:flex; gap:6px; align-items:center; flex:1; }
+.tally svg { width:22px; height:22px; }
+.tally svg path { stroke:var(--ink); stroke-width:2.2; stroke-linecap:round; fill:none; }
+.tally-btn {
+  background:none; border:1px solid var(--ink); border-radius:2px;
+  font-family:'Shippori Mincho B1',serif; font-size:12px; font-weight:600;
+  padding:7px 14px; cursor:pointer; color:var(--ink); letter-spacing:0.1em;
+}
+.tally-btn:active { background:var(--ink); color:var(--paper); }
+
+/* 筋トレ行 */
+.entry-link { font-family:'Shippori Mincho B1',serif; font-size:12px; font-weight:600; color:var(--shu); letter-spacing:0.08em; cursor:pointer; margin-left:auto; flex-shrink:0; }
+
+/* 所感 */
+.memo-lines { margin-top:10px; }
+.memo-line { border-bottom:1px dashed var(--rule); padding:9px 2px; font-size:13px; color:var(--ink); font-weight:400; line-height:1.6; }
+.memo-line.empty { color:var(--ink-faint); }
+
+/* 済印 */
+.stamp-area { display:flex; align-items:center; justify-content:space-between; padding:26px 4px 10px; }
+.stamp-caption { font-family:'Shippori Mincho B1',serif; font-size:13px; color:var(--ink-sub); letter-spacing:0.2em; line-height:1.9; }
+.stamp {
+  width:84px; height:84px; border-radius:50%;
+  border:2px dashed var(--ink-faint);
+  display:flex; align-items:center; justify-content:center;
+  font-family:'Shippori Mincho B1',serif; font-size:15px; color:var(--ink-faint);
+  cursor:pointer; letter-spacing:0.1em;
+  transition:all .15s;
+}
+.stamp.pressed {
+  border:3px solid var(--shu); color:var(--shu);
+  font-size:38px; font-weight:800;
+  transform:rotate(-8deg);
+  background:var(--shu-soft);
+  animation:stampIn .25s cubic-bezier(0.2,2.2,0.4,1);
+  box-shadow:inset 0 0 0 2px rgba(207,58,23,0.15);
+}
+@keyframes stampIn { 0%{ transform:rotate(-8deg) scale(1.6); opacity:0; } 100%{ transform:rotate(-8deg) scale(1); opacity:1; } }
+
+/* ============================================================
+   稽古帳 — トレーニング台帳
+   ============================================================ */
+.ledger-head { padding:16px 0 4px; display:flex; align-items:baseline; justify-content:space-between; }
+.ledger-title { font-family:'Shippori Mincho B1',serif; font-size:24px; font-weight:800; letter-spacing:0.06em; }
+.ledger-title small { font-size:13px; color:var(--ink-sub); font-weight:600; margin-left:10px; }
+.ledger-time { font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--ink-sub); }
+.ex-block { margin-top:18px; }
+.ex-title { display:flex; align-items:baseline; gap:10px; border-bottom:2px solid var(--ink); padding-bottom:7px; }
+.ex-title .name { font-family:'Shippori Mincho B1',serif; font-size:16px; font-weight:600; }
+.ex-title .prev { font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--ink-sub); margin-left:auto; }
+.set-line { display:flex; align-items:center; gap:0; border-bottom:1px solid var(--rule); padding:10px 2px; font-family:'IBM Plex Mono',monospace; }
+.set-line .no { width:30px; font-size:12px; color:var(--ink-sub); }
+.set-line input {
+  width:58px; background:none; border:none; border-bottom:1px solid var(--ink-faint);
+  font-family:'IBM Plex Mono',monospace; font-size:17px; font-weight:600; color:var(--ink);
+  text-align:center; outline:none; padding:2px 0;
+}
+.set-line input:focus { border-bottom:2px solid var(--shu); }
+.set-line .x { font-size:13px; color:var(--ink-faint); padding:0 8px; }
+.set-line .rm { margin-left:auto; font-size:11px; color:var(--ink-sub); }
+.set-line .ok { width:30px; text-align:right; color:var(--shu); font-weight:600; font-size:14px; }
+.add-line {
+  width:100%; background:none; border:none; text-align:left;
+  font-family:'Shippori Mincho B1',serif; font-size:12px; font-weight:600;
+  color:var(--ink-sub); padding:11px 2px; cursor:pointer; letter-spacing:0.12em;
+  border-bottom:1px dashed var(--rule);
+}
+.add-line:active { color:var(--shu); }
+.subtotal { display:flex; justify-content:space-between; padding:13px 2px; font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--ink-sub); }
+.subtotal b { color:var(--ink); font-weight:600; }
+/* 休憩タイマー（行として埋め込み） */
+.rest-line {
+  position:absolute; left:26px; right:26px; bottom:92px;
+  background:var(--paper); border-top:2px solid var(--ink); border-bottom:1px solid var(--ink);
+  padding:12px 4px; display:flex; align-items:center; gap:14px;
+}
+.rest-line .lbl { font-family:'Shippori Mincho B1',serif; font-size:13px; font-weight:600; letter-spacing:0.18em; }
+.rest-line .time { font-family:'IBM Plex Mono',monospace; font-size:24px; font-weight:600; color:var(--shu); }
+.rest-track { flex:1; height:2px; background:var(--rule); position:relative; }
+.rest-track i { position:absolute; left:0; top:0; height:100%; width:70%; background:var(--shu); }
+.rest-line button { background:none; border:none; font-family:'Shippori Mincho B1',serif; font-size:12px; font-weight:600; color:var(--ink-sub); cursor:pointer; letter-spacing:0.1em; }
+
+/* ============================================================
+   推移 — 方眼グラフ
+   ============================================================ */
+.graph-head { padding:16px 0 10px; display:flex; align-items:baseline; justify-content:space-between; }
+.graph-sub { font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink-sub); }
+.graph-paper {
+  border:1px solid var(--rule);
+  background:
+    repeating-linear-gradient(0deg, transparent, transparent 19px, rgba(160,140,100,0.16) 19px, rgba(160,140,100,0.16) 20px),
+    repeating-linear-gradient(90deg, transparent, transparent 19px, rgba(160,140,100,0.16) 19px, rgba(160,140,100,0.16) 20px);
+  padding:0;
+}
+.stat-line { display:flex; justify-content:space-between; padding:12px 2px; border-bottom:1px solid var(--rule); font-size:13px; }
+.stat-line .k { font-family:'Shippori Mincho B1',serif; font-weight:600; letter-spacing:0.1em; }
+.stat-line .v { font-family:'IBM Plex Mono',monospace; font-weight:600; }
+.stat-line .v em { font-style:normal; color:var(--shu); }
+/* 出席簿カレンダー */
+.attend { display:grid; grid-template-columns:repeat(7,1fr); margin-top:6px; border-left:1px solid var(--rule); border-top:1px solid var(--rule); }
+.attend div {
+  aspect-ratio:1; border-right:1px solid var(--rule); border-bottom:1px solid var(--rule);
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px;
+  font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--ink-faint);
+}
+.attend div b { font-weight:400; font-size:9px; }
+.attend .did { color:var(--ink); }
+.attend .did::after { content:'○'; color:var(--shu); font-size:13px; font-weight:700; line-height:1; }
+.attend .head { background:var(--paper2); font-size:9px; aspect-ratio:auto; padding:5px 0; color:var(--ink-sub); }
+.attend .today-cell { background:var(--shu-soft); }
+
+/* ============================================================
+   大会 — 行程表
+   ============================================================ */
+.contest-top { text-align:center; padding:30px 0 10px; }
+.contest-rest-label { font-family:'Shippori Mincho B1',serif; font-size:13px; letter-spacing:0.45em; color:var(--ink-sub); margin-bottom:6px; }
+.contest-big { font-family:'Shippori Mincho B1',serif; font-size:110px; font-weight:800; line-height:0.95; letter-spacing:-0.02em; }
+.contest-big small { font-size:30px; font-weight:600; margin-left:4px; }
+.contest-event { font-family:'Shippori Mincho B1',serif; font-size:16px; font-weight:600; margin-top:10px; letter-spacing:0.12em; }
+.contest-event small { display:block; font-size:11px; color:var(--ink-sub); margin-top:4px; letter-spacing:0.25em; font-weight:400; }
+/* フェーズ進捗（一本線） */
+.phase-line { margin:26px 6px 8px; position:relative; height:30px; }
+.phase-line .track { position:absolute; left:0; right:0; top:14px; height:2px; background:var(--rule); }
+.phase-line .fill { position:absolute; left:0; top:14px; height:2px; width:57%; background:var(--ink); }
+.phase-line .marker {
+  position:absolute; left:57%; top:7px; transform:translateX(-50%);
+  width:16px; height:16px; border-radius:50%; background:var(--paper);
+  border:3px solid var(--shu);
+}
+.phase-labels { display:flex; justify-content:space-between; font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--ink-sub); padding:0 2px; margin-bottom:20px; }
+/* 目標枠（記入欄風） */
+.goal-box { border:1.5px solid var(--ink); display:flex; margin-bottom:22px; }
+.goal-box > div { flex:1; text-align:center; padding:14px 4px 12px; border-right:1px solid var(--rule); }
+.goal-box > div:last-child { border-right:none; }
+.goal-box .k { font-family:'Shippori Mincho B1',serif; font-size:11px; font-weight:600; color:var(--ink-sub); letter-spacing:0.2em; margin-bottom:5px; }
+.goal-box .v { font-family:'IBM Plex Mono',monospace; font-size:21px; font-weight:600; }
+.goal-box .v.shu { color:var(--shu); }
+/* 行程表 */
+.sched-title { font-family:'Shippori Mincho B1',serif; font-size:14px; font-weight:800; letter-spacing:0.3em; border-bottom:2px solid var(--ink); padding-bottom:8px; }
+.sched-row { display:flex; gap:16px; padding:14px 2px; border-bottom:1px solid var(--rule); align-items:baseline; }
+.sched-row.now { background:var(--shu-soft); margin:0 -8px; padding-left:10px; padding-right:10px; }
+.sched-date { font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--ink-sub); width:74px; flex-shrink:0; }
+.sched-row.now .sched-date { color:var(--shu); font-weight:600; }
+.sched-what { font-size:13px; font-weight:500; line-height:1.6; }
+.sched-what small { display:block; font-size:11px; color:var(--ink-sub); font-weight:400; }
+
+/* ============================================================
+   ナビ — 文字のみ・索引タブ風
+   ============================================================ */
+.nav {
+  position:absolute; left:0; right:0; bottom:0; height:80px; z-index:10;
+  background:var(--paper);
+  border-top:2px solid var(--ink);
+  display:flex;
+}
+.nav button {
+  flex:1; background:none; border:none; cursor:pointer;
+  font-family:'Shippori Mincho B1',serif; font-size:14px; font-weight:600;
+  color:var(--ink-faint); letter-spacing:0.25em;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px;
+  padding-bottom:12px;
+}
+.nav button .ten { width:5px; height:5px; border-radius:50%; background:transparent; }
+.nav button.on { color:var(--ink); }
+.nav button.on .ten { background:var(--shu); }
+
+/* デザインノート */
+.notes-fab {
+  position:fixed; right:24px; bottom:24px; z-index:90;
+  background:var(--ink); color:var(--paper); border:none;
+  border-radius:2px; padding:12px 18px; font-size:13px; cursor:pointer;
+  font-family:'Shippori Mincho B1',serif; letter-spacing:0.15em;
+}
+.notes-panel {
+  position:fixed; right:24px; bottom:76px; z-index:91; width:380px; max-width:calc(100vw - 48px);
+  max-height:70vh; overflow-y:auto;
+  background:var(--paper); border:2px solid var(--ink); padding:24px;
+  display:none; box-shadow:12px 12px 0 rgba(27,24,19,0.2);
+}
+.notes-panel.open { display:block; }
+.notes-panel h2 { font-family:'Shippori Mincho B1',serif; font-size:16px; margin-bottom:14px; letter-spacing:0.1em; }
+.notes-panel li { font-size:12px; color:var(--ink-sub); line-height:1.9; margin-left:18px; margin-bottom:9px; }
+.notes-panel b { color:var(--ink); }
+@media (max-width:430px){ .notes-fab,.notes-panel{ display:none!important; } }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="statusbar"><span>18:29</span><span>KEIKO-CHO MOCK</span><span>61%</span></div>
+  <div class="viewport">
+
+    <!-- ============ 今日 ============ -->
+    <div class="page active" id="pg-today">
+      <div class="day-head">
+        <div>
+          <div class="day-era">二〇二六年 ・ 減量期 第八週</div>
+          <div class="day-date mincho">6月11日<small>木曜</small></div>
+          <div class="day-nav"><button>‹ 前日</button><button>翌日 ›</button></div>
+        </div>
+        <div class="tate">大会まで <b>四十七</b> 日</div>
+      </div>
+
+      <hr class="rule-thick">
+
+      <div class="entry">
+        <div class="entry-label">体重</div>
+        <div class="entry-val">62.4<small>kg</small></div>
+        <div class="entry-note"><span class="down">▾0.3</span> 前日比<br>目標まで -2.1</div>
+      </div>
+
+      <div class="entry">
+        <div class="entry-label">睡眠</div>
+        <div class="entry-val">7.5<small>h</small></div>
+        <div class="entry-note">23:30 — 07:00</div>
+      </div>
+
+      <div class="entry-block">
+        <div class="row1">
+          <div class="entry-label">食事</div>
+          <div class="entry-val">1,850<small>kcal</small></div>
+          <div class="entry-note">残り 350 / 目標 2,200</div>
+        </div>
+        <div class="pfc-bar"><i style="width:33%"></i><i style="width:24%"></i><i style="width:43%"></i></div>
+        <div class="entry-note" style="text-align:left;margin-top:6px;margin-left:0;">P 142g ・ F 48g ・ C 198g</div>
+      </div>
+
+      <div class="entry-block">
+        <div class="row1">
+          <div class="entry-label">水分</div>
+          <div class="entry-val"><span id="water-ml">1,600</span><small>ml</small></div>
+          <div class="entry-note">目標 3,000</div>
+        </div>
+        <div class="tally-row">
+          <div class="tally" id="tally"></div>
+          <button class="tally-btn" onclick="addGlass()">一杯 ＋200</button>
+        </div>
+      </div>
+
+      <div class="entry">
+        <div class="entry-label">筋トレ</div>
+        <div style="font-size:13px;font-weight:500;line-height:1.6;">肩 ・ 5種目 18セット<br><span style="font-size:11px;color:var(--ink-sub);font-family:'IBM Plex Mono',monospace;">総量 7.4t ・ 58分</span></div>
+        <div class="entry-link" onclick="go('log')">稽古帳を開く →</div>
+      </div>
+
+      <div class="entry-block" style="border-bottom:none;">
+        <div class="entry-label" style="margin-bottom:4px;">所感</div>
+        <div class="memo-lines">
+          <div class="memo-line">サイドレイズ 12kg×14 で自己ベスト。肩の張り良好。</div>
+          <div class="memo-line empty">タップして追記…</div>
+        </div>
+      </div>
+
+      <hr class="rule-thin">
+
+      <div class="stamp-area">
+        <div class="stamp-caption">本日の記録、<br>これにて仕舞い。</div>
+        <div class="stamp" id="stamp" onclick="press()">印</div>
+      </div>
+    </div>
+
+    <!-- ============ 稽古帳 ============ -->
+    <div class="page" id="pg-log">
+      <div class="ledger-head">
+        <div class="ledger-title">稽古帳<small>6月11日 ・ 肩の部</small></div>
+        <div class="ledger-time">00:42:18</div>
+      </div>
+      <hr class="rule-thick">
+
+      <div class="ex-block">
+        <div class="ex-title">
+          <span class="name">サイドレイズ</span>
+          <span class="prev">前回 12.0×12</span>
+        </div>
+        <div class="set-line"><span class="no">一</span><input value="12.0"><span class="x">kg ×</span><input value="14" style="width:42px;"><span class="x">rep</span><span class="rm">1RM 17.6</span><span class="ok">✓</span></div>
+        <div class="set-line"><span class="no">二</span><input value="12.0"><span class="x">kg ×</span><input value="12" style="width:42px;"><span class="x">rep</span><span class="rm">1RM 16.8</span><span class="ok">✓</span></div>
+        <div class="set-line"><span class="no">三</span><input placeholder="12.0"><span class="x">kg ×</span><input placeholder="12" style="width:42px;"><span class="x">rep</span><span class="rm"></span><span class="ok"></span></div>
+        <button class="add-line">＋ 一組 加える</button>
+      </div>
+
+      <div class="ex-block">
+        <div class="ex-title">
+          <span class="name">ショルダープレス</span>
+          <span class="prev">前回 40.0×10</span>
+        </div>
+        <div class="set-line"><span class="no">一</span><input value="40.0"><span class="x">kg ×</span><input value="10" style="width:42px;"><span class="x">rep</span><span class="rm">1RM 53.3</span><span class="ok">✓</span></div>
+        <div class="set-line"><span class="no">二</span><input placeholder="40.0"><span class="x">kg ×</span><input placeholder="10" style="width:42px;"><span class="x">rep</span><span class="rm"></span><span class="ok"></span></div>
+        <button class="add-line">＋ 一組 加える</button>
+      </div>
+
+      <button class="add-line" style="margin-top:18px;border-top:1px dashed var(--rule);border-bottom:1px dashed var(--rule);text-align:center;">＋ 種目を加える</button>
+
+      <div class="subtotal"><span>本日小計</span><span><b>3種目 11セット</b> ・ 総量 <b>7,420kg</b></span></div>
+
+      <!-- 休憩タイマー（帳面の行として常駐） -->
+      <div class="rest-line">
+        <span class="lbl">休憩</span>
+        <span class="time">1:03</span>
+        <div class="rest-track"><i></i></div>
+        <button>＋30秒</button>
+        <button style="color:var(--shu);">仕舞</button>
+      </div>
+    </div>
+
+    <!-- ============ 推移 ============ -->
+    <div class="page" id="pg-trend">
+      <div class="graph-head">
+        <div class="ledger-title">推移</div>
+        <div class="graph-sub">5/11 — 6/11</div>
+      </div>
+      <hr class="rule-thick" style="margin-bottom:16px;">
+
+      <svg class="graph-paper" width="100%" height="180" viewBox="0 0 340 180" preserveAspectRatio="none">
+        <!-- 目標線 -->
+        <line x1="0" y1="148" x2="340" y2="148" stroke="#cf3a17" stroke-width="1" stroke-dasharray="5 4" opacity="0.55"/>
+        <text x="6" y="143" font-size="9" fill="#cf3a17" font-family="IBM Plex Mono">目標 60.3</text>
+        <!-- 体重線（墨） -->
+        <path d="M12,36 L34,42 L56,40 L78,50 L100,47 L122,57 L144,54 L166,64 L188,61 L210,70 L232,67 L254,77 L276,75 L298,84 L322,87"
+              stroke="#1b1813" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+        <g fill="#1b1813">
+          <circle cx="12" cy="36" r="2.4"/><circle cx="56" cy="40" r="2.4"/><circle cx="100" cy="47" r="2.4"/>
+          <circle cx="144" cy="54" r="2.4"/><circle cx="188" cy="61" r="2.4"/><circle cx="232" cy="67" r="2.4"/>
+          <circle cx="276" cy="75" r="2.4"/>
+        </g>
+        <circle cx="322" cy="87" r="5" fill="#f7f3ec" stroke="#cf3a17" stroke-width="3"/>
+        <text x="296" y="76" font-size="11" fill="#cf3a17" font-family="IBM Plex Mono" font-weight="600">62.4</text>
+        <text x="6" y="30" font-size="9" fill="#6f6859" font-family="IBM Plex Mono">63.8</text>
+      </svg>
+
+      <div style="margin-top:18px;">
+        <div class="stat-line"><span class="k">週ペース</span><span class="v"><em>−0.32</em> kg/週 （適正 −0.3〜0.5）</span></div>
+        <div class="stat-line"><span class="k">摂取平均</span><span class="v">2,080 kcal ・ P 146g</span></div>
+        <div class="stat-line"><span class="k">蛋白充足</span><span class="v">2.3 g/kg <em>良</em></span></div>
+      </div>
+
+      <div class="graph-head" style="padding-top:26px;">
+        <div class="ledger-title" style="font-size:18px;">出席簿</div>
+        <div class="graph-sub">6月 ・ ○=稽古日</div>
+      </div>
+      <div class="attend">
+        <div class="head">月</div><div class="head">火</div><div class="head">水</div><div class="head">木</div><div class="head">金</div><div class="head">土</div><div class="head">日</div>
+        <div class="did"><b>1</b></div><div><b>2</b></div><div class="did"><b>3</b></div><div><b>4</b></div><div class="did"><b>5</b></div><div><b>6</b></div><div class="did"><b>7</b></div>
+        <div class="did"><b>8</b></div><div><b>9</b></div><div class="did"><b>10</b></div><div class="did today-cell"><b>11</b></div><div><b>12</b></div><div><b>13</b></div><div><b>14</b></div>
+        <div><b>15</b></div><div><b>16</b></div><div><b>17</b></div><div><b>18</b></div><div><b>19</b></div><div><b>20</b></div><div><b>21</b></div>
+        <div><b>22</b></div><div><b>23</b></div><div><b>24</b></div><div><b>25</b></div><div><b>26</b></div><div><b>27</b></div><div><b>28</b></div>
+      </div>
+      <div class="subtotal" style="margin-top:4px;"><span>今月</span><span><b>8回</b> ・ 総量 <b>54.2t</b> ・ 平均 <b>56分</b></span></div>
+    </div>
+
+    <!-- ============ 大会 ============ -->
+    <div class="page" id="pg-contest">
+      <div class="contest-top">
+        <div class="contest-rest-label">大会まで残り</div>
+        <div class="contest-big mincho">47<small>日</small></div>
+        <div class="contest-event">JBBF 東京選手権<small>二〇二六年 七月二十八日</small></div>
+      </div>
+
+      <div class="phase-line">
+        <div class="track"></div><div class="fill"></div><div class="marker"></div>
+      </div>
+      <div class="phase-labels"><span>減量開始 4/16</span><span>第8週 / 全14週</span><span>大会 7/28</span></div>
+
+      <div class="goal-box">
+        <div><div class="k">現在</div><div class="v">62.4</div></div>
+        <div><div class="k">目標</div><div class="v shu">60.3</div></div>
+        <div><div class="k">残り</div><div class="v">−2.1</div></div>
+        <div><div class="k">週ペース</div><div class="v">0.32</div></div>
+      </div>
+
+      <div class="sched-title">行 程 表</div>
+      <div class="sched-row">
+        <div class="sched-date">5/14<br>4週前</div>
+        <div class="sched-what">減量ペース確認 <small>64.2kg ・ 想定ライン上 ✓</small></div>
+      </div>
+      <div class="sched-row now">
+        <div class="sched-date">6/11<br>本日</div>
+        <div class="sched-what">第8週 ・ 62.4kg <small>目標まで −2.1kg ／ 順調</small></div>
+      </div>
+      <div class="sched-row">
+        <div class="sched-date">6/25<br>2週後</div>
+        <div class="sched-what">最終調整プラン確定 <small>水抜き・塩抜き・カーボの日程を決める</small></div>
+      </div>
+      <div class="sched-row">
+        <div class="sched-date">7/21<br>1週前</div>
+        <div class="sched-what">カーボディプリート開始 <small>練習はポージング中心へ</small></div>
+      </div>
+      <div class="sched-row" style="border-bottom:2px solid var(--ink);">
+        <div class="sched-date">7/28<br>当日</div>
+        <div class="sched-what" style="font-weight:700;">JBBF 東京選手権 <small>目標 60.3kg ・ ベストコンディションで</small></div>
+      </div>
+    </div>
+
+  </div><!-- /viewport -->
+
+  <!-- ナビ（文字のみ・索引風） -->
+  <nav class="nav">
+    <button class="on" id="nv-today" onclick="go('today')"><span class="ten"></span>今日</button>
+    <button id="nv-log" onclick="go('log')"><span class="ten"></span>稽古帳</button>
+    <button id="nv-trend" onclick="go('trend')"><span class="ten"></span>推移</button>
+    <button id="nv-contest" onclick="go('contest')"><span class="ten"></span>大会</button>
+  </nav>
+</div>
+
+<button class="notes-fab" onclick="document.getElementById('np').classList.toggle('open')">設計趣意</button>
+<div class="notes-panel" id="np">
+  <h2>「稽古帳」— ゼロベース設計の趣意</h2>
+  <ul>
+    <li><b>メタファーを「ガジェット」から「紙のノート」へ。</b>競技者は元々トレーニングノートをつける文化を持つ。アプリを"光る計器"ではなく"毎日書き込む帳面"として設計し直した。</li>
+    <li><b>紙×墨×朱の三色。</b>カードUI・影・グラデーションを全廃し、罫線と余白だけで構造を作る。アクセントは朱印の一色のみ。</li>
+    <li><b>1日=1ページ。</b>ホーム画面という概念をなくし、開いたら今日のページ。前日・翌日へは帳面をめくるように移動。</li>
+    <li><b>水分は「正」の字タリー。</b>ボタン連打のmlカウンタより、一杯ごとに画数が増えていく方が記録の手応えがある。</li>
+    <li><b>記録を締める「済印」。</b>1日の記録を終えたら朱印を押す。継続のごほうびをバッジやストリーク数字ではなく、所作として与える。</li>
+    <li><b>数字はすべて等幅フォント。</b>台帳らしく桁が揃い、kg×repの一覧性が上がる。見出しは明朝で引き締める。</li>
+    <li><b>ナビは文字のみ4項目。</b>アイコンを排し「今日・稽古帳・推移・大会」。競技者アプリの核である大会を一等地に。</li>
+    <li><b>休憩タイマーも帳面の一行。</b>モーダルやFABではなく、ページ下端に挟まった栞のように常駐。</li>
+    <li><b>留意点（正直な評価）:</b> 明所での視認性は上がるが、暗いジムではダークテーマに分がある。実装するなら紙テーマ／墨テーマ（ダーク反転）の切替が現実解。</li>
+  </ul>
+</div>
+
+<script>
+function go(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('pg-' + name).classList.add('active');
+  document.querySelectorAll('.nav button').forEach(b => b.classList.remove('on'));
+  document.getElementById('nv-' + name).classList.add('on');
+}
+
+/* ===== 水分タリー（正の字） ===== */
+/* 正の字の筆順5画 */
+const STROKES = [
+  'M3 4 H21',        // 一画目: 上の横棒
+  'M12 4 V20',       // 二画目: 中央の縦棒
+  'M12 12 H19',      // 三画目: 中段右の横棒
+  'M6 9 V20',        // 四画目: 左の縦棒
+  'M3 20 H21'        // 五画目: 下の横棒
+];
+let glasses = 8; // 1杯=200ml → 1,600ml
+function renderTally() {
+  const full = Math.floor(glasses / 5);
+  const rest = glasses % 5;
+  let html = '';
+  const glyph = n => '<svg viewBox="0 0 24 24">' +
+    STROKES.slice(0, n).map(d => `<path d="${d}"/>`).join('') + '</svg>';
+  for (let i = 0; i < full; i++) html += glyph(5);
+  if (rest > 0) html += glyph(rest);
+  document.getElementById('tally').innerHTML = html;
+  document.getElementById('water-ml').textContent = (glasses * 200).toLocaleString();
+}
+function addGlass() { glasses++; renderTally(); }
+renderTally();
+
+/* ===== 済印 ===== */
+function press() {
+  const s = document.getElementById('stamp');
+  s.classList.add('pressed');
+  s.textContent = '済';
+}
+</script>
+</body>
+</html>
