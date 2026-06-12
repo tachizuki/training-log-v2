@@ -51,7 +51,8 @@ class TimerService : Service() {
                 startTimer(totalSeconds)
             }
         }
-        return START_REDELIVER_INTENT
+        // OSによるサービス再起動時に古いタイマーが全長で再開しないよう NOT_STICKY
+        return START_NOT_STICKY
     }
 
     // Android 14 (API 34) SHORT_SERVICE のタイムアウト時に呼ばれる。

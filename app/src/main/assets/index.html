@@ -2703,11 +2703,17 @@
 
 
 
-  let records = JSON.parse(localStorage.getItem('training_records') || '[]');
-  let appOptions = JSON.parse(localStorage.getItem('app_options') || '{"shareAfterSave":true,"swAutoStop":true}');
+  // localStorageの値が破損していてもアプリ全体が起動不能にならないよう安全にパースする
+  function safeParse(key, fallback) {
+    try { return JSON.parse(localStorage.getItem(key) || fallback); }
+    catch(e) { console.error('localStorage parse error:', key, e); return JSON.parse(fallback); }
+  }
+
+  let records = safeParse('training_records', '[]');
+  let appOptions = safeParse('app_options', '{"shareAfterSave":true}');
   let weekWeightGoal = parseFloat(localStorage.getItem('week_weight_goal') || '0');
   // 週ごとの目標体重を管理 { 'YYYY-Www': weight }
-  let weeklyGoals = JSON.parse(localStorage.getItem('weekly_goals') || '{}');
+  let weeklyGoals = safeParse('weekly_goals', '{}');
   // 旧データを移行
   if (weekWeightGoal > 0 && Object.keys(weeklyGoals).length === 0) {
     const wk = getWeekKey(new Date());
@@ -2792,10 +2798,13 @@
     weekWeightGoal = weight;
     localStorage.setItem('week_weight_goal', weight);
   }
-  let waterData = JSON.parse(localStorage.getItem('water_data') || '{}');
+  let waterData = safeParse('water_data', '{}');
   const DEFAULT_WATER_BTNS = [100, 200, 350, 500, 1000];
-  let waterQuickBtns = JSON.parse(localStorage.getItem('water_quick_btns') ||
-    JSON.stringify(JSON.parse(localStorage.getItem('water_custom_btns') || 'null') || DEFAULT_WATER_BTNS));
+  let waterQuickBtns;
+  try {
+    waterQuickBtns = JSON.parse(localStorage.getItem('water_quick_btns') ||
+      JSON.stringify(JSON.parse(localStorage.getItem('water_custom_btns') || 'null') || DEFAULT_WATER_BTNS));
+  } catch(e) { waterQuickBtns = [...DEFAULT_WATER_BTNS]; }
   let customButtons = waterQuickBtns;
   let waterGoal = parseInt(localStorage.getItem('water_goal') || '3000');
   let trainingOn = false;
@@ -3341,6 +3350,7 @@
     const overlay = document.getElementById('onboarding-overlay');
     if (!overlay) return;
     if (!localStorage.getItem('onboarding_done')) {
+      overlay.classList.remove('hidden'); // チュートリアル再表示時にopacity:0が残らないように
       overlay.style.display = 'flex';
       obUpdateUI();
     } else {
@@ -5130,11 +5140,13 @@
       memo: document.getElementById('edit-memo').value.trim(),
     };
     localStorage.setItem('training_records', JSON.stringify(records));
-    // 水分データを保存
-    const editWaterVal = parseInt(document.getElementById('edit-water').value)||0;
-    if (editWaterVal > 0) {
+    // 水分データを保存（空欄なら変更なし、0なら水分をクリア）
+    const editWaterRaw = document.getElementById('edit-water').value.trim();
+    if (editWaterRaw !== '') {
+      const editWaterVal = parseInt(editWaterRaw)||0;
       if (!waterData[dateKey]) waterData[dateKey] = {total:0, log:[]};
       waterData[dateKey].total = editWaterVal;
+      if (editWaterVal === 0) waterData[dateKey].log = [];
       localStorage.setItem('water_data', JSON.stringify(waterData));
     }
     if (currentUser) syncToCloud(currentUser.uid);
@@ -5160,7 +5172,7 @@
   // ==================
   // GYM MEMO
   // ==================
-  let gymData = JSON.parse(localStorage.getItem('gym_data') || '{}');
+  let gymData = safeParse('gym_data', '{}');
   let gymDate = getToday();
   let gymPart = '胸';
   let gymExercises = [];
@@ -5199,6 +5211,7 @@
 
   function calcRM(weight, reps, exerciseName) {
     if (!weight || !reps || reps <= 0) return null;
+    if (typeof weight !== 'number') return null; // 「自重」など数値以外はRM換算不可
     if (reps === 1) return weight;
     if (reps > 12) return null; // 換算表は12repまで
     const isSquatDL = exerciseName &&
@@ -5564,9 +5577,6 @@
     document.getElementById('sw-display').textContent =
       `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
   }
-
-  // 画面を離れる時にストップウォッチをリセット
-  const _origShowScreen = showScreen;
 
   // ==================
 
@@ -6088,7 +6098,7 @@
   }
 
   // 種目プリセット管理（カスタマイズ可能）
-  let gymPresets = JSON.parse(localStorage.getItem('gym_presets') || 'null') || JSON.parse(JSON.stringify(GYM_PRESETS));
+  let gymPresets = safeParse('gym_presets', 'null') || JSON.parse(JSON.stringify(GYM_PRESETS));
 
   // GYM_PRESETSに新しいカテゴリが追加された場合、既存のgymPresetsにも自動でマージ
   (function mergeNewCategories() {
@@ -6178,7 +6188,7 @@
           '<button class="gym-preset-del-btn" style="padding:10px 14px;background:rgba(255,68,68,0.15);border:1px solid rgba(255,68,68,0.3);border-radius:8px;color:var(--danger);font-size:14px;cursor:pointer;" onclick="deletePreset(' + i + ')">'+t('btn_delete')+'</button>' +
           '</div></div>';
       }
-      return '<div class="gym-preset-item" style="cursor:pointer;" onclick="addFromPresetEditor(\'' + name + '\')">' +
+      return '<div class="gym-preset-item" style="cursor:pointer;" onclick="addFromPresetEditor(\'' + name.replace(/\\/g,'\\\\').replace(/'/g,"\\'") + '\')">' +
         '<span class="gym-preset-item-name">' + name + '</span>' +
         '<button class="gym-preset-edit-btn" onclick="event.stopPropagation();startEditPreset(' + i + ')">'+t('edit_btn')+'</button>' +
         '<button class="gym-preset-del-btn" onclick="event.stopPropagation();deletePreset(' + i + ')">✕</button>' +
@@ -6765,8 +6775,8 @@
   // ACTIVITY (運動記録)
   // ==================
   let recActivities = [];
-  let customActivities = JSON.parse(localStorage.getItem('custom_activities') || '[]');
-  let customGymExercises = JSON.parse(localStorage.getItem('custom_gym_exercises') || '[]');
+  let customActivities = safeParse('custom_activities', '[]');
+  let customGymExercises = safeParse('custom_gym_exercises', '[]');
 
   // 旧マイ種目をlocalStorageから削除
   (function() {
@@ -6805,7 +6815,7 @@
   ];
 
   // カスタマイズ可能な運動プリセット
-  let activityPresets = JSON.parse(localStorage.getItem('activity_presets') || 'null') || 
+  let activityPresets = safeParse('activity_presets', 'null') ||
     JSON.parse(JSON.stringify(ACTIVITY_PRESETS));
 
   function calcActivityKcal(met, minutes, weight) {
@@ -6847,8 +6857,8 @@
     const list = mode === 'rec' ? recActivities : editActivities;
     if (list[i]) {
       list[i][field] = parseFloat(val) || null;
-      // 距離と時間からkcalを再計算
-      if (list[i].speed && list[i].minutes) {
+      // 速度・時間の変更時のみ距離を自動計算（手入力した距離は上書きしない）
+      if (field !== 'distance' && list[i].speed && list[i].minutes) {
         list[i].distance = Math.round(list[i].speed * list[i].minutes / 60 * 10) / 10;
       }
     }
@@ -6891,7 +6901,7 @@
       if (filtered.length === 0) continue;
       html += `<div class="activity-picker-category">${cat.icon} ${cat.cat}</div>`;
       filtered.forEach(it => {
-        html += `<div class="activity-picker-item" onclick="addActivityFromPreset('${it.name.replace(/'/g,"\'")}',${it.met||0},'${it.icon||cat.icon}',${!!it.hasDetail})">
+        html += `<div class="activity-picker-item" onclick="addActivityFromPreset('${it.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'")}',${it.met||0},'${it.icon||cat.icon}',${!!it.hasDetail})">
           <div class="activity-picker-item-left">
             <span class="activity-picker-item-icon">${it.icon||cat.icon}</span>
             <span class="activity-picker-item-name">${it.name}</span>
@@ -7074,7 +7084,7 @@
   // ==================
   // PROFILE & BMR
   // ==================
-  let userProfile = JSON.parse(localStorage.getItem('user_profile') || '{"height":168,"age":25,"sex":"male"}');
+  let userProfile = safeParse('user_profile', '{"height":168,"age":25,"sex":"male"}');
 
   function calcBMR(height, weight, age, sex) {
     if (!height || !age) return null;
@@ -7500,7 +7510,7 @@
   // ==================
   // マイセット
   // ==================
-  let mySets = JSON.parse(localStorage.getItem('my_sets') || '[]');
+  let mySets = safeParse('my_sets', '[]');
 
   function openMySetModal() {
     document.getElementById('myset-modal').classList.add('open');
