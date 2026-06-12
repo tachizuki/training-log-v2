@@ -54,6 +54,7 @@ class MainActivity : AppCompatActivity() {
     private var filePathCallback: ValueCallback<Array<Uri>>? = null
     // 通知タップ時に復帰すべき画面（onPageFinishedで一度だけ使用）
     private var pendingScreen: String? = null
+    private var authStateListener: FirebaseAuth.AuthStateListener? = null
 
     private lateinit var auth: FirebaseAuth
     private lateinit var db: FirebaseFirestore
@@ -531,6 +532,8 @@ class MainActivity : AppCompatActivity() {
         super.onNewIntent(intent)
         setIntent(intent)
         val screen = intent.getStringExtra("target_screen") ?: return
+        // 英数字とハイフンのみ許可（JS注入防止）
+        if (!screen.matches(Regex("[a-z0-9-]+"))) return
         webView.post {
             webView.evaluateJavascript(
                 "if(typeof showScreen==='function')showScreen('$screen')", null
@@ -544,7 +547,8 @@ class MainActivity : AppCompatActivity() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
         setContentView(R.layout.activity_main)
         // 通知タップからの起動時は対象画面を記憶（ページロード後にonPageFinishedで遷移）
-        pendingScreen = intent?.getStringExtra("target_screen")
+        val rawScreen = intent?.getStringExtra("target_screen")
+        pendingScreen = if (rawScreen != null && rawScreen.matches(Regex("[a-z0-9-]+"))) rawScreen else null
 
         auth = FirebaseAuth.getInstance()
         db = FirebaseFirestore.getInstance()
@@ -646,12 +650,13 @@ class MainActivity : AppCompatActivity() {
 
         // 認証状態の監視（新規ログイン・ログアウト時にJSに通知）
         // ※ページロード完了前に発火した場合はonPageFinishedで改めて復元される
-        auth.addAuthStateListener { firebaseAuth ->
+        authStateListener = FirebaseAuth.AuthStateListener { firebaseAuth ->
             val user = firebaseAuth.currentUser
             if (user != null) {
                 notifySignIn(user.uid, user.displayName ?: "", user.email ?: "")
             }
         }
+        auth.addAuthStateListener(authStateListener!!)
 
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
@@ -665,9 +670,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun notifySignIn(uid: String, name: String, email: String) {
+        val safeName = name.replace("\\", "\\\\").replace("'", "\\'")
+        val safeEmail = email.replace("\\", "\\\\").replace("'", "\\'")
         webView.post {
             webView.evaluateJavascript(
-                "if(typeof onFirebaseSignIn==='function')onFirebaseSignIn('$uid','$name','$email')", null
+                "if(typeof onFirebaseSignIn==='function')onFirebaseSignIn('$uid','$safeName','$safeEmail')", null
             )
         }
     }
@@ -690,6 +697,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         try { unregisterReceiver(timerDoneReceiver) } catch (_: Exception) {}
+        authStateListener?.let { auth.removeAuthStateListener(it) }
         if (::billing.isInitialized) billing.endConnection()
         super.onDestroy()
     }

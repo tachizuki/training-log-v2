@@ -55,9 +55,14 @@ class TimerService : Service() {
     }
 
     // Android 14 (API 34) SHORT_SERVICE のタイムアウト時に呼ばれる。
-    // デフォルト実装は ForegroundServiceDidNotStopInTimeException をスローするためオーバーライドして正常停止。
+    // 3分超タイマーがOS強制終了される場合でも完了として処理する。
     @Suppress("OVERRIDE_DEPRECATION")
     override fun onTimeout(startId: Int) {
+        countDownTimer?.cancel()
+        try { vibrate() } catch (_: Exception) {}
+        notificationManager.notify(DONE_NOTIF_ID, buildDoneNotification())
+        stopForeground(STOP_FOREGROUND_REMOVE)
+        sendBroadcast(Intent(BROADCAST_DONE))
         releaseWakeLock()
         stopSelf()
         // super を呼ばない — デフォルト実装はクラッシュする

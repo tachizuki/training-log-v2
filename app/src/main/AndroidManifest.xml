@@ -30,7 +30,7 @@
         </activity>
         <receiver
             android:name=".NotificationReceiver"
-            android:exported="true">
+            android:exported="false">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
                 <action android:name="com.traininglog.app.DAILY_NOTIFICATION" />

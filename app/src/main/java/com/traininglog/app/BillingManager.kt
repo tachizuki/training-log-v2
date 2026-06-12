@@ -78,8 +78,8 @@ class BillingManager(
                 }
             }
             override fun onBillingServiceDisconnected() {
-                // 必要に応じて再接続。当面は次回呼び出し時に reconnect する。
-                Log.w(TAG, "Billingサービス切断")
+                Log.w(TAG, "Billingサービス切断 — 再接続を試みます")
+                billingClient.startConnection(this)
             }
         })
     }

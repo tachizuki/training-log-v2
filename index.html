@@ -2693,6 +2693,11 @@
           localStorage.setItem(k, data[k]);
         }
       });
+      // メモリ上のグローバル変数も更新する（ページ初回評価後に呼ばれる場合があるため）
+      records = JSON.parse(localStorage.getItem('training_records') || '[]');
+      waterData = JSON.parse(localStorage.getItem('water_data') || '{}');
+      gymData = JSON.parse(localStorage.getItem('gym_data') || '{}');
+      userProfile = JSON.parse(localStorage.getItem('user_profile') || '{"height":168,"age":25,"sex":"male"}');
     } catch(e) {}
   }
 
@@ -3093,6 +3098,11 @@
           const cloud = JSON.parse(data[k]);
           const local = JSON.parse(localStorage.getItem('gym_data') || '{}');
           localStorage.setItem('gym_data', JSON.stringify(Object.assign({}, cloud, local)));
+        } else if (k === 'training_records' || k === 'water_data') {
+          // 記録系はローカルを優先（クラウド読込でローカルの最新データを失わないため）
+          const local = localStorage.getItem(k);
+          const isEmpty = !local || local === '[]' || local === '{}';
+          if (isEmpty) localStorage.setItem(k, data[k]);
         } else {
           localStorage.setItem(k, data[k]);
         }
@@ -3242,6 +3252,7 @@
 
   function loadFromCloud(uid) {
     if (!uid) return;
+    if (!isPremium()) return; // クラウド同期はプレミアム機能（無課金ユーザーのローカルデータを上書きしない）
     if (typeof AndroidBridge !== 'undefined') {
       AndroidBridge.loadFromFirestore(uid);
     } else {
@@ -3490,6 +3501,8 @@
       if (_lastScreen) {
         showScreen(_lastScreen);
         if (_lastScreen === 'gym-screen') renderGym();
+        else if (_lastScreen === 'water-screen') renderWater();
+        else if (_lastScreen === 'view-screen') renderView();
       }
     }
   }
@@ -3588,6 +3601,7 @@
       selectedMuscles = [];
       document.getElementById('training-toggle').classList.remove('on');
       document.getElementById('muscle-selector').style.display = 'none';
+      document.querySelectorAll('.muscle-btn').forEach(b => b.classList.remove('selected'));
       recActivities = [];
       renderActivityList();
       updateGymLinkSection(date);
@@ -3775,6 +3789,7 @@
     updateRing(waterData[key].total);
     renderWaterLog(waterData[key].log);
     updateTodaySummary();
+    if (currentUser) syncToCloud(currentUser.uid);
   }
 
   function renderWaterLog(log) {
@@ -3794,6 +3809,7 @@
     waterData[todayKey()]={total:0,log:[]};
     localStorage.setItem('water_data', JSON.stringify(waterData));
     renderWater(); updateTodaySummary();
+    if (currentUser) syncToCloud(currentUser.uid);
   }
 
   function renderWaterQuickBtns() {
@@ -5121,6 +5137,7 @@
       waterData[dateKey].total = editWaterVal;
       localStorage.setItem('water_data', JSON.stringify(waterData));
     }
+    if (currentUser) syncToCloud(currentUser.uid);
     closeEditModal();
     renderList();
     if(currentFilter==='week'||currentFilter==='month') renderStats();
@@ -5133,6 +5150,7 @@
     if (!confirm(dateKey + t('confirm_delete_record'))) return;
     records = records.filter(r=>r.date!==dateKey);
     localStorage.setItem('training_records', JSON.stringify(records));
+    if (currentUser) syncToCloud(currentUser.uid);
     closeEditModal();
     renderList();
     updateTodaySummary();
@@ -5425,7 +5443,7 @@
       ex.sets.forEach((s, si) => {
         const w = document.getElementById('gs-' + ei + '-' + si + '-w');
         const r = document.getElementById('gs-' + ei + '-' + si + '-r');
-        if (w) s.weight = parseFloat(w.value) || null;
+        if (w) s.weight = (w.value === '自重') ? '自重' : (parseFloat(w.value) || null);
         if (r) s.reps = parseFloat(r.value) || null;
       });
     });
@@ -5584,11 +5602,14 @@
   }
 
   function autoSaveGym() {
-    if (gymExercises.length === 0) return;
     const key = getGymKey();
     if (!gymData[key]) gymData[key] = {};
     gymData[key].exercises = JSON.parse(JSON.stringify(gymExercises));
     localStorage.setItem('gym_data', JSON.stringify(gymData));
+    if (gymExercises.length === 0) {
+      if (currentUser) syncToCloud(currentUser.uid);
+      return;
+    }
     const muscleMap = {
       '胸':['ベンチプレス','フライ','ペックデック','ディップス','チェストプレス'],
       '背中':['デッドリフト','ラットプルダウン','チンニング','ロウ','バックエクステンション','Tバー'],
@@ -6542,7 +6563,22 @@
 
     // gymExercisesを直接使用（保存済み・未保存問わず現在の全データ）
     const allExercises = gymExercises;
-    const partLabel = gymParts.join('・');
+    // 種目名から部位を自動判定（gymPartsは初期値が"胸"固定のため使わない）
+    const _partMap = {
+      '胸':['ベンチプレス','フライ','ペックデック','ディップス','チェストプレス'],
+      '背中':['デッドリフト','ラットプルダウン','チンニング','ロウ','バックエクステンション','Tバー'],
+      '肩':['ショルダープレス','サイドレイズ','フロントレイズ','リアレイズ','アーノルド','フェイスプル'],
+      '腕':['カール','スカルクラッシャー','プッシュダウン','クローズグリップ'],
+      '足':['スクワット','レッグプレス','ブルガリアン','レッグエクステ','レッグカール','アウターサイ','ルーマニアン','ハック'],
+      '腹筋':['クランチ','レッグレイズ','プランク','ツイスト','アブローラー','ハンギング'],
+    };
+    const _detectedParts = new Set();
+    allExercises.forEach(ex => {
+      Object.entries(_partMap).forEach(([part, kws]) => {
+        if (kws.some(kw => ex.name.includes(kw))) _detectedParts.add(part);
+      });
+    });
+    const partLabel = _detectedParts.size > 0 ? [..._detectedParts].join('・') : gymParts.join('・');
 
     const W = 720;
     const lineH = 26;
@@ -6867,8 +6903,8 @@
     el.innerHTML = html || '<div style="color:var(--text-muted);padding:20px;text-align:center;">—</div>';
   }
 
-  function addActivityFromPreset(name, met, icon) {
-    recActivities.push({name, met, icon, minutes:null, kcal:0});
+  function addActivityFromPreset(name, met, icon, hasDetail) {
+    recActivities.push({name, met, icon, hasDetail: !!hasDetail, minutes:null, kcal:0});
     renderActivityList();
     document.getElementById('activity-picker').classList.remove('open');
     markRecordChanged();
@@ -7253,7 +7289,9 @@
   function exportData() {
     const data = {};
     const keys = ['training_records','gym_data','water_data','user_profile',
-                  'gym_presets','water_quick_btns','activity_presets','custom_gym_exercises'];
+                  'gym_presets','water_quick_btns','activity_presets','custom_gym_exercises',
+                  'weekly_goals','contest_date','contest_name','contest_weight','peak_date',
+                  'nutrition_goals','display_name_custom','water_goal','app_options'];
     keys.forEach(k => {
       const v = localStorage.getItem(k);
       if (v) data[k] = v;
