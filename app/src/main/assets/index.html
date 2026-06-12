@@ -53,6 +53,12 @@
     --success: #00ff88;
   }
 
+  :root {
+    /* Kotlinから実際のシステムバー高さで上書きされる。WebViewでenv()が0を返す場合の保険 */
+    --sat: env(safe-area-inset-top, 0px);
+    --sab: env(safe-area-inset-bottom, 0px);
+  }
+
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
     background: var(--bg);
@@ -61,8 +67,8 @@
     min-height: 100vh;
     overflow-x: hidden;
     /* Android/iOSのシステムバーを避ける */
-    padding-top: env(safe-area-inset-top);
-    padding-bottom: env(safe-area-inset-bottom);
+    padding-top: var(--sat);
+    padding-bottom: var(--sab);
     padding-left: env(safe-area-inset-left);
     padding-right: env(safe-area-inset-right);
   }
@@ -71,7 +77,7 @@
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     height: 100vh;
     overflow: hidden;
-    padding: max(20px, env(safe-area-inset-top)) 20px calc(75px + max(20px, env(safe-area-inset-bottom)));
+    padding: max(20px, var(--sat)) 20px calc(75px + max(20px, var(--sab)));
     position: relative;
   }
   #top-screen::before {
@@ -83,9 +89,9 @@
   .top-content { position: relative; z-index: 1; text-align: center; width: 100%; max-width: 400px; }
   .app-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(56px,16vw,80px); letter-spacing: 0.05em; line-height: 0.9; color: var(--accent); text-shadow: 0 0 40px rgba(232,255,0,0.3); margin-bottom: 8px; }
   .app-subtitle { font-size: 11px; letter-spacing: 0.3em; color: var(--text-muted); text-transform: uppercase; margin-bottom: 48px; }
-  .profile-btn { position: absolute; top: max(20px, env(safe-area-inset-top)); right: 20px; background: none; border: 1px solid var(--border); border-radius: 10px; color: var(--text-muted); font-size: 18px; padding: 6px 10px; cursor: pointer; z-index: 2; }
+  .profile-btn { position: absolute; top: max(20px, var(--sat)); right: 20px; background: none; border: 1px solid var(--border); border-radius: 10px; color: var(--text-muted); font-size: 18px; padding: 6px 10px; cursor: pointer; z-index: 2; }
   /* ===== ボトムナビゲーション ===== */
-  .bottom-nav { position:fixed; bottom:0; left:0; right:0; display:flex; background:var(--surface); border-top:1px solid var(--border); padding-bottom:env(safe-area-inset-bottom); z-index:20; transition:transform 0.25s cubic-bezier(0.4,0,0.2,1); }
+  .bottom-nav { position:fixed; bottom:0; left:0; right:0; display:flex; background:var(--surface); border-top:1px solid var(--border); padding-bottom:var(--sab); z-index:20; transition:transform 0.25s cubic-bezier(0.4,0,0.2,1); }
   .bottom-nav.hidden { transform:translateY(100%); }
   .nav-item { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:10px 4px 10px; gap:3px; border:none; background:none; color:var(--text-muted); font-size:10px; cursor:pointer; position:relative; -webkit-tap-highlight-color:transparent; letter-spacing:0.02em; transition:color 0.15s; }
   .nav-item.active { color:var(--accent); }
@@ -123,7 +129,7 @@
   .profile-modal-sheet {
     background: var(--surface);
     border-radius: 24px 24px 0 0;
-    padding: 24px 24px calc(32px + env(safe-area-inset-bottom));
+    padding: 24px 24px calc(32px + var(--sab));
     width: 100%;
     max-width: 480px;
     max-height: 90vh;
@@ -163,7 +169,7 @@
 
   .screen { display: none; min-height: 100vh; padding: 0 0 80px 0; }
   .screen.active { display: block; }
-  .screen-header { display: flex; align-items: center; gap: 16px; padding: max(20px, calc(env(safe-area-inset-top) + 12px)) 20px 16px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--bg); z-index: 10; }
+  .screen-header { display: flex; align-items: center; gap: 16px; padding: max(20px, calc(var(--sat) + 12px)) 20px 16px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--bg); z-index: 10; }
   .btn-back { background: none; border: none; color: var(--text-muted); font-size: 24px; cursor: pointer; padding: 4px; line-height: 1; }
   .screen-title { font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 0.05em; color: var(--accent); }
   .screen-title.cyan { color: var(--accent2); }
@@ -193,7 +199,7 @@
 
   .btn-submit { width: 100%; padding: 18px; background: var(--accent); color: var(--bg); border: none; border-radius: 12px; font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 0.1em; cursor: pointer; margin-top: 20px; transition: opacity 0.2s; }
   .btn-submit:active { opacity: 0.8; }
-  .settings-save-bar, .record-save-bar { display:none; position:fixed; bottom:calc(60px + env(safe-area-inset-bottom)); left:0; right:0; padding:12px 20px; background:var(--bg); border-top:2px solid var(--accent); z-index:19; }
+  .settings-save-bar, .record-save-bar { display:none; position:fixed; bottom:calc(60px + var(--sab)); left:0; right:0; padding:12px 20px; background:var(--bg); border-top:2px solid var(--accent); z-index:19; }
   .settings-save-bar.visible, .record-save-bar.visible { display:block; }
   .settings-save-bar button, .record-save-bar button { width:100%; padding:14px; background:var(--accent); color:var(--bg); border:none; border-radius:12px; font-family:'Bebas Neue',sans-serif; font-size:20px; letter-spacing:0.1em; cursor:pointer; }
   .settings-section { border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: var(--surface); margin-bottom: 6px; }
@@ -309,7 +315,7 @@
   /* ===== PAYWALL ===== */
   .paywall-overlay { position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:300;display:none;align-items:flex-end;justify-content:center; }
   .paywall-overlay.open { display:flex; }
-  .paywall-sheet { background:var(--surface);border-radius:24px 24px 0 0;padding:32px 24px calc(32px + env(safe-area-inset-bottom));width:100%;max-width:480px;text-align:center;max-height:90vh;overflow-y:auto; }
+  .paywall-sheet { background:var(--surface);border-radius:24px 24px 0 0;padding:32px 24px calc(32px + var(--sab));width:100%;max-width:480px;text-align:center;max-height:90vh;overflow-y:auto; }
   .paywall-feature { display:flex;align-items:center;gap:10px;padding:10px 12px;font-size:13px;color:var(--text);text-align:left;background:rgba(232,255,0,0.04);border-left:3px solid var(--accent);border-radius:6px;margin-bottom:8px; }
   .paywall-feature-icon { font-size:18px; }
   .paywall-feature-text { flex:1; }
@@ -508,7 +514,7 @@
   .share-btn.download { background: var(--accent); color: var(--bg); }
   .share-btn.cancel { background: var(--surface); color: var(--text-muted); }
 
-  .toast { position: fixed; bottom: calc(68px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%) translateY(200px); background: var(--accent); color: var(--bg); padding: 12px 24px; border-radius: 30px; font-weight: 700; font-size: 13px; letter-spacing: 0.05em; z-index: 100; transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1); white-space: nowrap; }
+  .toast { position: fixed; bottom: calc(68px + var(--sab)); left: 50%; transform: translateX(-50%) translateY(200px); background: var(--accent); color: var(--bg); padding: 12px 24px; border-radius: 30px; font-weight: 700; font-size: 13px; letter-spacing: 0.05em; z-index: 100; transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1); white-space: nowrap; }
   .toast.show { transform: translateX(-50%) translateY(0); }
   .toast.blue { background: var(--accent2); }
 
@@ -590,7 +596,7 @@
     background: var(--bg);
     display: flex; flex-direction: column;
     align-items: center; justify-content: flex-end;
-    padding-bottom: max(40px, env(safe-area-inset-bottom));
+    padding-bottom: max(40px, var(--sab));
     transition: opacity 0.4s;
   }
   #onboarding-overlay.hidden { opacity: 0; pointer-events: none; }
@@ -605,7 +611,7 @@
     min-width: 100%; height: 100%;
     display: flex; flex-direction: column;
     align-items: center; justify-content: center;
-    padding: max(60px, env(safe-area-inset-top)) 32px 20px;
+    padding: max(60px, var(--sat)) 32px 20px;
     text-align: center;
     gap: 16px;
   }
@@ -964,7 +970,7 @@
 <div class="gym-exercise-picker" id="gym-picker">
   <div class="gym-picker-sheet">
     <!-- ヘッダー -->
-    <div style="display:flex;align-items:center;padding-top:max(48px,env(safe-area-inset-top));padding-right:20px;padding-bottom:16px;padding-left:20px;background:var(--accent);gap:12px;">
+    <div style="display:flex;align-items:center;padding-top:max(48px,var(--sat));padding-right:20px;padding-bottom:16px;padding-left:20px;background:var(--accent);gap:12px;">
       <button onclick="closeGymPicker()" style="background:none;border:none;color:var(--bg);font-size:22px;cursor:pointer;padding:0;line-height:1;font-weight:bold;">←</button>
       <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--bg);flex:1;letter-spacing:0.05em;" data-i18n="gym_picker_title">種目を選択</div>
       <button onclick="openGymPresetEditor()" style="background:none;border:1px solid rgba(0,0,0,0.3);border-radius:8px;color:var(--bg);font-size:13px;padding:5px 12px;cursor:pointer;" data-i18n="gym_picker_edit">編集</button>
@@ -1723,7 +1729,7 @@
   </div>
 
   <!-- ログイン選択画面（スライド終了後に表示） -->
-  <div id="ob-login-choice" style="display:none;flex-direction:column;align-items:center;justify-content:center;flex:1;width:100%;padding:40px 28px max(40px,env(safe-area-inset-bottom));">
+  <div id="ob-login-choice" style="display:none;flex-direction:column;align-items:center;justify-content:center;flex:1;width:100%;padding:40px 28px max(40px,var(--sab));">
     <div style="font-size:56px;margin-bottom:16px;">🔐</div>
     <div class="ob-title" style="margin-bottom:8px;" id="ob-login-title">データを<br>守りますか？</div>
     <p class="ob-desc" style="margin-bottom:32px;" id="ob-login-desc">Googleアカウントでログインすると<br>データがクラウドに自動保存されます。<br>後からでもログインできます。</p>

@@ -10,6 +10,8 @@ import android.content.pm.PackageManager
 import android.os.Build
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
@@ -617,6 +619,15 @@ class MainActivity : AppCompatActivity() {
 
             override fun onPageFinished(view: WebView, url: String) {
                 super.onPageFinished(view, url)
+                // システムバーの実際の高さをCSS変数として注入（env(safe-area-inset-top)がWebViewで0を返す場合の対策）
+                ViewCompat.getRootWindowInsets(window.decorView)?.let { insets ->
+                    val sat = insets.getInsets(WindowInsetsCompat.Type.statusBars()).top
+                    val sab = insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom
+                    view.evaluateJavascript("""
+                        document.documentElement.style.setProperty('--sat','${sat}px');
+                        document.documentElement.style.setProperty('--sab','${sab}px');
+                    """.trimIndent(), null)
+                }
                 // ページ読み込み完了後にFirebase認証状態を復元
                 val user = auth.currentUser
                 if (user != null) {
