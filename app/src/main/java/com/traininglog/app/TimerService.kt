@@ -28,7 +28,7 @@ class TimerService : Service() {
 
     companion object {
         const val CHANNEL_ID      = "timer_channel"
-        const val DONE_CHANNEL_ID = "timer_done_channel"
+        const val DONE_CHANNEL_ID = "timer_done_channel_v2" // v2: USAGE_ALARM に変更（イヤホン時もスピーカー鳴動）
         const val NOTIF_ID        = 2001
         const val DONE_NOTIF_ID   = 2002
         const val ACTION_START    = "com.traininglog.app.TIMER_START"
@@ -198,10 +198,10 @@ class TimerService : Service() {
                 setSound(null, null)
                 enableVibration(false)
             }
-            // タイマー完了通知（音＋バイブ付き）
+            // タイマー完了通知（USAGE_ALARM: イヤホン接続中もスピーカーから鳴動）
             val vibPattern = longArrayOf(0, 400, 150, 400, 150, 400, 150, 400)
             val audioAttrs = AudioAttributes.Builder()
-                .setUsage(AudioAttributes.USAGE_NOTIFICATION)
+                .setUsage(AudioAttributes.USAGE_ALARM)
                 .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
                 .build()
             val doneChannel = NotificationChannel(
@@ -211,7 +211,7 @@ class TimerService : Service() {
                 description = "インターバル終了通知"
                 enableVibration(true)
                 vibrationPattern = vibPattern
-                setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION), audioAttrs)
+                setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM), audioAttrs)
             }
             notificationManager.createNotificationChannel(timerChannel)
             notificationManager.createNotificationChannel(doneChannel)
