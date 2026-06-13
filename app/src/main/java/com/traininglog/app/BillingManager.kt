@@ -31,7 +31,8 @@ import com.android.billingclient.api.QueryPurchasesParams
  */
 class BillingManager(
     private val context: Context,
-    private val onPremiumStateChanged: (Boolean) -> Unit,
+    // (有効か, 新規購入か) — 新規購入時のみ歓迎メッセージ等を出し分けられる
+    private val onPremiumStateChanged: (Boolean, Boolean) -> Unit,
 ) {
 
     companion object {
@@ -114,7 +115,7 @@ class BillingManager(
                     it.purchaseState == Purchase.PurchaseState.PURCHASED &&
                     it.products.contains(PRODUCT_PREMIUM_MONTHLY)
                 }
-                setPremium(active)
+                setPremium(active, isNewPurchase = false)
                 // 未acknowledgeの購入は ack しておかないと自動払い戻しになる
                 purchases.filter { it.purchaseState == Purchase.PurchaseState.PURCHASED && !it.isAcknowledged }
                     .forEach { acknowledge(it) }
@@ -131,11 +132,17 @@ class BillingManager(
             queryProductDetails()
             return false
         }
-        val offerToken = details.subscriptionOfferDetails?.firstOrNull()?.offerToken
-        if (offerToken == null) {
-            Log.w(TAG, "オファートークン取得不可")
+        // 無料トライアル等の優遇オファー（価格0の料金フェーズを含む）があれば優先的に選択する。
+        // firstOrNull だと基本プランが先頭の場合にトライアルが適用されない不具合になるため。
+        val offers = details.subscriptionOfferDetails
+        if (offers.isNullOrEmpty()) {
+            Log.w(TAG, "オファー一覧が空のため購入フロー起動不可")
             return false
         }
+        val freeTrialOffer = offers.firstOrNull { offer ->
+            offer.pricingPhases.pricingPhaseList.any { it.priceAmountMicros == 0L }
+        }
+        val offerToken = (freeTrialOffer ?: offers.first()).offerToken
         val params = BillingFlowParams.newBuilder()
             .setProductDetailsParamsList(
                 listOf(
@@ -153,7 +160,7 @@ class BillingManager(
     private fun handlePurchase(purchase: Purchase) {
         if (purchase.purchaseState != Purchase.PurchaseState.PURCHASED) return
         if (!purchase.products.contains(PRODUCT_PREMIUM_MONTHLY)) return
-        setPremium(true)
+        setPremium(true, isNewPurchase = true)
         if (!purchase.isAcknowledged) acknowledge(purchase)
     }
 
@@ -172,10 +179,10 @@ class BillingManager(
 
     fun isPremium(): Boolean = prefs.getBoolean(PREF_KEY, false)
 
-    private fun setPremium(active: Boolean) {
+    private fun setPremium(active: Boolean, isNewPurchase: Boolean) {
         val prev = isPremium()
         prefs.edit().putBoolean(PREF_KEY, active).apply()
-        if (prev != active) onPremiumStateChanged(active)
+        if (prev != active) onPremiumStateChanged(active, isNewPurchase)
     }
 
     fun endConnection() {

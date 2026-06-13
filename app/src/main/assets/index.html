@@ -4063,8 +4063,7 @@
   function onPremiumPurchased() {
     localStorage.setItem('is_premium', 'true');
     closePaywall();
-    renderView();
-    if (document.getElementById('tab-graph').classList.contains('active')) renderCharts();
+    refreshAllPremiumUI();
     showToast(t('toast_premium_welcome'), false);
   }
 
@@ -4075,7 +4074,17 @@
     } else {
       localStorage.removeItem('is_premium');
     }
-    renderView();
+    refreshAllPremiumUI();
+  }
+
+  // プレミアム状態変化時に、ロック対象の全UIを一括で再描画する
+  function refreshAllPremiumUI() {
+    try { updatePremiumGatedUI(); } catch(e) {}
+    try { renderView(); } catch(e) {}
+    try { renderRoadmap(); } catch(e) {}
+    try { renderGymAnalysis(); } catch(e) {}
+    try { if (document.getElementById('tab-graph')?.classList.contains('active')) renderCharts(); } catch(e) {}
+    try { updatePlanStatus(); } catch(e) {}
   }
 
   function getFilteredRecords() {
@@ -7206,6 +7215,14 @@
     loadOptionToggles();
     updateBackupVisibility();
     // プランステータス更新
+    updatePlanStatus();
+    // アカウント削除はログイン済みの場合のみ表示
+    const dangerZone = document.getElementById('danger-zone');
+    if (dangerZone) dangerZone.style.display = currentUser ? '' : 'none';
+  }
+
+  // プラン表示（ラベル・アップグレードボタン）を現在のプレミアム状態で更新する
+  function updatePlanStatus() {
     const premium = isPremium();
     const label = document.getElementById('plan-status-label');
     const btn = document.getElementById('plan-upgrade-btn');
@@ -7213,9 +7230,6 @@
     if (label) label.textContent = isBrowser ? '🎁 プレミアム無料公開中（アプリリリースまで）' : premium ? t('plan_premium') : t('plan_free');
     if (label) label.style.color = premium ? 'var(--accent)' : 'var(--text)';
     if (btn) btn.style.display = premium ? 'none' : '';
-    // アカウント削除はログイン済みの場合のみ表示
-    const dangerZone = document.getElementById('danger-zone');
-    if (dangerZone) dangerZone.style.display = currentUser ? '' : 'none';
   }
 
 

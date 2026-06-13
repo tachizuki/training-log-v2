@@ -556,13 +556,19 @@ class MainActivity : AppCompatActivity() {
         db = FirebaseFirestore.getInstance()
 
         // Google Play Billing 初期化（プレミアム状態変化時はWebViewへ通知）
-        billing = BillingManager(applicationContext) { active ->
+        billing = BillingManager(applicationContext) { active, isNewPurchase ->
             runOnUiThread {
                 if (::webView.isInitialized) {
-                    if (active) {
-                        webView.evaluateJavascript("if(typeof onPremiumPurchased==='function')onPremiumPurchased();", null)
-                    } else {
-                        webView.evaluateJavascript("if(typeof onPremiumRestored==='function')onPremiumRestored(false);", null)
+                    when {
+                        // 新規購入時のみ歓迎メッセージを表示
+                        active && isNewPurchase ->
+                            webView.evaluateJavascript("if(typeof onPremiumPurchased==='function')onPremiumPurchased();", null)
+                        // 起動時の自動復元（歓迎メッセージなしでUIだけ解放）
+                        active ->
+                            webView.evaluateJavascript("if(typeof onPremiumRestored==='function')onPremiumRestored(true);", null)
+                        // 失効・解約
+                        else ->
+                            webView.evaluateJavascript("if(typeof onPremiumRestored==='function')onPremiumRestored(false);", null)
                     }
                 }
             }
