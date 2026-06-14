@@ -101,6 +101,26 @@ input[type=checkbox] { accent-color: var(--accent); width: 16px; height: 16px; c
 .collapsible.collapsed::after { content: ' ▸'; }
 .collapse-body { transition: display 0.2s; }
 .collapse-body.hidden { display: none; }
+/* add row button */
+.add-row-btn { display: block; width: 100%; margin: 10px 0 2px; padding: 6px 12px; background: transparent; border: 1px dashed var(--border); border-radius: 4px; color: var(--text-muted); font-size: 12px; cursor: pointer; text-align: left; }
+.add-row-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(100,181,246,0.05); }
+/* delete row button */
+.del-btn { background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-size: 13px; padding: 2px 5px; border-radius: 3px; vertical-align: middle; }
+.del-btn:hover { color: var(--red); background: rgba(239,83,80,0.12); }
+/* technique / prio selects in custom rows */
+select.tech-sel { font-size: 11px; padding: 2px 4px; border-radius: 4px; border: 1px solid var(--border); color: #90caf9; cursor: pointer; background: #0d47a1; }
+select.tech-sel[data-v="bva"] { background: #1a237e; color: #9fa8da; }
+select.tech-sel[data-v="st"]  { background: #4a148c; color: #ce93d8; }
+select.tech-sel[data-v="dt"]  { background: #880e4f; color: #f48fb1; }
+select.tech-sel[data-v="pw"]  { background: #004d40; color: #80cbc4; }
+select.tech-sel[data-v="eg"]  { background: #e65100; color: #ffcc02; }
+select.tech-sel[data-v="uc"]  { background: #1b5e20; color: #a5d6a7; }
+select.prio-sel { font-size: 11px; padding: 2px 4px; border-radius: 4px; border: 1px solid var(--border); color: #ffcdd2; cursor: pointer; background: #b71c1c; }
+select.prio-sel[data-v="med"] { background: #e65100; color: #ffe0b2; }
+select.prio-sel[data-v="low"] { background: #37474f; color: #b0bec5; }
+/* editable cell placeholder */
+td[contenteditable]:empty::before { content: attr(data-ph); color: var(--text-muted); font-style: italic; pointer-events: none; }
+.custom-row td[contenteditable] { min-width: 80px; }
 @media print {
   .tabs, .tab { display: none !important; }
   .pane { display: block !important; page-break-inside: avoid; }
@@ -1460,6 +1480,7 @@ input[type=checkbox] { accent-color: var(--accent); width: 16px; height: 16px; c
 </div>
 
 <script>
+// ──────── タブ切替 ────────
 function showTab(id) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.pane').forEach(p => p.classList.remove('active'));
@@ -1468,69 +1489,196 @@ function showTab(id) {
   updateSummary();
 }
 
+// ──────── 折りたたみ ────────
 function toggle(el) {
   el.classList.toggle('collapsed');
-  const body = el.nextElementSibling;
-  body.classList.toggle('hidden');
+  el.nextElementSibling.classList.toggle('hidden');
 }
 
+// ──────── HTML エスケープ ────────
+function esc(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ──────── select HTML 生成 ────────
+function techSelect(val) {
+  val = val || 'eq';
+  const opts = [['eq','同値分割'],['bva','境界値分析'],['st','状態遷移'],
+    ['dt','デシジョンテーブル'],['pw','ペアワイズ'],['eg','エラー推測'],['uc','ユースケース']];
+  return '<select class="tech-sel" data-v="' + val + '" onchange="updateTech(this)">' +
+    opts.map(([v,l]) => '<option value="' + v + '"' + (v===val?' selected':'') + '>' + l + '</option>').join('') + '</select>';
+}
+function prioSelect(val) {
+  val = val || 'high';
+  const opts = [['high','HIGH'],['med','MED'],['low','LOW']];
+  return '<select class="prio-sel" data-v="' + val + '" onchange="updatePrio(this)">' +
+    opts.map(([v,l]) => '<option value="' + v + '"' + (v===val?' selected':'') + '>' + l + '</option>').join('') + '</select>';
+}
+function statusSelect(val) {
+  val = val || 'pending';
+  const opts = [['pending','未実施'],['pass','PASS'],['fail','FAIL'],['skip','SKIP']];
+  return '<select class="status" data-v="' + val + '" onchange="updateStatus(this)">' +
+    opts.map(([v,l]) => '<option value="' + v + '"' + (v===val?' selected':'') + '>' + l + '</option>').join('') + '</select>';
+}
+
+// ──────── イベントハンドラ ────────
 function updateStatus(sel) {
   sel.setAttribute('data-v', sel.value);
+  saveState(); saveCustomRows(); updateSummary();
+}
+function updateTech(sel) { sel.setAttribute('data-v', sel.value); saveCustomRows(); }
+function updatePrio(sel) { sel.setAttribute('data-v', sel.value); saveCustomRows(); }
+
+// ──────── カスタム行の生成 ────────
+function buildCustomRow(r) {
+  const tr = document.createElement('tr');
+  tr.className = 'custom-row';
+  tr.dataset.rowId = r.rowId;
+  tr.dataset.tbl   = r.tbl;
+  tr.innerHTML =
+    '<td contenteditable data-ph="ID">' + esc(r.id||'') + '</td>' +
+    '<td>' + techSelect(r.tech) + '</td>' +
+    '<td>' + prioSelect(r.prio) + '</td>' +
+    '<td contenteditable data-ph="操作手順">' + esc(r.steps||'') + '</td>' +
+    '<td contenteditable data-ph="期待結果">' + esc(r.expected||'') + '</td>' +
+    '<td>' + statusSelect(r.status) + '</td>' +
+    '<td style="white-space:nowrap">' +
+      '<input class="note" placeholder="メモ" value="' + esc(r.note||'') + '" style="width:calc(100% - 30px)">' +
+      ' <button class="del-btn" onclick="deleteRow(this)" title="この行を削除">×</button>' +
+    '</td>';
+  tr.querySelectorAll('td[contenteditable]').forEach(td => td.addEventListener('input', saveCustomRows));
+  tr.querySelector('input.note').addEventListener('input', saveCustomRows);
+  return tr;
+}
+
+// ──────── 行追加 ────────
+function addRow(tblId) {
+  const tbl = document.getElementById(tblId);
+  if (!tbl) return;
+  const r = { rowId: 'r' + Date.now(), tbl: tblId, id: '', tech: 'eq', prio: 'high', steps: '', expected: '', status: 'pending', note: '' };
+  const tr = buildCustomRow(r);
+  tbl.appendChild(tr);
+  tr.querySelector('td[contenteditable]').focus();
+  saveCustomRows();
   updateSummary();
 }
 
+// ──────── 行削除 ────────
+function deleteRow(btn) {
+  if (!confirm('このテストケースを削除しますか？')) return;
+  btn.closest('tr').remove();
+  saveCustomRows();
+  updateSummary();
+}
+
+// ──────── 追加ボタンを各テーブルへ注入 ────────
+function injectAddButtons() {
+  const paneIds = ['pane-cases-today','pane-cases-gym','pane-cases-water',
+    'pane-cases-analysis','pane-cases-billing','pane-cases-sync','pane-cases-system'];
+  let idx = 0;
+  paneIds.forEach(pid => {
+    const pane = document.getElementById(pid);
+    if (!pane) return;
+    pane.querySelectorAll('.collapse-body table').forEach(tbl => {
+      tbl.id = 'tbl-' + idx++;
+      const btn = document.createElement('button');
+      btn.className = 'add-row-btn';
+      btn.textContent = '＋ テストケースを追加';
+      btn.type = 'button';
+      btn.onclick = () => addRow(tbl.id);
+      tbl.parentNode.insertBefore(btn, tbl.nextSibling);
+    });
+  });
+}
+
+// ──────── 保存：既存行（インデックスベース）────────
+function saveState() {
+  const sels  = document.querySelectorAll('tr:not(.custom-row) select.status');
+  const notes = document.querySelectorAll('tr:not(.custom-row) input.note');
+  localStorage.setItem('test-design-state', JSON.stringify({
+    statuses: Array.from(sels).map(s => s.value),
+    notes:    Array.from(notes).map(n => n.value)
+  }));
+}
+
+// ──────── 保存：カスタム行（ID ベース）────────
+function saveCustomRows() {
+  const rows = [];
+  document.querySelectorAll('tr.custom-row').forEach(tr => {
+    const cells = tr.querySelectorAll('td');
+    rows.push({
+      rowId:    tr.dataset.rowId,
+      tbl:      tr.dataset.tbl,
+      id:       cells[0] ? cells[0].textContent.trim() : '',
+      tech:     tr.querySelector('select.tech-sel') ? tr.querySelector('select.tech-sel').value : 'eq',
+      prio:     tr.querySelector('select.prio-sel') ? tr.querySelector('select.prio-sel').value : 'high',
+      steps:    cells[3] ? cells[3].textContent.trim() : '',
+      expected: cells[4] ? cells[4].textContent.trim() : '',
+      status:   tr.querySelector('select.status') ? tr.querySelector('select.status').value : 'pending',
+      note:     tr.querySelector('input.note') ? tr.querySelector('input.note').value : ''
+    });
+  });
+  localStorage.setItem('test-design-custom-rows', JSON.stringify(rows));
+}
+
+// ──────── 読み込み：カスタム行 ────────
+function loadCustomRows() {
+  const saved = localStorage.getItem('test-design-custom-rows');
+  if (!saved) return;
+  try {
+    JSON.parse(saved).forEach(r => {
+      const tbl = document.getElementById(r.tbl);
+      if (tbl) tbl.appendChild(buildCustomRow(r));
+    });
+  } catch(e) {}
+}
+
+// ──────── 進捗サマリー更新 ────────
 function updateSummary() {
   const all = document.querySelectorAll('select.status');
   let pass = 0, fail = 0, skip = 0, pending = 0;
   all.forEach(s => {
     const v = s.value;
-    if (v === 'pass') pass++;
-    else if (v === 'fail') fail++;
-    else if (v === 'skip') skip++;
-    else pending++;
+    if (v === 'pass') pass++; else if (v === 'fail') fail++;
+    else if (v === 'skip') skip++; else pending++;
   });
   const total = all.length;
-  const done = pass + fail + skip;
-  const pct = total ? Math.round(done / total * 100) : 0;
-  document.getElementById('chip-total').textContent = '総計: ' + total + '件';
-  document.getElementById('chip-pass').textContent = 'PASS: ' + pass;
-  document.getElementById('chip-fail').textContent = 'FAIL: ' + fail;
-  document.getElementById('chip-skip').textContent = 'SKIP: ' + skip;
+  const pct = total ? Math.round((pass+fail+skip) / total * 100) : 0;
+  document.getElementById('chip-total').textContent   = '総計: ' + total + '件';
+  document.getElementById('chip-pass').textContent    = 'PASS: ' + pass;
+  document.getElementById('chip-fail').textContent    = 'FAIL: ' + fail;
+  document.getElementById('chip-skip').textContent    = 'SKIP: ' + skip;
   document.getElementById('chip-pending').textContent = '未実施: ' + pending;
   document.getElementById('progress-fill').style.width = pct + '%';
   document.getElementById('progress-label').textContent = pct + '%';
 }
 
-// Load persisted state
+// ──────── 初期化 ────────
+injectAddButtons();
+
 (function() {
   const saved = localStorage.getItem('test-design-state');
   if (saved) {
     try {
       const state = JSON.parse(saved);
-      const sels = document.querySelectorAll('select.status');
-      const notes = document.querySelectorAll('input.note');
+      const sels  = document.querySelectorAll('tr:not(.custom-row) select.status');
+      const notes = document.querySelectorAll('tr:not(.custom-row) input.note');
       if (state.statuses) sels.forEach((s, i) => {
         if (state.statuses[i]) { s.value = state.statuses[i]; s.setAttribute('data-v', state.statuses[i]); }
       });
       if (state.notes) notes.forEach((n, i) => { if (state.notes[i]) n.value = state.notes[i]; });
     } catch(e) {}
   }
+  loadCustomRows();
   updateSummary();
 })();
 
-// Auto-save state
-function saveState() {
-  const sels = document.querySelectorAll('select.status');
-  const notes = document.querySelectorAll('input.note');
-  const state = {
-    statuses: Array.from(sels).map(s => s.value),
-    notes: Array.from(notes).map(n => n.value)
-  };
-  localStorage.setItem('test-design-state', JSON.stringify(state));
-}
-
-document.addEventListener('change', saveState);
-document.addEventListener('input', saveState);
+document.addEventListener('change', e => {
+  if (e.target.matches('tr:not(.custom-row) select.status')) saveState();
+});
+document.addEventListener('input', e => {
+  if (e.target.matches('tr:not(.custom-row) input.note')) saveState();
+});
 </script>
 </body>
 </html>
