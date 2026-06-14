@@ -1,0 +1,1536 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>トレーニングログ v2 — テスト設計書</title>
+<style>
+:root {
+  --bg: #0f1117;
+  --surface: #1a1d27;
+  --surface2: #22263a;
+  --border: #2e3350;
+  --text: #e2e8f0;
+  --text-muted: #8892b0;
+  --accent: #64b5f6;
+  --green: #4caf50;
+  --red: #ef5350;
+  --yellow: #ffb74d;
+  --purple: #ba68c8;
+  --cyan: #4dd0e1;
+  --pink: #f48fb1;
+  --pass: #1b5e20;
+  --fail: #b71c1c;
+  --skip: #37474f;
+  --pending: #1a237e;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', 'Hiragino Sans', sans-serif; font-size: 14px; line-height: 1.6; }
+h1 { font-size: 1.5rem; padding: 20px 24px 8px; color: var(--accent); }
+.meta { padding: 0 24px 16px; color: var(--text-muted); font-size: 12px; }
+.meta span { margin-right: 20px; }
+/* tabs */
+.tabs { display: flex; gap: 2px; padding: 0 24px; border-bottom: 2px solid var(--border); position: sticky; top: 0; background: var(--bg); z-index: 100; }
+.tab { padding: 10px 18px; cursor: pointer; color: var(--text-muted); border-bottom: 3px solid transparent; margin-bottom: -2px; font-size: 13px; white-space: nowrap; }
+.tab.active { color: var(--accent); border-color: var(--accent); }
+.tab:hover { color: var(--text); }
+.pane { display: none; padding: 20px 24px; }
+.pane.active { display: block; }
+/* cards */
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 16px; overflow: hidden; }
+.card-head { background: var(--surface2); padding: 10px 16px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+.card-body { padding: 12px 16px; }
+/* badges */
+.badge { display: inline-block; padding: 1px 7px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+.badge-eq { background: #0d47a1; color: #90caf9; }
+.badge-bva { background: #1a237e; color: #9fa8da; }
+.badge-st { background: #4a148c; color: #ce93d8; }
+.badge-dt { background: #880e4f; color: #f48fb1; }
+.badge-pw { background: #004d40; color: #80cbc4; }
+.badge-eg { background: #e65100; color: #ffcc02; }
+.badge-uc { background: #1b5e20; color: #a5d6a7; }
+.badge-prio-high { background: #b71c1c; color: #ffcdd2; }
+.badge-prio-med { background: #e65100; color: #ffe0b2; }
+.badge-prio-low { background: #37474f; color: #b0bec5; }
+/* table */
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { background: var(--surface2); padding: 8px 10px; text-align: left; color: var(--text-muted); font-weight: 600; white-space: nowrap; border-bottom: 1px solid var(--border); }
+td { padding: 7px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: rgba(255,255,255,0.02); }
+/* status select */
+select.status { font-size: 12px; padding: 2px 6px; border-radius: 4px; border: 1px solid var(--border); background: var(--surface2); color: var(--text); cursor: pointer; }
+select.status[data-v="pass"] { background: var(--pass); }
+select.status[data-v="fail"] { background: var(--fail); }
+select.status[data-v="skip"] { background: var(--skip); }
+select.status[data-v="pending"] { background: var(--pending); }
+/* notes input */
+input.note { background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; color: var(--text); padding: 3px 7px; width: 100%; font-size: 12px; }
+input.note:focus { outline: none; border-color: var(--accent); }
+/* checkbox */
+input[type=checkbox] { accent-color: var(--accent); width: 16px; height: 16px; cursor: pointer; }
+/* progress bar */
+.progress-wrap { display: flex; align-items: center; gap: 10px; margin: 8px 0; }
+.progress-bar { flex: 1; height: 8px; background: var(--surface2); border-radius: 4px; overflow: hidden; }
+.progress-fill { height: 100%; background: var(--accent); border-radius: 4px; transition: width 0.3s; }
+.progress-label { font-size: 12px; color: var(--text-muted); min-width: 60px; text-align: right; }
+/* summary chips */
+.summary { display: flex; gap: 12px; flex-wrap: wrap; margin: 12px 0; }
+.chip { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+.chip-pass { background: var(--pass); color: #a5d6a7; }
+.chip-fail { background: var(--fail); color: #ffcdd2; }
+.chip-skip { background: var(--skip); color: #b0bec5; }
+.chip-total { background: var(--surface2); color: var(--text-muted); }
+/* viewpoint grid */
+.vp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+.vp-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; }
+.vp-card h4 { font-size: 13px; color: var(--accent); margin-bottom: 6px; }
+.vp-card ul { padding-left: 16px; color: var(--text-muted); font-size: 12px; }
+.vp-card ul li { margin-bottom: 3px; }
+/* section title */
+.sec { font-size: 15px; font-weight: 700; color: var(--accent); margin: 20px 0 10px; border-left: 3px solid var(--accent); padding-left: 10px; }
+/* technique legend */
+.legend { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+/* editable */
+[contenteditable] { outline: none; }
+[contenteditable]:hover { background: rgba(255,255,255,0.03); border-radius: 3px; }
+[contenteditable]:focus { background: rgba(100,181,246,0.08); border-radius: 3px; }
+/* collapse */
+.collapsible { cursor: pointer; user-select: none; }
+.collapsible::after { content: ' ▾'; font-size: 11px; }
+.collapsible.collapsed::after { content: ' ▸'; }
+.collapse-body { transition: display 0.2s; }
+.collapse-body.hidden { display: none; }
+@media print {
+  .tabs, .tab { display: none !important; }
+  .pane { display: block !important; page-break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+<h1>トレーニングログ v2 — テスト設計書</h1>
+<div class="meta">
+  <span>バージョン: <b contenteditable>1.1.13 (versionCode 24)</b></span>
+  <span>作成日: <b contenteditable>2026-06-13</b></span>
+  <span>テスター: <b contenteditable>-</b></span>
+  <span>対象OS: <b contenteditable>Android 10〜15</b></span>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="showTab('overview')">テスト観点一覧</div>
+  <div class="tab" onclick="showTab('design')">テスト設計書</div>
+  <div class="tab" onclick="showTab('cases-today')">今日の記録</div>
+  <div class="tab" onclick="showTab('cases-gym')">筋トレメモ</div>
+  <div class="tab" onclick="showTab('cases-water')">水分管理</div>
+  <div class="tab" onclick="showTab('cases-analysis')">分析</div>
+  <div class="tab" onclick="showTab('cases-billing')">課金</div>
+  <div class="tab" onclick="showTab('cases-sync')">クラウド同期</div>
+  <div class="tab" onclick="showTab('cases-system')">システム</div>
+  <div class="tab" onclick="showTab('summary')">進捗サマリー</div>
+</div>
+
+<!-- ===== テスト観点一覧 ===== -->
+<div id="pane-overview" class="pane active">
+  <div class="sec">テスト観点一覧</div>
+  <div class="vp-grid">
+    <div class="vp-card">
+      <h4>📋 今日の記録</h4>
+      <ul>
+        <li>体重・睡眠の入力と保存</li>
+        <li>PFC・塩分・kcalの計算正確性</li>
+        <li>歩数入力の境界値</li>
+        <li>筋肉部位選択（複数選択）</li>
+        <li>有酸素活動の追加/削除</li>
+        <li>日付ナビゲーション</li>
+      </ul>
+    </div>
+    <div class="vp-card">
+      <h4>💪 筋トレメモ</h4>
+      <ul>
+        <li>エクササイズの追加/削除/並び替え</li>
+        <li>セット数・重量・回数の入力</li>
+        <li>自重エクササイズの扱い</li>
+        <li>1RM自動計算</li>
+        <li>プリセット選択</li>
+        <li>メモ入力（長文）</li>
+        <li>ストップウォッチ</li>
+        <li>レストタイマー</li>
+        <li>シェア画像生成</li>
+      </ul>
+    </div>
+    <div class="vp-card">
+      <h4>💧 水分管理</h4>
+      <ul>
+        <li>クイック追加ボタン（量の編集）</li>
+        <li>カスタム量入力</li>
+        <li>ログ削除・全リセット</li>
+        <li>リング表示の正確性</li>
+        <li>目標量の変更と反映</li>
+        <li>0ml・負値のガード</li>
+      </ul>
+    </div>
+    <div class="vp-card">
+      <h4>📊 分析・グラフ</h4>
+      <ul>
+        <li>体重グラフの表示</li>
+        <li>PFC・水分グラフ</li>
+        <li>期間フィルタ（週/月/全）</li>
+        <li>週次レポート（プレミアム）</li>
+        <li>ジム分析（プレミアム）</li>
+        <li>ロードマップ（プレミアム）</li>
+      </ul>
+    </div>
+    <div class="vp-card">
+      <h4>⚙️ 設定</h4>
+      <ul>
+        <li>プロフィール（身長/年齢/性別）</li>
+        <li>栄養目標の設定</li>
+        <li>通知時刻の設定/オフ</li>
+        <li>バックアップ export/import</li>
+        <li>プレミアム購入画面</li>
+        <li>ログアウト・アカウント削除</li>
+      </ul>
+    </div>
+    <div class="vp-card">
+      <h4>🔐 認証</h4>
+      <ul>
+        <li>Googleサインイン成功/失敗</li>
+        <li>サインアウト後のUI状態</li>
+        <li>アカウント削除確認フロー</li>
+        <li>未サインイン時の機能制限</li>
+      </ul>
+    </div>
+    <div class="vp-card">
+      <h4>💳 課金</h4>
+      <ul>
+        <li>購入フロー（正常）</li>
+        <li>無料トライアル適用</li>
+        <li>購入復元</li>
+        <li>ペイウォールのゲーティング</li>
+        <li>キャンセル時の挙動</li>
+        <li>課金済みUI解放</li>
+      </ul>
+    </div>
+    <div class="vp-card">
+      <h4>☁️ クラウド同期</h4>
+      <ul>
+        <li>プレミアムのみ同期</li>
+        <li>ローカル優先マージ</li>
+        <li>複数デバイスでの整合性</li>
+        <li>オフライン時の挙動</li>
+        <li>同期エラーのリカバリ</li>
+      </ul>
+    </div>
+    <div class="vp-card">
+      <h4>🔔 レストタイマー</h4>
+      <ul>
+        <li>カスタム秒数の設定と開始</li>
+        <li>バックグラウンド通知</li>
+        <li>音（スピーカー / イヤホン）</li>
+        <li>停止ボタン</li>
+        <li>SHORT_SERVICEタイムアウト</li>
+        <li>複数タイマー起動の排他</li>
+      </ul>
+    </div>
+    <div class="vp-card">
+      <h4>📱 システム・UI</h4>
+      <ul>
+        <li>ステータスバー重なりなし</li>
+        <li>バックグラウンド復帰時の画面復元</li>
+        <li>ストップウォッチ状態の復元</li>
+        <li>キーボード表示時のレイアウト</li>
+        <li>画面回転（非対応確認）</li>
+        <li>ダークモード</li>
+        <li>大文字フォント設定</li>
+      </ul>
+    </div>
+    <div class="vp-card">
+      <h4>🛡 非機能</h4>
+      <ul>
+        <li>ローカルデータの永続性（app再起動）</li>
+        <li>大量データ時のパフォーマンス</li>
+        <li>ネットワーク断でのクラッシュなし</li>
+        <li>特殊文字・絵文字の入力</li>
+        <li>古い端末（API 26）での動作</li>
+        <li>バッテリー消費（タイマー稼働中）</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="sec">テスト技法凡例</div>
+  <div class="legend">
+    <span class="badge badge-eq">同値分割</span>
+    <span class="badge badge-bva">境界値分析</span>
+    <span class="badge badge-st">状態遷移</span>
+    <span class="badge badge-dt">デシジョンテーブル</span>
+    <span class="badge badge-pw">ペアワイズ</span>
+    <span class="badge badge-eg">エラー推測</span>
+    <span class="badge badge-uc">ユースケース</span>
+    <span class="badge badge-prio-high">HIGH</span>
+    <span class="badge badge-prio-med">MED</span>
+    <span class="badge badge-prio-low">LOW</span>
+  </div>
+</div>
+
+<!-- ===== テスト設計書 ===== -->
+<div id="pane-design" class="pane">
+  <div class="sec">テスト範囲と除外事項</div>
+  <div class="card">
+    <div class="card-head">テスト範囲 (IN SCOPE)</div>
+    <div class="card-body">
+      <p>Android アプリ（WebView ハイブリッド）の全機能。ローカルデータ保存・Firebase Auth・Google Play Billing・レストタイマーサービス・Firestoreクラウド同期。</p>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-head">除外事項 (OUT OF SCOPE)</div>
+    <div class="card-body">
+      <ul style="padding-left:18px;color:var(--text-muted);">
+        <li>iOS / ブラウザ版（Android 専用アプリ）</li>
+        <li>Play Console の管理画面操作</li>
+        <li>Firebase コンソール / Firestore セキュリティルール単体</li>
+        <li>Google アカウント側の 2FA / パスワード変更</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="sec">テスト環境</div>
+  <div class="card">
+    <div class="card-body">
+      <table>
+        <tr><th>項目</th><th>内容</th></tr>
+        <tr><td>実機①</td><td contenteditable class="note-inline">Pixel 8 (Android 15 / API 35)</td></tr>
+        <tr><td>実機②</td><td contenteditable class="note-inline">Galaxy A54 (Android 14 / API 34)</td></tr>
+        <tr><td>実機③</td><td contenteditable class="note-inline">旧機種 (Android 10 / API 29) ※最低保証</td></tr>
+        <tr><td>ネットワーク</td><td contenteditable class="note-inline">Wi-Fi 通常 / 機内モード（オフライン）</td></tr>
+        <tr><td>Play ライセンス</td><td contenteditable class="note-inline">テストアカウント (Gmail) を Play Console でライセンステスターに登録</td></tr>
+        <tr><td>課金テスト</td><td contenteditable class="note-inline">テスト用製品 + ライセンステスターアカウントで実施（実課金なし）</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="sec">リスクと優先度</div>
+  <div class="card">
+    <div class="card-body">
+      <table>
+        <tr><th>リスク</th><th>影響</th><th>優先度</th></tr>
+        <tr>
+          <td>課金処理のバグ（二重課金・未解放）</td>
+          <td>収益損失 / ユーザー怒り</td>
+          <td><span class="badge badge-prio-high">HIGH</span></td>
+        </tr>
+        <tr>
+          <td>データ消失（クラウド同期上書き）</td>
+          <td>記録永久消失</td>
+          <td><span class="badge badge-prio-high">HIGH</span></td>
+        </tr>
+        <tr>
+          <td>レストタイマー音が鳴らない</td>
+          <td>コア UX 損失</td>
+          <td><span class="badge badge-prio-high">HIGH</span></td>
+        </tr>
+        <tr>
+          <td>ステータスバー重なり</td>
+          <td>視認性低下</td>
+          <td><span class="badge badge-prio-med">MED</span></td>
+        </tr>
+        <tr>
+          <td>1RM 計算誤り</td>
+          <td>トレーニング指標への誤信</td>
+          <td><span class="badge badge-prio-med">MED</span></td>
+        </tr>
+        <tr>
+          <td>バックアップ import 失敗</td>
+          <td>機種変時のデータ復元不能</td>
+          <td><span class="badge badge-prio-high">HIGH</span></td>
+        </tr>
+        <tr>
+          <td>プレミアムゲートのバイパス</td>
+          <td>収益機会損失</td>
+          <td><span class="badge badge-prio-high">HIGH</span></td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="sec">状態遷移図：レストタイマー</div>
+  <div class="card">
+    <div class="card-body" style="font-family:monospace;font-size:12px;color:var(--text-muted);line-height:2;">
+      <pre>
+[未起動] ──── 開始ボタン ────→ [カウント中]
+                                    │  ╔═══════════╗
+                                    │  ║ タイマー通知 ║
+                                    │  ╚═══════════╝
+                           カウント満了 ──→ [完了]
+                                    │
+                             停止ボタン ──→ [未起動]
+                                    │
+                     アプリBG移行（継続） ──→ [バックグラウンド中]
+                                              │
+                                        FG復帰 ──→ [カウント中]
+                                              │
+                                      満了通知 ──→ [完了]
+      </pre>
+    </div>
+  </div>
+
+  <div class="sec">状態遷移図：課金</div>
+  <div class="card">
+    <div class="card-body" style="font-family:monospace;font-size:12px;color:var(--text-muted);line-height:2;">
+      <pre>
+[未購入] ──── 購入ボタン ──→ [Playダイアログ] ──→ 完了 ──→ [プレミアム]
+                                                  │
+                                             キャンセル ──→ [未購入]
+                                                  │
+                                              エラー ──→ [未購入]
+
+[未購入] ──── 復元ボタン ──→ BillingClient確認 ──→ 有効購入あり ──→ [プレミアム]
+                                                  │
+                                              購入なし ──→ [未購入]
+
+[プレミアム] ──── サブスク解約（Play側） ──→ 次回更新日以降 ──→ [未購入]
+      </pre>
+    </div>
+  </div>
+
+  <div class="sec">デシジョンテーブル：クラウド同期マージ戦略</div>
+  <div class="card">
+    <div class="card-body">
+      <table>
+        <tr>
+          <th>条件</th>
+          <th>C1</th><th>C2</th><th>C3</th><th>C4</th>
+        </tr>
+        <tr>
+          <td>ローカルに記録あり</td>
+          <td>Y</td><td>Y</td><td>N</td><td>N</td>
+        </tr>
+        <tr>
+          <td>クラウドに記録あり</td>
+          <td>Y</td><td>N</td><td>Y</td><td>N</td>
+        </tr>
+        <tr>
+          <td>プレミアムユーザー</td>
+          <td>Y</td><td>Y</td><td>Y</td><td>Y</td>
+        </tr>
+        <tr style="border-top:2px solid var(--border);">
+          <td><b>期待動作</b></td>
+          <td>ローカル優先で保持</td>
+          <td>ローカルのみ保持</td>
+          <td>クラウドを取得</td>
+          <td>変化なし</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 今日の記録 ===== -->
+<div id="pane-cases-today" class="pane">
+  <div class="sec">今日の記録 — テストケース</div>
+  <div class="card">
+    <div class="card-head collapsible" onclick="toggle(this)">TC-TODAY-01〜10: 体重・睡眠</div>
+    <div class="card-body collapse-body">
+      <table>
+        <tr>
+          <th>#</th><th>技法</th><th>優先</th><th>操作手順</th><th>期待結果</th><th>状態</th><th>メモ</th>
+        </tr>
+        <tr>
+          <td>TC-T01</td>
+          <td><span class="badge badge-bva">境界値</span></td>
+          <td><span class="badge badge-prio-high">HIGH</span></td>
+          <td>体重フィールドに「0」を入力して保存</td>
+          <td>0kgが保存される（または最小値ガード）</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-T02</td>
+          <td><span class="badge badge-bva">境界値</span></td>
+          <td><span class="badge badge-prio-med">MED</span></td>
+          <td>体重フィールドに「999.9」を入力して保存</td>
+          <td>999.9kgが保存される（上限なし確認）</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-T03</td>
+          <td><span class="badge badge-eg">エラー推測</span></td>
+          <td><span class="badge badge-prio-med">MED</span></td>
+          <td>体重に「abc」を入力して保存</td>
+          <td>入力が無効化される / 保存されない / クラッシュしない</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-T04</td>
+          <td><span class="badge badge-eq">同値分割</span></td>
+          <td><span class="badge badge-prio-high">HIGH</span></td>
+          <td>就寝時刻 23:30 → 起床時刻 06:00 を入力して保存、睡眠時間を確認</td>
+          <td>6時間30分として正しく表示される</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-T05</td>
+          <td><span class="badge badge-bva">境界値</span></td>
+          <td><span class="badge badge-prio-med">MED</span></td>
+          <td>就寝 23:59 → 起床 00:00（日跨ぎ最小）</td>
+          <td>1分として計算される / クラッシュなし</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-T06</td>
+          <td><span class="badge badge-eq">同値分割</span></td>
+          <td><span class="badge badge-prio-high">HIGH</span></td>
+          <td>歩数に「8000」を入力して保存、翌日確認</td>
+          <td>8000歩が該当日に保存・表示される</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-T07</td>
+          <td><span class="badge badge-bva">境界値</span></td>
+          <td><span class="badge badge-prio-low">LOW</span></td>
+          <td>歩数に「0」を入力して保存</td>
+          <td>0歩で保存される（エラーなし）</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-T08</td>
+          <td><span class="badge badge-uc">ユースケース</span></td>
+          <td><span class="badge badge-prio-high">HIGH</span></td>
+          <td>今日の記録を入力 → アプリ終了 → 再起動 → 今日の記録を開く</td>
+          <td>入力した全データが復元されている</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-T09</td>
+          <td><span class="badge badge-st">状態遷移</span></td>
+          <td><span class="badge badge-prio-med">MED</span></td>
+          <td>「＜」ボタンで昨日の記録に移動し、昨日のデータを確認</td>
+          <td>昨日の日付・データが正しく表示される</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-T10</td>
+          <td><span class="badge badge-eg">エラー推測</span></td>
+          <td><span class="badge badge-prio-med">MED</span></td>
+          <td>筋肉部位を5つ選択して保存、再読み込みで確認</td>
+          <td>複数部位が全て保存・復元される</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head collapsible" onclick="toggle(this)">TC-TODAY-11〜18: PFC・栄養計算</div>
+    <div class="card-body collapse-body">
+      <table>
+        <tr><th>#</th><th>技法</th><th>優先</th><th>操作手順</th><th>期待結果</th><th>状態</th><th>メモ</th></tr>
+        <tr>
+          <td>TC-T11</td>
+          <td><span class="badge badge-eq">同値分割</span></td>
+          <td><span class="badge badge-prio-high">HIGH</span></td>
+          <td>タンパク質150g・脂質50g・炭水化物200gを入力してkcal計算を確認</td>
+          <td>(150×4)+(50×9)+(200×4) = 2050kcal 前後</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-T12</td>
+          <td><span class="badge badge-bva">境界値</span></td>
+          <td><span class="badge badge-prio-med">MED</span></td>
+          <td>全栄養素に0を入力</td>
+          <td>0kcal / エラーなし</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-T13</td>
+          <td><span class="badge badge-eg">エラー推測</span></td>
+          <td><span class="badge badge-prio-med">MED</span></td>
+          <td>塩分に「99.9」を入力して保存</td>
+          <td>正常に保存される</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-T14</td>
+          <td><span class="badge badge-bva">境界値</span></td>
+          <td><span class="badge badge-prio-med">MED</span></td>
+          <td>目標カロリーに対してオーバー時の表示確認（例：目標2000kcal / 実績2500kcal）</td>
+          <td>目標超過が視覚的に表現される（赤表示等）</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 筋トレメモ ===== -->
+<div id="pane-cases-gym" class="pane">
+  <div class="sec">筋トレメモ — テストケース</div>
+  <div class="card">
+    <div class="card-head collapsible" onclick="toggle(this)">TC-GYM-01〜12: エクササイズ追加・編集</div>
+    <div class="card-body collapse-body">
+      <table>
+        <tr><th>#</th><th>技法</th><th>優先</th><th>操作手順</th><th>期待結果</th><th>状態</th><th>メモ</th></tr>
+        <tr>
+          <td>TC-G01</td>
+          <td><span class="badge badge-uc">ユースケース</span></td>
+          <td><span class="badge badge-prio-high">HIGH</span></td>
+          <td>エクササイズ追加 → 名前入力 → セット追加 → 重量/回数入力 → 保存</td>
+          <td>全データが筋トレメモ画面に反映される</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-G02</td>
+          <td><span class="badge badge-eq">同値分割</span></td>
+          <td><span class="badge badge-prio-high">HIGH</span></td>
+          <td>重量フィールドで「自重」を選択してセット保存</td>
+          <td>重量が「自重」として保存され、数値として扱われない</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-G03</td>
+          <td><span class="badge badge-bva">境界値</span></td>
+          <td><span class="badge badge-prio-high">HIGH</span></td>
+          <td>重量100kg・回数1回でセット入力 → 1RM確認</td>
+          <td>Epley式: 100×(1+1/30)≈103.3kg 前後</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-G04</td>
+          <td><span class="badge badge-eg">エラー推測</span></td>
+          <td><span class="badge badge-prio-med">MED</span></td>
+          <td>重量0kg・回数10回でセット入力 → 1RM確認</td>
+          <td>0kgまたは非表示（無効値ガード）でクラッシュなし</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-G05</td>
+          <td><span class="badge badge-eg">エラー推測</span></td>
+          <td><span class="badge badge-prio-med">MED</span></td>
+          <td>重量「自重」・回数10回 → 1RM確認</td>
+          <td>1RMが非表示 / nullガード（数値変換しない）</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-G06</td>
+          <td><span class="badge badge-st">状態遷移</span></td>
+          <td><span class="badge badge-prio-high">HIGH</span></td>
+          <td>セット追加 → セット削除 → 再追加 → 保存確認</td>
+          <td>最終状態のみ保存される / インデックス崩れなし</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-G07</td>
+          <td><span class="badge badge-uc">ユースケース</span></td>
+          <td><span class="badge badge-prio-high">HIGH</span></td>
+          <td>プリセットから「ベンチプレス」を選択してエクササイズ追加</td>
+          <td>「ベンチプレス」が名前として追加される</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-G08</td>
+          <td><span class="badge badge-eg">エラー推測</span></td>
+          <td><span class="badge badge-prio-med">MED</span></td>
+          <td>エクササイズ名に特殊文字「'";◎」を入力して保存</td>
+          <td>クラッシュなし・正しく保存される</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-G09</td>
+          <td><span class="badge badge-bva">境界値</span></td>
+          <td><span class="badge badge-prio-low">LOW</span></td>
+          <td>エクササイズを10個追加してスクロール確認</td>
+          <td>全エクササイズが表示・操作可能</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-G10</td>
+          <td><span class="badge badge-uc">ユースケース</span></td>
+          <td><span class="badge badge-prio-high">HIGH</span></td>
+          <td>シェアボタンタップ → 画像生成確認</td>
+          <td>筋トレ内容を含む画像が生成されシェアシートが表示される</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-G11</td>
+          <td><span class="badge badge-eg">エラー推測</span></td>
+          <td><span class="badge badge-prio-med">MED</span></td>
+          <td>エクササイズが0件の状態でシェアボタンタップ</td>
+          <td>空の画像 or 適切なメッセージ / クラッシュなし</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-G12</td>
+          <td><span class="badge badge-uc">ユースケース</span></td>
+          <td><span class="badge badge-prio-high">HIGH</span></td>
+          <td>筋トレ記録入力 → 他画面へ移動 → 筋トレメモへ戻る</td>
+          <td>入力内容が失われていない（autoSave）</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head collapsible" onclick="toggle(this)">TC-GYM-13〜22: ストップウォッチ・レストタイマー</div>
+    <div class="card-body collapse-body">
+      <table>
+        <tr><th>#</th><th>技法</th><th>優先</th><th>操作手順</th><th>期待結果</th><th>状態</th><th>メモ</th></tr>
+        <tr>
+          <td>TC-G13</td>
+          <td><span class="badge badge-st">状態遷移</span></td>
+          <td><span class="badge badge-prio-high">HIGH</span></td>
+          <td>ストップウォッチ開始 → アプリBG移行 → 2分後FG復帰 → 時間確認</td>
+          <td>経過時間が連続して計測されている（localStorage start_ts で継続）</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-G14</td>
+          <td><span class="badge badge-st">状態遷移</span></td>
+          <td><span class="badge badge-prio-high">HIGH</span></td>
+          <td>ストップウォッチ開始 → 一時停止 → アプリ再起動 → 状態確認</td>
+          <td>停止状態（elapsed 保持）で復元される</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-G15</td>
+          <td><span class="badge badge-uc">ユースケース</span></td>
+          <td><span class="badge badge-prio-high">HIGH</span></td>
+          <td>レストタイマー90秒設定 → 開始 → 90秒待つ</td>
+          <td>90秒後に通知音（スピーカー）＋バイブレーション</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-G16</td>
+          <td><span class="badge badge-uc">ユースケース</span></td>
+          <td><span class="badge badge-prio-high">HIGH</span></td>
+          <td>レストタイマー開始 → イヤホン装着 → 時間満了</td>
+          <td>スピーカーから通知音が鳴る（USAGE_ALARM）</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-G17</td>
+          <td><span class="badge badge-st">状態遷移</span></td>
+          <td><span class="badge badge-prio-high">HIGH</span></td>
+          <td>レストタイマー開始 → アプリBG移行 → 時間満了 → FG復帰</td>
+          <td>BG中に通知が届き、FG復帰後タイマーリセット状態</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-G18</td>
+          <td><span class="badge badge-bva">境界値</span></td>
+          <td><span class="badge badge-prio-med">MED</span></td>
+          <td>レストタイマーに「1」秒を設定して開始</td>
+          <td>1秒後に完了する</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-G19</td>
+          <td><span class="badge badge-bva">境界値</span></td>
+          <td><span class="badge badge-prio-med">MED</span></td>
+          <td>レストタイマーに「180」秒（3分・SHORT_SERVICEギリ）を設定して開始</td>
+          <td>タイムアウト前に完了、または onTimeout 経由で完了通知</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-G20</td>
+          <td><span class="badge badge-eg">エラー推測</span></td>
+          <td><span class="badge badge-prio-med">MED</span></td>
+          <td>レストタイマー稼働中に再度タイマー開始ボタンをタップ</td>
+          <td>既存タイマーが停止して新しいタイマーが開始 / 二重起動なし</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-G21</td>
+          <td><span class="badge badge-st">状態遷移</span></td>
+          <td><span class="badge badge-prio-high">HIGH</span></td>
+          <td>レストタイマー開始 → 停止ボタンタップ</td>
+          <td>タイマーが即座に停止、通知も消える</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-G22</td>
+          <td><span class="badge badge-uc">ユースケース</span></td>
+          <td><span class="badge badge-prio-high">HIGH</span></td>
+          <td>通知から「停止」アクションをタップ（BG中）</td>
+          <td>タイマーが停止する</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 水分管理 ===== -->
+<div id="pane-cases-water" class="pane">
+  <div class="sec">水分管理 — テストケース</div>
+  <div class="card">
+    <div class="card-head collapsible" onclick="toggle(this)">TC-WATER-01〜12</div>
+    <div class="card-body collapse-body">
+      <table>
+        <tr><th>#</th><th>技法</th><th>優先</th><th>操作手順</th><th>期待結果</th><th>状態</th><th>メモ</th></tr>
+        <tr>
+          <td>TC-W01</td>
+          <td><span class="badge badge-uc">ユースケース</span></td>
+          <td><span class="badge badge-prio-high">HIGH</span></td>
+          <td>クイック追加ボタン（例:200ml）をタップ</td>
+          <td>200mlがログに追加され、リングが更新される</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-W02</td>
+          <td><span class="badge badge-bva">境界値</span></td>
+          <td><span class="badge badge-prio-high">HIGH</span></td>
+          <td>目標量と同じ量を追加してリング確認</td>
+          <td>リングが100%になる（または 100% 超え表示）</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-W03</td>
+          <td><span class="badge badge-bva">境界値</span></td>
+          <td><span class="badge badge-prio-med">MED</span></td>
+          <td>カスタム量「0」を入力して追加</td>
+          <td>追加されない / エラーメッセージ（0は無効）</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-W04</td>
+          <td><span class="badge badge-eg">エラー推測</span></td>
+          <td><span class="badge badge-prio-med">MED</span></td>
+          <td>カスタム量に「-100」を入力して追加</td>
+          <td>エラー / 無視される / クラッシュなし</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-W05</td>
+          <td><span class="badge badge-uc">ユースケース</span></td>
+          <td><span class="badge badge-prio-high">HIGH</span></td>
+          <td>ログ一覧から1件削除 → 合計量と履歴確認</td>
+          <td>削除分が合計から引かれ、ログ一覧も更新</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-W06</td>
+          <td><span class="badge badge-st">状態遷移</span></td>
+          <td><span class="badge badge-prio-high">HIGH</span></td>
+          <td>「今日をリセット」→ 確認ダイアログ → OK</td>
+          <td>今日の水分ログが全消去、リング0%</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-W07</td>
+          <td><span class="badge badge-st">状態遷移</span></td>
+          <td><span class="badge badge-prio-med">MED</span></td>
+          <td>「今日をリセット」→ 確認ダイアログ → キャンセル</td>
+          <td>ログが保持される</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-W08</td>
+          <td><span class="badge badge-uc">ユースケース</span></td>
+          <td><span class="badge badge-prio-med">MED</span></td>
+          <td>クイック追加ボタンの量を編集（長押しまたは設定）して保存、次回タップで新しい量が追加される</td>
+          <td>編集量で追加される</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-W09</td>
+          <td><span class="badge badge-uc">ユースケース</span></td>
+          <td><span class="badge badge-prio-high">HIGH</span></td>
+          <td>水分目標を変更（2000→2500ml） → リング表示確認</td>
+          <td>新しい目標でリングのパーセントが再計算される</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-W10</td>
+          <td><span class="badge badge-uc">ユースケース</span></td>
+          <td><span class="badge badge-prio-high">HIGH</span></td>
+          <td>水分データを複数追加 → アプリ再起動 → 水分管理画面確認</td>
+          <td>全ログが復元されている</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-W11</td>
+          <td><span class="badge badge-bva">境界値</span></td>
+          <td><span class="badge badge-prio-low">LOW</span></td>
+          <td>1日に50回水分ログを追加（大量データ）</td>
+          <td>全ログが表示・合計が正確 / パフォーマンス問題なし</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-W12</td>
+          <td><span class="badge badge-eg">エラー推測</span></td>
+          <td><span class="badge badge-prio-med">MED</span></td>
+          <td>記録編集モーダルで水分量を「0」に変更して保存</td>
+          <td>0として保存され、ログが削除されない（仕様確認）</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 分析 ===== -->
+<div id="pane-cases-analysis" class="pane">
+  <div class="sec">分析・グラフ — テストケース</div>
+  <div class="card">
+    <div class="card-head collapsible" onclick="toggle(this)">TC-ANALYSIS-01〜12</div>
+    <div class="card-body collapse-body">
+      <table>
+        <tr><th>#</th><th>技法</th><th>優先</th><th>操作手順</th><th>期待結果</th><th>状態</th><th>メモ</th></tr>
+        <tr>
+          <td>TC-A01</td>
+          <td><span class="badge badge-eq">同値分割</span></td>
+          <td><span class="badge badge-prio-high">HIGH</span></td>
+          <td>7日間体重を入力 → 分析 → 体重グラフ「週」フィルタ確認</td>
+          <td>7点のデータが折れ線グラフに表示される</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-A02</td>
+          <td><span class="badge badge-eq">同値分割</span></td>
+          <td><span class="badge badge-prio-med">MED</span></td>
+          <td>フィルタを「月」→「全期間」と切り替えてグラフ確認</td>
+          <td>各フィルタでデータ範囲が切り替わる</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-A03</td>
+          <td><span class="badge badge-eg">エラー推測</span></td>
+          <td><span class="badge badge-prio-med">MED</span></td>
+          <td>データが1件もない状態で分析画面を開く</td>
+          <td>「データなし」表示 / グラフクラッシュなし</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-A04</td>
+          <td><span class="badge badge-dt">デシジョンテーブル</span></td>
+          <td><span class="badge badge-prio-high">HIGH</span></td>
+          <td>非プレミアム状態で「週次レポート」タブをタップ</td>
+          <td>ペイウォールが表示される / コンテンツは見えない</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-A05</td>
+          <td><span class="badge badge-dt">デシジョンテーブル</span></td>
+          <td><span class="badge badge-prio-high">HIGH</span></td>
+          <td>プレミアム状態で「週次レポート」タブをタップ</td>
+          <td>週次レポートが表示される / ペイウォールなし</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-A06</td>
+          <td><span class="badge badge-dt">デシジョンテーブル</span></td>
+          <td><span class="badge badge-prio-high">HIGH</span></td>
+          <td>非プレミアムで「ジム分析」タブをタップ</td>
+          <td>ペイウォールが表示される</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-A07</td>
+          <td><span class="badge badge-dt">デシジョンテーブル</span></td>
+          <td><span class="badge badge-prio-high">HIGH</span></td>
+          <td>非プレミアムで「ロードマップ」タブをタップ</td>
+          <td>ペイウォールが表示される</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-A08</td>
+          <td><span class="badge badge-uc">ユースケース</span></td>
+          <td><span class="badge badge-prio-high">HIGH</span></td>
+          <td>課金完了後に分析画面へ移動してプレミアム機能確認</td>
+          <td>全プレミアムタブが解放されている</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-A09</td>
+          <td><span class="badge badge-uc">ユースケース</span></td>
+          <td><span class="badge badge-prio-med">MED</span></td>
+          <td>30日分の体重データを入力後、グラフを「全期間」で表示</td>
+          <td>全30点が描画される / スクロール可能</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-A10</td>
+          <td><span class="badge badge-eg">エラー推測</span></td>
+          <td><span class="badge badge-prio-low">LOW</span></td>
+          <td>体重グラフ表示中に他のグラフタブへ素早く切り替えを連打</td>
+          <td>クラッシュなし / 最後に選択したグラフが表示</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 課金 ===== -->
+<div id="pane-cases-billing" class="pane">
+  <div class="sec">課金 — テストケース</div>
+  <div class="card">
+    <div class="card-head collapsible" onclick="toggle(this)">TC-BILLING-01〜16: 購入フロー・ゲーティング</div>
+    <div class="card-body collapse-body">
+      <table>
+        <tr><th>#</th><th>技法</th><th>優先</th><th>操作手順</th><th>期待結果</th><th>状態</th><th>メモ</th></tr>
+        <tr>
+          <td>TC-B01</td>
+          <td><span class="badge badge-uc">ユースケース</span></td>
+          <td><span class="badge badge-prio-high">HIGH</span></td>
+          <td>テストアカウントでプレミアム購入 → 購入完了</td>
+          <td>プレミアム状態になる / ウェルカムトースト表示</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-B02</td>
+          <td><span class="badge badge-st">状態遷移</span></td>
+          <td><span class="badge badge-prio-high">HIGH</span></td>
+          <td>購入後に全プレミアムUI（分析タブ・クラウド同期・設定メニュー）が解放されていることを確認</td>
+          <td>ペイウォールなし / 全機能アクセス可能</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-B03</td>
+          <td><span class="badge badge-uc">ユースケース</span></td>
+          <td><span class="badge badge-prio-high">HIGH</span></td>
+          <td>購入後にアプリ再起動してプレミアム状態維持を確認</td>
+          <td>再起動後もプレミアム状態 / restorePurchases で復元</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-B04</td>
+          <td><span class="badge badge-st">状態遷移</span></td>
+          <td><span class="badge badge-prio-high">HIGH</span></td>
+          <td>購入ダイアログでキャンセルボタンをタップ</td>
+          <td>非プレミアム状態のまま / エラーなし</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-B05</td>
+          <td><span class="badge badge-uc">ユースケース</span></td>
+          <td><span class="badge badge-prio-high">HIGH</span></td>
+          <td>「購入を復元」ボタンをタップ（既存購入あり）</td>
+          <td>プレミアム状態になる / ウェルカムトーストなし（復元なので）</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-B06</td>
+          <td><span class="badge badge-uc">ユースケース</span></td>
+          <td><span class="badge badge-prio-high">HIGH</span></td>
+          <td>「購入を復元」ボタンをタップ（購入なし状態）</td>
+          <td>非プレミアムのまま / 適切なメッセージ</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-B07</td>
+          <td><span class="badge badge-uc">ユースケース</span></td>
+          <td><span class="badge badge-prio-high">HIGH</span></td>
+          <td>無料トライアルあり商品で購入 → 購入確認画面で「14日間無料」と表示されることを確認</td>
+          <td>トライアル期間が提示される</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-B08</td>
+          <td><span class="badge badge-dt">デシジョンテーブル</span></td>
+          <td><span class="badge badge-prio-high">HIGH</span></td>
+          <td>非サインイン状態でペイウォール「購入」ボタンをタップ</td>
+          <td>サインイン促進 or Playアカウント選択</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-B09</td>
+          <td><span class="badge badge-eg">エラー推測</span></td>
+          <td><span class="badge badge-prio-high">HIGH</span></td>
+          <td>機内モードで購入ボタンをタップ</td>
+          <td>エラー表示 / クラッシュなし</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-B10</td>
+          <td><span class="badge badge-eg">エラー推測</span></td>
+          <td><span class="badge badge-prio-high">HIGH</span></td>
+          <td>Billing接続前（起動直後0.5秒以内）に購入ボタンをタップ</td>
+          <td>「少し待って」等のメッセージ / クラッシュなし</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-B11</td>
+          <td><span class="badge badge-pw">ペアワイズ</span></td>
+          <td><span class="badge badge-prio-high">HIGH</span></td>
+          <td>[サインイン済み × プレミアム] → ロードマップ画面表示</td>
+          <td>ペイウォールなし / ロードマップ表示</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-B12</td>
+          <td><span class="badge badge-pw">ペアワイズ</span></td>
+          <td><span class="badge badge-prio-high">HIGH</span></td>
+          <td>[サインイン済み × 非プレミアム] → ロードマップ画面表示</td>
+          <td>ペイウォール表示</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-B13</td>
+          <td><span class="badge badge-pw">ペアワイズ</span></td>
+          <td><span class="badge badge-prio-high">HIGH</span></td>
+          <td>[未サインイン × 非プレミアム] → クラウド同期ボタン表示</td>
+          <td>サインイン促進UI / ペイウォール or 両方</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-B14</td>
+          <td><span class="badge badge-pw">ペアワイズ</span></td>
+          <td><span class="badge badge-prio-high">HIGH</span></td>
+          <td>[サインイン済み × プレミアム] → クラウド同期ボタンタップ</td>
+          <td>同期が実行される</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-B15</td>
+          <td><span class="badge badge-eg">エラー推測</span></td>
+          <td><span class="badge badge-prio-high">HIGH</span></td>
+          <td>プレミアム購入後に購入ボタンを再度タップ</td>
+          <td>「既に購入済み」の案内 / 二重課金なし</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-B16</td>
+          <td><span class="badge badge-uc">ユースケース</span></td>
+          <td><span class="badge badge-prio-high">HIGH</span></td>
+          <td>購入完了後にアプリを強制終了して再起動、プレミアム状態確認</td>
+          <td>restorePurchases で自動回復し、プレミアム状態</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ===== クラウド同期 ===== -->
+<div id="pane-cases-sync" class="pane">
+  <div class="sec">クラウド同期 — テストケース</div>
+  <div class="card">
+    <div class="card-head collapsible" onclick="toggle(this)">TC-SYNC-01〜10</div>
+    <div class="card-body collapse-body">
+      <table>
+        <tr><th>#</th><th>技法</th><th>優先</th><th>操作手順</th><th>期待結果</th><th>状態</th><th>メモ</th></tr>
+        <tr>
+          <td>TC-S01</td>
+          <td><span class="badge badge-uc">ユースケース</span></td>
+          <td><span class="badge badge-prio-high">HIGH</span></td>
+          <td>プレミアム+サインイン状態で記録を保存 → Firestore確認</td>
+          <td>Firestoreにデータが書き込まれている</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-S02</td>
+          <td><span class="badge badge-dt">デシジョンテーブル</span></td>
+          <td><span class="badge badge-prio-high">HIGH</span></td>
+          <td>非プレミアムで記録を保存 → Firestoreに書き込みがないことを確認</td>
+          <td>Firestoreへの書き込みなし（loadFromCloud のプレミアムゲート）</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-S03</td>
+          <td><span class="badge badge-dt">デシジョンテーブル</span></td>
+          <td><span class="badge badge-prio-high">HIGH</span></td>
+          <td>端末A（プレミアム）でデータ入力 → 端末Bでログイン → 同期ボタン</td>
+          <td>端末Bに端末Aのデータが反映される</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-S04</td>
+          <td><span class="badge badge-dt">デシジョンテーブル</span></td>
+          <td><span class="badge badge-prio-high">HIGH</span></td>
+          <td>端末AとBに同日の記録がある状態で同期（両方異なる記録）</td>
+          <td>ローカル優先マージ：端末Bの記録が保持される（上書きされない）</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-S05</td>
+          <td><span class="badge badge-eg">エラー推測</span></td>
+          <td><span class="badge badge-prio-high">HIGH</span></td>
+          <td>機内モードで同期ボタンをタップ</td>
+          <td>エラーハンドリング / クラッシュなし / ローカルデータ保持</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-S06</td>
+          <td><span class="badge badge-uc">ユースケース</span></td>
+          <td><span class="badge badge-prio-high">HIGH</span></td>
+          <td>バックアップ export → 新端末 import → データ確認</td>
+          <td>全エクスポートキー（weekly_goals, contest_date 等）が復元される</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-S07</td>
+          <td><span class="badge badge-eg">エラー推測</span></td>
+          <td><span class="badge badge-prio-high">HIGH</span></td>
+          <td>破損したJSONファイルをimport</td>
+          <td>エラーメッセージ / クラッシュなし / 既存データ保持</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-S08</td>
+          <td><span class="badge badge-eg">エラー推測</span></td>
+          <td><span class="badge badge-prio-med">MED</span></td>
+          <td>Firestoreに大量データ（365日分）がある状態で初回同期</td>
+          <td>タイムアウトなし / 全データ取得 / クラッシュなし</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-S09</td>
+          <td><span class="badge badge-st">状態遷移</span></td>
+          <td><span class="badge badge-prio-high">HIGH</span></td>
+          <td>サインアウト → 再サインイン → 同期</td>
+          <td>再サインイン後も同じアカウントのデータが取得できる</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-S10</td>
+          <td><span class="badge badge-st">状態遷移</span></td>
+          <td><span class="badge badge-prio-high">HIGH</span></td>
+          <td>アカウント削除 → 再サインイン → Firestoreデータ確認</td>
+          <td>削除後は旧データにアクセスできない</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ===== システム ===== -->
+<div id="pane-cases-system" class="pane">
+  <div class="sec">システム・UI — テストケース</div>
+  <div class="card">
+    <div class="card-head collapsible" onclick="toggle(this)">TC-SYS-01〜15: UI・バックグラウンド・認証</div>
+    <div class="card-body collapse-body">
+      <table>
+        <tr><th>#</th><th>技法</th><th>優先</th><th>操作手順</th><th>期待結果</th><th>状態</th><th>メモ</th></tr>
+        <tr>
+          <td>TC-SY01</td>
+          <td><span class="badge badge-uc">ユースケース</span></td>
+          <td><span class="badge badge-prio-high">HIGH</span></td>
+          <td>アプリ起動時、ステータスバーとコンテンツが重なっていないことを確認</td>
+          <td>safe-area分マージン確保 / ステータスバー内にコンテンツなし</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-SY02</td>
+          <td><span class="badge badge-st">状態遷移</span></td>
+          <td><span class="badge badge-prio-high">HIGH</span></td>
+          <td>分析画面表示中にホームボタン → 数分後アプリ再開</td>
+          <td>分析画面が復元される（last_screen localStorage）</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-SY03</td>
+          <td><span class="badge badge-st">状態遷移</span></td>
+          <td><span class="badge badge-prio-high">HIGH</span></td>
+          <td>水分管理画面でホームボタン → アプリ再開</td>
+          <td>水分管理画面が復元される</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-SY04</td>
+          <td><span class="badge badge-uc">ユースケース</span></td>
+          <td><span class="badge badge-prio-high">HIGH</span></td>
+          <td>Googleサインイン → サインイン成功を確認</td>
+          <td>ユーザー名・アイコンが設定画面に反映される</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-SY05</td>
+          <td><span class="badge badge-st">状態遷移</span></td>
+          <td><span class="badge badge-prio-high">HIGH</span></td>
+          <td>サインアウト → UI状態確認</td>
+          <td>クラウド同期・プレミアム機能がゲートされる / ローカルデータは保持</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-SY06</td>
+          <td><span class="badge badge-uc">ユースケース</span></td>
+          <td><span class="badge badge-prio-high">HIGH</span></td>
+          <td>アカウント削除 → 確認ダイアログ → 削除実行</td>
+          <td>サインアウト状態になる / Firestoreデータ削除</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-SY07</td>
+          <td><span class="badge badge-eg">エラー推測</span></td>
+          <td><span class="badge badge-prio-med">MED</span></td>
+          <td>テキスト入力中にホームボタン → 復帰</td>
+          <td>入力内容が保持されている or 適切なリセット</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-SY08</td>
+          <td><span class="badge badge-eg">エラー推測</span></td>
+          <td><span class="badge badge-prio-med">MED</span></td>
+          <td>キーボード表示中のレイアウト確認（viewport resizes-content）</td>
+          <td>コンテンツが押しつぶされず、スクロール可能</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-SY09</td>
+          <td><span class="badge badge-eg">エラー推測</span></td>
+          <td><span class="badge badge-prio-low">LOW</span></td>
+          <td>端末の文字サイズを「最大」に設定してアプリを起動</td>
+          <td>レイアウト崩れが最小限 / 主要ボタンが見切れない</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-SY10</td>
+          <td><span class="badge badge-eg">エラー推測</span></td>
+          <td><span class="badge badge-prio-low">LOW</span></td>
+          <td>アプリ起動中に電話着信 → 通話終了後アプリ復帰</td>
+          <td>クラッシュなし / データ保持</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-SY11</td>
+          <td><span class="badge badge-uc">ユースケース</span></td>
+          <td><span class="badge badge-prio-med">MED</span></td>
+          <td>設定 → 通知時刻設定 → ON → 設定した時刻に通知確認</td>
+          <td>設定時刻に通知が届く</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-SY12</td>
+          <td><span class="badge badge-st">状態遷移</span></td>
+          <td><span class="badge badge-prio-med">MED</span></td>
+          <td>通知をOFF → 設定時刻経過後に通知が来ないことを確認</td>
+          <td>通知が届かない</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-SY13</td>
+          <td><span class="badge badge-eg">エラー推測</span></td>
+          <td><span class="badge badge-prio-med">MED</span></td>
+          <td>localStorage が一杯になる極端ケース（数MB のデータ）</td>
+          <td>QuotaExceededError ハンドリング / クラッシュなし</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-SY14</td>
+          <td><span class="badge badge-uc">ユースケース</span></td>
+          <td><span class="badge badge-prio-med">MED</span></td>
+          <td>プロフィール（身長・体重・年齢）を設定して保存 → 栄養目標が自動更新されるか確認</td>
+          <td>目標値が再計算される</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+        <tr>
+          <td>TC-SY15</td>
+          <td><span class="badge badge-uc">ユースケース</span></td>
+          <td><span class="badge badge-prio-high">HIGH</span></td>
+          <td>レストタイマー通知をタップして gym-screen に遷移することを確認</td>
+          <td>筋トレメモ画面（gym-screen）が表示される</td>
+          <td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td>
+          <td><input class="note" placeholder="メモ"></td>
+        </tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 進捗サマリー ===== -->
+<div id="pane-summary" class="pane">
+  <div class="sec">テスト進捗サマリー</div>
+  <div id="summary-stats" class="summary">
+    <span class="chip chip-total" id="chip-total">総計: 0件</span>
+    <span class="chip chip-pass" id="chip-pass">PASS: 0</span>
+    <span class="chip chip-fail" id="chip-fail">FAIL: 0</span>
+    <span class="chip chip-skip" id="chip-skip">SKIP: 0</span>
+    <span class="chip chip-total" id="chip-pending">未実施: 0</span>
+  </div>
+  <div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+    <div class="progress-label" id="progress-label">0%</div>
+  </div>
+
+  <div class="sec" style="margin-top:24px;">FAIL / 未実施 ケース</div>
+  <div class="card">
+    <div class="card-body">
+      <table id="fail-table">
+        <tr><th>#</th><th>テストケースID</th><th>状態</th><th>メモ</th></tr>
+        <tr><td colspan="4" style="color:var(--text-muted);text-align:center;">テスト実施後に自動集計されます</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="sec">テスト所見・備考</div>
+  <div class="card">
+    <div class="card-body">
+      <div contenteditable style="min-height:120px;color:var(--text-muted);font-size:13px;" placeholder="テスト実施後の所見を記入してください...">テスト実施後の所見を記入してください...</div>
+    </div>
+  </div>
+</div>
+
+<script>
+function showTab(id) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.pane').forEach(p => p.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('pane-' + id).classList.add('active');
+  updateSummary();
+}
+
+function toggle(el) {
+  el.classList.toggle('collapsed');
+  const body = el.nextElementSibling;
+  body.classList.toggle('hidden');
+}
+
+function updateStatus(sel) {
+  sel.setAttribute('data-v', sel.value);
+  updateSummary();
+}
+
+function updateSummary() {
+  const all = document.querySelectorAll('select.status');
+  let pass = 0, fail = 0, skip = 0, pending = 0;
+  all.forEach(s => {
+    const v = s.value;
+    if (v === 'pass') pass++;
+    else if (v === 'fail') fail++;
+    else if (v === 'skip') skip++;
+    else pending++;
+  });
+  const total = all.length;
+  const done = pass + fail + skip;
+  const pct = total ? Math.round(done / total * 100) : 0;
+  document.getElementById('chip-total').textContent = '総計: ' + total + '件';
+  document.getElementById('chip-pass').textContent = 'PASS: ' + pass;
+  document.getElementById('chip-fail').textContent = 'FAIL: ' + fail;
+  document.getElementById('chip-skip').textContent = 'SKIP: ' + skip;
+  document.getElementById('chip-pending').textContent = '未実施: ' + pending;
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('progress-label').textContent = pct + '%';
+}
+
+// Load persisted state
+(function() {
+  const saved = localStorage.getItem('test-design-state');
+  if (saved) {
+    try {
+      const state = JSON.parse(saved);
+      const sels = document.querySelectorAll('select.status');
+      const notes = document.querySelectorAll('input.note');
+      if (state.statuses) sels.forEach((s, i) => {
+        if (state.statuses[i]) { s.value = state.statuses[i]; s.setAttribute('data-v', state.statuses[i]); }
+      });
+      if (state.notes) notes.forEach((n, i) => { if (state.notes[i]) n.value = state.notes[i]; });
+    } catch(e) {}
+  }
+  updateSummary();
+})();
+
+// Auto-save state
+function saveState() {
+  const sels = document.querySelectorAll('select.status');
+  const notes = document.querySelectorAll('input.note');
+  const state = {
+    statuses: Array.from(sels).map(s => s.value),
+    notes: Array.from(notes).map(n => n.value)
+  };
+  localStorage.setItem('test-design-state', JSON.stringify(state));
+}
+
+document.addEventListener('change', saveState);
+document.addEventListener('input', saveState);
+</script>
+</body>
+</html>
