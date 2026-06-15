@@ -179,6 +179,21 @@ body{background:#000;color:var(--text);font-family:'Noto Sans JP',sans-serif;dis
 .set-save{width:100%;height:52px;background:var(--acc);color:#101214;border:none;border-radius:14px;font-size:15px;font-weight:900;cursor:pointer;font-family:'Noto Sans JP';margin:10px 0 24px;}
 .prem-badge{font-size:9px;color:#101214;background:var(--acc);border-radius:4px;padding:1px 6px;font-weight:700;margin-left:6px;}
 .set-note{font-size:11px;color:var(--faint);padding:8px 0;line-height:1.6;}
+.acc-btn{width:100%;border:none;border-radius:12px;padding:14px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Noto Sans JP';}
+.acc-google{background:#fff;color:#1f1f1f;display:flex;align-items:center;justify-content:center;gap:10px;}
+.acc-google svg{width:18px;height:18px;}
+.acc-danger{background:none;color:var(--bad);border:1px solid rgba(248,113,113,0.4);}
+.prem-card{padding:16px;background:linear-gradient(135deg,var(--acc-dim),transparent);border:1px solid rgba(201,240,77,0.35);}
+.prem-card h3{font-size:15px;font-weight:900;color:var(--acc);margin-bottom:8px;}
+.prem-card ul{list-style:none;margin:0 0 12px;padding:0;}
+.prem-card li{font-size:12px;color:var(--sub);padding:3px 0;}
+.prem-card li::before{content:'✓ ';color:var(--acc);font-weight:700;}
+.prem-go{width:100%;height:50px;background:var(--acc);color:#101214;border:none;border-radius:12px;font-size:15px;font-weight:900;cursor:pointer;font-family:'Noto Sans JP';}
+.prem-status{padding:16px;display:flex;align-items:center;gap:8px;font-weight:700;color:var(--acc);font-size:14px;}
+.paywall-feat{font-size:13px;color:var(--text);padding:9px 0;border-bottom:1px solid var(--line);display:flex;gap:10px;align-items:flex-start;}
+.paywall-feat .ic{color:var(--acc);font-size:16px;}
+.restore-link{display:block;width:100%;text-align:center;background:none;border:none;color:var(--sub);font-size:12px;margin-top:12px;cursor:pointer;font-family:'Noto Sans JP';text-decoration:underline;}
+.price-note{font-size:11px;color:var(--faint);text-align:center;margin-top:8px;}
 </style>
 </head>
 <body>
@@ -319,16 +334,25 @@ body{background:#000;color:var(--text);font-family:'Noto Sans JP',sans-serif;dis
       <div class="tile set-card">
         <div class="set-btn-row">
           <button class="set-btn" onclick="exportData()">📤 エクスポート</button>
-          <button class="set-btn" onclick="document.getElementById('set-import').click()">📥 インポート</button>
+          <button class="set-btn" onclick="if(!bridge('openFilePicker')) document.getElementById('set-import').click()">📥 インポート</button>
         </div>
         <input type="file" id="set-import" accept="application/json,.json" style="display:none;" onchange="if(this.files[0])importData(this.files[0]);this.value='';">
         <div class="set-note">全データ（記録・水分・筋トレ・設定）をJSONで保存／復元します。無料で利用できます。</div>
       </div>
 
+      <div class="set-sec">プレミアム</div>
+      <div class="tile prem-card" id="premium-card"></div>
+
       <div class="set-sec">アカウント</div>
+      <div class="tile set-card" id="account-card"></div>
+
+      <div class="set-sec">サポート</div>
       <div class="tile set-card">
-        <div class="set-row"><label>プラン</label><span id="set-plan" style="font-weight:700;">—</span></div>
-        <div class="set-note">サインイン・プレミアム購入・クラウド同期は本番アプリ（Androidブリッジ）に接続予定。このプレビューはローカルデータで動作します。</div>
+        <div class="set-btn-row">
+          <button class="set-btn" onclick="reviewApp()">★ アプリを評価</button>
+          <button class="set-btn" onclick="contactApp()">✉ お問い合わせ</button>
+        </div>
+        <div class="set-note">サインイン・購入・同期・通知は本番アプリ（Androidブリッジ）に接続されます。このプレビューはローカルデータで動作します。</div>
       </div>
 
       <button class="set-save" onclick="saveSet()">設定を保存</button>
@@ -402,6 +426,20 @@ body{background:#000;color:var(--text);font-family:'Noto Sans JP',sans-serif;dis
       <h3>種目を追加</h3>
       <div class="note">よく使う種目から選択（プリセット）</div>
       <div class="menu-grid" id="ex-grid"></div>
+    </div>
+
+    <!-- プレミアム ペイウォール -->
+    <div class="sheet-ov" id="paywall-ov" onclick="closePaywall()"></div>
+    <div class="sheet" id="paywall-sheet">
+      <h3>⭐ プレミアム</h3>
+      <div class="note">大会に出る人・もっと深く分析したい人向けの機能を解放します。記録と全期間の履歴は無料のまま。</div>
+      <div class="paywall-feat"><span class="ic">🗺</span><div><b>大会ロードマップ・大会設定</b><br><span style="font-size:11px;color:var(--faint);">大会日から逆算した目標体重ラインと進捗</span></div></div>
+      <div class="paywall-feat"><span class="ic">📋</span><div><b>週次レポート</b></div></div>
+      <div class="paywall-feat"><span class="ic">💪</span><div><b>筋トレ分析</b>（1RM推移・停滞検知）</div></div>
+      <div class="paywall-feat"><span class="ic">☁️</span><div><b>複数端末のクラウド同期</b></div></div>
+      <button class="prem-go" style="margin-top:14px;" onclick="purchasePremium()">14日間無料で試す</button>
+      <button class="restore-link" onclick="restorePremium()">購入を復元</button>
+      <div class="price-note">期間後 ¥400 / 月（いつでも解約可）</div>
     </div>
 
     <div class="toast" id="toast"></div>
@@ -496,8 +534,45 @@ function renderSet(){
   setV('set-water-goal', DB.waterGoal());
   setV('set-day-start', DB.dayStartHour());
   updateSetKcal();
-  document.getElementById('set-plan').textContent = isPremium()?'プレミアム':'無料プラン';
+  renderPremiumCard(); renderAccountCard();
 }
+/* ===== バックエンド連携の見た目（ブリッジが有れば本物、無ければ案内） ===== */
+const GOOGLE_ICON='<svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.5 12.2c0-.7-.1-1.4-.2-2H12v3.8h5.9a5 5 0 01-2.2 3.3v2.7h3.6c2.1-2 3.2-4.9 3.2-7.8z"/><path fill="#34A853" d="M12 23c2.9 0 5.4-1 7.2-2.7l-3.6-2.7c-1 .7-2.3 1.1-3.6 1.1-2.8 0-5.1-1.9-6-4.4H2.3v2.8A11 11 0 0012 23z"/><path fill="#FBBC05" d="M6 14.3a6.6 6.6 0 010-4.2V7.3H2.3a11 11 0 000 9.8L6 14.3z"/><path fill="#EA4335" d="M12 5.4c1.6 0 3 .6 4.1 1.6l3.1-3.1A11 11 0 002.3 7.3L6 10.1c.9-2.5 3.2-4.7 6-4.7z"/></svg>';
+function bridge(m){ const a=[].slice.call(arguments,1); if(typeof AndroidBridge!=='undefined' && typeof AndroidBridge[m]==='function'){ try{ AndroidBridge[m].apply(AndroidBridge,a); return true; }catch(e){} } return false; }
+// 実購入フラグ基準（ブラウザのプレビューでは未購入扱い＝入会UIを表示できる）
+function isPremiumReal(){ if(typeof AndroidBridge!=='undefined' && typeof AndroidBridge.isPremium==='function'){ const r=AndroidBridge.isPremium(); return r===true||r==='true'; } return localStorage.getItem('is_premium')==='true'; }
+function renderPremiumCard(){
+  const el=document.getElementById('premium-card'); if(!el) return;
+  if(isPremiumReal()){ el.className='tile prem-status'; el.innerHTML='⭐ プレミアム会員 — すべての機能が解放されています'; }
+  else { el.className='tile prem-card'; el.innerHTML='<h3>⭐ プレミアムにアップグレード</h3><ul><li>大会ロードマップ・大会設定</li><li>週次レポート</li><li>筋トレ分析（1RM推移・停滞検知）</li><li>複数端末のクラウド同期</li></ul><button class="prem-go" onclick="openPaywall()">14日間無料で試す</button>'; }
+}
+function renderAccountCard(){
+  const el=document.getElementById('account-card'); if(!el) return;
+  if(window.currentUser){
+    el.innerHTML='<div class="set-row"><label>'+(currentUser.name||'ログイン中')+'</label><span style="font-size:11px;color:var(--sub);">'+(currentUser.email||'')+'</span></div>'+
+      '<div class="set-btn-row"><button class="set-btn" onclick="doSignOut()">サインアウト</button></div>'+
+      '<button class="acc-btn acc-danger" style="margin-top:8px;" onclick="doDeleteAccount()">アカウントを削除</button>';
+  } else {
+    el.innerHTML='<button class="acc-btn acc-google" onclick="doSignIn()">'+GOOGLE_ICON+'Googleでログイン</button>'+
+      '<div class="set-note">ログインするとクラウド同期・機種変時のデータ引き継ぎが使えます（本番アプリ）。</div>';
+  }
+}
+function doSignIn(){ if(!bridge('signInWithGoogle')) toast('Googleログインはアプリで利用できます'); }
+function doSignOut(){ if(!bridge('signOut')){ window.currentUser=null; renderAccountCard(); toast('サインアウト（プレビュー）'); } }
+function doDeleteAccount(){ if(!confirm('アカウントとクラウド上のデータを削除しますか？')) return; if(!bridge('deleteAccountAndData')){ window.currentUser=null; renderAccountCard(); toast('アカウント削除はアプリで実行されます'); } }
+function openPaywall(){ document.getElementById('paywall-sheet').classList.add('open'); document.getElementById('paywall-ov').classList.add('open'); }
+function closePaywall(){ document.getElementById('paywall-sheet').classList.remove('open'); document.getElementById('paywall-ov').classList.remove('open'); }
+function purchasePremium(){ if(!bridge('purchasePremium')) toast('プレミアム購入はアプリで利用できます'); }
+function restorePremium(){ if(!bridge('restorePremium')) toast('購入の復元はアプリで利用できます'); }
+function reviewApp(){ if(!bridge('requestReview') && !bridge('openPlayStore')) toast('アプリの評価はストアから（アプリで利用可）'); }
+function contactApp(){ if(!bridge('sendContactForm', JSON.stringify({source:'v3-preview'}))) toast('お問い合わせはアプリから送信できます'); }
+/* 本番ブリッジからのコールバック（実機ではここに繋がる） */
+function onFirebaseSignIn(uid,name,email){ window.currentUser={uid:uid,name:name,email:email}; renderAccountCard(); toast('ログインしました ✓'); }
+function onFirebaseSignOut(){ window.currentUser=null; renderAccountCard(); }
+function onAccountDeleted(ok,msg){ window.currentUser=null; renderAccountCard(); toast(ok?'アカウントを削除しました':(msg||'削除に失敗しました')); }
+function onPremiumPurchased(){ try{localStorage.setItem('is_premium','true');}catch(e){} closePaywall(); renderPremiumCard(); renderAccountCard(); toast('プレミアムへようこそ ✓'); }
+function onPremiumRestored(ok){ if(ok){ try{localStorage.setItem('is_premium','true');}catch(e){} } renderPremiumCard(); toast(ok?'購入を復元しました ✓':'有効な購入が見つかりません'); }
+function receiveImportData(str){ try{ const obj=JSON.parse(str); let n=0; Object.keys(obj).forEach(k=>{ if(EXPORT_KEYS.includes(k)){ localStorage.setItem(k,obj[k]); n++; } }); toast('インポートしました（'+n+'項目）✓'); renderSet(); renderToday(); }catch(e){ toast('インポート失敗: 不正なデータ'); } }
 function updateSetKcal(){
   const g=id=>parseFloat(document.getElementById(id).value)||0;
   document.getElementById('set-kcal').textContent=calcKcal(g('set-goal-p'),g('set-goal-f'),g('set-goal-c')).toLocaleString()+' kcal';
@@ -525,7 +600,7 @@ function saveSet(){
 function exportData(){
   const obj={}; EXPORT_KEYS.forEach(k=>{ const v=localStorage.getItem(k); if(v!=null) obj[k]=v; });
   const json=JSON.stringify(obj,null,2);
-  if(typeof AndroidBridge!=='undefined' && typeof AndroidBridge.saveFile==='function'){ try{ AndroidBridge.saveFile('physiquelog-backup.json', json); toast('エクスポートしました ✓'); return; }catch(e){} }
+  if(bridge('saveJson','physiquelog-backup.json',json)){ toast('エクスポートしました ✓'); return; }
   try{ const blob=new Blob([json],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='physiquelog-backup.json'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(a.href); toast('エクスポートしました ✓'); }catch(e){ toast('エクスポート失敗'); }
 }
 function importData(file){
