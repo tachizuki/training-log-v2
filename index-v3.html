@@ -785,8 +785,12 @@ const DB = {
   contestName(){ return localStorage.getItem('contest_name')||''; },
   dayStartHour(){ return parseInt(localStorage.getItem('day_start_hour'))||0; },
 };
+// 管理者アカウント（このアカウントでアプリ内ログインすると全機能解放）
+const ADMIN_EMAILS=['moyaki397@gmail.com'];
+function isAdmin(){ try{ return !!(window.currentUser && window.currentUser.email && ADMIN_EMAILS.indexOf(window.currentUser.email.toLowerCase())>=0); }catch(e){ return false; } }
 function isPremium(){
   try{
+    if(isAdmin()) return true;
     if(typeof AndroidBridge!=='undefined' && typeof AndroidBridge.isPremium==='function'){ const r=AndroidBridge.isPremium(); return r===true||r==='true'; }
     if(typeof AndroidBridge==='undefined') return true; // ブラウザ版は全開放
     return localStorage.getItem('is_premium')==='true';
@@ -898,7 +902,7 @@ function renderSet(){
 const GOOGLE_ICON='<svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.5 12.2c0-.7-.1-1.4-.2-2H12v3.8h5.9a5 5 0 01-2.2 3.3v2.7h3.6c2.1-2 3.2-4.9 3.2-7.8z"/><path fill="#34A853" d="M12 23c2.9 0 5.4-1 7.2-2.7l-3.6-2.7c-1 .7-2.3 1.1-3.6 1.1-2.8 0-5.1-1.9-6-4.4H2.3v2.8A11 11 0 0012 23z"/><path fill="#FBBC05" d="M6 14.3a6.6 6.6 0 010-4.2V7.3H2.3a11 11 0 000 9.8L6 14.3z"/><path fill="#EA4335" d="M12 5.4c1.6 0 3 .6 4.1 1.6l3.1-3.1A11 11 0 002.3 7.3L6 10.1c.9-2.5 3.2-4.7 6-4.7z"/></svg>';
 function bridge(m){ const a=[].slice.call(arguments,1); if(typeof AndroidBridge!=='undefined' && typeof AndroidBridge[m]==='function'){ try{ AndroidBridge[m].apply(AndroidBridge,a); return true; }catch(e){} } return false; }
 // 実購入フラグ基準（ブラウザのプレビューでは未購入扱い＝入会UIを表示できる）
-function isPremiumReal(){ if(typeof AndroidBridge!=='undefined' && typeof AndroidBridge.isPremium==='function'){ const r=AndroidBridge.isPremium(); return r===true||r==='true'; } return localStorage.getItem('is_premium')==='true'; }
+function isPremiumReal(){ if(isAdmin()) return true; if(typeof AndroidBridge!=='undefined' && typeof AndroidBridge.isPremium==='function'){ const r=AndroidBridge.isPremium(); return r===true||r==='true'; } return localStorage.getItem('is_premium')==='true'; }
 function renderPremiumCard(){
   const el=document.getElementById('premium-card'); if(!el) return;
   if(isPremiumReal()){ el.className='tile prem-status'; el.innerHTML=t('prem_member'); }
@@ -935,7 +939,10 @@ function restorePremium(){ if(!bridge('restorePremium')) toast(t('t_restore_app'
 function reviewApp(){ if(!bridge('requestReview') && !bridge('openPlayStore')) toast(t('t_review_app')); }
 function contactApp(){ if(!bridge('sendContactForm', JSON.stringify({source:'v3-preview'}))) toast(t('t_contact_app')); }
 /* 本番ブリッジからのコールバック（実機ではここに繋がる） */
-function onFirebaseSignIn(uid,name,email){ window.currentUser={uid:uid,name:name,email:email}; renderAccountCard(); loadFromCloud(uid); toast(t('t_login_ok')); }
+function onFirebaseSignIn(uid,name,email){ window.currentUser={uid:uid,name:name,email:email}; renderAccountCard(); renderPremiumCard(); loadFromCloud(uid); toast(t('t_login_ok'));
+  // 管理者解放/会員状態を即反映（現在の画面を再描画）
+  try{ if(document.getElementById('pg-set').classList.contains('active')) renderSet(); if(document.getElementById('pg-data').classList.contains('active')) renderData(); if(document.getElementById('pg-today').classList.contains('active')) renderToday(); }catch(e){}
+}
 function onFirebaseSignOut(){ window.currentUser=null; renderAccountCard(); }
 function onAccountDeleted(ok,msg){ window.currentUser=null; renderAccountCard(); toast(ok?t('t_acc_deleted'):(msg||t('t_acc_del_fail'))); }
 function onPremiumPurchased(){ try{localStorage.setItem('is_premium','true');}catch(e){} closePaywall(); renderPremiumCard(); renderAccountCard(); toast(t('t_premium_welcome')); }
