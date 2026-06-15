@@ -159,6 +159,15 @@ body{background:#000;color:var(--text);font-family:'Noto Sans JP',sans-serif;}
 .insight b{color:var(--text);}
 .insight .ok{color:var(--good);font-weight:700;}
 .chart-card{padding:16px;}
+.wsummary{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:10px;}
+.ws-label{font-size:11px;color:var(--sub);}
+.ws-avg{font-family:'Inter';font-size:26px;font-weight:800;color:var(--text);line-height:1;}
+.ws-avg small{font-size:12px;color:var(--sub);margin-left:2px;font-weight:600;}
+.ws-cmp{font-size:12px;font-weight:800;padding:3px 9px;border-radius:999px;}
+.ws-cmp.down{background:rgba(74,222,128,0.15);color:var(--good);}
+.ws-cmp.up{background:rgba(248,113,113,0.15);color:var(--bad);}
+.ws-cmp.flat{background:var(--surface2);color:var(--sub);}
+.ws-empty{font-size:12.5px;color:var(--faint);line-height:1.6;}
 .chart-card h3{font-size:12px;color:var(--sub);font-weight:700;margin-bottom:12px;display:flex;justify-content:space-between;}
 .chart-card h3 span{font-weight:500;color:var(--faint);}
 .kpis{display:flex;border-top:1px solid var(--line);margin-top:14px;padding-top:12px;}
@@ -381,6 +390,7 @@ body{background:#000;color:var(--text);font-family:'Noto Sans JP',sans-serif;}
       <div class="insight" id="data-insight">データを蓄積すると傾向が表示されます。</div>
       <div class="card chart-card">
         <h3><span data-i18n="weight_trend">体重の推移</span> <span id="weight-range"></span></h3>
+        <div class="wsummary" id="weight-summary"></div>
         <svg id="weight-chart" width="100%" height="140" viewBox="0 0 340 140" preserveAspectRatio="none"></svg>
         <div class="kpis" id="weight-kpis"></div>
       </div>
@@ -650,7 +660,9 @@ const I18N = {
     t_saved:'記録しました — <b>自動保存 ✓</b>', t_meal_saved:'食事を記録 — <b>自動保存 ✓</b>', t_set_saved:'設定を保存しました ✓', t_autosaved:'<b>自動保存 ✓</b>', t_rest_done:'休憩終了！次のセットへ 💪',
     t_water_edit:'編集モード: チップをタップして量を変更', l_quick_ml:'クイック追加の量 (ml)', t_water_add:'水分 +{0}ml — <b>自動保存 ✓</b>', t_menu:'メニュー: {0} — <b>自動保存 ✓</b>', t_quick_upd:'クイック追加を更新（昇順整列）— <b>保存 ✓</b>', t_meal_copied:'前回の食事をコピーしました', ex_default:'種目', confirm_del_ex:'この種目を削除しますか？', rest_next:'{0} 次のセットへ', t_copied_prev:'前回({0})をコピー', t_no_prev:'前回の記録が見つかりません', t_added:'{0} を追加', this_month:'（今月）', range_sep:'〜', insight_pace:'週ペース <span class="ok">{0}kg/週</span>', insight_target:'目標まで <b>{0}kg</b>', insight_sep:'、', insight_need:'{0}の体重記録が2日分以上あると傾向が表示されます。', goal_label:'目標', salon_unit:'分',
     t_exported:'エクスポートしました ✓', t_export_fail:'エクスポート失敗', t_imported:'インポートしました（{0}項目）✓', t_import_err:'読み込みエラー: 不正なファイル', t_login_app:'Googleログインはアプリで利用できます', t_signout_preview:'サインアウト（プレビュー）', t_delete_app:'アカウント削除はアプリで実行されます', t_purchase_app:'プレミアム購入はアプリで利用できます', t_restore_app:'購入の復元はアプリで利用できます', t_review_app:'アプリの評価はストアから（アプリで利用可）', t_contact_app:'お問い合わせはアプリから送信できます', t_login_ok:'ログインしました ✓', t_acc_deleted:'アカウントを削除しました', t_acc_del_fail:'削除に失敗しました', t_premium_welcome:'プレミアムへようこそ ✓', t_restored:'購入を復元しました ✓', t_not_restored:'有効な購入が見つかりません', t_synced:'クラウドと同期しました ✓', t_contact_sent:'送信しました ✓', t_contact_fail:'送信に失敗しました',
-    gym_empty:'この日の種目はまだありません。<br>下の「＋ 種目を追加」から始めましょう。', insufficient:'データが足りません（2日以上の体重記録）',
+    gym_empty:'この日の種目はまだありません。<br>下の「＋ 種目を追加」から始めましょう。', insufficient:'体重記録が2日分以上で推移を表示',
+    w_avg_week:'週平均', w_avg_month:'月平均', w_avg_all:'平均体重', w_losing:'減量中', w_gaining:'増加', w_keeping:'維持',
+    w_no_period:'この期間の体重記録はありません（最新 {0} {1}kg）', w_no_data:'体重の記録がありません',
     a_remain:'今日はあと <b>残り{0}kcal</b>', a_pdiff:' / P あと{0}g', a_salt_missing:'塩分が未記録です。', a_prevdiff:'前日比', a_in_pace:' — 減量ペース内 ✓', a_increase:' — 増加',
   },
   en: {
@@ -688,7 +700,9 @@ const I18N = {
     t_saved:'Saved — <b>auto-saved ✓</b>', t_meal_saved:'Meal saved — <b>auto-saved ✓</b>', t_set_saved:'Settings saved ✓', t_autosaved:'<b>Auto-saved ✓</b>', t_rest_done:'Rest over! Next set 💪',
     t_water_edit:'Edit mode: tap a chip to change the amount', l_quick_ml:'Quick-add amount (ml)', t_water_add:'Water +{0}ml — <b>auto-saved ✓</b>', t_menu:'Menu: {0} — <b>auto-saved ✓</b>', t_quick_upd:'Quick-add updated (sorted) — <b>saved ✓</b>', t_meal_copied:'Copied last meal', ex_default:'Exercise', confirm_del_ex:'Delete this exercise?', rest_next:'{0} — next set', t_copied_prev:'Copied last ({0})', t_no_prev:'No previous record found', t_added:'Added {0}', this_month:' (this month)', range_sep:'–', insight_pace:'Pace <span class="ok">{0}kg/wk</span>', insight_target:'{0}kg to target', insight_sep:', ', insight_need:'Log 2+ weight entries in {0} to see trends.', goal_label:'Goal', salon_unit:'min',
     t_exported:'Exported ✓', t_export_fail:'Export failed', t_imported:'Imported ({0} items) ✓', t_import_err:'Import error: invalid file', t_login_app:'Google sign-in is available in the app', t_signout_preview:'Signed out (preview)', t_delete_app:'Account deletion runs in the app', t_purchase_app:'Premium purchase is available in the app', t_restore_app:'Restore is available in the app', t_review_app:'Rate the app from the store (in-app)', t_contact_app:'Contact is available from the app', t_login_ok:'Signed in ✓', t_acc_deleted:'Account deleted', t_acc_del_fail:'Deletion failed', t_premium_welcome:'Welcome to Premium ✓', t_restored:'Purchase restored ✓', t_not_restored:'No active purchase found', t_synced:'Synced with cloud ✓', t_contact_sent:'Sent ✓', t_contact_fail:'Failed to send',
-    gym_empty:'No exercises for this day yet.<br>Start from “＋ Add exercise” below.', insufficient:'Not enough data (need 2+ weight logs)',
+    gym_empty:'No exercises for this day yet.<br>Start from “＋ Add exercise” below.', insufficient:'Trend shows with 2+ weight logs',
+    w_avg_week:'Weekly avg', w_avg_month:'Monthly avg', w_avg_all:'Average', w_losing:'losing', w_gaining:'gaining', w_keeping:'stable',
+    w_no_period:'No weight logged this period (latest {0} {1}kg)', w_no_data:'No weight records',
     a_remain:'<b>{0} kcal left</b> today', a_pdiff:' / {0}g P to go', a_salt_missing:'Salt not logged.', a_prevdiff:'vs yesterday', a_in_pace:' — within cut pace ✓', a_increase:' — up',
   }
 };
@@ -1287,7 +1301,13 @@ function drawWeightChart(list){
   const dPath=list.map((r,i)=>(i?'L':'M')+X(i).toFixed(0)+','+Y(r.weight).toFixed(0)).join(' ');
   const cw=DB.contestWeight();
   let goalLine=''; if(cw!=null && cw>=min-rng && cw<=max+rng){ const gy=Y(cw).toFixed(0); goalLine=`<line x1="0" y1="${gy}" x2="340" y2="${gy}" stroke="#f87171" stroke-width="1" stroke-dasharray="5 4" opacity="0.5"/><text x="6" y="${gy-4}" font-size="9" fill="#f87171" font-family="Inter">${t('goal_label')} ${cw}</text>`; }
-  svg.innerHTML=goalLine+`<path d="${dPath}" stroke="#c9f04d" stroke-width="2.4" fill="none" stroke-linecap="round"/><circle cx="${X(n-1).toFixed(0)}" cy="${Y(list[n-1].weight).toFixed(0)}" r="4.5" fill="#101214" stroke="#c9f04d" stroke-width="3"/>`;
+  const avgw=ws.reduce((a,b)=>a+b,0)/ws.length, ay=Y(avgw).toFixed(0);
+  const lastW=list[n-1].weight, lx=X(n-1), ly=Y(lastW);
+  const extras=`<line x1="0" y1="${ay}" x2="340" y2="${ay}" stroke="#8b939b" stroke-width="1" stroke-dasharray="3 3" opacity="0.4"/>`
+    +`<text x="4" y="13" font-size="9" fill="#8b939b" font-family="Inter">${max.toFixed(1)}</text>`
+    +`<text x="4" y="126" font-size="9" fill="#8b939b" font-family="Inter">${min.toFixed(1)}</text>`
+    +`<text x="${(lx-7).toFixed(0)}" y="${(ly-9).toFixed(0)}" font-size="11" fill="#c9f04d" text-anchor="end" font-family="Inter" font-weight="700">${lastW.toFixed(1)}</text>`;
+  svg.innerHTML=goalLine+extras+`<path d="${dPath}" stroke="#c9f04d" stroke-width="2.4" fill="none" stroke-linecap="round"/><circle cx="${lx.toFixed(0)}" cy="${ly.toFixed(0)}" r="4.5" fill="#101214" stroke="#c9f04d" stroke-width="3"/>`;
 }
 function renderData(){
   const segIdx={week:0,month:1,all:2};
@@ -1305,6 +1325,12 @@ function renderData(){
   const inRange=r=>r.date>=start&&r.date<=end;
   const wRecs=DB.records().filter(r=>r.weight!=null&&inRange(r)).sort((a,b)=>a.date.localeCompare(b.date));
   drawWeightChart(wRecs);
+  // 週平均（前期間比で痩せ/太り判定）＋ 期間にデータが無い時は最新記録を提示
+  const thisAvgW = wRecs.length ? wRecs.reduce((a,b)=>a+b.weight,0)/wRecs.length : null;
+  let prevAvgW=null;
+  if(dataPeriod!=='all'){ const pr=(dataPeriod==='week'?weekRange(dataOffset-1):monthRange(dataOffset-1)); const prs=DB.records().filter(r=>r.weight!=null&&r.date>=pr[0]&&r.date<=pr[1]); if(prs.length) prevAvgW=prs.reduce((a,b)=>a+b.weight,0)/prs.length; }
+  const _allW=DB.records().filter(r=>r.weight!=null).sort((a,b)=>a.date.localeCompare(b.date));
+  setWeightSummary(thisAvgW, prevAvgW, _allW.length?_allW[_allW.length-1]:null);
   // 体重KPI
   let avgW='—',pace='—',paceGood=false,chg='—',cur='—';
   if(wRecs.length){ const ws=wRecs.map(r=>r.weight); avgW=(ws.reduce((a,b)=>a+b,0)/ws.length).toFixed(1); cur=wRecs[wRecs.length-1].weight;
@@ -1331,6 +1357,14 @@ function renderData(){
   } else ins.textContent=t('insight_need', label);
 }
 function kpi(k,v,good){ return `<div><div class="k">${k}</div><div class="v num${good?' g':''}">${v}</div></div>`; }
+function setWeightSummary(thisAvg, prevAvg, latest){
+  const el=document.getElementById('weight-summary'); if(!el) return;
+  if(thisAvg==null){ el.innerHTML = latest ? '<span class="ws-empty">'+t('w_no_period', mmdd(latest.date), latest.weight)+'</span>' : '<span class="ws-empty">'+t('w_no_data')+'</span>'; return; }
+  const lbl = dataPeriod==='week'?t('w_avg_week'):dataPeriod==='month'?t('w_avg_month'):t('w_avg_all');
+  let cmp='';
+  if(prevAvg!=null){ const d=thisAvg-prevAvg; const cls=d<-0.05?'down':(d>0.05?'up':'flat'); const arrow=d<-0.05?'▼':(d>0.05?'▲':'→'); const word=d<-0.05?t('w_losing'):(d>0.05?t('w_gaining'):t('w_keeping')); cmp='<span class="ws-cmp '+cls+'">'+arrow+' '+Math.abs(d).toFixed(1)+'kg '+word+'</span>'; }
+  el.innerHTML='<span class="ws-label">'+lbl+'</span><span class="ws-avg num">'+thisAvg.toFixed(1)+'<small>kg</small></span>'+cmp;
+}
 function avg(arr){ if(!arr||!arr.length) return '—'; return Math.round(arr.reduce((s,x)=>s+x,0)/arr.length).toLocaleString(); }
 function avgWater(){ const w=DB.water(); const vals=Object.values(w).map(d=>d&&d.total).filter(x=>x); return vals.length?Math.round(vals.slice(-7).reduce((s,x)=>s+x,0)/Math.min(7,vals.length)):'—'; }
 
