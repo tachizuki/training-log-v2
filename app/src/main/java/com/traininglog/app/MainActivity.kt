@@ -47,7 +47,8 @@ import java.io.FileOutputStream
 class MainActivity : AppCompatActivity() {
 
     private lateinit var webView: WebView
-    private val REMOTE_URL = "https://training-log-v2-5vc.pages.dev/index.html"
+    // release=本番index.html / debug=再設計版index-v3.html（build.gradleのbuildConfigFieldで切替）
+    private val REMOTE_URL = BuildConfig.WEBVIEW_URL
     private val LOCAL_URL = "file:///android_asset/index.html"
 
     private val chunks = mutableMapOf<Int, String>()

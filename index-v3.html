@@ -229,35 +229,35 @@ body{background:#000;color:var(--text);font-family:'Noto Sans JP',sans-serif;dis
       <div class="today-title">
         <h1 onclick="openCal()" style="cursor:pointer;"><span id="today-label">今日</span><small id="today-date"></small> <span style="font-size:13px;">📅</span></h1>
         <input type="date" id="cal" style="position:absolute;opacity:0;width:1px;height:1px;pointer-events:none;left:0;" onchange="onCalChange(this.value)">
-        <div class="date-nav"><button class="today-btn" id="btn-today" onclick="goToday()">今日</button><button onclick="shiftDate(-1)">‹</button><button onclick="shiftDate(1)">›</button></div>
+        <div class="date-nav"><button class="today-btn" id="btn-today" data-i18n="today_btn" onclick="goToday()">今日</button><button onclick="shiftDate(-1)">‹</button><button onclick="shiftDate(1)">›</button></div>
       </div>
       <div class="grid2">
-        <div class="tile mini" onclick="openPad('体重 (kg)','weight')">
-          <div class="k">体重 <span class="ok" id="ok-weight" style="display:none">✓</span></div>
+        <div class="tile mini" onclick="openPad('','weight')">
+          <div class="k"><span data-i18n="weight">体重</span> <span class="ok" id="ok-weight" style="display:none">✓</span></div>
           <div class="v num" id="weight-val"><span class="ph">—</span><small>kg</small></div>
           <div class="s" id="weight-sub"></div>
         </div>
-        <div class="tile mini" onclick="openPad('睡眠時間 (h)','sleep')">
-          <div class="k">睡眠 <span class="ok" id="ok-sleep" style="display:none">✓</span></div>
+        <div class="tile mini" onclick="openPad('','sleep')">
+          <div class="k"><span data-i18n="sleep">睡眠</span> <span class="ok" id="ok-sleep" style="display:none">✓</span></div>
           <div class="v num" id="sleep-val"><span class="ph">—</span><small>h</small></div>
           <div class="s" id="sleep-sub"></div>
         </div>
       </div>
       <div class="tile meal" onclick="openMealPad(0)">
         <div class="meal-head">
-          <span class="k">食事</span>
+          <span class="k" data-i18n="meal">食事</span>
           <span class="kcal num" id="kcal-auto">0<small>kcal 自動計算</small></span>
         </div>
         <div class="meal-cells">
           <div class="mcell" id="mc-p" onclick="event.stopPropagation();openMealPad(0)"><div class="l">P</div><div class="n num"><span class="ph">—</span><small>g</small></div></div>
           <div class="mcell" id="mc-f" onclick="event.stopPropagation();openMealPad(1)"><div class="l">F</div><div class="n num"><span class="ph">—</span><small>g</small></div></div>
           <div class="mcell" id="mc-c" onclick="event.stopPropagation();openMealPad(2)"><div class="l">C</div><div class="n num"><span class="ph">—</span><small>g</small></div></div>
-          <div class="mcell" id="mc-salt" onclick="event.stopPropagation();openMealPad(3)"><div class="l">塩分</div><div class="n num"><span class="ph">—</span><small>g</small></div></div>
+          <div class="mcell" id="mc-salt" onclick="event.stopPropagation();openMealPad(3)"><div class="l" data-i18n="salt">塩分</div><div class="n num"><span class="ph">—</span><small>g</small></div></div>
         </div>
       </div>
       <div class="tile water">
         <div class="water-head">
-          <span class="k">水分</span>
+          <span class="k" data-i18n="water">水分</span>
           <span class="v num"><span id="water-num">0</span><small id="water-goal-lbl">/ 2,000ml</small></span>
         </div>
         <div class="water-bar"><i id="water-fill" style="width:0%"></i></div>
@@ -270,14 +270,14 @@ body{background:#000;color:var(--text);font-family:'Noto Sans JP',sans-serif;dis
       </div>
       <div class="tile gymtile">
         <div>
-          <div class="k">筋トレ</div>
+          <div class="k" data-i18n="gym">筋トレ</div>
           <div class="menu-pick" onclick="openMenuSheet()"><span id="menu-name">メニュー未選択</span><span class="car">▾</span></div>
           <div class="s" id="menu-sub">タップして部位を選択</div>
         </div>
-        <button class="go" onclick="go('gym')">開始</button>
+        <button class="go" data-i18n="start" onclick="go('gym')">開始</button>
       </div>
       <div class="tile analysis">
-        <div class="hd">🔍 今日の分析 <span>体重変動分析</span></div>
+        <div class="hd"><span data-i18n="analysis_title">🔍 今日の分析</span> <span data-i18n="analysis_sub">体重変動分析</span></div>
         <div class="body" id="today-analysis">記録を入力すると分析が表示されます。</div>
       </div>
     </div>
@@ -287,20 +287,20 @@ body{background:#000;color:var(--text);font-family:'Noto Sans JP',sans-serif;dis
       <div class="ctx-strip"><span class="days num" id="ctx-days2">—</span><span id="ctx-contest2" onclick="goContestSettings()" style="cursor:pointer;"></span><span class="auto"><i></i>自動保存</span></div>
       <div class="gym-top">
         <h1 onclick="openMenuSheet()"><span id="gym-title">メニュー未選択</span><span class="car">▾</span></h1>
-        <div class="sw-pill"><span class="t num" id="sw">00:00</span><button onclick="toggleSw()" id="sw-btn">開始</button></div>
+        <div class="sw-pill"><span class="t num" id="sw">00:00</span><button onclick="toggleSw()" id="sw-btn" data-i18n="start">開始</button></div>
       </div>
       <div id="gym-cards"></div>
-      <button class="big-add" onclick="openExSheet()">＋ 種目を追加</button>
+      <button class="big-add" onclick="openExSheet()" data-i18n="add_ex">＋ 種目を追加</button>
     </div>
 
     <!-- ===== データ ===== -->
     <div class="page scrollable" id="pg-data">
       <div class="ctx-strip"><span class="days num" id="ctx-days3">—</span><span id="ctx-contest3" onclick="goContestSettings()" style="cursor:pointer;"></span><span class="auto"><i></i>自動保存</span></div>
-      <div class="today-title" style="padding-bottom:10px;"><h1>データ</h1></div>
+      <div class="today-title" style="padding-bottom:10px;"><h1 data-i18n="data_title">データ</h1></div>
       <div class="seg" id="data-seg">
-        <button class="seg-btn on" onclick="setPeriod('week')">週間</button>
-        <button class="seg-btn" onclick="setPeriod('month')">月間</button>
-        <button class="seg-btn" onclick="setPeriod('all')">全期間</button>
+        <button class="seg-btn on" onclick="setPeriod('week')" data-i18n="seg_week">週間</button>
+        <button class="seg-btn" onclick="setPeriod('month')" data-i18n="seg_month">月間</button>
+        <button class="seg-btn" onclick="setPeriod('all')" data-i18n="seg_all">全期間</button>
       </div>
       <div class="period-nav" id="period-nav">
         <button onclick="shiftPeriod(-1)">‹</button>
@@ -309,85 +309,81 @@ body{background:#000;color:var(--text);font-family:'Noto Sans JP',sans-serif;dis
       </div>
       <div class="insight" id="data-insight">データを蓄積すると傾向が表示されます。</div>
       <div class="card chart-card">
-        <h3>体重の推移 <span id="weight-range"></span></h3>
+        <h3><span data-i18n="weight_trend">体重の推移</span> <span id="weight-range"></span></h3>
         <svg id="weight-chart" width="100%" height="140" viewBox="0 0 340 140" preserveAspectRatio="none"></svg>
         <div class="kpis" id="weight-kpis"></div>
       </div>
       <div class="card chart-card">
-        <h3>トレーニング <span id="train-range"></span></h3>
+        <h3><span data-i18n="training">トレーニング</span> <span id="train-range"></span></h3>
         <div class="kpis" id="train-kpis" style="border-top:none;margin-top:0;padding-top:0;"></div>
       </div>
       <div class="card chart-card">
-        <h3>栄養 <span id="nutri-range"></span></h3>
+        <h3><span data-i18n="nutrition">栄養</span> <span id="nutri-range"></span></h3>
         <div class="kpis" id="nutri-kpis" style="border-top:none;margin-top:0;padding-top:0;"></div>
       </div>
     </div>
 
     <!-- ===== 設定 ===== -->
     <div class="page scrollable" id="pg-set">
-      <div class="today-title" style="padding:8px 2px 12px;"><h1>設定</h1></div>
+      <div class="today-title" style="padding:8px 2px 12px;"><h1 data-i18n="set_title">設定</h1></div>
 
-      <div class="set-sec collap" onclick="toggleSec(this)">プロフィール</div>
+      <div class="set-sec" data-i18n="sec_account">アカウント</div>
+      <div class="tile set-card" id="account-card"></div>
+
+      <div class="set-sec" data-i18n="sec_premium">プレミアム</div>
+      <div class="tile prem-card" id="premium-card"></div>
+
+      <div class="set-sec collap" onclick="toggleSec(this)" data-i18n="sec_profile">プロフィール</div>
       <div class="tile set-card sec-hidden">
-        <div class="set-row"><label>表示名</label><input type="text" id="set-name" placeholder="ニックネーム"></div>
-        <div class="set-row"><label>身長 (cm)</label><input type="number" id="set-height" readonly inputmode="none" onclick="openSetPad('set-height','身長 (cm)')" placeholder="168"></div>
-        <div class="set-row"><label>年齢</label><input type="number" id="set-age" readonly inputmode="none" onclick="openSetPad('set-age','年齢')" placeholder="25"></div>
-        <div class="set-row"><label>性別</label><select id="set-sex"><option value="male">男性</option><option value="female">女性</option></select></div>
+        <div class="set-row"><label data-i18n="l_name">表示名</label><input type="text" id="set-name" data-i18n-ph="ph_name" placeholder="ニックネーム"></div>
+        <div class="set-row"><label data-i18n="l_height">身長 (cm)</label><input type="number" id="set-height" readonly inputmode="none" onclick="openSetPad('set-height','l_height')" placeholder="168"></div>
+        <div class="set-row"><label data-i18n="l_age">年齢</label><input type="number" id="set-age" readonly inputmode="none" onclick="openSetPad('set-age','l_age')" placeholder="25"></div>
+        <div class="set-row"><label data-i18n="l_sex">性別</label><select id="set-sex"><option value="male" data-i18n="sex_male">男性</option><option value="female" data-i18n="sex_female">女性</option></select></div>
+        <div class="set-row"><label data-i18n="l_day_start">1日の起点時刻</label><select id="set-day-start"></select></div>
+        <div class="set-row"><label><span data-i18n="l_reminder">リマインダー通知</span><br><span style="font-size:10px;color:var(--faint);" data-i18n="off_empty">空欄でオフ</span></label><input type="time" id="set-notif-time" onclick="dpick(this)"></div>
+      </div>
+
+      <div class="set-sec collap" onclick="toggleSec(this)" data-i18n="sec_nutrition">1日の栄養目標</div>
+      <div class="tile set-card sec-hidden">
+        <div class="set-row"><label data-i18n="l_p">タンパク質 P (g)</label><input type="number" id="set-goal-p" readonly inputmode="none" onclick="openSetPad('set-goal-p','l_p')" placeholder="160"></div>
+        <div class="set-row"><label data-i18n="l_f">脂質 F (g)</label><input type="number" id="set-goal-f" readonly inputmode="none" onclick="openSetPad('set-goal-f','l_f')" placeholder="50"></div>
+        <div class="set-row"><label data-i18n="l_c">炭水化物 C (g)</label><input type="number" id="set-goal-c" readonly inputmode="none" onclick="openSetPad('set-goal-c','l_c')" placeholder="230"></div>
+        <div class="set-row"><label data-i18n="l_salt">塩分 (g)</label><input type="number" id="set-goal-salt" readonly inputmode="none" onclick="openSetPad('set-goal-salt','l_salt')" placeholder="6"></div>
+        <div class="set-row"><label data-i18n="l_tol">許容誤差 (kcal)</label><input type="number" id="set-goal-tol" readonly inputmode="none" onclick="openSetPad('set-goal-tol','l_tol')" placeholder="100"></div>
+        <div class="set-row"><label data-i18n="l_kcal_goal">カロリー目標（自動）</label><span class="set-kcal" id="set-kcal">0 kcal</span></div>
+        <div class="set-row"><label data-i18n="l_water_goal">水分目標 (ml)</label><input type="number" id="set-water-goal" readonly inputmode="none" onclick="openSetPad('set-water-goal','l_water_goal')" placeholder="2000"></div>
       </div>
 
       <div class="set-sec collap" id="sec-contest" onclick="toggleSec(this)">大会設定 <span class="prem-badge">PREMIUM</span></div>
       <div class="tile set-card sec-hidden" id="contest-card">
-        <div class="contest-lock" onclick="openPaywall()">🔒 大会ロードマップ・大会設定はプレミアム機能です<br><span class="lock-cta">プレミアムで解放</span></div>
+        <div class="contest-lock" onclick="openPaywall()"><span data-i18n="contest_lock">🔒 大会ロードマップ・大会設定はプレミアム機能です</span><br><span class="lock-cta" data-i18n="unlock_premium">プレミアムで解放</span></div>
         <div class="contest-form">
-          <div class="set-row"><label>大会名</label><input type="text" id="set-contest-name" placeholder="東京選手権"></div>
-          <div class="set-row"><label>大会日</label><input type="date" id="set-contest-date" onclick="dpick(this)"></div>
-          <div class="set-row"><label>ピーク日</label><input type="date" id="set-peak-date" onclick="dpick(this)"></div>
-          <div class="set-row"><label>目標体重 (kg)</label><input type="number" id="set-contest-weight" readonly inputmode="none" onclick="openSetPad('set-contest-weight','目標体重 (kg)')" placeholder="60.0"></div>
+          <div class="set-row"><label data-i18n="l_contest_name">大会名</label><input type="text" id="set-contest-name" placeholder="東京選手権"></div>
+          <div class="set-row"><label data-i18n="l_contest_date">大会日</label><input type="date" id="set-contest-date" onclick="dpick(this)"></div>
+          <div class="set-row"><label data-i18n="l_peak_date">ピーク日</label><input type="date" id="set-peak-date" onclick="dpick(this)"></div>
+          <div class="set-row"><label data-i18n="l_target_w">目標体重 (kg)</label><input type="number" id="set-contest-weight" readonly inputmode="none" onclick="openSetPad('set-contest-weight','l_target_w')" placeholder="60.0"></div>
         </div>
       </div>
 
-      <div class="set-sec collap" onclick="toggleSec(this)">1日の栄養目標</div>
+      <div class="set-sec collap" onclick="toggleSec(this)" data-i18n="sec_support">サポート</div>
       <div class="tile set-card sec-hidden">
-        <div class="set-row"><label>タンパク質 P (g)</label><input type="number" id="set-goal-p" readonly inputmode="none" onclick="openSetPad('set-goal-p','タンパク質 P (g)')" placeholder="160"></div>
-        <div class="set-row"><label>脂質 F (g)</label><input type="number" id="set-goal-f" readonly inputmode="none" onclick="openSetPad('set-goal-f','脂質 F (g)')" placeholder="50"></div>
-        <div class="set-row"><label>炭水化物 C (g)</label><input type="number" id="set-goal-c" readonly inputmode="none" onclick="openSetPad('set-goal-c','炭水化物 C (g)')" placeholder="230"></div>
-        <div class="set-row"><label>塩分 (g)</label><input type="number" id="set-goal-salt" readonly inputmode="none" onclick="openSetPad('set-goal-salt','塩分 (g)')" placeholder="6"></div>
-        <div class="set-row"><label>許容誤差 (kcal)</label><input type="number" id="set-goal-tol" readonly inputmode="none" onclick="openSetPad('set-goal-tol','許容誤差 (kcal)')" placeholder="100"></div>
-        <div class="set-row"><label>カロリー目標（自動）</label><span class="set-kcal" id="set-kcal">0 kcal</span></div>
+        <div class="set-row"><label data-i18n="lang_label">言語</label><select id="set-lang" onchange="setLang(this.value)"><option value="auto" data-i18n="lang_auto">自動</option><option value="ja">日本語</option><option value="en">English</option></select></div>
+        <div class="set-btn-row">
+          <button class="set-btn" data-i18n="btn_review" onclick="reviewApp()">★ アプリを評価</button>
+          <button class="set-btn" data-i18n="btn_contact" onclick="contactApp()">✉ お問い合わせ</button>
+        </div>
+        <div class="set-note" data-i18n="support_note">サインイン・購入・同期・通知は本番アプリ（Androidブリッジ）に接続されます。このプレビューはローカルデータで動作します。</div>
       </div>
 
-      <div class="set-sec collap" onclick="toggleSec(this)">その他</div>
-      <div class="tile set-card sec-hidden">
-        <div class="set-row"><label>水分目標 (ml)</label><input type="number" id="set-water-goal" readonly inputmode="none" onclick="openSetPad('set-water-goal','水分目標 (ml)')" placeholder="2000"></div>
-        <div class="set-row"><label>1日の起点時刻</label><select id="set-day-start"></select></div>
-      </div>
-
-      <div class="set-sec collap" onclick="toggleSec(this)">データ</div>
+      <div class="set-sec collap" onclick="toggleSec(this)" data-i18n="sec_data">データ</div>
       <div class="tile set-card sec-hidden">
         <div class="set-btn-row">
-          <button class="set-btn" onclick="exportData()">📤 エクスポート</button>
-          <button class="set-btn" onclick="if(!bridge('openFilePicker')) document.getElementById('set-import').click()">📥 インポート</button>
+          <button class="set-btn" data-i18n="btn_export" onclick="exportData()">📤 エクスポート</button>
+          <button class="set-btn" data-i18n="btn_import" onclick="if(!bridge('openFilePicker')) document.getElementById('set-import').click()">📥 インポート</button>
         </div>
         <input type="file" id="set-import" accept="application/json,.json" style="display:none;" onchange="if(this.files[0])importData(this.files[0]);this.value='';">
-        <div class="set-note">全データ（記録・水分・筋トレ・設定）をJSONで保存／復元します。無料で利用できます。</div>
+        <div class="set-note" data-i18n="data_note">全データ（記録・水分・筋トレ・設定）をJSONで保存／復元します。無料で利用できます。</div>
       </div>
-
-      <div class="set-sec">プレミアム</div>
-      <div class="tile prem-card" id="premium-card"></div>
-
-      <div class="set-sec">アカウント</div>
-      <div class="tile set-card" id="account-card"></div>
-
-      <div class="set-sec collap" onclick="toggleSec(this)">サポート</div>
-      <div class="tile set-card sec-hidden">
-        <div class="set-btn-row">
-          <button class="set-btn" onclick="reviewApp()">★ アプリを評価</button>
-          <button class="set-btn" onclick="contactApp()">✉ お問い合わせ</button>
-        </div>
-        <div class="set-note">サインイン・購入・同期・通知は本番アプリ（Androidブリッジ）に接続されます。このプレビューはローカルデータで動作します。</div>
-      </div>
-
-      <button class="set-save" onclick="saveSet()">設定を保存</button>
     </div>
 
     <!-- レストタイマー -->
@@ -395,7 +391,7 @@ body{background:#000;color:var(--text);font-family:'Noto Sans JP',sans-serif;dis
       <span class="t num" id="rest-t">1:30</span>
       <div class="meta"><div class="l" id="rest-label">休憩中</div><div class="bar"><i id="rest-bar" style="width:100%"></i></div></div>
       <button onclick="restAdd()">＋30s</button>
-      <button onclick="restStop()">スキップ</button>
+      <button onclick="restStop()" data-i18n="rest_skip">スキップ</button>
     </div>
 
     <!-- 数値パッド -->
@@ -409,7 +405,7 @@ body{background:#000;color:var(--text);font-family:'Noto Sans JP',sans-serif;dis
       <div class="pad-grid">
         <button onclick="padKey('7')">7</button><button onclick="padKey('8')">8</button><button onclick="padKey('9')">9</button><button onclick="padKey('back')">⌫</button>
         <button onclick="padKey('4')">4</button><button onclick="padKey('5')">5</button><button onclick="padKey('6')">6</button>
-        <button class="okbtn" onclick="padDone()">確定</button>
+        <button class="okbtn" onclick="padDone()" data-i18n="confirm">確定</button>
         <button onclick="padKey('1')">1</button><button onclick="padKey('2')">2</button><button onclick="padKey('3')">3</button>
         <button onclick="padKey('0')">0</button><button onclick="padKey('.')">.</button><button onclick="padKey('clear')">C</button>
       </div>
@@ -419,15 +415,15 @@ body{background:#000;color:var(--text);font-family:'Noto Sans JP',sans-serif;dis
     <div class="pad-ov" id="mpad-ov" onclick="closeMealPad()"></div>
     <div class="pad" id="mpad">
       <div class="pad-head" style="padding-bottom:8px;">
-        <span class="lbl">食事を入力</span>
-        <button class="prev" onclick="mealCopyPrev()">前回コピー</button>
+        <span class="lbl" data-i18n="meal_input">食事を入力</span>
+        <button class="prev" onclick="mealCopyPrev()" data-i18n="copy_prev">前回コピー</button>
         <span class="val num" id="mpad-kcal" style="font-size:20px;">0<small style="font-size:10px;color:var(--faint);font-family:'Noto Sans JP';"> kcal</small></span>
       </div>
       <div class="meal-cells" style="margin-bottom:10px;">
         <div class="mcell" id="mf-0" onclick="mealFocus(0)"><div class="l">P</div><div class="n num" id="mv-0">0<small>g</small></div></div>
         <div class="mcell" id="mf-1" onclick="mealFocus(1)"><div class="l">F</div><div class="n num" id="mv-1">0<small>g</small></div></div>
         <div class="mcell" id="mf-2" onclick="mealFocus(2)"><div class="l">C</div><div class="n num" id="mv-2">0<small>g</small></div></div>
-        <div class="mcell" id="mf-3" onclick="mealFocus(3)"><div class="l">塩分</div><div class="n num" id="mv-3">0<small>g</small></div></div>
+        <div class="mcell" id="mf-3" onclick="mealFocus(3)"><div class="l" data-i18n="salt">塩分</div><div class="n num" id="mv-3">0<small>g</small></div></div>
       </div>
       <div class="pad-grid">
         <button onclick="mKey('7')">7</button><button onclick="mKey('8')">8</button><button onclick="mKey('9')">9</button><button onclick="mKey('back')">⌫</button>
@@ -435,57 +431,136 @@ body{background:#000;color:var(--text);font-family:'Noto Sans JP',sans-serif;dis
         <button class="okbtn" id="mpad-ok" onclick="mealNext()">次へ</button>
         <button onclick="mKey('1')">1</button><button onclick="mKey('2')">2</button><button onclick="mKey('3')">3</button>
         <button onclick="mKey('0')">0</button><button onclick="mKey('.')">.</button><button onclick="mKey('clear')">C</button>
-        <button class="ok1" onclick="mealCommit()">確定</button>
+        <button class="ok1" onclick="mealCommit()" data-i18n="confirm">確定</button>
       </div>
     </div>
 
     <!-- メニュー選択シート -->
     <div class="sheet-ov" id="menu-ov" onclick="closeMenuSheet()"></div>
     <div class="sheet" id="menu-sheet">
-      <h3>今日のメニュー</h3>
-      <div class="note">選んだ部位は「今日の記録」の筋トレ部位として保存されます</div>
+      <h3 data-i18n="menu_title">今日のメニュー</h3>
+      <div class="note" data-i18n="menu_note">選んだ部位は「今日の記録」の筋トレ部位として保存されます</div>
       <div class="menu-grid">
-        <button onclick="pickMenu('胸')">胸</button><button onclick="pickMenu('背中')">背中</button>
-        <button onclick="pickMenu('肩')">肩</button><button onclick="pickMenu('腕')">腕</button>
-        <button onclick="pickMenu('足')">足</button><button onclick="pickMenu('腹筋')">腹筋</button>
-        <button onclick="pickMenu('有酸素')">有酸素</button><button onclick="pickMenu('自由')">自由</button>
+        <button onclick="pickMenu('胸')" data-i18n="part_chest">胸</button><button onclick="pickMenu('背中')" data-i18n="part_back">背中</button>
+        <button onclick="pickMenu('肩')" data-i18n="part_shoulder">肩</button><button onclick="pickMenu('腕')" data-i18n="part_arm">腕</button>
+        <button onclick="pickMenu('足')" data-i18n="part_leg">足</button><button onclick="pickMenu('腹筋')" data-i18n="part_abs">腹筋</button>
+        <button onclick="pickMenu('有酸素')" data-i18n="part_cardio">有酸素</button><button onclick="pickMenu('自由')" data-i18n="part_free">自由</button>
       </div>
     </div>
 
     <!-- 種目追加シート -->
     <div class="sheet-ov" id="ex-ov" onclick="closeExSheet()"></div>
     <div class="sheet" id="ex-sheet">
-      <h3>種目を追加</h3>
-      <div class="note">よく使う種目から選択（プリセット）</div>
+      <h3 data-i18n="ex_title">種目を追加</h3>
+      <div class="note" data-i18n="ex_note">よく使う種目から選択（プリセット）</div>
       <div class="menu-grid" id="ex-grid"></div>
     </div>
 
     <!-- プレミアム ペイウォール -->
     <div class="sheet-ov" id="paywall-ov" onclick="closePaywall()"></div>
     <div class="sheet" id="paywall-sheet">
-      <h3>⭐ プレミアム</h3>
-      <div class="note">大会に出る人・もっと深く分析したい人向けの機能を解放します。記録と全期間の履歴は無料のまま。</div>
-      <div class="paywall-feat"><span class="ic">🗺</span><div><b>大会ロードマップ・大会設定</b><br><span style="font-size:11px;color:var(--faint);">大会日から逆算した目標体重ラインと進捗</span></div></div>
-      <div class="paywall-feat"><span class="ic">📋</span><div><b>週次レポート</b></div></div>
-      <div class="paywall-feat"><span class="ic">💪</span><div><b>筋トレ分析</b>（1RM推移・停滞検知）</div></div>
-      <div class="paywall-feat"><span class="ic">☁️</span><div><b>複数端末のクラウド同期</b></div></div>
-      <button class="prem-go" style="margin-top:14px;" onclick="purchasePremium()">14日間無料で試す</button>
-      <button class="restore-link" onclick="restorePremium()">購入を復元</button>
-      <div class="price-note">期間後 ¥400 / 月（いつでも解約可）</div>
+      <h3 data-i18n="paywall_title">⭐ プレミアム</h3>
+      <div class="note" data-i18n="paywall_note">大会に出る人・もっと深く分析したい人向けの機能を解放します。記録と全期間の履歴は無料のまま。</div>
+      <div class="paywall-feat"><span class="ic">🗺</span><div><b data-i18n="pf_roadmap">大会ロードマップ・大会設定</b><br><span style="font-size:11px;color:var(--faint);" data-i18n="pf_roadmap_sub">大会日から逆算した目標体重ラインと進捗</span></div></div>
+      <div class="paywall-feat"><span class="ic">📋</span><div><b data-i18n="pf_weekly">週次レポート</b></div></div>
+      <div class="paywall-feat"><span class="ic">💪</span><div data-i18n="pf_gym"><b>筋トレ分析</b>（1RM推移・停滞検知）</div></div>
+      <div class="paywall-feat"><span class="ic">☁️</span><div><b data-i18n="pf_sync">複数端末のクラウド同期</b></div></div>
+      <button class="prem-go" style="margin-top:14px;" onclick="purchasePremium()" data-i18n="trial_btn">14日間無料で試す</button>
+      <button class="restore-link" onclick="restorePremium()" data-i18n="restore">購入が反映されない場合はこちら</button>
+      <div class="price-note" data-i18n="price_note">期間後 ¥400 / 月（いつでも解約可）</div>
     </div>
 
     <div class="toast" id="toast"></div>
   </div>
 
   <nav class="nav">
-    <button class="on" id="nv-today" onclick="go('today')"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>今日</button>
-    <button id="nv-gym" onclick="go('gym')"><svg viewBox="0 0 24 24"><path d="M6.5 6.5v11M17.5 6.5v11M3 9v6M21 9v6M6.5 12h11"/></svg>筋トレ</button>
-    <button id="nv-data" onclick="go('data')"><svg viewBox="0 0 24 24"><path d="M3 21h18M7 16v-5M12 16V8M17 16v-8"/></svg>データ</button>
-    <button id="nv-set" onclick="go('set')"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 00-.1-1.2l2-1.5-2-3.5-2.4 1a7 7 0 00-2-1.2L14 3h-4l-.5 2.6a7 7 0 00-2 1.2l-2.4-1-2 3.5 2 1.5A7 7 0 005 12a7 7 0 00.1 1.2l-2 1.5 2 3.5 2.4-1a7 7 0 002 1.2L10 21h4l.5-2.6a7 7 0 002-1.2l2.4 1 2-3.5-2-1.5A7 7 0 0019 12z"/></svg>設定</button>
+    <button class="on" id="nv-today" onclick="go('today')"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><span data-i18n="nav_today">今日</span></button>
+    <button id="nv-gym" onclick="go('gym')"><svg viewBox="0 0 24 24"><path d="M6.5 6.5v11M17.5 6.5v11M3 9v6M21 9v6M6.5 12h11"/></svg><span data-i18n="nav_gym">筋トレ</span></button>
+    <button id="nv-data" onclick="go('data')"><svg viewBox="0 0 24 24"><path d="M3 21h18M7 16v-5M12 16V8M17 16v-8"/></svg><span data-i18n="nav_data">データ</span></button>
+    <button id="nv-set" onclick="go('set')"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 00-.1-1.2l2-1.5-2-3.5-2.4 1a7 7 0 00-2-1.2L14 3h-4l-.5 2.6a7 7 0 00-2 1.2l-2.4-1-2 3.5 2 1.5A7 7 0 005 12a7 7 0 00.1 1.2l-2 1.5 2 3.5 2.4-1a7 7 0 002 1.2L10 21h4l.5-2.6a7 7 0 002-1.2l2.4 1 2-3.5-2-1.5A7 7 0 0019 12z"/></svg><span data-i18n="nav_set">設定</span></button>
   </nav>
 </div>
 
 <script>
+/* ===== i18n（自動判定＋設定で手動切替。未翻訳キーは日本語フォールバック） ===== */
+const I18N = {
+  ja: {
+    nav_today:'今日', nav_gym:'筋トレ', nav_data:'データ', nav_set:'設定',
+    today:'今日', today_btn:'今日', contest_unset:'大会未設定', tap_part:'タップして部位を選択', menu_unset:'メニュー未選択', start:'開始',
+    weight:'体重', sleep:'睡眠', meal:'食事', water:'水分', gym:'筋トレ',
+    kcal_auto:'kcal 自動計算', analysis_title:'🔍 今日の分析', analysis_sub:'体重変動分析', analysis_empty:'記録を入力すると分析が表示されます。',
+    seg_week:'週間', seg_month:'月間', seg_all:'全期間', data_title:'データ', data_empty:'データを蓄積すると傾向が表示されます。',
+    weight_trend:'体重の推移', training:'トレーニング', nutrition:'栄養', this_week:'今週', last_week:'先週', all_period:'全期間',
+    kpi_avg:'平均', kpi_pace:'週ペース', kpi_change:'変化', kpi_latest:'最新', kpi_count:'回数', kpi_parts:'部位数', kpi_steps:'歩数平均', kpi_salon:'日サロ計', kpi_kcal:'摂取kcal', kpi_p:'P平均', kpi_salt:'塩分平均', kpi_water:'水分平均',
+    set_title:'設定', sec_profile:'プロフィール', sec_contest:'大会設定', sec_nutrition:'1日の栄養目標', sec_other:'その他', sec_data:'データ', sec_premium:'プレミアム', sec_account:'アカウント', sec_support:'サポート',
+    l_name:'表示名', ph_name:'ニックネーム', l_height:'身長 (cm)', l_age:'年齢', l_sex:'性別', sex_male:'男性', sex_female:'女性',
+    salt:'塩分',
+    l_contest_name:'大会名', l_contest_date:'大会日', l_peak_date:'ピーク日', l_target_w:'目標体重 (kg)',
+    l_p:'タンパク質 P (g)', l_f:'脂質 F (g)', l_c:'炭水化物 C (g)', l_salt:'塩分 (g)', l_tol:'許容誤差 (kcal)', l_kcal_goal:'カロリー目標（自動）',
+    l_water_goal:'水分目標 (ml)', l_day_start:'1日の起点時刻', l_reminder:'リマインダー通知', off_empty:'空欄でオフ',
+    btn_export:'📤 エクスポート', btn_import:'📥 インポート', data_note:'全データ（記録・水分・筋トレ・設定）をJSONで保存／復元します。無料で利用できます。',
+    btn_review:'★ アプリを評価', btn_contact:'✉ お問い合わせ', support_note:'サインイン・購入・同期・通知は本番アプリ（Androidブリッジ）に接続されます。このプレビューはローカルデータで動作します。',
+    btn_save_set:'設定を保存', lang_label:'言語', lang_auto:'自動',
+    contest_lock:'🔒 大会ロードマップ・大会設定はプレミアム機能です', unlock_premium:'プレミアムで解放',
+    prem_upgrade:'⭐ プレミアムにアップグレード', prem_member:'⭐ プレミアム会員 — すべての機能が解放されています', trial_btn:'14日間無料で試す',
+    pf_roadmap:'大会ロードマップ・大会設定', pf_weekly:'週次レポート', pf_gym:'筋トレ分析（1RM推移・停滞検知）', pf_sync:'複数端末のクラウド同期',
+    google_login:'Googleでログイン', login_note:'ログインするとクラウド同期・機種変時のデータ引き継ぎが使えます（本番アプリ）。', btn_signout:'サインアウト', btn_delete_acc:'アカウントを削除', logged_in:'ログイン中',
+    paywall_title:'⭐ プレミアム', paywall_note:'大会に出る人・もっと深く分析したい人向けの機能を解放します。記録と全期間の履歴は無料のまま。', pf_roadmap_sub:'大会日から逆算した目標体重ラインと進捗', restore:'購入が反映されない場合はこちら', price_note:'期間後 ¥400 / 月（いつでも解約可）',
+    confirm:'確定', next:'次へ', copy_prev:'前回コピー', prev:'前回', sw_stop:'終了', meal_input:'食事を入力', add_set:'＋ セットを追加', add_ex:'＋ 種目を追加',
+    menu_title:'今日のメニュー', menu_note:'選んだ部位は「今日の記録」の筋トレ部位として保存されます',
+    part_chest:'胸', part_back:'背中', part_shoulder:'肩', part_arm:'腕', part_leg:'足', part_abs:'腹筋', part_cardio:'有酸素', part_free:'自由',
+    ex_title:'種目を追加', ex_note:'よく使う種目から選択（プリセット）',
+    rest_label:'休憩中', rest_skip:'スキップ',
+    t_saved:'記録しました — <b>自動保存 ✓</b>', t_meal_saved:'食事を記録 — <b>自動保存 ✓</b>', t_set_saved:'設定を保存しました ✓', t_autosaved:'<b>自動保存 ✓</b>', t_rest_done:'休憩終了！次のセットへ 💪',
+    t_water_edit:'編集モード: チップをタップして量を変更', l_quick_ml:'クイック追加の量 (ml)', t_water_add:'水分 +{0}ml — <b>自動保存 ✓</b>', t_menu:'メニュー: {0} — <b>自動保存 ✓</b>', t_quick_upd:'クイック追加を更新（昇順整列）— <b>保存 ✓</b>', t_meal_copied:'前回の食事をコピーしました', ex_default:'種目', confirm_del_ex:'この種目を削除しますか？', rest_next:'{0} 次のセットへ', t_copied_prev:'前回({0})をコピー', t_no_prev:'前回の記録が見つかりません', t_added:'{0} を追加', this_month:'（今月）', range_sep:'〜', insight_pace:'週ペース <span class="ok">{0}kg/週</span>', insight_target:'目標まで <b>{0}kg</b>', insight_sep:'、', insight_need:'{0}の体重記録が2日分以上あると傾向が表示されます。', goal_label:'目標', salon_unit:'分',
+    t_exported:'エクスポートしました ✓', t_export_fail:'エクスポート失敗', t_imported:'インポートしました（{0}項目）✓', t_import_err:'読み込みエラー: 不正なファイル', t_login_app:'Googleログインはアプリで利用できます', t_signout_preview:'サインアウト（プレビュー）', t_delete_app:'アカウント削除はアプリで実行されます', t_purchase_app:'プレミアム購入はアプリで利用できます', t_restore_app:'購入の復元はアプリで利用できます', t_review_app:'アプリの評価はストアから（アプリで利用可）', t_contact_app:'お問い合わせはアプリから送信できます', t_login_ok:'ログインしました ✓', t_acc_deleted:'アカウントを削除しました', t_acc_del_fail:'削除に失敗しました', t_premium_welcome:'プレミアムへようこそ ✓', t_restored:'購入を復元しました ✓', t_not_restored:'有効な購入が見つかりません', t_synced:'クラウドと同期しました ✓', t_contact_sent:'送信しました ✓', t_contact_fail:'送信に失敗しました',
+    gym_empty:'この日の種目はまだありません。<br>下の「＋ 種目を追加」から始めましょう。', insufficient:'データが足りません（2日以上の体重記録）',
+    a_remain:'今日はあと <b>残り{0}kcal</b>', a_pdiff:' / P あと{0}g', a_salt_missing:'塩分が未記録です。', a_prevdiff:'前日比', a_in_pace:' — 減量ペース内 ✓', a_increase:' — 増加',
+  },
+  en: {
+    nav_today:'Today', nav_gym:'Workout', nav_data:'Data', nav_set:'Settings',
+    today:'Today', today_btn:'Today', contest_unset:'No contest', tap_part:'Tap to pick muscle group', menu_unset:'No menu', start:'Start',
+    weight:'Weight', sleep:'Sleep', meal:'Meal', water:'Water', gym:'Workout',
+    kcal_auto:'kcal auto', analysis_title:'🔍 Today\'s analysis', analysis_sub:'Weight change', analysis_empty:'Log data to see your analysis.',
+    seg_week:'Week', seg_month:'Month', seg_all:'All', data_title:'Data', data_empty:'Trends appear as you log data.',
+    weight_trend:'Weight trend', training:'Training', nutrition:'Nutrition', this_week:'This week', last_week:'Last week', all_period:'All time',
+    kpi_avg:'Avg', kpi_pace:'Pace/wk', kpi_change:'Change', kpi_latest:'Latest', kpi_count:'Sessions', kpi_parts:'Muscles', kpi_steps:'Avg steps', kpi_salon:'Tanning', kpi_kcal:'kcal', kpi_p:'Avg P', kpi_salt:'Avg salt', kpi_water:'Avg water',
+    set_title:'Settings', sec_profile:'Profile', sec_contest:'Contest', sec_nutrition:'Daily nutrition goals', sec_other:'Other', sec_data:'Data', sec_premium:'Premium', sec_account:'Account', sec_support:'Support',
+    l_name:'Display name', ph_name:'Nickname', l_height:'Height (cm)', l_age:'Age', l_sex:'Sex', sex_male:'Male', sex_female:'Female',
+    salt:'Salt',
+    l_contest_name:'Contest name', l_contest_date:'Contest date', l_peak_date:'Peak date', l_target_w:'Target weight (kg)',
+    l_p:'Protein P (g)', l_f:'Fat F (g)', l_c:'Carbs C (g)', l_salt:'Salt (g)', l_tol:'Tolerance (kcal)', l_kcal_goal:'Calorie goal (auto)',
+    l_water_goal:'Water goal (ml)', l_day_start:'Day start hour', l_reminder:'Reminder', off_empty:'Empty = off',
+    btn_export:'📤 Export', btn_import:'📥 Import', data_note:'Back up & restore all data (logs, water, workouts, settings) as JSON. Free.',
+    btn_review:'★ Rate app', btn_contact:'✉ Contact', support_note:'Sign-in, purchase, sync and notifications connect in the real app (Android bridge). This preview runs on local data.',
+    btn_save_set:'Save settings', lang_label:'Language', lang_auto:'Auto',
+    contest_lock:'🔒 Contest roadmap & settings are a Premium feature', unlock_premium:'Unlock with Premium',
+    prem_upgrade:'⭐ Upgrade to Premium', prem_member:'⭐ Premium member — all features unlocked', trial_btn:'Try 14 days free',
+    pf_roadmap:'Contest roadmap & settings', pf_weekly:'Weekly report', pf_gym:'Workout analytics (1RM trend, plateau)', pf_sync:'Multi-device cloud sync',
+    google_login:'Sign in with Google', login_note:'Sign in to enable cloud sync and data transfer on device change (real app).', btn_signout:'Sign out', btn_delete_acc:'Delete account', logged_in:'Signed in',
+    paywall_title:'⭐ Premium', paywall_note:'Unlocks features for competitors and power users. Logging and full history stay free.', pf_roadmap_sub:'Target weight line & progress from contest date', restore:"Purchase not showing? Tap here", price_note:'¥400/mo after trial (cancel anytime)',
+    confirm:'OK', next:'Next', copy_prev:'Copy last', prev:'Prev', sw_stop:'Stop', meal_input:'Enter meal', add_set:'＋ Add set', add_ex:'＋ Add exercise',
+    menu_title:'Today\'s menu', menu_note:'The selected muscle group is saved to today\'s workout log',
+    part_chest:'Chest', part_back:'Back', part_shoulder:'Shoulders', part_arm:'Arms', part_leg:'Legs', part_abs:'Abs', part_cardio:'Cardio', part_free:'Free',
+    ex_title:'Add exercise', ex_note:'Pick from your presets',
+    rest_label:'Resting', rest_skip:'Skip',
+    t_saved:'Saved — <b>auto-saved ✓</b>', t_meal_saved:'Meal saved — <b>auto-saved ✓</b>', t_set_saved:'Settings saved ✓', t_autosaved:'<b>Auto-saved ✓</b>', t_rest_done:'Rest over! Next set 💪',
+    t_water_edit:'Edit mode: tap a chip to change the amount', l_quick_ml:'Quick-add amount (ml)', t_water_add:'Water +{0}ml — <b>auto-saved ✓</b>', t_menu:'Menu: {0} — <b>auto-saved ✓</b>', t_quick_upd:'Quick-add updated (sorted) — <b>saved ✓</b>', t_meal_copied:'Copied last meal', ex_default:'Exercise', confirm_del_ex:'Delete this exercise?', rest_next:'{0} — next set', t_copied_prev:'Copied last ({0})', t_no_prev:'No previous record found', t_added:'Added {0}', this_month:' (this month)', range_sep:'–', insight_pace:'Pace <span class="ok">{0}kg/wk</span>', insight_target:'{0}kg to target', insight_sep:', ', insight_need:'Log 2+ weight entries in {0} to see trends.', goal_label:'Goal', salon_unit:'min',
+    t_exported:'Exported ✓', t_export_fail:'Export failed', t_imported:'Imported ({0} items) ✓', t_import_err:'Import error: invalid file', t_login_app:'Google sign-in is available in the app', t_signout_preview:'Signed out (preview)', t_delete_app:'Account deletion runs in the app', t_purchase_app:'Premium purchase is available in the app', t_restore_app:'Restore is available in the app', t_review_app:'Rate the app from the store (in-app)', t_contact_app:'Contact is available from the app', t_login_ok:'Signed in ✓', t_acc_deleted:'Account deleted', t_acc_del_fail:'Deletion failed', t_premium_welcome:'Welcome to Premium ✓', t_restored:'Purchase restored ✓', t_not_restored:'No active purchase found', t_synced:'Synced with cloud ✓', t_contact_sent:'Sent ✓', t_contact_fail:'Failed to send',
+    gym_empty:'No exercises for this day yet.<br>Start from “＋ Add exercise” below.', insufficient:'Not enough data (need 2+ weight logs)',
+    a_remain:'<b>{0} kcal left</b> today', a_pdiff:' / {0}g P to go', a_salt_missing:'Salt not logged.', a_prevdiff:'vs yesterday', a_in_pace:' — within cut pace ✓', a_increase:' — up',
+  }
+};
+function resolveLang(){ const o=localStorage.getItem('app_lang'); if(o==='ja'||o==='en') return o; return (navigator.language||'').toLowerCase().indexOf('ja')===0?'ja':'en'; }
+let LANG=resolveLang();
+function t(k){ let s=(I18N[LANG]&&I18N[LANG][k]!=null)?I18N[LANG][k]:(I18N.ja[k]!=null?I18N.ja[k]:k); if(arguments.length>1){ for(let i=1;i<arguments.length;i++) s=s.replace('{'+(i-1)+'}',arguments[i]); } return s; }
+function applyI18n(){
+  document.querySelectorAll('[data-i18n]').forEach(e=>{ e.textContent=t(e.getAttribute('data-i18n')); });
+  document.querySelectorAll('[data-i18n-html]').forEach(e=>{ e.innerHTML=t(e.getAttribute('data-i18n-html')); });
+  document.querySelectorAll('[data-i18n-ph]').forEach(e=>{ e.setAttribute('placeholder', t(e.getAttribute('data-i18n-ph'))); });
+}
+function setLang(v){ localStorage.setItem('app_lang', v); LANG=resolveLang(); applyI18n(); try{ renderToday(); }catch(e){} try{ if(document.getElementById('pg-data').classList.contains('active')) renderData(); }catch(e){} try{ if(document.getElementById('pg-set').classList.contains('active')) renderSet(); }catch(e){} try{ if(document.getElementById('pg-gym').classList.contains('active')) renderGym(); }catch(e){} }
+
 /* ===== データ層（本番 index.html と共通の localStorage キー） ===== */
 const DB = {
   records(){ try{return JSON.parse(localStorage.getItem('training_records')||'[]')}catch(e){return[]} },
@@ -508,6 +583,24 @@ function isPremium(){
     if(typeof AndroidBridge==='undefined') return true; // ブラウザ版は全開放
     return localStorage.getItem('is_premium')==='true';
   }catch(e){return false;}
+}
+
+/* ===== クラウド同期（本番ブリッジ移植・Stage4①） ===== */
+const STORAGE_KEYS=['training_records','gym_data','water_data','user_profile','gym_presets','water_quick_btns','activity_presets','weekly_goals','contest_date','contest_name','contest_weight','peak_date','nutrition_goals','display_name_custom'];
+let _syncTimer=null;
+function syncToCloud(uid, delay){ delay=(delay==null?3000:delay); if(!uid) return; if(!isPremium()) return; clearTimeout(_syncTimer); _syncTimer=setTimeout(()=>{ const data={}; STORAGE_KEYS.forEach(k=>{ const v=localStorage.getItem(k); if(v) data[k]=v; }); if(typeof AndroidBridge!=='undefined' && typeof AndroidBridge.saveToFirestore==='function'){ try{ AndroidBridge.saveToFirestore(uid, JSON.stringify(data)); }catch(e){} } else if(typeof firebase!=='undefined' && firebase.firestore){ try{ firebase.firestore().collection('users').doc(uid).set({data:JSON.stringify(data),updatedAt:Date.now()}); }catch(e){} } }, delay); }
+function loadFromCloud(uid){ if(!uid) return; if(!isPremium()) return; if(typeof AndroidBridge!=='undefined' && typeof AndroidBridge.loadFromFirestore==='function'){ try{ AndroidBridge.loadFromFirestore(uid); }catch(e){} } else if(typeof firebase!=='undefined' && firebase.firestore){ try{ firebase.firestore().collection('users').doc(uid).get().then(doc=>{ if(doc.exists) receiveFirestoreData(doc.data().data||'{}'); }); }catch(e){} } }
+function receiveFirestoreData(jsonStr){
+  try{
+    const data=JSON.parse(jsonStr);
+    STORAGE_KEYS.forEach(k=>{
+      if(!data[k]) return;
+      if(k==='gym_data'){ const cloud=JSON.parse(data[k]); const local=JSON.parse(localStorage.getItem('gym_data')||'{}'); localStorage.setItem('gym_data', JSON.stringify(Object.assign({},cloud,local))); } // ローカル優先マージ
+      else if(k==='training_records'||k==='water_data'){ const local=localStorage.getItem(k); const isEmpty=!local||local==='[]'||local==='{}'; if(isEmpty) localStorage.setItem(k,data[k]); } // 記録系はローカル優先
+      else { localStorage.setItem(k,data[k]); }
+    });
+    renderToday(); toast(t('t_synced'));
+  }catch(e){}
 }
 
 /* ===== 日付ヘルパ（day_start_hour 対応で本番 todayKey と整合） ===== */
@@ -533,7 +626,9 @@ function prevValue(field){
 }
 
 /* ===== ナビ ===== */
+let curScreen='today';
 function go(n){
+  curScreen=n;
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   const pg=document.getElementById('pg-'+n); if(pg) pg.classList.add('active');
   document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('on'));
@@ -543,6 +638,19 @@ function go(n){
   if(n==='data') renderData();
   if(n==='set') renderSet();
 }
+/* ===== ネイティブ互換シム（本番MainActivityが呼ぶJS関数名に対応） ===== */
+// 通知タップ等からの画面遷移。本番は 'gym-screen' 等のidを渡す
+function showScreen(id){
+  const map={'gym-screen':'gym','record-screen':'today','today-screen':'today','data-screen':'data','settings-screen':'set','set-screen':'set'};
+  go(map[id] || (['today','gym','data','set'].includes(id)?id:'today'));
+}
+// Androidバックキー: 開いているシート/パッドがあれば閉じる→true。今日以外なら今日へ→true。それ以外false（＝アプリ終了をネイティブに委譲）
+function handleAndroidBack(){
+  const ov=[['paywall-sheet',closePaywall],['pad',closePad],['mpad',closeMealPad],['menu-sheet',closeMenuSheet],['ex-sheet',closeExSheet]];
+  for(const [id,fn] of ov){ const el=document.getElementById(id); if(el && el.classList.contains('open')){ try{fn();}catch(e){} return true; } }
+  if(curScreen!=='today'){ go('today'); return true; }
+  return false;
+}
 
 /* ===== 設定（本番と共通キーに読み書き） ===== */
 const EXPORT_KEYS=['training_records','water_data','gym_data','gym_presets','user_profile','display_name_custom','contest_name','contest_date','peak_date','contest_weight','nutrition_goals','weekly_goals','week_weight_goal','water_goal','water_quick_btns','water_custom_btns','day_start_hour','activity_presets','my_sets','app_options'];
@@ -550,7 +658,7 @@ function setV(id,v){ const e=document.getElementById(id); if(e!=null && v!=null)
 function renderSet(){
   // 起点時刻セレクトを生成（0〜12時）
   const ds=document.getElementById('set-day-start');
-  if(ds && !ds.options.length){ for(let h=0;h<=12;h++){ const o=document.createElement('option'); o.value=h; o.textContent=h+'時'; ds.appendChild(o);} }
+  if(ds){ const cur=ds.value; ds.innerHTML=''; for(let h=0;h<=12;h++){ const o=document.createElement('option'); o.value=h; o.textContent=(LANG==='ja'?h+'時':h+':00'); ds.appendChild(o);} if(cur) ds.value=cur; }
   const prof=JSON.parse(localStorage.getItem('user_profile')||'{"height":168,"age":25,"sex":"male"}');
   setV('set-name', localStorage.getItem('display_name_custom')||'');
   setV('set-height', prof.height==null?'':prof.height);
@@ -565,6 +673,12 @@ function renderSet(){
   setV('set-goal-salt', ng.salt==null?'':ng.salt); setV('set-goal-tol', ng.tolerance==null?'':ng.tolerance);
   setV('set-water-goal', DB.waterGoal());
   setV('set-day-start', DB.dayStartHour());
+  setV('set-lang', localStorage.getItem('app_lang')||'auto');
+  // リマインダー通知（ネイティブ getNotificationSettings、無ければlocalStorage）
+  let nt=null;
+  if(typeof AndroidBridge!=='undefined' && AndroidBridge.getNotificationSettings){ try{ nt=JSON.parse(AndroidBridge.getNotificationSettings()); }catch(e){} }
+  if(!nt){ const st=localStorage.getItem('notif_time'); nt= st? {enabled:true,hour:+st.split(':')[0],minute:+st.split(':')[1]} : {enabled:false}; }
+  setV('set-notif-time', nt.enabled? (String(nt.hour).padStart(2,'0')+':'+String(nt.minute).padStart(2,'0')) : '');
   updateSetKcal();
   const cc=document.getElementById('contest-card'); if(cc) cc.classList.toggle('locked', !isPremiumReal());
   renderPremiumCard(); renderAccountCard();
@@ -576,36 +690,36 @@ function bridge(m){ const a=[].slice.call(arguments,1); if(typeof AndroidBridge!
 function isPremiumReal(){ if(typeof AndroidBridge!=='undefined' && typeof AndroidBridge.isPremium==='function'){ const r=AndroidBridge.isPremium(); return r===true||r==='true'; } return localStorage.getItem('is_premium')==='true'; }
 function renderPremiumCard(){
   const el=document.getElementById('premium-card'); if(!el) return;
-  if(isPremiumReal()){ el.className='tile prem-status'; el.innerHTML='⭐ プレミアム会員 — すべての機能が解放されています'; }
-  else { el.className='tile prem-card'; el.innerHTML='<h3>⭐ プレミアムにアップグレード</h3><ul><li>大会ロードマップ・大会設定</li><li>週次レポート</li><li>筋トレ分析（1RM推移・停滞検知）</li><li>複数端末のクラウド同期</li></ul><button class="prem-go" onclick="openPaywall()">14日間無料で試す</button>'; }
+  if(isPremiumReal()){ el.className='tile prem-status'; el.innerHTML=t('prem_member'); }
+  else { el.className='tile prem-card'; el.innerHTML='<h3>'+t('prem_upgrade')+'</h3><ul><li>'+t('pf_roadmap')+'</li><li>'+t('pf_weekly')+'</li><li>'+t('pf_gym')+'</li><li>'+t('pf_sync')+'</li></ul><button class="prem-go" onclick="openPaywall()">'+t('trial_btn')+'</button>'; }
 }
 function renderAccountCard(){
   const el=document.getElementById('account-card'); if(!el) return;
   if(window.currentUser){
-    el.innerHTML='<div class="set-row"><label>'+(currentUser.name||'ログイン中')+'</label><span style="font-size:11px;color:var(--sub);">'+(currentUser.email||'')+'</span></div>'+
-      '<div class="set-btn-row"><button class="set-btn" onclick="doSignOut()">サインアウト</button></div>'+
-      '<button class="acc-btn acc-danger" style="margin-top:8px;" onclick="doDeleteAccount()">アカウントを削除</button>';
+    el.innerHTML='<div class="set-row"><label>'+(currentUser.name||t('logged_in'))+'</label><span style="font-size:11px;color:var(--sub);">'+(currentUser.email||'')+'</span></div>'+
+      '<div class="set-btn-row"><button class="set-btn" onclick="doSignOut()">'+t('btn_signout')+'</button></div>'+
+      '<button class="acc-btn acc-danger" style="margin-top:8px;" onclick="doDeleteAccount()">'+t('btn_delete_acc')+'</button>';
   } else {
-    el.innerHTML='<button class="acc-btn acc-google" onclick="doSignIn()">'+GOOGLE_ICON+'Googleでログイン</button>'+
-      '<div class="set-note">ログインするとクラウド同期・機種変時のデータ引き継ぎが使えます（本番アプリ）。</div>';
+    el.innerHTML='<button class="acc-btn acc-google" onclick="doSignIn()">'+GOOGLE_ICON+t('google_login')+'</button>'+
+      '<div class="set-note">'+t('login_note')+'</div>';
   }
 }
-function doSignIn(){ if(!bridge('signInWithGoogle')) toast('Googleログインはアプリで利用できます'); }
-function doSignOut(){ if(!bridge('signOut')){ window.currentUser=null; renderAccountCard(); toast('サインアウト（プレビュー）'); } }
-function doDeleteAccount(){ if(!confirm('アカウントとクラウド上のデータを削除しますか？')) return; if(!bridge('deleteAccountAndData')){ window.currentUser=null; renderAccountCard(); toast('アカウント削除はアプリで実行されます'); } }
+function doSignIn(){ if(!bridge('signInWithGoogle')) toast(t('t_login_app')); }
+function doSignOut(){ if(!bridge('signOut')){ window.currentUser=null; renderAccountCard(); toast(t('t_signout_preview')); } }
+function doDeleteAccount(){ if(!confirm(t('btn_delete_acc')+'?')) return; if(!bridge('deleteAccountAndData')){ window.currentUser=null; renderAccountCard(); toast(t('t_delete_app')); } }
 function openPaywall(){ document.getElementById('paywall-sheet').classList.add('open'); document.getElementById('paywall-ov').classList.add('open'); }
 function closePaywall(){ document.getElementById('paywall-sheet').classList.remove('open'); document.getElementById('paywall-ov').classList.remove('open'); }
-function purchasePremium(){ if(!bridge('purchasePremium')) toast('プレミアム購入はアプリで利用できます'); }
-function restorePremium(){ if(!bridge('restorePremium')) toast('購入の復元はアプリで利用できます'); }
-function reviewApp(){ if(!bridge('requestReview') && !bridge('openPlayStore')) toast('アプリの評価はストアから（アプリで利用可）'); }
-function contactApp(){ if(!bridge('sendContactForm', JSON.stringify({source:'v3-preview'}))) toast('お問い合わせはアプリから送信できます'); }
+function purchasePremium(){ if(!bridge('purchasePremium')) toast(t('t_purchase_app')); }
+function restorePremium(){ if(!bridge('restorePremium')) toast(t('t_restore_app')); }
+function reviewApp(){ if(!bridge('requestReview') && !bridge('openPlayStore')) toast(t('t_review_app')); }
+function contactApp(){ if(!bridge('sendContactForm', JSON.stringify({source:'v3-preview'}))) toast(t('t_contact_app')); }
 /* 本番ブリッジからのコールバック（実機ではここに繋がる） */
-function onFirebaseSignIn(uid,name,email){ window.currentUser={uid:uid,name:name,email:email}; renderAccountCard(); toast('ログインしました ✓'); }
+function onFirebaseSignIn(uid,name,email){ window.currentUser={uid:uid,name:name,email:email}; renderAccountCard(); loadFromCloud(uid); toast(t('t_login_ok')); }
 function onFirebaseSignOut(){ window.currentUser=null; renderAccountCard(); }
-function onAccountDeleted(ok,msg){ window.currentUser=null; renderAccountCard(); toast(ok?'アカウントを削除しました':(msg||'削除に失敗しました')); }
-function onPremiumPurchased(){ try{localStorage.setItem('is_premium','true');}catch(e){} closePaywall(); renderPremiumCard(); renderAccountCard(); toast('プレミアムへようこそ ✓'); }
-function onPremiumRestored(ok){ if(ok){ try{localStorage.setItem('is_premium','true');}catch(e){} } renderPremiumCard(); toast(ok?'購入を復元しました ✓':'有効な購入が見つかりません'); }
-function receiveImportData(str){ try{ const obj=JSON.parse(str); let n=0; Object.keys(obj).forEach(k=>{ if(EXPORT_KEYS.includes(k)){ localStorage.setItem(k,obj[k]); n++; } }); toast('インポートしました（'+n+'項目）✓'); renderSet(); renderToday(); }catch(e){ toast('インポート失敗: 不正なデータ'); } }
+function onAccountDeleted(ok,msg){ window.currentUser=null; renderAccountCard(); toast(ok?t('t_acc_deleted'):(msg||t('t_acc_del_fail'))); }
+function onPremiumPurchased(){ try{localStorage.setItem('is_premium','true');}catch(e){} closePaywall(); renderPremiumCard(); renderAccountCard(); toast(t('t_premium_welcome')); }
+function onPremiumRestored(ok){ if(ok){ try{localStorage.setItem('is_premium','true');}catch(e){} } renderPremiumCard(); toast(ok?t('t_restored'):t('t_not_restored')); }
+function receiveImportData(str){ try{ const obj=JSON.parse(str); let n=0; Object.keys(obj).forEach(k=>{ if(EXPORT_KEYS.includes(k)){ localStorage.setItem(k,obj[k]); n++; } }); toast(t('t_imported', n)); renderSet(); renderToday(); }catch(e){ toast(t('t_import_err')); } }
 function updateSetKcal(){
   const g=id=>parseFloat(document.getElementById(id).value)||0;
   document.getElementById('set-kcal').textContent=calcKcal(g('set-goal-p'),g('set-goal-f'),g('set-goal-c')).toLocaleString()+' kcal';
@@ -629,21 +743,36 @@ function saveSet(){
   localStorage.setItem('nutrition_goals', JSON.stringify(ng));
   localStorage.setItem('water_goal', String(parseInt(document.getElementById('set-water-goal').value)||2000));
   localStorage.setItem('day_start_hour', document.getElementById('set-day-start').value);
-  if(typeof AndroidBridge!=='undefined'){ try{ if(window.currentUser && typeof syncToCloud==='function') syncToCloud(currentUser.uid,0);}catch(e){} }
-  toast('設定を保存しました ✓');
+  // リマインダー通知
+  const ntv=document.getElementById('set-notif-time').value;
+  if(ntv){ const h=+ntv.split(':')[0], m=+ntv.split(':')[1]; if(typeof AndroidBridge!=='undefined'&&AndroidBridge.setNotification){ try{ AndroidBridge.setNotification(true,h,m); }catch(e){} } localStorage.setItem('notif_time',ntv); }
+  else { if(typeof AndroidBridge!=='undefined'&&AndroidBridge.setNotification){ try{ AndroidBridge.setNotification(false,0,0); }catch(e){} } localStorage.removeItem('notif_time'); }
+  if(typeof AndroidBridge!=='undefined'){ try{ if(window.currentUser && typeof syncToCloud==='function') syncToCloud(currentUser.uid);}catch(e){} }
+}
+/* 自動保存: 設定の各項目を変更/確定した瞬間に保存（保存ボタンなし＝アプリ全体の自動保存と統一） */
+let _autoSaveToastT=null;
+function autoSaveSet(){ saveSet(); clearTimeout(_autoSaveToastT); _autoSaveToastT=setTimeout(()=>toast(t('t_autosaved')),350); }
+function wireSettingsAutoSave(){
+  ['set-name','set-contest-name','set-sex','set-day-start','set-contest-date','set-peak-date','set-notif-time'].forEach(id=>{
+    const el=document.getElementById(id); if(el && !el._asWired){ el._asWired=true; el.addEventListener('change', autoSaveSet); }
+  });
 }
 function exportData(){
   const obj={}; EXPORT_KEYS.forEach(k=>{ const v=localStorage.getItem(k); if(v!=null) obj[k]=v; });
   const json=JSON.stringify(obj,null,2);
-  if(bridge('saveJson','physiquelog-backup.json',json)){ toast('エクスポートしました ✓'); return; }
-  try{ const blob=new Blob([json],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='physiquelog-backup.json'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(a.href); toast('エクスポートしました ✓'); }catch(e){ toast('エクスポート失敗'); }
+  if(bridge('saveJson','physiquelog-backup.json',json)){ toast(t('t_exported')); return; }
+  try{ const blob=new Blob([json],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='physiquelog-backup.json'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(a.href); toast(t('t_exported')); }catch(e){ toast(t('t_export_fail')); }
 }
 function importData(file){
   const r=new FileReader();
-  r.onload=()=>{ try{ const obj=JSON.parse(r.result); let n=0; Object.keys(obj).forEach(k=>{ if(EXPORT_KEYS.includes(k)){ localStorage.setItem(k, obj[k]); n++; } }); toast('インポートしました（'+n+'項目）✓'); renderSet(); renderToday(); }catch(e){ toast('読み込みエラー: 不正なファイル'); } };
+  r.onload=()=>{ try{ const obj=JSON.parse(r.result); let n=0; Object.keys(obj).forEach(k=>{ if(EXPORT_KEYS.includes(k)){ localStorage.setItem(k, obj[k]); n++; } }); toast(t('t_imported', n)); renderSet(); renderToday(); }catch(e){ toast(t('t_import_err')); } };
   r.readAsText(file);
 }
 let _tt; function toast(msg){ const t=document.getElementById('toast'); t.innerHTML=msg; t.classList.add('show'); clearTimeout(_tt); _tt=setTimeout(()=>t.classList.remove('show'),1600); }
+// 本番ネイティブが呼ぶトースト（クラウド保存/通知設定/課金メッセージ等）。第2引数isErrorは現状未使用
+function showToast(msg, isError){ toast(msg); }
+// お問い合わせ送信結果のコールバック（sendContactForm後にネイティブが呼ぶ）
+function onContactSent(ok, msg){ toast(ok ? t('t_contact_sent') : (msg || t('t_contact_fail'))); }
 
 /* ===== 今日 描画 ===== */
 const WD=['日','月','火','水','木','金','土'];
@@ -654,12 +783,15 @@ function dpick(el){ if(el && el.showPicker){ try{ el.showPicker(); }catch(e){} }
 function toggleSec(h){ h.classList.toggle('open'); const card=h.nextElementSibling; if(card && card.classList.contains('set-card')) card.classList.toggle('sec-hidden'); }
 function goContestSettings(){ go('set'); setTimeout(()=>{ const s=document.getElementById('sec-contest'); if(s){ s.classList.add('open'); const c=s.nextElementSibling; if(c && c.classList.contains('set-card')) c.classList.remove('sec-hidden'); s.scrollIntoView({behavior:'smooth',block:'start'}); } },140); }
 function onCalChange(v){ if(v){ curDate=v; renderToday(); } }
+const PART_KEY={'胸':'part_chest','背中':'part_back','肩':'part_shoulder','腕':'part_arm','足':'part_leg','腹筋':'part_abs','有酸素':'part_cardio','自由':'part_free'};
+function partLabel(m){ return PART_KEY[m]?t(PART_KEY[m]):m; }
+function fmtDateLocal(d){ const wd=(LANG==='ja'?['日','月','火','水','木','金','土']:['Sun','Mon','Tue','Wed','Thu','Fri','Sat'])[d.getDay()]; return LANG==='ja'?`${d.getMonth()+1}月${d.getDate()}日（${wd}）`:`${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()]} ${d.getDate()} (${wd})`; }
 function renderToday(){
   const rec=getRec(curDate)||blankRec(curDate);
   const d=new Date(curDate+'T00:00:00');
-  document.getElementById('today-date').textContent=`${d.getMonth()+1}月${d.getDate()}日（${WD[d.getDay()]}）`;
+  document.getElementById('today-date').textContent=fmtDateLocal(d);
   const _isToday=(curDate===logicalToday());
-  document.getElementById('today-label').textContent = _isToday?'今日':'';
+  document.getElementById('today-label').textContent = _isToday?t('today'):'';
   const _bt=document.getElementById('btn-today'); if(_bt) _bt.classList.toggle('cur', _isToday);
   // 大会 D-XX
   const cd=DB.contestDate();
@@ -668,28 +800,28 @@ function renderToday(){
   if(cd){
     const diff=Math.ceil((new Date(cd+'T00:00:00')-new Date(curDate+'T00:00:00'))/86400000);
     days.forEach(e=>e.textContent='D'+(diff>=0?'-'+diff:'+'+(-diff)));
-    const cw=DB.contestWeight(); let txt=DB.contestName()||'大会';
-    if(cw!=null && rec.weight!=null){ const gap=(rec.weight-cw); txt+=' ・ あと '+(gap>0?'−'+gap.toFixed(1):'+'+(-gap).toFixed(1))+'kg'; }
+    const cw=DB.contestWeight(); let txt=DB.contestName()||(LANG==='ja'?'大会':'Contest');
+    if(cw!=null && rec.weight!=null){ const gap=(rec.weight-cw); txt += LANG==='ja' ? (' ・ あと '+(gap>0?'−'+gap.toFixed(1):'+'+(-gap).toFixed(1))+'kg') : (' · '+(gap>0?gap.toFixed(1):'+'+(-gap).toFixed(1))+'kg to go'); }
     cn.forEach(e=>e.textContent=txt);
-  } else { days.forEach(e=>e.textContent='—'); cn.forEach(e=>e.textContent='大会未設定'); }
+  } else { days.forEach(e=>e.textContent='—'); cn.forEach(e=>e.textContent=t('contest_unset')); }
   // 体重
   setMini('weight-val','weight-sub','ok-weight', rec.weight, 'kg', ()=>{
-    const pv=prevValue('weight'); if(pv!=null && rec.weight!=null){ const dlt=(rec.weight-pv); return '前日比 <span class="'+(dlt<=0?'g':'')+'">'+(dlt>0?'+':'')+dlt.toFixed(1)+'</span>'; } return '';
+    const pv=prevValue('weight'); if(pv!=null && rec.weight!=null){ const dlt=(rec.weight-pv); return t('a_prevdiff')+' <span class="'+(dlt<=0?'g':'')+'">'+(dlt>0?'+':'')+dlt.toFixed(1)+'</span>'; } return '';
   });
   // 睡眠
   setMini('sleep-val','sleep-sub','ok-sleep', rec.sleep, 'h', ()=> rec.bedtime&&rec.waketime ? rec.bedtime+' → '+rec.waketime : '');
   // 食事
   setMeal('mc-p',rec.p); setMeal('mc-f',rec.f); setMeal('mc-c',rec.c); setMeal('mc-salt',rec.salt);
   const kc = rec.kcal!=null?rec.kcal:calcKcal(rec.p,rec.f,rec.c);
-  document.getElementById('kcal-auto').innerHTML=(kc||0).toLocaleString()+'<small>kcal 自動計算</small>';
+  document.getElementById('kcal-auto').innerHTML=(kc||0).toLocaleString()+'<small>'+t('kcal_auto')+'</small>';
   // 水分
   renderWaterTile();
   // 筋トレ
-  const mn=rec.muscles&&rec.muscles.length? rec.muscles.join('・')+'の日' : 'メニュー未選択';
+  const mn=rec.muscles&&rec.muscles.length? (rec.muscles.map(partLabel).join(LANG==='ja'?'・':', ')+(LANG==='ja'?'の日':'')) : t('menu_unset');
   document.getElementById('menu-name').textContent=mn;
   document.getElementById('gym-title').textContent=mn;
   const lastGym=DB.records().filter(r=>r.date<curDate && r.trained && r.muscles&&r.muscles.length).sort((a,b)=>b.date.localeCompare(a.date))[0];
-  document.getElementById('menu-sub').textContent= lastGym ? ('前回 '+lastGym.date.slice(5).replace('-','/')+' '+lastGym.muscles.join('・')) : 'タップして部位を選択';
+  document.getElementById('menu-sub').textContent= lastGym ? (t('prev')+' '+lastGym.date.slice(5).replace('-','/')+' '+lastGym.muscles.map(partLabel).join(LANG==='ja'?'・':', ')) : t('tap_part');
   // 分析
   renderTodayAnalysis(rec);
 }
@@ -702,12 +834,12 @@ function setMeal(id,val){ document.getElementById(id).querySelector('.n').innerH
 function renderTodayAnalysis(rec){
   const el=document.getElementById('today-analysis'); const parts=[];
   const pv=prevValue('weight');
-  if(rec.weight!=null && pv!=null){ const dlt=(rec.weight-pv); parts.push('前日比 <span class="'+(dlt<=0?'g':'w')+'">'+(dlt>0?'+':'')+dlt.toFixed(1)+'kg</span>'+(dlt<=0?' — 減量ペース内 ✓':' — 増加')); }
+  if(rec.weight!=null && pv!=null){ const dlt=(rec.weight-pv); parts.push(t('a_prevdiff')+' <span class="'+(dlt<=0?'g':'w')+'">'+(dlt>0?'+':'')+dlt.toFixed(1)+'kg</span>'+(dlt<=0?t('a_in_pace'):t('a_increase'))); }
   const ng=DB.nutritionGoals(); const kc=rec.kcal!=null?rec.kcal:calcKcal(rec.p,rec.f,rec.c);
   const goalKcal = (ng.p!=null||ng.f!=null||ng.c!=null) ? calcKcal(ng.p,ng.f,ng.c) : (ng.kcal||0);
-  if(goalKcal){ const remain=goalKcal-(kc||0); parts.push('今日はあと <b>残り'+(remain>0?remain:0)+'kcal</b>'+(ng.p!=null&&rec.p!=null?' / P あと'+Math.max(0,Math.round(ng.p-rec.p))+'g':'')); }
-  if(rec.salt==null) parts.push('塩分が未記録です。');
-  el.innerHTML = parts.length? parts.join('<br>') : '記録を入力すると分析が表示されます。';
+  if(goalKcal){ const remain=goalKcal-(kc||0); let s=t('a_remain',(remain>0?remain:0)); if(ng.p!=null&&rec.p!=null) s+=t('a_pdiff',Math.max(0,Math.round(ng.p-rec.p))); parts.push(s); }
+  if(rec.salt==null) parts.push(t('a_salt_missing'));
+  el.innerHTML = parts.length? parts.join('<br>') : t('analysis_empty');
 }
 
 /* ===== 水分 ===== */
@@ -723,16 +855,16 @@ function toggleWaterEdit(){
   waterEditMode=!waterEditMode;
   document.getElementById('wedit').classList.toggle('on',waterEditMode);
   for(let i=0;i<3;i++) document.getElementById('wc'+i).classList.toggle('editing',waterEditMode);
-  if(waterEditMode) toast('編集モード: チップをタップして量を変更');
+  if(waterEditMode) toast(t('t_water_edit'));
 }
 function waterChip(i){
   const qb=DB.quickBtns();
-  if(waterEditMode){ openPad('クイック追加の量 (ml)','wchip'+i,String(qb[i]||0)); return; }
+  if(waterEditMode){ openPad('l_quick_ml','wchip'+i,String(qb[i]||0)); return; }
   const w=DB.water(); const key=curDate;
   if(!w[key]) w[key]={total:0,log:[]};
   const now=new Date(); const tm=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
   w[key].total+=qb[i]; w[key].log.push({ml:qb[i],time:tm}); DB.saveWater(w);
-  renderWaterTile(); toast('水分 +'+qb[i]+'ml — <b>自動保存 ✓</b>');
+  renderWaterTile(); toast(t('t_water_add', qb[i]));
 }
 
 /* ===== メニュー（筋トレ部位＝記録のmuscles） ===== */
@@ -741,7 +873,7 @@ function closeMenuSheet(){ document.getElementById('menu-sheet').classList.remov
 function pickMenu(name){
   const rec=getRec(curDate)||blankRec(curDate);
   rec.trained=true; rec.muscles=[name]; upsertRec(rec);
-  closeMenuSheet(); renderToday(); toast('メニュー: '+name+' — <b>自動保存 ✓</b>');
+  closeMenuSheet(); renderToday(); toast(t('t_menu', partLabel(name)));
 }
 
 /* ===== 数値パッド ===== */
@@ -755,6 +887,7 @@ function normBuf(s){
   else { s=s.replace(/^0+(?=\d)/,''); }
   return s;
 }
+function padLabel(tg){ const k={weight:'weight',sleep:'sleep',p:'l_p',f:'l_f',c:'l_c',salt:'l_salt',steps:'kpi_steps'}; const u={weight:' (kg)',sleep:' (h)'}; return k[tg]?(t(k[tg])+(u[tg]||'')):tg; }
 function openPad(label,target){
   padTarget=target; padFresh=true;
   const rec=getRec(curDate)||blankRec(curDate);
@@ -762,17 +895,17 @@ function openPad(label,target){
   if(target.startsWith('wchip')){ cur=String(DB.quickBtns()[parseInt(target.slice(5))]||0); }
   else { cur = rec[target]!=null?String(rec[target]):'0'; pv=prevValue(target); }
   padPrev_=pv;
-  document.getElementById('pad-lbl').textContent=label||PAD_LABEL[target]||'';
+  document.getElementById('pad-lbl').textContent = label ? t(label) : padLabel(target);
   document.getElementById('pad-val').textContent=cur;
   const pb=document.getElementById('pad-prev');
-  if(pv!=null){ pb.classList.remove('hide'); pb.textContent='前回 '+pv; } else pb.classList.add('hide');
+  if(pv!=null){ pb.classList.remove('hide'); pb.textContent=t('prev')+' '+pv; } else pb.classList.add('hide');
   document.getElementById('pad').classList.add('open'); document.getElementById('pad-ov').classList.add('open');
 }
 function closePad(){ document.getElementById('pad').classList.remove('open'); document.getElementById('pad-ov').classList.remove('open'); }
 function openSetPad(id,label){
   padTarget='set:'+id; padFresh=true; padPrev_=null;
   const el=document.getElementById(id); const cur=(el&&el.value!=='')?el.value:'0';
-  document.getElementById('pad-lbl').textContent=label||'';
+  document.getElementById('pad-lbl').textContent=t(label||'');
   document.getElementById('pad-val').textContent=cur;
   document.getElementById('pad-prev').classList.add('hide');
   document.getElementById('pad').classList.add('open'); document.getElementById('pad-ov').classList.add('open');
@@ -790,13 +923,13 @@ function padKey(k){
 function padPrev(){ if(padPrev_!=null) document.getElementById('pad-val').textContent=String(padPrev_).replace(/,/g,''); }
 function padDone(){
   const v=document.getElementById('pad-val').textContent; const n=parseFloat(v);
-  if(padTarget.startsWith('gym:')){ const pr=padTarget.split(':'); const ei=+pr[1],si=+pr[2],which=pr[3]; if(which==='w') gymWork[ei].sets[si].weight=isNaN(n)?null:n; else gymWork[ei].sets[si].reps=isNaN(n)?null:n; saveGymData(); closePad(); renderGym(); toast('記録しました — <b>自動保存 ✓</b>'); return; }
-  if(padTarget.startsWith('wchip')){ const i=parseInt(padTarget.slice(5)); const qb=DB.quickBtns(); qb[i]=Math.round(n)||0; qb.sort((a,b)=>a-b); DB.saveQuickBtns(qb); renderWaterTile(); closePad(); toast('クイック追加を更新（昇順整列）— <b>保存 ✓</b>'); return; }
-  if(padTarget.startsWith('set:')){ const id=padTarget.slice(4); const el=document.getElementById(id); if(el) el.value=v; if(typeof updateSetKcal==='function') updateSetKcal(); closePad(); return; }
+  if(padTarget.startsWith('gym:')){ const pr=padTarget.split(':'); const ei=+pr[1],si=+pr[2],which=pr[3]; if(which==='w') gymWork[ei].sets[si].weight=isNaN(n)?null:n; else gymWork[ei].sets[si].reps=isNaN(n)?null:n; saveGymData(); closePad(); renderGym(); toast(t('t_saved')); return; }
+  if(padTarget.startsWith('wchip')){ const i=parseInt(padTarget.slice(5)); const qb=DB.quickBtns(); qb[i]=Math.round(n)||0; qb.sort((a,b)=>a-b); DB.saveQuickBtns(qb); renderWaterTile(); closePad(); toast(t('t_quick_upd')); return; }
+  if(padTarget.startsWith('set:')){ const id=padTarget.slice(4); const el=document.getElementById(id); if(el) el.value=v; if(typeof updateSetKcal==='function') updateSetKcal(); closePad(); autoSaveSet(); return; }
   const rec=getRec(curDate)||blankRec(curDate);
   rec[padTarget] = isNaN(n)?null:n;
   if(['p','f','c'].includes(padTarget)) rec.kcal=calcKcal(rec.p,rec.f,rec.c);
-  upsertRec(rec); closePad(); renderToday(); toast('記録しました — <b>自動保存 ✓</b>');
+  upsertRec(rec); closePad(); renderToday(); toast(t('t_saved'));
 }
 
 /* ===== 食事一括パッド ===== */
@@ -810,7 +943,7 @@ function openMealPad(idx){
 function closeMealPad(){ document.getElementById('mpad').classList.remove('open'); document.getElementById('mpad-ov').classList.remove('open'); }
 function mealFocus(idx){ mIdx=idx; mFresh=true; mCur=(mVals[idx]==null?'':String(mVals[idx])); for(let i=0;i<4;i++) document.getElementById('mf-'+i).classList.toggle('editing',i===idx);
   // 次へ: P/F/Cでは表示、塩分(最後)では非表示（6の隣を空ける）
-  const ok=document.getElementById('mpad-ok'); if(ok){ ok.textContent='次へ'; ok.style.visibility = (idx===3)?'hidden':'visible'; }
+  const ok=document.getElementById('mpad-ok'); if(ok){ ok.textContent=t('next'); ok.style.visibility = (idx===3)?'hidden':'visible'; }
 }
 function mealNext(){ if(mIdx<3) mealFocus(mIdx+1); }
 function mRender(){
@@ -833,9 +966,9 @@ function mKey(k){
 function mealCommit(){
   const rec=getRec(curDate)||blankRec(curDate);
   rec.p=mVals[0]; rec.f=mVals[1]; rec.c=mVals[2]; rec.salt=mVals[3]; rec.kcal=calcKcal(rec.p,rec.f,rec.c);
-  upsertRec(rec); closeMealPad(); renderToday(); toast('食事を記録 — <b>自動保存 ✓</b>');
+  upsertRec(rec); closeMealPad(); renderToday(); toast(t('t_meal_saved'));
 }
-function mealCopyPrev(){ mVals=[prevValue('p'),prevValue('f'),prevValue('c'),prevValue('salt')]; mRender(); toast('前回の食事をコピーしました'); }
+function mealCopyPrev(){ mVals=[prevValue('p'),prevValue('f'),prevValue('c'),prevValue('salt')]; mRender(); toast(t('t_meal_copied')); }
 
 /* ===== 筋トレ画面（gym_data 編集配線） ===== */
 let gymWork=[];
@@ -847,7 +980,7 @@ function saveGymData(){
 function renderGym(){
   gymWork = JSON.parse(JSON.stringify((DB.gym()[curDate]||{}).exercises||[]));
   const wrap=document.getElementById('gym-cards');
-  if(!gymWork.length){ wrap.innerHTML='<div class="empty">この日の種目はまだありません。<br>下の「＋ 種目を追加」から始めましょう。</div>'; return; }
+  if(!gymWork.length){ wrap.innerHTML='<div class="empty">'+t('gym_empty')+'</div>'; return; }
   wrap.innerHTML=gymWork.map((ex,ei)=>{
     const sets=(ex.sets||[]).map((s,si)=>{
       const w=(s.weight===''||s.weight==null)?'<span class="ph">—</span>':s.weight;
@@ -857,21 +990,21 @@ function renderGym(){
         `<div class="cell" onclick="openGymPad(${ei},${si},'r')">${r}<small>rep</small></div>`+
         `<button class="chk${s.done?' on':''}" onclick="gymCheck(${ei},${si})">✓</button></div>`;
     }).join('');
-    return `<div class="card"><div class="ex-h"><span class="nm">${ex.name||'種目'}</span>`+
-      `<button class="copy-prev" onclick="gymCopyPrev(${ei})">前回コピー</button>`+
+    return `<div class="card"><div class="ex-h"><span class="nm">${ex.name||t('ex_default')}</span>`+
+      `<button class="copy-prev" onclick="gymCopyPrev(${ei})">${t('copy_prev')}</button>`+
       `<button class="copy-prev" onclick="gymDelEx(${ei})">🗑</button></div>`+
       sets+
-      `<button class="ex-add" style="width:100%;background:none;border:none;border-top:1px solid var(--line);color:var(--sub);padding:14px;font-size:12px;font-weight:700;cursor:pointer;" onclick="gymAddSet(${ei})">＋ セットを追加</button></div>`;
+      `<button class="ex-add" style="width:100%;background:none;border:none;border-top:1px solid var(--line);color:var(--sub);padding:14px;font-size:12px;font-weight:700;cursor:pointer;" onclick="gymAddSet(${ei})">${t('add_set')}</button></div>`;
   }).join('');
 }
 function gymAddSet(ei){ gymWork[ei].sets=gymWork[ei].sets||[]; const last=gymWork[ei].sets[gymWork[ei].sets.length-1]; gymWork[ei].sets.push({weight:last?last.weight:null,reps:last?last.reps:null}); saveGymData(); renderGym(); }
-function gymDelEx(ei){ if(!confirm('この種目を削除しますか？')) return; gymWork.splice(ei,1); saveGymData(); renderGym(); }
-function gymCheck(ei,si){ const s=gymWork[ei].sets[si]; s.done=!s.done; saveGymData(); renderGym(); if(s.done) startRest((gymWork[ei].name||'')+' 次のセットへ'); }
+function gymDelEx(ei){ if(!confirm(t('confirm_del_ex'))) return; gymWork.splice(ei,1); saveGymData(); renderGym(); }
+function gymCheck(ei,si){ const s=gymWork[ei].sets[si]; s.done=!s.done; saveGymData(); renderGym(); if(s.done) startRest(t('rest_next', gymWork[ei].name||'')); }
 function gymCopyPrev(ei){
   const name=gymWork[ei].name, g=DB.gym();
   const dates=Object.keys(g).filter(d=>d<curDate).sort().reverse();
-  for(const d of dates){ const ex=(g[d].exercises||[]).find(e=>e.name===name); if(ex&&ex.sets&&ex.sets.length){ gymWork[ei].sets=ex.sets.map(s=>({weight:s.weight,reps:s.reps})); saveGymData(); renderGym(); toast('前回('+d.slice(5).replace('-','/')+')をコピー'); return; } }
-  toast('前回の記録が見つかりません');
+  for(const d of dates){ const ex=(g[d].exercises||[]).find(e=>e.name===name); if(ex&&ex.sets&&ex.sets.length){ gymWork[ei].sets=ex.sets.map(s=>({weight:s.weight,reps:s.reps})); saveGymData(); renderGym(); toast(t('t_copied_prev', d.slice(5).replace('-','/'))); return; } }
+  toast(t('t_no_prev'));
 }
 function gymPresetList(){
   let arr=[]; try{ const p=JSON.parse(localStorage.getItem('gym_presets')||'null'); if(Array.isArray(p)) arr=p.map(x=>typeof x==='string'?x:(x&&x.name)).filter(Boolean);}catch(e){}
@@ -884,7 +1017,7 @@ function openExSheet(){
   document.getElementById('ex-sheet').classList.add('open'); document.getElementById('ex-ov').classList.add('open');
 }
 function closeExSheet(){ document.getElementById('ex-sheet').classList.remove('open'); document.getElementById('ex-ov').classList.remove('open'); }
-function pickEx(name){ gymWork.push({name,sets:[{weight:null,reps:null}]}); saveGymData(); closeExSheet(); renderGym(); toast(name+' を追加'); }
+function pickEx(name){ gymWork.push({name,sets:[{weight:null,reps:null}]}); saveGymData(); closeExSheet(); renderGym(); toast(t('t_added', name)); }
 function openGymPad(ei,si,which){
   padTarget='gym:'+ei+':'+si+':'+which; padFresh=true;
   const s=gymWork[ei].sets[si]; const cur= which==='w'?(s.weight==null?'':s.weight):(s.reps==null?'':s.reps);
@@ -894,7 +1027,7 @@ function openGymPad(ei,si,which){
   padPrev_=pv;
   document.getElementById('pad-lbl').textContent=name+' — '+(which==='w'?'kg':'rep');
   document.getElementById('pad-val').textContent=(cur===''||cur==null)?'0':String(cur);
-  const pb=document.getElementById('pad-prev'); if(pv!=null){pb.classList.remove('hide');pb.textContent='前回 '+pv;}else pb.classList.add('hide');
+  const pb=document.getElementById('pad-prev'); if(pv!=null){pb.classList.remove('hide');pb.textContent=t('prev')+' '+pv;}else pb.classList.add('hide');
   document.getElementById('pad').classList.add('open'); document.getElementById('pad-ov').classList.add('open');
 }
 
@@ -909,12 +1042,12 @@ function rangeWaterAvg(start,end){ const w=DB.water(); const vals=Object.keys(w)
 function fmtU(arr,u){ const a=avg(arr); return a==='—'?'—':a+u; }
 function drawWeightChart(list){
   const svg=document.getElementById('weight-chart');
-  if(!list || list.length<2){ svg.innerHTML='<text x="170" y="74" font-size="11" fill="#545c64" text-anchor="middle">データが足りません（2日以上の体重記録）</text>'; return; }
+  if(!list || list.length<2){ svg.innerHTML='<text x="170" y="74" font-size="11" fill="#545c64" text-anchor="middle">'+t('insufficient')+'</text>'; return; }
   const ws=list.map(r=>r.weight); const min=Math.min(...ws),max=Math.max(...ws); const rng=(max-min)||1;
   const n=list.length; const X=i=>10+(320*i/(n-1)); const Y=w=>20+100*(1-(w-min)/rng);
   const dPath=list.map((r,i)=>(i?'L':'M')+X(i).toFixed(0)+','+Y(r.weight).toFixed(0)).join(' ');
   const cw=DB.contestWeight();
-  let goalLine=''; if(cw!=null && cw>=min-rng && cw<=max+rng){ const gy=Y(cw).toFixed(0); goalLine=`<line x1="0" y1="${gy}" x2="340" y2="${gy}" stroke="#f87171" stroke-width="1" stroke-dasharray="5 4" opacity="0.5"/><text x="6" y="${gy-4}" font-size="9" fill="#f87171" font-family="Inter">目標 ${cw}</text>`; }
+  let goalLine=''; if(cw!=null && cw>=min-rng && cw<=max+rng){ const gy=Y(cw).toFixed(0); goalLine=`<line x1="0" y1="${gy}" x2="340" y2="${gy}" stroke="#f87171" stroke-width="1" stroke-dasharray="5 4" opacity="0.5"/><text x="6" y="${gy-4}" font-size="9" fill="#f87171" font-family="Inter">${t('goal_label')} ${cw}</text>`; }
   svg.innerHTML=goalLine+`<path d="${dPath}" stroke="#c9f04d" stroke-width="2.4" fill="none" stroke-linecap="round"/><circle cx="${X(n-1).toFixed(0)}" cy="${Y(list[n-1].weight).toFixed(0)}" r="4.5" fill="#101214" stroke="#c9f04d" stroke-width="3"/>`;
 }
 function renderData(){
@@ -922,11 +1055,11 @@ function renderData(){
   document.querySelectorAll('#data-seg .seg-btn').forEach((b,i)=>b.classList.toggle('on', i===segIdx[dataPeriod]));
   const nav=document.getElementById('period-nav');
   let start,end,label;
-  if(dataPeriod==='week'){ const r=weekRange(dataOffset); start=r[0]; end=r[1]; nav.classList.remove('hide'); label=(dataOffset===0?'今週':dataOffset===-1?'先週':mmdd(start)+'〜'+mmdd(end)); }
-  else if(dataPeriod==='month'){ const r=monthRange(dataOffset); start=r[0]; end=r[1]; nav.classList.remove('hide'); const d=new Date(start+'T00:00:00'); label=(d.getMonth()+1)+'月'+(dataOffset===0?'（今月）':''); }
-  else { const all=DB.records().filter(r=>r.weight!=null).map(r=>r.date).sort(); start=all[0]||'0000-01-01'; end=all[all.length-1]||'9999-12-31'; nav.classList.add('hide'); label='全期間'; }
+  if(dataPeriod==='week'){ const r=weekRange(dataOffset); start=r[0]; end=r[1]; nav.classList.remove('hide'); label=(dataOffset===0?t('this_week'):dataOffset===-1?t('last_week'):mmdd(start)+t('range_sep')+mmdd(end)); }
+  else if(dataPeriod==='month'){ const r=monthRange(dataOffset); start=r[0]; end=r[1]; nav.classList.remove('hide'); const d=new Date(start+'T00:00:00'); label=(LANG==='ja'?(d.getMonth()+1)+'月':['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()])+(dataOffset===0?t('this_month'):''); }
+  else { const all=DB.records().filter(r=>r.weight!=null).map(r=>r.date).sort(); start=all[0]||'0000-01-01'; end=all[all.length-1]||'9999-12-31'; nav.classList.add('hide'); label=t('all_period'); }
   document.getElementById('period-label').textContent=label;
-  const rangeTxt=(dataPeriod==='all')?'全期間':(mmdd(start)+'〜'+mmdd(end));
+  const rangeTxt=(dataPeriod==='all')?t('all_period'):(mmdd(start)+t('range_sep')+mmdd(end));
   document.getElementById('weight-range').textContent=rangeTxt;
   document.getElementById('train-range').textContent=rangeTxt;
   document.getElementById('nutri-range').textContent=rangeTxt;
@@ -938,46 +1071,70 @@ function renderData(){
   if(wRecs.length){ const ws=wRecs.map(r=>r.weight); avgW=(ws.reduce((a,b)=>a+b,0)/ws.length).toFixed(1); cur=wRecs[wRecs.length-1].weight;
     if(wRecs.length>=2){ const f=wRecs[0],l=wRecs[wRecs.length-1]; const dd=(new Date(l.date)-new Date(f.date))/86400000; chg=(l.weight-f.weight); if(dd>0){ const wp=(l.weight-f.weight)/dd*7; pace=wp.toFixed(2); paceGood=wp<=0; } } }
   document.getElementById('weight-kpis').innerHTML=
-    kpi('平均',avgW)+kpi('週ペース',pace,paceGood)+kpi('変化',chg==='—'?'—':((chg>0?'+':'')+chg.toFixed(1)),chg!=='—'&&chg<=0)+kpi('最新',cur);
+    kpi(t('kpi_avg'),avgW)+kpi(t('kpi_pace'),pace,paceGood)+kpi(t('kpi_change'),chg==='—'?'—':((chg>0?'+':'')+chg.toFixed(1)),chg!=='—'&&chg<=0)+kpi(t('kpi_latest'),cur);
   // トレKPI
   const trecs=DB.records().filter(inRange);
   const trained=trecs.filter(r=>r.trained);
   document.getElementById('train-kpis').innerHTML=
-    kpi('回数',trained.length)+kpi('部位数',new Set(trained.flatMap(r=>r.muscles||[])).size)+kpi('歩数平均',fmtU(trecs.filter(r=>r.steps).map(r=>r.steps),''))+kpi('日サロ計',trecs.reduce((s,r)=>s+(r.salon||0),0)+'分');
+    kpi(t('kpi_count'),trained.length)+kpi(t('kpi_parts'),new Set(trained.flatMap(r=>r.muscles||[])).size)+kpi(t('kpi_steps'),fmtU(trecs.filter(r=>r.steps).map(r=>r.steps),''))+kpi(t('kpi_salon'),trecs.reduce((s,r)=>s+(r.salon||0),0)+t('salon_unit'));
   // 栄養KPI
   const kcals=trecs.map(r=>r.kcal!=null?r.kcal:calcKcal(r.p,r.f,r.c)).filter(x=>x);
   const wAvg=rangeWaterAvg(start,end);
   document.getElementById('nutri-kpis').innerHTML=
-    kpi('摂取kcal',avg(kcals))+kpi('P平均',fmtU(trecs.map(r=>r.p).filter(x=>x),'g'))+kpi('塩分平均',fmtU(trecs.map(r=>r.salt).filter(x=>x),'g'))+kpi('水分平均',wAvg!=null?wAvg.toLocaleString()+'ml':'—');
+    kpi(t('kpi_kcal'),avg(kcals))+kpi(t('kpi_p'),fmtU(trecs.map(r=>r.p).filter(x=>x),'g'))+kpi(t('kpi_salt'),fmtU(trecs.map(r=>r.salt).filter(x=>x),'g'))+kpi(t('kpi_water'),wAvg!=null?wAvg.toLocaleString()+'ml':'—');
   // インサイト
   const ins=document.getElementById('data-insight'); const cw=DB.contestWeight();
   if(wRecs.length>=2){
     let msg='<b>'+label+':</b> ';
-    if(pace!=='—') msg+='週ペース <span class="ok">'+pace+'kg/週</span>';
-    if(cw!=null && cur!=='—') msg+=(pace!=='—'?'、':'')+'目標まで <b>'+(cur-cw).toFixed(1)+'kg</b>';
+    if(pace!=='—') msg+=t('insight_pace', pace);
+    if(cw!=null && cur!=='—') msg+=(pace!=='—'?t('insight_sep'):'')+t('insight_target',(cur-cw).toFixed(1));
     ins.innerHTML=msg;
-  } else ins.textContent=label+'の体重記録が2日分以上あると傾向が表示されます。';
+  } else ins.textContent=t('insight_need', label);
 }
 function kpi(k,v,good){ return `<div><div class="k">${k}</div><div class="v num${good?' g':''}">${v}</div></div>`; }
 function avg(arr){ if(!arr||!arr.length) return '—'; return Math.round(arr.reduce((s,x)=>s+x,0)/arr.length).toLocaleString(); }
 function avgWater(){ const w=DB.water(); const vals=Object.values(w).map(d=>d&&d.total).filter(x=>x); return vals.length?Math.round(vals.slice(-7).reduce((s,x)=>s+x,0)/Math.min(7,vals.length)):'—'; }
 
-/* ===== レストタイマー（ローカルのみ・本番は通知サービス連携予定） ===== */
-let restSec=90, restTimer=null;
-function startRest(label){ restSec=90; document.getElementById('rest-label').textContent=label||'休憩中'; document.getElementById('rest').classList.add('show'); clearInterval(restTimer); tickRest(); restTimer=setInterval(tickRest,1000); }
-function tickRest(){ if(restSec<=0){ restStop(); toast('休憩終了！次のセットへ 💪'); return; } const m=Math.floor(restSec/60),s=restSec%60; document.getElementById('rest-t').textContent=m+':'+String(s).padStart(2,'0'); document.getElementById('rest-bar').style.width=(restSec/90*100)+'%'; restSec--; }
-function restAdd(){ restSec+=30; }
-function restStop(){ clearInterval(restTimer); document.getElementById('rest').classList.remove('show'); }
+/* ===== レストタイマー（本番ネイティブサービス連携・Stage4②） ===== */
+let restEnd=0, restTotal=90, restTimer=null, _restDoneFired=false, REST_DEFAULT=90;
+function startRest(label){
+  restTotal=REST_DEFAULT; restEnd=Date.now()+restTotal*1000; _restDoneFired=false;
+  document.getElementById('rest-label').textContent=label||t('rest_label');
+  document.getElementById('rest').classList.add('show');
+  if(typeof AndroidBridge!=='undefined' && AndroidBridge.startTimer){ try{ AndroidBridge.startTimer(restTotal); }catch(e){} } // BG動作＋音/バイブをネイティブに委譲
+  clearInterval(restTimer); tickRest(); restTimer=setInterval(tickRest,500); // タイムスタンプ基準で自己補正
+}
+function tickRest(){
+  const rem=Math.max(0,Math.round((restEnd-Date.now())/1000)); const tot=restTotal||90;
+  document.getElementById('rest-t').textContent=Math.floor(rem/60)+':'+String(rem%60).padStart(2,'0');
+  document.getElementById('rest-bar').style.width=Math.min(100,rem/tot*100)+'%';
+  if(rem<=0){ clearInterval(restTimer); restTimer=null; onTimerDone(); }
+}
+function restAdd(){ restTotal+=30; restEnd+=30000; if(typeof AndroidBridge!=='undefined' && AndroidBridge.startTimer){ try{ AndroidBridge.startTimer(Math.max(0,Math.round((restEnd-Date.now())/1000))); }catch(e){} } tickRest(); }
+function restStop(){ clearInterval(restTimer); restTimer=null; document.getElementById('rest').classList.remove('show'); if(typeof AndroidBridge!=='undefined' && AndroidBridge.stopTimer){ try{ AndroidBridge.stopTimer(); }catch(e){} } }
+// ネイティブから呼ばれる完了コールバック（またはJS到達0時）
+function onTimerDone(){
+  if(_restDoneFired) return; _restDoneFired=true;
+  clearInterval(restTimer); restTimer=null;
+  document.getElementById('rest').classList.remove('show');
+  toast(t('t_rest_done'));
+  if(typeof AndroidBridge==='undefined'){ // ブラウザのみフォールバック（アプリはネイティブで音/バイブ済み）
+    if(navigator.vibrate) navigator.vibrate([300,100,300]);
+    try{ const a=new (window.AudioContext||window.webkitAudioContext)(); const o=a.createOscillator(),g=a.createGain(); o.connect(g); g.connect(a.destination); o.type='sine'; o.frequency.value=880; g.gain.setValueAtTime(0.5,a.currentTime); g.gain.exponentialRampToValueAtTime(0.001,a.currentTime+0.3); o.start(); o.stop(a.currentTime+0.3); }catch(e){}
+  }
+}
 
 /* ===== ストップウォッチ（簡易） ===== */
 let swRunning=false, swS=0, swTimer=null;
-function toggleSw(){ swRunning=!swRunning; document.getElementById('sw-btn').textContent=swRunning?'終了':'開始'; if(swRunning){ swTimer=setInterval(()=>{swS++; const m=Math.floor(swS/60),s=swS%60; document.getElementById('sw').textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');},1000);} else clearInterval(swTimer); }
+function toggleSw(){ swRunning=!swRunning; document.getElementById('sw-btn').textContent=swRunning?t('sw_stop'):t('start'); if(swRunning){ swTimer=setInterval(()=>{swS++; const m=Math.floor(swS/60),s=swS%60; document.getElementById('sw').textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');},1000);} else clearInterval(swTimer); }
 
 /* ===== ステータスバー時計 ===== */
 function tickClock(){ const d=new Date(); document.getElementById('sb-time').textContent=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); }
 setInterval(tickClock,10000); tickClock();
 
 /* 初期化 */
+applyI18n();
+wireSettingsAutoSave();
 renderToday();
 </script>
 </body>
