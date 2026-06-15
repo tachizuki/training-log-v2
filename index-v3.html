@@ -168,6 +168,15 @@ body{background:#000;color:var(--text);font-family:'Noto Sans JP',sans-serif;dis
 .v3-badge{position:absolute;top:calc(var(--sat) + 2px);left:50%;transform:translateX(-50%);font-size:9px;color:var(--faint);font-weight:700;letter-spacing:.1em;}
 /* 設定 */
 .set-sec{font-size:11px;font-weight:700;color:var(--sub);margin:14px 4px 6px;display:flex;align-items:center;}
+.set-sec.collap{cursor:pointer;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:13px 14px;margin:8px 0 0;}
+.set-sec.collap::after{content:'▾';margin-left:auto;font-size:11px;color:var(--faint);transition:transform .15s;}
+.set-sec.collap:not(.open)::after{transform:rotate(-90deg);}
+.set-sec.collap+.set-card{margin-top:4px;}
+.sec-hidden{display:none;}
+.contest-lock{display:none;text-align:center;padding:18px 8px;color:var(--sub);font-size:13px;line-height:1.7;cursor:pointer;}
+.contest-lock .lock-cta{display:inline-block;margin-top:8px;background:var(--acc);color:#101214;border-radius:20px;padding:6px 18px;font-weight:700;font-size:12px;}
+.set-card.locked .contest-form{display:none;}
+.set-card.locked .contest-lock{display:block;}
 .set-card{padding:4px 14px;margin-bottom:8px;}
 .set-row{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--line);}
 .set-row:last-child{border-bottom:none;}
@@ -301,24 +310,27 @@ body{background:#000;color:var(--text);font-family:'Noto Sans JP',sans-serif;dis
     <div class="page scrollable" id="pg-set">
       <div class="today-title" style="padding:8px 2px 12px;"><h1>設定</h1></div>
 
-      <div class="set-sec">プロフィール</div>
-      <div class="tile set-card">
+      <div class="set-sec collap" onclick="toggleSec(this)">プロフィール</div>
+      <div class="tile set-card sec-hidden">
         <div class="set-row"><label>表示名</label><input type="text" id="set-name" placeholder="ニックネーム"></div>
         <div class="set-row"><label>身長 (cm)</label><input type="number" id="set-height" readonly inputmode="none" onclick="openSetPad('set-height','身長 (cm)')" placeholder="168"></div>
         <div class="set-row"><label>年齢</label><input type="number" id="set-age" readonly inputmode="none" onclick="openSetPad('set-age','年齢')" placeholder="25"></div>
         <div class="set-row"><label>性別</label><select id="set-sex"><option value="male">男性</option><option value="female">女性</option></select></div>
       </div>
 
-      <div class="set-sec" id="sec-contest">大会設定 <span class="prem-badge">PREMIUM</span></div>
-      <div class="tile set-card">
-        <div class="set-row"><label>大会名</label><input type="text" id="set-contest-name" placeholder="東京選手権"></div>
-        <div class="set-row"><label>大会日</label><input type="date" id="set-contest-date" onclick="dpick(this)"></div>
-        <div class="set-row"><label>ピーク日</label><input type="date" id="set-peak-date" onclick="dpick(this)"></div>
-        <div class="set-row"><label>目標体重 (kg)</label><input type="number" id="set-contest-weight" readonly inputmode="none" onclick="openSetPad('set-contest-weight','目標体重 (kg)')" placeholder="60.0"></div>
+      <div class="set-sec collap" id="sec-contest" onclick="toggleSec(this)">大会設定 <span class="prem-badge">PREMIUM</span></div>
+      <div class="tile set-card sec-hidden" id="contest-card">
+        <div class="contest-lock" onclick="openPaywall()">🔒 大会ロードマップ・大会設定はプレミアム機能です<br><span class="lock-cta">プレミアムで解放</span></div>
+        <div class="contest-form">
+          <div class="set-row"><label>大会名</label><input type="text" id="set-contest-name" placeholder="東京選手権"></div>
+          <div class="set-row"><label>大会日</label><input type="date" id="set-contest-date" onclick="dpick(this)"></div>
+          <div class="set-row"><label>ピーク日</label><input type="date" id="set-peak-date" onclick="dpick(this)"></div>
+          <div class="set-row"><label>目標体重 (kg)</label><input type="number" id="set-contest-weight" readonly inputmode="none" onclick="openSetPad('set-contest-weight','目標体重 (kg)')" placeholder="60.0"></div>
+        </div>
       </div>
 
-      <div class="set-sec">1日の栄養目標</div>
-      <div class="tile set-card">
+      <div class="set-sec collap" onclick="toggleSec(this)">1日の栄養目標</div>
+      <div class="tile set-card sec-hidden">
         <div class="set-row"><label>タンパク質 P (g)</label><input type="number" id="set-goal-p" readonly inputmode="none" onclick="openSetPad('set-goal-p','タンパク質 P (g)')" placeholder="160"></div>
         <div class="set-row"><label>脂質 F (g)</label><input type="number" id="set-goal-f" readonly inputmode="none" onclick="openSetPad('set-goal-f','脂質 F (g)')" placeholder="50"></div>
         <div class="set-row"><label>炭水化物 C (g)</label><input type="number" id="set-goal-c" readonly inputmode="none" onclick="openSetPad('set-goal-c','炭水化物 C (g)')" placeholder="230"></div>
@@ -327,14 +339,14 @@ body{background:#000;color:var(--text);font-family:'Noto Sans JP',sans-serif;dis
         <div class="set-row"><label>カロリー目標（自動）</label><span class="set-kcal" id="set-kcal">0 kcal</span></div>
       </div>
 
-      <div class="set-sec">その他</div>
-      <div class="tile set-card">
+      <div class="set-sec collap" onclick="toggleSec(this)">その他</div>
+      <div class="tile set-card sec-hidden">
         <div class="set-row"><label>水分目標 (ml)</label><input type="number" id="set-water-goal" readonly inputmode="none" onclick="openSetPad('set-water-goal','水分目標 (ml)')" placeholder="2000"></div>
         <div class="set-row"><label>1日の起点時刻</label><select id="set-day-start"></select></div>
       </div>
 
-      <div class="set-sec">データ</div>
-      <div class="tile set-card">
+      <div class="set-sec collap" onclick="toggleSec(this)">データ</div>
+      <div class="tile set-card sec-hidden">
         <div class="set-btn-row">
           <button class="set-btn" onclick="exportData()">📤 エクスポート</button>
           <button class="set-btn" onclick="if(!bridge('openFilePicker')) document.getElementById('set-import').click()">📥 インポート</button>
@@ -349,8 +361,8 @@ body{background:#000;color:var(--text);font-family:'Noto Sans JP',sans-serif;dis
       <div class="set-sec">アカウント</div>
       <div class="tile set-card" id="account-card"></div>
 
-      <div class="set-sec">サポート</div>
-      <div class="tile set-card">
+      <div class="set-sec collap" onclick="toggleSec(this)">サポート</div>
+      <div class="tile set-card sec-hidden">
         <div class="set-btn-row">
           <button class="set-btn" onclick="reviewApp()">★ アプリを評価</button>
           <button class="set-btn" onclick="contactApp()">✉ お問い合わせ</button>
@@ -537,6 +549,7 @@ function renderSet(){
   setV('set-water-goal', DB.waterGoal());
   setV('set-day-start', DB.dayStartHour());
   updateSetKcal();
+  const cc=document.getElementById('contest-card'); if(cc) cc.classList.toggle('locked', !isPremiumReal());
   renderPremiumCard(); renderAccountCard();
 }
 /* ===== バックエンド連携の見た目（ブリッジが有れば本物、無ければ案内） ===== */
@@ -589,10 +602,12 @@ function saveSet(){
   prof.sex=document.getElementById('set-sex').value;
   localStorage.setItem('user_profile', JSON.stringify(prof));
   const dn=document.getElementById('set-name').value.trim(); if(dn) localStorage.setItem('display_name_custom',dn); else localStorage.removeItem('display_name_custom');
-  setKey('contest_name', document.getElementById('set-contest-name').value.trim());
-  setKey('contest_date', document.getElementById('set-contest-date').value);
-  setKey('peak_date', document.getElementById('set-peak-date').value);
-  setKey('contest_weight', document.getElementById('set-contest-weight').value);
+  if(isPremiumReal()){ // 大会設定はプレミアムのみ保存（非プレミアムは既存値を保持）
+    setKey('contest_name', document.getElementById('set-contest-name').value.trim());
+    setKey('contest_date', document.getElementById('set-contest-date').value);
+    setKey('peak_date', document.getElementById('set-peak-date').value);
+    setKey('contest_weight', document.getElementById('set-contest-weight').value);
+  }
   const ng={ p:numOrNull('set-goal-p'), f:numOrNull('set-goal-f'), c:numOrNull('set-goal-c'), salt:numOrNull('set-goal-salt'), tolerance:numOrNull('set-goal-tol') };
   localStorage.setItem('nutrition_goals', JSON.stringify(ng));
   localStorage.setItem('water_goal', String(parseInt(document.getElementById('set-water-goal').value)||2000));
@@ -619,7 +634,8 @@ function shiftDate(d){ const x=new Date(curDate+'T00:00:00'); x.setDate(x.getDat
 function goToday(){ curDate=logicalToday(); renderToday(); }
 function openCal(){ const c=document.getElementById('cal'); c.value=curDate; if(c.showPicker){ try{ c.showPicker(); return; }catch(e){} } c.click(); }
 function dpick(el){ if(el && el.showPicker){ try{ el.showPicker(); }catch(e){} } }
-function goContestSettings(){ go('set'); setTimeout(()=>{ const s=document.getElementById('sec-contest'); if(s) s.scrollIntoView({behavior:'smooth',block:'start'}); },140); }
+function toggleSec(h){ h.classList.toggle('open'); const card=h.nextElementSibling; if(card && card.classList.contains('set-card')) card.classList.toggle('sec-hidden'); }
+function goContestSettings(){ go('set'); setTimeout(()=>{ const s=document.getElementById('sec-contest'); if(s){ s.classList.add('open'); const c=s.nextElementSibling; if(c && c.classList.contains('set-card')) c.classList.remove('sec-hidden'); s.scrollIntoView({behavior:'smooth',block:'start'}); } },140); }
 function onCalChange(v){ if(v){ curDate=v; renderToday(); } }
 function renderToday(){
   const rec=getRec(curDate)||blankRec(curDate);
