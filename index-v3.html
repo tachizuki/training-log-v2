@@ -44,6 +44,9 @@ body{background:#000;color:var(--text);font-family:'Noto Sans JP',sans-serif;dis
 .today-title h1 small{font-size:12px;color:var(--sub);font-weight:500;margin-left:7px;}
 .date-nav{display:flex;gap:4px;}
 .date-nav button{width:38px;height:38px;background:var(--surface);border:1px solid var(--line);border-radius:11px;color:var(--sub);font-size:16px;cursor:pointer;}
+.date-nav .today-btn{width:auto;padding:0 14px;font-size:13px;font-weight:700;font-family:'Noto Sans JP';}
+.date-nav .today-btn.cur{color:var(--faint);}
+.date-nav .today-btn:not(.cur){color:var(--acc);border-color:rgba(201,240,77,0.4);}
 .grid2{flex-shrink:0;display:grid;grid-template-columns:1fr 1fr;gap:8px;}
 .mini{padding:10px 13px;cursor:pointer;position:relative;display:flex;flex-direction:column;justify-content:center;min-height:64px;}
 .mini:active{background:var(--surface2);}
@@ -204,13 +207,13 @@ body{background:#000;color:var(--text);font-family:'Noto Sans JP',sans-serif;dis
     <!-- ===== 今日 ===== -->
     <div class="page active" id="pg-today">
       <div class="ctx-strip">
-        <span class="days num" id="ctx-days">—</span><span id="ctx-contest">大会未設定</span>
+        <span class="days num" id="ctx-days">—</span><span id="ctx-contest" onclick="goContestSettings()" style="cursor:pointer;">大会未設定</span>
         <span class="auto"><i></i>自動保存</span>
       </div>
       <div class="today-title">
         <h1 onclick="openCal()" style="cursor:pointer;"><span id="today-label">今日</span><small id="today-date"></small> <span style="font-size:13px;">📅</span></h1>
         <input type="date" id="cal" style="position:absolute;opacity:0;width:1px;height:1px;pointer-events:none;left:0;" onchange="onCalChange(this.value)">
-        <div class="date-nav"><button onclick="shiftDate(-1)">‹</button><button onclick="shiftDate(1)">›</button></div>
+        <div class="date-nav"><button class="today-btn" id="btn-today" onclick="goToday()">今日</button><button onclick="shiftDate(-1)">‹</button><button onclick="shiftDate(1)">›</button></div>
       </div>
       <div class="grid2">
         <div class="tile mini" onclick="openPad('体重 (kg)','weight')">
@@ -265,7 +268,7 @@ body{background:#000;color:var(--text);font-family:'Noto Sans JP',sans-serif;dis
 
     <!-- ===== 筋トレ ===== -->
     <div class="page scrollable" id="pg-gym">
-      <div class="ctx-strip"><span class="days num" id="ctx-days2">—</span><span id="ctx-contest2"></span><span class="auto"><i></i>自動保存</span></div>
+      <div class="ctx-strip"><span class="days num" id="ctx-days2">—</span><span id="ctx-contest2" onclick="goContestSettings()" style="cursor:pointer;"></span><span class="auto"><i></i>自動保存</span></div>
       <div class="gym-top">
         <h1 onclick="openMenuSheet()"><span id="gym-title">メニュー未選択</span><span class="car">▾</span></h1>
         <div class="sw-pill"><span class="t num" id="sw">00:00</span><button onclick="toggleSw()" id="sw-btn">開始</button></div>
@@ -276,7 +279,7 @@ body{background:#000;color:var(--text);font-family:'Noto Sans JP',sans-serif;dis
 
     <!-- ===== データ ===== -->
     <div class="page scrollable" id="pg-data">
-      <div class="ctx-strip"><span class="days num" id="ctx-days3">—</span><span id="ctx-contest3"></span><span class="auto"><i></i>自動保存</span></div>
+      <div class="ctx-strip"><span class="days num" id="ctx-days3">—</span><span id="ctx-contest3" onclick="goContestSettings()" style="cursor:pointer;"></span><span class="auto"><i></i>自動保存</span></div>
       <div class="today-title" style="padding-bottom:12px;"><h1>データ</h1></div>
       <div class="insight" id="data-insight">データを蓄積すると傾向が表示されます。</div>
       <div class="card chart-card">
@@ -306,7 +309,7 @@ body{background:#000;color:var(--text);font-family:'Noto Sans JP',sans-serif;dis
         <div class="set-row"><label>性別</label><select id="set-sex"><option value="male">男性</option><option value="female">女性</option></select></div>
       </div>
 
-      <div class="set-sec">大会設定 <span class="prem-badge">PREMIUM</span></div>
+      <div class="set-sec" id="sec-contest">大会設定 <span class="prem-badge">PREMIUM</span></div>
       <div class="tile set-card">
         <div class="set-row"><label>大会名</label><input type="text" id="set-contest-name" placeholder="東京選手権"></div>
         <div class="set-row"><label>大会日</label><input type="date" id="set-contest-date" onclick="dpick(this)"></div>
@@ -613,14 +616,18 @@ let _tt; function toast(msg){ const t=document.getElementById('toast'); t.innerH
 /* ===== 今日 描画 ===== */
 const WD=['日','月','火','水','木','金','土'];
 function shiftDate(d){ const x=new Date(curDate+'T00:00:00'); x.setDate(x.getDate()+d); curDate=fmt(x); renderToday(); }
+function goToday(){ curDate=logicalToday(); renderToday(); }
 function openCal(){ const c=document.getElementById('cal'); c.value=curDate; if(c.showPicker){ try{ c.showPicker(); return; }catch(e){} } c.click(); }
 function dpick(el){ if(el && el.showPicker){ try{ el.showPicker(); }catch(e){} } }
+function goContestSettings(){ go('set'); setTimeout(()=>{ const s=document.getElementById('sec-contest'); if(s) s.scrollIntoView({behavior:'smooth',block:'start'}); },140); }
 function onCalChange(v){ if(v){ curDate=v; renderToday(); } }
 function renderToday(){
   const rec=getRec(curDate)||blankRec(curDate);
   const d=new Date(curDate+'T00:00:00');
   document.getElementById('today-date').textContent=`${d.getMonth()+1}月${d.getDate()}日（${WD[d.getDay()]}）`;
-  document.getElementById('today-label').textContent = (curDate===logicalToday())?'今日':'';
+  const _isToday=(curDate===logicalToday());
+  document.getElementById('today-label').textContent = _isToday?'今日':'';
+  const _bt=document.getElementById('btn-today'); if(_bt) _bt.classList.toggle('cur', _isToday);
   // 大会 D-XX
   const cd=DB.contestDate();
   const days=document.querySelectorAll('#ctx-days,#ctx-days2,#ctx-days3');
