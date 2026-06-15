@@ -168,6 +168,44 @@ body{background:#000;color:var(--text);font-family:'Noto Sans JP',sans-serif;}
 .ws-cmp.up{background:rgba(248,113,113,0.15);color:var(--bad);}
 .ws-cmp.flat{background:var(--surface2);color:var(--sub);}
 .ws-empty{font-size:12.5px;color:var(--faint);line-height:1.6;}
+/* 週平均テーブル */
+.wtable{width:100%;border-collapse:collapse;font-size:13px;}
+.wtable td{padding:8px 2px;border-top:1px solid var(--line);}
+.wtable tr:first-child td{border-top:none;}
+.wtable .wk{color:var(--sub);font-size:12px;}
+.wtable .av{font-family:'Inter';font-weight:800;text-align:right;}
+.wtable .av small{font-size:10px;color:var(--faint);font-weight:600;}
+.wtable .dl{text-align:right;font-family:'Inter';font-weight:700;width:74px;}
+.wtable .dl.down{color:var(--good);} .wtable .dl.up{color:var(--bad);} .wtable .dl.flat{color:var(--faint);}
+.wtable .empty{color:var(--faint);font-size:11px;text-align:center;padding:14px;}
+/* プレミアム ロックカード */
+.prem-lock{text-align:center;padding:8px 6px 4px;}
+.prem-lock .ic{font-size:24px;}
+.prem-lock .ttl{font-size:14px;font-weight:800;margin:6px 0 4px;}
+.prem-lock .ds{font-size:12px;color:var(--sub);margin-bottom:14px;line-height:1.7;}
+.prem-lock .cta{display:inline-block;background:var(--acc);color:#101214;border-radius:20px;padding:8px 20px;font-weight:800;font-size:12px;cursor:pointer;}
+/* 大会ロードマップ */
+.rm-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px;}
+.rm-dday{font-family:'Inter';font-size:22px;font-weight:900;color:var(--acc);}
+.rm-judge{font-size:12px;font-weight:800;padding:3px 10px;border-radius:999px;}
+.rm-judge.ok{background:rgba(74,222,128,0.15);color:var(--good);}
+.rm-judge.behind{background:rgba(248,113,113,0.15);color:var(--bad);}
+.rm-judge.done{background:var(--acc-dim);color:var(--acc);}
+.rm-rows{display:flex;gap:10px;}
+.rm-rows>div{flex:1;}
+.rm-rows .k{font-size:10px;color:var(--faint);margin-bottom:3px;}
+.rm-rows .v{font-family:'Inter';font-size:16px;font-weight:800;}
+/* 筋トレ分析 / 週次レポート 行 */
+.an-row{display:flex;align-items:center;gap:8px;padding:8px 2px;border-top:1px solid var(--line);}
+.an-row:first-child{border-top:none;}
+.an-row .nm{flex:1;font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.an-row .rm{font-family:'Inter';font-weight:800;font-size:14px;}
+.an-row .tag{font-size:10px;font-weight:800;padding:2px 7px;border-radius:999px;}
+.an-row .tag.up{background:rgba(74,222,128,0.15);color:var(--good);}
+.an-row .tag.flat{background:var(--surface2);color:var(--sub);}
+.an-row .tag.down{background:rgba(248,113,113,0.15);color:var(--bad);}
+.report-line{font-size:13px;line-height:1.9;color:var(--text);}
+.report-line b{color:var(--acc);}
 .chart-card h3{font-size:12px;color:var(--sub);font-weight:700;margin-bottom:12px;display:flex;justify-content:space-between;}
 .chart-card h3 span{font-weight:500;color:var(--faint);}
 .kpis{display:flex;border-top:1px solid var(--line);margin-top:14px;padding-top:12px;}
@@ -395,13 +433,20 @@ body{background:#000;color:var(--text);font-family:'Noto Sans JP',sans-serif;}
         <div class="kpis" id="weight-kpis"></div>
       </div>
       <div class="card chart-card">
+        <h3><span data-i18n="week_table_title">週平均の推移</span></h3>
+        <div id="week-table"></div>
+      </div>
+      <div class="card chart-card" id="roadmap-card"></div>
+      <div class="card chart-card">
         <h3><span data-i18n="training">トレーニング</span> <span id="train-range"></span></h3>
         <div class="kpis" id="train-kpis" style="border-top:none;margin-top:0;padding-top:0;"></div>
       </div>
+      <div class="card chart-card" id="gymanalytics-card"></div>
       <div class="card chart-card">
         <h3><span data-i18n="nutrition">栄養</span> <span id="nutri-range"></span></h3>
         <div class="kpis" id="nutri-kpis" style="border-top:none;margin-top:0;padding-top:0;"></div>
       </div>
+      <div class="card chart-card" id="report-card"></div>
     </div>
 
     <!-- ===== 設定 ===== -->
@@ -663,6 +708,10 @@ const I18N = {
     gym_empty:'この日の種目はまだありません。<br>下の「＋ 種目を追加」から始めましょう。', insufficient:'体重記録が2日分以上で推移を表示',
     w_avg_week:'週平均', w_avg_month:'月平均', w_avg_all:'平均体重', w_losing:'減量中', w_gaining:'増加', w_keeping:'維持',
     w_no_period:'この期間の体重記録はありません（最新 {0} {1}kg）', w_no_data:'体重の記録がありません',
+    week_table_title:'週平均の推移',
+    rm_title:'大会ロードマップ', rm_lock:'仕上がり体重と大会日から逆算した目標ペースと進捗を表示します。', rm_setup:'大会日と仕上がり体重を設定すると進捗が表示されます。', rm_setup_btn:'大会設定へ', rm_gap:'目標まで', rm_req:'必要(kg/週)', rm_cur:'現在(kg/週)', rm_ok:'順調', rm_behind:'遅れ', rm_done:'達成', rm_nopace:'記録待ち',
+    an_title:'筋トレ分析', an_sub:'推定1RM・停滞検知', an_lock:'種目ごとの推定1RM推移と停滞を自動で検知します。', an_empty:'筋トレを記録すると分析が表示されます。', an_pr:'更新', an_plateau:'停滞', an_down:'低下',
+    rep_title:'レポート', rep_lock:'期間ごとの体重・トレーニング・栄養・水分をまとめて表示します。', rep_avgw:'平均体重', rep_vs:'前期間比', rep_trained:'トレーニング', rep_times:'回', rep_kcal:'平均摂取', rep_water:'平均水分',
     a_remain:'今日はあと <b>残り{0}kcal</b>', a_pdiff:' / P あと{0}g', a_salt_missing:'塩分が未記録です。', a_prevdiff:'前日比', a_in_pace:' — 減量ペース内 ✓', a_increase:' — 増加',
   },
   en: {
@@ -703,6 +752,10 @@ const I18N = {
     gym_empty:'No exercises for this day yet.<br>Start from “＋ Add exercise” below.', insufficient:'Trend shows with 2+ weight logs',
     w_avg_week:'Weekly avg', w_avg_month:'Monthly avg', w_avg_all:'Average', w_losing:'losing', w_gaining:'gaining', w_keeping:'stable',
     w_no_period:'No weight logged this period (latest {0} {1}kg)', w_no_data:'No weight records',
+    week_table_title:'Weekly average',
+    rm_title:'Contest roadmap', rm_lock:'Target pace & progress back-calculated from your goal weight and contest date.', rm_setup:'Set contest date and goal weight to see progress.', rm_setup_btn:'Contest settings', rm_gap:'To goal', rm_req:'Need(kg/wk)', rm_cur:'Now(kg/wk)', rm_ok:'On track', rm_behind:'Behind', rm_done:'Reached', rm_nopace:'Need data',
+    an_title:'Workout analytics', an_sub:'est. 1RM & plateau', an_lock:'Auto-detects estimated 1RM trend and plateaus per exercise.', an_empty:'Log workouts to see analytics.', an_pr:'PR', an_plateau:'Plateau', an_down:'Down',
+    rep_title:'Report', rep_lock:'Digest of weight, training, nutrition and water per period.', rep_avgw:'Avg weight', rep_vs:'vs prev', rep_trained:'Training', rep_times:'×', rep_kcal:'Avg intake', rep_water:'Avg water',
     a_remain:'<b>{0} kcal left</b> today', a_pdiff:' / {0}g P to go', a_salt_missing:'Salt not logged.', a_prevdiff:'vs yesterday', a_in_pace:' — within cut pace ✓', a_increase:' — up',
   }
 };
@@ -1355,6 +1408,7 @@ function renderData(){
     if(cw!=null && cur!=='—') msg+=(pace!=='—'?t('insight_sep'):'')+t('insight_target',(cur-cw).toFixed(1));
     ins.innerHTML=msg;
   } else ins.textContent=t('insight_need', label);
+  renderWeekTable(); renderRoadmap(); renderGymAnalytics(); renderWeeklyReport(start,end,label);
 }
 function kpi(k,v,good){ return `<div><div class="k">${k}</div><div class="v num${good?' g':''}">${v}</div></div>`; }
 function setWeightSummary(thisAvg, prevAvg, latest){
@@ -1364,6 +1418,89 @@ function setWeightSummary(thisAvg, prevAvg, latest){
   let cmp='';
   if(prevAvg!=null){ const d=thisAvg-prevAvg; const cls=d<-0.05?'down':(d>0.05?'up':'flat'); const arrow=d<-0.05?'▼':(d>0.05?'▲':'→'); const word=d<-0.05?t('w_losing'):(d>0.05?t('w_gaining'):t('w_keeping')); cmp='<span class="ws-cmp '+cls+'">'+arrow+' '+Math.abs(d).toFixed(1)+'kg '+word+'</span>'; }
   el.innerHTML='<span class="ws-label">'+lbl+'</span><span class="ws-avg num">'+thisAvg.toFixed(1)+'<small>kg</small></span>'+cmp;
+}
+/* ===== プレミアム ロックカード ===== */
+function premLock(icon,titleKey,descKey){ return '<div class="prem-lock"><div class="ic">'+icon+'</div><div class="ttl">'+t(titleKey)+'</div><div class="ds">'+t(descKey)+'</div><span class="cta" onclick="openPaywall()">'+t('unlock_premium')+'</span></div>'; }
+/* ===== 週平均テーブル（無料） ===== */
+function weekStartOf(dateStr){ const d=new Date(dateStr+'T00:00:00'); const dow=(d.getDay()+6)%7; d.setDate(d.getDate()-dow); return fmt(d); }
+function weeklyAverages(){ const recs=DB.records().filter(r=>r.weight!=null); const byW={}; recs.forEach(r=>{ const w=weekStartOf(r.date); (byW[w]=byW[w]||[]).push(r.weight); }); return Object.keys(byW).sort().map(w=>({start:w, avg:byW[w].reduce((a,b)=>a+b,0)/byW[w].length, n:byW[w].length})); }
+function renderWeekTable(){
+  const el=document.getElementById('week-table'); if(!el) return;
+  const wa=weeklyAverages();
+  if(!wa.length){ el.innerHTML='<div class="empty" style="color:var(--faint);font-size:11px;text-align:center;padding:14px;">'+t('w_no_data')+'</div>'; return; }
+  const recent=wa.slice(-8); let rows='';
+  for(let i=recent.length-1;i>=0;i--){ const cur=recent[i], prev=i>0?recent[i-1]:null;
+    const we=(()=>{ const d=new Date(cur.start+'T00:00:00'); d.setDate(d.getDate()+6); return fmt(d); })();
+    let dl='<span class="dl flat">—</span>';
+    if(prev){ const d=cur.avg-prev.avg, cls=d<-0.05?'down':(d>0.05?'up':'flat'), ar=d<-0.05?'▼':(d>0.05?'▲':'→'); dl='<span class="dl '+cls+'">'+ar+Math.abs(d).toFixed(1)+'</span>'; }
+    rows+='<tr><td class="wk">'+mmdd(cur.start)+t('range_sep')+mmdd(we)+'</td><td class="av">'+cur.avg.toFixed(1)+'<small>kg</small></td><td>'+dl+'</td></tr>';
+  }
+  el.innerHTML='<table class="wtable">'+rows+'</table>';
+}
+/* ===== 大会ロードマップ（プレミアム） ===== */
+function renderRoadmap(){
+  const el=document.getElementById('roadmap-card'); if(!el) return;
+  if(!isPremiumReal()){ el.innerHTML='<h3><span>'+t('rm_title')+'</span> <span class="prem-badge">PREMIUM</span></h3>'+premLock('🗺','rm_title','rm_lock'); return; }
+  const cd=DB.contestDate(), cw=DB.contestWeight();
+  if(!cd||cw==null){ el.innerHTML='<h3>'+t('rm_title')+'</h3><div class="prem-lock"><div class="ds">'+t('rm_setup')+'</div><span class="cta" onclick="goContestSettings()">'+t('rm_setup_btn')+'</span></div>'; return; }
+  const wRecs=DB.records().filter(r=>r.weight!=null).sort((a,b)=>a.date.localeCompare(b.date));
+  const latest=wRecs.length?wRecs[wRecs.length-1].weight:null;
+  const today=logicalToday();
+  const daysLeft=Math.ceil((new Date(cd+'T00:00:00')-new Date(today+'T00:00:00'))/86400000);
+  const weeksLeft=Math.max(daysLeft/7,0.1);
+  const gap=latest!=null?(latest-cw):null;
+  let curPace=null; const cutoff=fmt(new Date(Date.now()-21*86400000)); const rc=wRecs.filter(r=>r.date>=cutoff);
+  if(rc.length>=2){ const f=rc[0],l=rc[rc.length-1]; const dd=(new Date(l.date)-new Date(f.date))/86400000; if(dd>0) curPace=(l.weight-f.weight)/dd*7; }
+  const reqPace=gap!=null?(-gap/weeksLeft):null;
+  let judge,jcls;
+  if(gap!=null&&gap<=0.05){ judge=t('rm_done'); jcls='done'; }
+  else if(curPace!=null&&reqPace!=null){ if(curPace<=reqPace+0.02){ judge=t('rm_ok'); jcls='ok'; } else { judge=t('rm_behind'); jcls='behind'; } }
+  else { judge=t('rm_nopace'); jcls='flat'; }
+  const dday='D'+(daysLeft>=0?'-'+daysLeft:'+'+(-daysLeft));
+  el.innerHTML='<h3>'+t('rm_title')+' <span style="font-size:9px;color:var(--faint)">'+(DB.contestName()||'')+'</span></h3>'
+    +'<div class="rm-head"><span class="rm-dday">'+dday+'</span><span class="rm-judge '+jcls+'">'+judge+'</span></div>'
+    +'<div class="rm-rows">'
+    +'<div><div class="k">'+t('rm_gap')+'</div><div class="v">'+(gap!=null?(gap>0?gap.toFixed(1):'±0')+'kg':'—')+'</div></div>'
+    +'<div><div class="k">'+t('rm_req')+'</div><div class="v">'+(reqPace!=null?reqPace.toFixed(2):'—')+'</div></div>'
+    +'<div><div class="k">'+t('rm_cur')+'</div><div class="v">'+(curPace!=null?(curPace>0?'+':'')+curPace.toFixed(2):'—')+'</div></div>'
+    +'</div>';
+}
+/* ===== 筋トレ分析 1RM・停滞（プレミアム） ===== */
+function gymExerciseStats(){
+  const g=DB.gym(); const byEx={};
+  Object.keys(g).forEach(k=>{ const date=k.slice(0,10); const exs=(g[k]&&g[k].exercises)||[]; exs.forEach(e=>{ if(!e.name||!e.sets) return; let best=0; e.sets.forEach(s=>{ const w=parseFloat(s.weight),r=parseFloat(s.reps); if(w>0&&r>0) best=Math.max(best,w*(1+r/30)); }); if(best>0){ byEx[e.name]=byEx[e.name]||{}; byEx[e.name][date]=Math.max(byEx[e.name][date]||0,best); } }); });
+  return Object.keys(byEx).map(n=>{ const ds=Object.keys(byEx[n]).sort(); return {name:n, series:ds.map(d=>byEx[n][d])}; });
+}
+function renderGymAnalytics(){
+  const el=document.getElementById('gymanalytics-card'); if(!el) return;
+  if(!isPremiumReal()){ el.innerHTML='<h3><span>'+t('an_title')+'</span> <span class="prem-badge">PREMIUM</span></h3>'+premLock('💪','an_title','an_lock'); return; }
+  const stats=gymExerciseStats().filter(s=>s.series.length>=2).sort((a,b)=>b.series.length-a.series.length).slice(0,5);
+  if(!stats.length){ el.innerHTML='<h3>'+t('an_title')+'</h3><div class="prem-lock"><div class="ds">'+t('an_empty')+'</div></div>'; return; }
+  let rows='';
+  stats.forEach(s=>{ const latest=s.series[s.series.length-1], prevMax=Math.max(...s.series.slice(0,-1)); let tag,tcls;
+    if(latest>prevMax+0.5){ tag=t('an_pr'); tcls='up'; } else if(latest<prevMax-2){ tag=t('an_down'); tcls='down'; } else { tag=t('an_plateau'); tcls='flat'; }
+    rows+='<div class="an-row"><span class="nm">'+s.name+'</span><span class="rm">'+Math.round(latest)+'<small style="font-size:9px;color:var(--faint)"> 1RM</small></span><span class="tag '+tcls+'">'+tag+'</span></div>';
+  });
+  el.innerHTML='<h3>'+t('an_title')+' <span style="font-size:9px;color:var(--faint)">'+t('an_sub')+'</span></h3>'+rows;
+}
+/* ===== 週次レポート（プレミアム） ===== */
+function renderWeeklyReport(start,end,label){
+  const el=document.getElementById('report-card'); if(!el) return;
+  if(!isPremiumReal()){ el.innerHTML='<h3><span>'+t('rep_title')+'</span> <span class="prem-badge">PREMIUM</span></h3>'+premLock('📋','rep_title','rep_lock'); return; }
+  const inR=r=>r.date>=start&&r.date<=end; const recs=DB.records().filter(inR);
+  const wRecs=recs.filter(r=>r.weight!=null);
+  const avgW=wRecs.length?(wRecs.reduce((a,b)=>a+b.weight,0)/wRecs.length):null;
+  const trained=recs.filter(r=>r.trained).length;
+  const kcals=recs.map(r=>r.kcal!=null?r.kcal:calcKcal(r.p,r.f,r.c)).filter(x=>x);
+  const avgK=kcals.length?Math.round(kcals.reduce((a,b)=>a+b,0)/kcals.length):null;
+  const wAvg=rangeWaterAvg(start,end);
+  let prevAvg=null; if(dataPeriod!=='all'){ const pr=(dataPeriod==='week'?weekRange(dataOffset-1):dataPeriod==='month'?monthRange(dataOffset-1):null); if(pr){ const prs=DB.records().filter(r=>r.weight!=null&&r.date>=pr[0]&&r.date<=pr[1]); if(prs.length) prevAvg=prs.reduce((a,b)=>a+b.weight,0)/prs.length; } }
+  let h='<h3>'+t('rep_title')+' <span style="font-size:10px;color:var(--sub)">'+label+'</span></h3><div class="report-line">';
+  if(avgW!=null){ h+='・'+t('rep_avgw')+' <b>'+avgW.toFixed(1)+'kg</b>'+(prevAvg!=null?'（'+t('rep_vs')+' '+((avgW-prevAvg)>0?'+':'')+(avgW-prevAvg).toFixed(1)+'kg）':'')+'<br>'; }
+  h+='・'+t('rep_trained')+' <b>'+trained+t('rep_times')+'</b><br>';
+  if(avgK!=null) h+='・'+t('rep_kcal')+' <b>'+avgK.toLocaleString()+'kcal</b><br>';
+  if(wAvg!=null) h+='・'+t('rep_water')+' <b>'+(wAvg/1000).toFixed(1)+'L</b>';
+  el.innerHTML=h+'</div>';
 }
 function avg(arr){ if(!arr||!arr.length) return '—'; return Math.round(arr.reduce((s,x)=>s+x,0)/arr.length).toLocaleString(); }
 function avgWater(){ const w=DB.water(); const vals=Object.values(w).map(d=>d&&d.total).filter(x=>x); return vals.length?Math.round(vals.slice(-7).reduce((s,x)=>s+x,0)/Math.min(7,vals.length)):'—'; }
