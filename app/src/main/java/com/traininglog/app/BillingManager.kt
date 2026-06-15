@@ -46,6 +46,19 @@ class BillingManager(
 
     private var productDetails: ProductDetails? = null
     private var pendingPurchaseCallback: (() -> Unit)? = null
+    // 商品詳細(ローカライズ価格)取得時にWebViewへ通知するためのコールバック
+    var onPriceReady: ((String) -> Unit)? = null
+
+    /** プレミアムの繰り返し課金フェーズの整形済みローカライズ価格（例: "¥480" / "US$4.99"）。未取得時は空。 */
+    fun premiumFormattedPrice(): String {
+        val offers = productDetails?.subscriptionOfferDetails ?: return ""
+        for (offer in offers) {
+            for (phase in offer.pricingPhases.pricingPhaseList) {
+                if (phase.priceAmountMicros > 0L) return phase.formattedPrice
+            }
+        }
+        return ""
+    }
 
     private val purchasesUpdatedListener = PurchasesUpdatedListener { result, purchases ->
         when (result.responseCode) {
@@ -98,6 +111,7 @@ class BillingManager(
             if (result.responseCode == BillingClient.BillingResponseCode.OK && list.isNotEmpty()) {
                 productDetails = list.first()
                 Log.d(TAG, "商品詳細取得: ${productDetails?.name}")
+                onPriceReady?.invoke(premiumFormattedPrice())
             } else {
                 Log.w(TAG, "商品詳細取得失敗 code=${result.responseCode} msg=${result.debugMessage}")
             }

@@ -556,7 +556,7 @@ body{background:#000;color:var(--text);font-family:'Noto Sans JP',sans-serif;}
       <div class="paywall-feat"><span class="ic">☁️</span><div><b data-i18n="pf_sync">複数端末のクラウド同期</b></div></div>
       <button class="prem-go" style="margin-top:14px;" onclick="purchasePremium()" data-i18n="trial_btn">14日間無料で試す</button>
       <button class="restore-link" onclick="restorePremium()" data-i18n="restore">購入が反映されない場合はこちら</button>
-      <div class="price-note" data-i18n="price_note">期間後 ¥400 / 月（いつでも解約可）</div>
+      <div class="price-note" id="paywall-price-note">トライアル後に自動更新（いつでも解約可）</div>
     </div>
 
     <div class="toast" id="toast"></div>
@@ -636,7 +636,7 @@ const I18N = {
     prem_upgrade:'⭐ プレミアムにアップグレード', prem_member:'⭐ プレミアム会員 — すべての機能が解放されています', trial_btn:'14日間無料で試す',
     pf_roadmap:'大会ロードマップ・大会設定', pf_weekly:'週次レポート', pf_gym:'筋トレ分析（1RM推移・停滞検知）', pf_sync:'複数端末のクラウド同期',
     google_login:'Googleでログイン', login_note:'ログインするとクラウド同期・機種変時のデータ引き継ぎが使えます（本番アプリ）。', btn_signout:'サインアウト', btn_delete_acc:'アカウントを削除', logged_in:'ログイン中',
-    paywall_title:'⭐ プレミアム', paywall_note:'大会に出る人・もっと深く分析したい人向けの機能を解放します。記録と全期間の履歴は無料のまま。', pf_roadmap_sub:'大会日から逆算した目標体重ラインと進捗', restore:'購入が反映されない場合はこちら', price_note:'期間後 ¥400 / 月（いつでも解約可）',
+    paywall_title:'⭐ プレミアム', paywall_note:'大会に出る人・もっと深く分析したい人向けの機能を解放します。記録と全期間の履歴は無料のまま。', pf_roadmap_sub:'大会日から逆算した目標体重ラインと進捗', restore:'購入が反映されない場合はこちら', price_note:'トライアル後 {0} / 月（いつでも解約可）', price_note_generic:'トライアル後に自動更新（いつでも解約可）',
     confirm:'確定', next:'次へ', copy_prev:'前回コピー', prev:'前回', sw_stop:'終了', meal_input:'食事を入力', add_set:'＋ セットを追加', add_ex:'＋ 種目を追加',
     menu_title:'今日のメニュー', menu_note:'選んだ部位は「今日の記録」の筋トレ部位として保存されます',
     part_chest:'胸', part_back:'背中', part_shoulder:'肩', part_arm:'腕', part_leg:'足', part_abs:'腹筋', part_cardio:'有酸素', part_free:'自由',
@@ -674,7 +674,7 @@ const I18N = {
     prem_upgrade:'⭐ Upgrade to Premium', prem_member:'⭐ Premium member — all features unlocked', trial_btn:'Try 14 days free',
     pf_roadmap:'Contest roadmap & settings', pf_weekly:'Weekly report', pf_gym:'Workout analytics (1RM trend, plateau)', pf_sync:'Multi-device cloud sync',
     google_login:'Sign in with Google', login_note:'Sign in to enable cloud sync and data transfer on device change (real app).', btn_signout:'Sign out', btn_delete_acc:'Delete account', logged_in:'Signed in',
-    paywall_title:'⭐ Premium', paywall_note:'Unlocks features for competitors and power users. Logging and full history stay free.', pf_roadmap_sub:'Target weight line & progress from contest date', restore:"Purchase not showing? Tap here", price_note:'¥400/mo after trial (cancel anytime)',
+    paywall_title:'⭐ Premium', paywall_note:'Unlocks features for competitors and power users. Logging and full history stay free.', pf_roadmap_sub:'Target weight line & progress from contest date', restore:"Purchase not showing? Tap here", price_note:'{0}/mo after trial (cancel anytime)', price_note_generic:'Auto-renews after trial (cancel anytime)',
     confirm:'OK', next:'Next', copy_prev:'Copy last', prev:'Prev', sw_stop:'Stop', meal_input:'Enter meal', add_set:'＋ Add set', add_ex:'＋ Add exercise',
     menu_title:'Today\'s menu', menu_note:'The selected muscle group is saved to today\'s workout log',
     part_chest:'Chest', part_back:'Back', part_shoulder:'Shoulders', part_arm:'Arms', part_leg:'Legs', part_abs:'Abs', part_cardio:'Cardio', part_free:'Free',
@@ -694,13 +694,13 @@ const I18N = {
 };
 function resolveLang(){ const o=localStorage.getItem('app_lang'); if(o==='ja'||o==='en') return o; return (navigator.language||'').toLowerCase().indexOf('ja')===0?'ja':'en'; }
 let LANG=resolveLang();
-function t(k){ let s=(I18N[LANG]&&I18N[LANG][k]!=null)?I18N[LANG][k]:(I18N.ja[k]!=null?I18N.ja[k]:k); if(arguments.length>1){ for(let i=1;i<arguments.length;i++) s=s.replace('{'+(i-1)+'}',arguments[i]); } return s; }
+function t(k){ let s=(I18N[LANG]&&I18N[LANG][k]!=null)?I18N[LANG][k]:(I18N.ja[k]!=null?I18N.ja[k]:k); if(arguments.length>1){ for(let i=1;i<arguments.length;i++){ const v=arguments[i]; s=s.replace('{'+(i-1)+'}', ()=>v); } } return s; }
 function applyI18n(){
   document.querySelectorAll('[data-i18n]').forEach(e=>{ e.textContent=t(e.getAttribute('data-i18n')); });
   document.querySelectorAll('[data-i18n-html]').forEach(e=>{ e.innerHTML=t(e.getAttribute('data-i18n-html')); });
   document.querySelectorAll('[data-i18n-ph]').forEach(e=>{ e.setAttribute('placeholder', t(e.getAttribute('data-i18n-ph'))); });
 }
-function setLang(v){ localStorage.setItem('app_lang', v); LANG=resolveLang(); applyI18n(); try{ renderToday(); }catch(e){} try{ if(document.getElementById('pg-data').classList.contains('active')) renderData(); }catch(e){} try{ if(document.getElementById('pg-set').classList.contains('active')) renderSet(); }catch(e){} try{ if(document.getElementById('pg-gym').classList.contains('active')) renderGym(); }catch(e){} }
+function setLang(v){ localStorage.setItem('app_lang', v); LANG=resolveLang(); applyI18n(); try{ renderToday(); }catch(e){} try{ if(document.getElementById('pg-data').classList.contains('active')) renderData(); }catch(e){} try{ if(document.getElementById('pg-set').classList.contains('active')) renderSet(); }catch(e){} try{ if(document.getElementById('pg-gym').classList.contains('active')) renderGym(); }catch(e){} try{ updatePaywallPrice(); }catch(e){} }
 
 /* ===== データ層（本番 index.html と共通の localStorage キー） ===== */
 const DB = {
@@ -858,7 +858,10 @@ function renderAccountCard(){
 function doSignIn(){ if(!bridge('signInWithGoogle')) toast(t('t_login_app')); }
 function doSignOut(){ if(!bridge('signOut')){ window.currentUser=null; renderAccountCard(); toast(t('t_signout_preview')); } }
 function doDeleteAccount(){ if(!confirm(t('btn_delete_acc')+'?')) return; if(!bridge('deleteAccountAndData')){ window.currentUser=null; renderAccountCard(); toast(t('t_delete_app')); } }
-function openPaywall(){ document.getElementById('paywall-sheet').classList.add('open'); document.getElementById('paywall-ov').classList.add('open'); }
+let premiumPrice='';
+function onPremiumPriceLoaded(p){ premiumPrice=p||''; updatePaywallPrice(); }
+function updatePaywallPrice(){ const el=document.getElementById('paywall-price-note'); if(!el) return; el.textContent = premiumPrice ? t('price_note', premiumPrice) : t('price_note_generic'); }
+function openPaywall(){ if(typeof AndroidBridge!=='undefined' && AndroidBridge.getPremiumPrice){ try{ const p=AndroidBridge.getPremiumPrice(); if(p) premiumPrice=p; }catch(e){} } updatePaywallPrice(); document.getElementById('paywall-sheet').classList.add('open'); document.getElementById('paywall-ov').classList.add('open'); }
 function closePaywall(){ document.getElementById('paywall-sheet').classList.remove('open'); document.getElementById('paywall-ov').classList.remove('open'); }
 function purchasePremium(){ if(!bridge('purchasePremium')) toast(t('t_purchase_app')); }
 function restorePremium(){ if(!bridge('restorePremium')) toast(t('t_restore_app')); }

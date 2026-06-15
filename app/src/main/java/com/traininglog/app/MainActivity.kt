@@ -336,6 +336,11 @@ class MainActivity : AppCompatActivity() {
             if (::billing.isInitialized) billing.restorePurchases()
         }
 
+        @JavascriptInterface
+        fun getPremiumPrice(): String =
+            // ペイウォール表示用: ストアのローカライズ済み価格（例 "¥480" / "US$4.99"）。未取得時は空
+            if (::billing.isInitialized) billing.premiumFormattedPrice() else ""
+
         /**
          * Google Play In-App Review を起動する（レビュー促進）。
          * Web側が「良い瞬間（記録が一定数貯まった等）」に1回だけ呼ぶ想定。
@@ -571,6 +576,15 @@ class MainActivity : AppCompatActivity() {
                         else ->
                             webView.evaluateJavascript("if(typeof onPremiumRestored==='function')onPremiumRestored(false);", null)
                     }
+                }
+            }
+        }
+        // 商品詳細取得時にローカライズ価格をペイウォールへ反映
+        billing.onPriceReady = { price ->
+            runOnUiThread {
+                if (::webView.isInitialized) {
+                    val safe = price.replace("\\", "\\\\").replace("'", "\\'")
+                    webView.evaluateJavascript("if(typeof onPremiumPriceLoaded==='function')onPremiumPriceLoaded('$safe')", null)
                 }
             }
         }
