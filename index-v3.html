@@ -19,10 +19,15 @@
   --sab:env(safe-area-inset-bottom,0px); --sat:env(safe-area-inset-top,0px);
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-body{background:#000;color:var(--text);font-family:'Noto Sans JP',sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px 0;}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans JP',sans-serif;}
 .num{font-family:'Inter',sans-serif;font-variant-numeric:tabular-nums;}
-.phone{width:402px;height:874px;background:var(--bg);border-radius:48px;border:1px solid #23272c;box-shadow:0 0 0 10px #15171a,0 40px 120px rgba(0,0,0,0.8);overflow:hidden;position:relative;display:flex;flex-direction:column;}
-@media (max-width:430px){ body{padding:0;} .phone{width:100%;height:100dvh;border-radius:0;box-shadow:none;border:none;} }
+/* 既定＝実機フルスクリーン（モバイルファースト） */
+.phone{width:100%;height:100vh;height:100dvh;background:var(--bg);overflow:hidden;position:relative;display:flex;flex-direction:column;}
+/* 広い画面（PCプレビュー）でだけ端末モック枠を表示 */
+@media (min-width:600px){
+  body{background:#000;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px 0;}
+  .phone{width:402px;height:874px;border-radius:48px;border:1px solid #23272c;box-shadow:0 0 0 10px #15171a,0 40px 120px rgba(0,0,0,0.8);}
+}
 .statusbar{height:calc(38px + var(--sat));padding-top:var(--sat);flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding-left:26px;padding-right:26px;font-size:11px;color:var(--faint);font-weight:700;}
 .viewport{flex:1;overflow:hidden;position:relative;display:flex;flex-direction:column;}
 .page{position:absolute;inset:0;padding:0 14px calc(96px + var(--sab));display:none;}
