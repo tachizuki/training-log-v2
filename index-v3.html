@@ -161,6 +161,13 @@ body{background:#000;color:var(--text);font-family:'Noto Sans JP',sans-serif;dis
 .kpis .k{font-size:10px;color:var(--faint);margin-bottom:3px;}
 .kpis .v{font-family:'Inter';font-size:17px;font-weight:800;}
 .kpis .v.g{color:var(--good);}
+.seg{display:flex;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:3px;margin-bottom:8px;}
+.seg-btn{flex:1;background:none;border:none;color:var(--sub);font-size:13px;font-weight:700;padding:9px;border-radius:9px;cursor:pointer;font-family:'Noto Sans JP';}
+.seg-btn.on{background:var(--acc);color:#101214;}
+.period-nav{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:10px;}
+.period-nav button{width:34px;height:34px;background:var(--surface);border:1px solid var(--line);border-radius:9px;color:var(--sub);font-size:15px;cursor:pointer;}
+.period-nav span{font-size:13px;font-weight:700;min-width:140px;text-align:center;}
+.period-nav.hide{display:none;}
 .nav{position:absolute;left:0;right:0;bottom:0;height:calc(80px + var(--sab));padding-bottom:var(--sab);z-index:40;background:rgba(16,18,20,0.95);backdrop-filter:blur(16px);border-top:1px solid var(--line);display:flex;padding-top:8px;}
 .nav button{flex:1;background:none;border:none;cursor:pointer;color:var(--faint);font-size:10px;font-weight:700;font-family:'Noto Sans JP';display:flex;flex-direction:column;align-items:center;gap:4px;}
 .nav button svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;}
@@ -289,19 +296,29 @@ body{background:#000;color:var(--text);font-family:'Noto Sans JP',sans-serif;dis
     <!-- ===== データ ===== -->
     <div class="page scrollable" id="pg-data">
       <div class="ctx-strip"><span class="days num" id="ctx-days3">—</span><span id="ctx-contest3" onclick="goContestSettings()" style="cursor:pointer;"></span><span class="auto"><i></i>自動保存</span></div>
-      <div class="today-title" style="padding-bottom:12px;"><h1>データ</h1></div>
+      <div class="today-title" style="padding-bottom:10px;"><h1>データ</h1></div>
+      <div class="seg" id="data-seg">
+        <button class="seg-btn on" onclick="setPeriod('week')">週間</button>
+        <button class="seg-btn" onclick="setPeriod('month')">月間</button>
+        <button class="seg-btn" onclick="setPeriod('all')">全期間</button>
+      </div>
+      <div class="period-nav" id="period-nav">
+        <button onclick="shiftPeriod(-1)">‹</button>
+        <span id="period-label">今週</span>
+        <button onclick="shiftPeriod(1)">›</button>
+      </div>
       <div class="insight" id="data-insight">データを蓄積すると傾向が表示されます。</div>
       <div class="card chart-card">
-        <h3>体重の推移 <span>直近30日</span></h3>
+        <h3>体重の推移 <span id="weight-range"></span></h3>
         <svg id="weight-chart" width="100%" height="140" viewBox="0 0 340 140" preserveAspectRatio="none"></svg>
         <div class="kpis" id="weight-kpis"></div>
       </div>
       <div class="card chart-card">
-        <h3>トレーニング <span>今月</span></h3>
+        <h3>トレーニング <span id="train-range"></span></h3>
         <div class="kpis" id="train-kpis" style="border-top:none;margin-top:0;padding-top:0;"></div>
       </div>
       <div class="card chart-card">
-        <h3>栄養 <span>直近7日平均</span></h3>
+        <h3>栄養 <span id="nutri-range"></span></h3>
         <div class="kpis" id="nutri-kpis" style="border-top:none;margin-top:0;padding-top:0;"></div>
       </div>
     </div>
@@ -881,44 +898,65 @@ function openGymPad(ei,si,which){
   document.getElementById('pad').classList.add('open'); document.getElementById('pad-ov').classList.add('open');
 }
 
-/* ===== データ画面（実データ集計） ===== */
-function renderData(){
-  const recs=DB.records().filter(r=>r.weight!=null).sort((a,b)=>a.date.localeCompare(b.date));
-  const last30=recs.slice(-30);
-  // 体重チャート
+/* ===== データ画面（週間/月間/全期間） ===== */
+let dataPeriod='week', dataOffset=0;
+function setPeriod(p){ dataPeriod=p; dataOffset=0; renderData(); }
+function shiftPeriod(d){ dataOffset+=d; if(dataOffset>0) dataOffset=0; renderData(); }
+function mmdd(s){ const d=new Date(s+'T00:00:00'); return (d.getMonth()+1)+'/'+d.getDate(); }
+function weekRange(off){ const t=new Date(logicalToday()+'T00:00:00'); const day=(t.getDay()+6)%7; t.setDate(t.getDate()-day+off*7); const s=new Date(t); const e=new Date(t); e.setDate(e.getDate()+6); return [fmt(s),fmt(e)]; }
+function monthRange(off){ const t=new Date(logicalToday()+'T00:00:00'); const s=new Date(t.getFullYear(),t.getMonth()+off,1); const e=new Date(t.getFullYear(),t.getMonth()+off+1,0); return [fmt(s),fmt(e)]; }
+function rangeWaterAvg(start,end){ const w=DB.water(); const vals=Object.keys(w).filter(d=>d>=start&&d<=end).map(d=>w[d]&&w[d].total).filter(x=>x); return vals.length?Math.round(vals.reduce((a,b)=>a+b,0)/vals.length):null; }
+function fmtU(arr,u){ const a=avg(arr); return a==='—'?'—':a+u; }
+function drawWeightChart(list){
   const svg=document.getElementById('weight-chart');
-  if(last30.length>=2){
-    const ws=last30.map(r=>r.weight); const min=Math.min(...ws), max=Math.max(...ws); const rng=(max-min)||1;
-    const n=last30.length; const X=i=>10+(320*i/(n-1)); const Y=w=>20+100*(1-(w-min)/rng);
-    const dPath=last30.map((r,i)=>(i?'L':'M')+X(i).toFixed(0)+','+Y(r.weight).toFixed(0)).join(' ');
-    const cw=DB.contestWeight();
-    let goalLine=''; if(cw!=null && cw>=min-rng && cw<=max+rng){ const gy=Y(cw).toFixed(0); goalLine=`<line x1="0" y1="${gy}" x2="340" y2="${gy}" stroke="#f87171" stroke-width="1" stroke-dasharray="5 4" opacity="0.5"/><text x="6" y="${gy-4}" font-size="9" fill="#f87171" font-family="Inter">目標 ${cw}</text>`; }
-    svg.innerHTML=goalLine+`<path d="${dPath}" stroke="#c9f04d" stroke-width="2.4" fill="none" stroke-linecap="round"/><circle cx="${X(n-1).toFixed(0)}" cy="${Y(last30[n-1].weight).toFixed(0)}" r="4.5" fill="#101214" stroke="#c9f04d" stroke-width="3"/>`;
-  } else { svg.innerHTML=`<text x="170" y="74" font-size="11" fill="#545c64" text-anchor="middle">データが足りません（2日以上の体重記録）</text>`; }
-  // 週ペース・KPI
-  const cur=last30.length?last30[last30.length-1].weight:null;
-  let weekPace=null, chg30=null;
-  if(last30.length>=2){
-    const first=last30[0], last=last30[last30.length-1];
-    const dd=(new Date(last.date)-new Date(first.date))/86400000;
-    if(dd>0){ weekPace=((last.weight-first.weight)/dd*7); chg30=(last.weight-first.weight); }
-  }
+  if(!list || list.length<2){ svg.innerHTML='<text x="170" y="74" font-size="11" fill="#545c64" text-anchor="middle">データが足りません（2日以上の体重記録）</text>'; return; }
+  const ws=list.map(r=>r.weight); const min=Math.min(...ws),max=Math.max(...ws); const rng=(max-min)||1;
+  const n=list.length; const X=i=>10+(320*i/(n-1)); const Y=w=>20+100*(1-(w-min)/rng);
+  const dPath=list.map((r,i)=>(i?'L':'M')+X(i).toFixed(0)+','+Y(r.weight).toFixed(0)).join(' ');
+  const cw=DB.contestWeight();
+  let goalLine=''; if(cw!=null && cw>=min-rng && cw<=max+rng){ const gy=Y(cw).toFixed(0); goalLine=`<line x1="0" y1="${gy}" x2="340" y2="${gy}" stroke="#f87171" stroke-width="1" stroke-dasharray="5 4" opacity="0.5"/><text x="6" y="${gy-4}" font-size="9" fill="#f87171" font-family="Inter">目標 ${cw}</text>`; }
+  svg.innerHTML=goalLine+`<path d="${dPath}" stroke="#c9f04d" stroke-width="2.4" fill="none" stroke-linecap="round"/><circle cx="${X(n-1).toFixed(0)}" cy="${Y(list[n-1].weight).toFixed(0)}" r="4.5" fill="#101214" stroke="#c9f04d" stroke-width="3"/>`;
+}
+function renderData(){
+  const segIdx={week:0,month:1,all:2};
+  document.querySelectorAll('#data-seg .seg-btn').forEach((b,i)=>b.classList.toggle('on', i===segIdx[dataPeriod]));
+  const nav=document.getElementById('period-nav');
+  let start,end,label;
+  if(dataPeriod==='week'){ const r=weekRange(dataOffset); start=r[0]; end=r[1]; nav.classList.remove('hide'); label=(dataOffset===0?'今週':dataOffset===-1?'先週':mmdd(start)+'〜'+mmdd(end)); }
+  else if(dataPeriod==='month'){ const r=monthRange(dataOffset); start=r[0]; end=r[1]; nav.classList.remove('hide'); const d=new Date(start+'T00:00:00'); label=(d.getMonth()+1)+'月'+(dataOffset===0?'（今月）':''); }
+  else { const all=DB.records().filter(r=>r.weight!=null).map(r=>r.date).sort(); start=all[0]||'0000-01-01'; end=all[all.length-1]||'9999-12-31'; nav.classList.add('hide'); label='全期間'; }
+  document.getElementById('period-label').textContent=label;
+  const rangeTxt=(dataPeriod==='all')?'全期間':(mmdd(start)+'〜'+mmdd(end));
+  document.getElementById('weight-range').textContent=rangeTxt;
+  document.getElementById('train-range').textContent=rangeTxt;
+  document.getElementById('nutri-range').textContent=rangeTxt;
+  const inRange=r=>r.date>=start&&r.date<=end;
+  const wRecs=DB.records().filter(r=>r.weight!=null&&inRange(r)).sort((a,b)=>a.date.localeCompare(b.date));
+  drawWeightChart(wRecs);
+  // 体重KPI
+  let avgW='—',pace='—',paceGood=false,chg='—',cur='—';
+  if(wRecs.length){ const ws=wRecs.map(r=>r.weight); avgW=(ws.reduce((a,b)=>a+b,0)/ws.length).toFixed(1); cur=wRecs[wRecs.length-1].weight;
+    if(wRecs.length>=2){ const f=wRecs[0],l=wRecs[wRecs.length-1]; const dd=(new Date(l.date)-new Date(f.date))/86400000; chg=(l.weight-f.weight); if(dd>0){ const wp=(l.weight-f.weight)/dd*7; pace=wp.toFixed(2); paceGood=wp<=0; } } }
   document.getElementById('weight-kpis').innerHTML=
-    kpi('現在',cur!=null?cur:'—')+kpi('週ペース',weekPace!=null?weekPace.toFixed(2):'—',weekPace!=null&&weekPace<=0)+kpi('30日変化',chg30!=null?(chg30>0?'+':'')+chg30.toFixed(1):'—')+kpi('記録数',recs.length);
-  // トレ（今月）
-  const ym=curDate.slice(0,7);
-  const trained=DB.records().filter(r=>r.date.startsWith(ym)&&r.trained);
+    kpi('平均',avgW)+kpi('週ペース',pace,paceGood)+kpi('変化',chg==='—'?'—':((chg>0?'+':'')+chg.toFixed(1)),chg!=='—'&&chg<=0)+kpi('最新',cur);
+  // トレKPI
+  const trecs=DB.records().filter(inRange);
+  const trained=trecs.filter(r=>r.trained);
   document.getElementById('train-kpis').innerHTML=
-    kpi('回数',trained.length)+kpi('部位数',new Set(trained.flatMap(r=>r.muscles||[])).size)+kpi('歩数平均',avg(DB.records().filter(r=>r.date.startsWith(ym)&&r.steps).map(r=>r.steps)))+kpi('日サロ計',DB.records().filter(r=>r.date.startsWith(ym)).reduce((s,r)=>s+(r.salon||0),0)+'分');
-  // 栄養（直近7日）
-  const recent=DB.records().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,7);
-  const kcals=recent.map(r=>r.kcal!=null?r.kcal:calcKcal(r.p,r.f,r.c)).filter(x=>x);
+    kpi('回数',trained.length)+kpi('部位数',new Set(trained.flatMap(r=>r.muscles||[])).size)+kpi('歩数平均',fmtU(trecs.filter(r=>r.steps).map(r=>r.steps),''))+kpi('日サロ計',trecs.reduce((s,r)=>s+(r.salon||0),0)+'分');
+  // 栄養KPI
+  const kcals=trecs.map(r=>r.kcal!=null?r.kcal:calcKcal(r.p,r.f,r.c)).filter(x=>x);
+  const wAvg=rangeWaterAvg(start,end);
   document.getElementById('nutri-kpis').innerHTML=
-    kpi('摂取kcal',avg(kcals))+kpi('P平均',avg(recent.map(r=>r.p).filter(x=>x))+'g')+kpi('塩分平均',avg(recent.map(r=>r.salt).filter(x=>x))+'g')+kpi('水分平均',avgWater()+'ml');
+    kpi('摂取kcal',avg(kcals))+kpi('P平均',fmtU(trecs.map(r=>r.p).filter(x=>x),'g'))+kpi('塩分平均',fmtU(trecs.map(r=>r.salt).filter(x=>x),'g'))+kpi('水分平均',wAvg!=null?wAvg.toLocaleString()+'ml':'—');
   // インサイト
-  const ins=document.getElementById('data-insight');
-  if(weekPace!=null){ ins.innerHTML='<b>直近の傾向:</b> 週ペース <span class="ok">'+weekPace.toFixed(2)+'kg/週</span>'+(DB.contestWeight()!=null&&cur!=null?'。目標まであと <b>'+(cur-DB.contestWeight()).toFixed(1)+'kg</b>。':'。'); }
-  else ins.textContent='体重を2日以上記録すると傾向が表示されます。';
+  const ins=document.getElementById('data-insight'); const cw=DB.contestWeight();
+  if(wRecs.length>=2){
+    let msg='<b>'+label+':</b> ';
+    if(pace!=='—') msg+='週ペース <span class="ok">'+pace+'kg/週</span>';
+    if(cw!=null && cur!=='—') msg+=(pace!=='—'?'、':'')+'目標まで <b>'+(cur-cw).toFixed(1)+'kg</b>';
+    ins.innerHTML=msg;
+  } else ins.textContent=label+'の体重記録が2日分以上あると傾向が表示されます。';
 }
 function kpi(k,v,good){ return `<div><div class="k">${k}</div><div class="v num${good?' g':''}">${v}</div></div>`; }
 function avg(arr){ if(!arr||!arr.length) return '—'; return Math.round(arr.reduce((s,x)=>s+x,0)/arr.length).toLocaleString(); }
