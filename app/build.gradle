@@ -19,8 +19,8 @@ android {
         applicationId "com.traininglog.app"
         minSdk 26
         targetSdk 35
-        versionCode 26
-        versionName "1.1.15"
+        versionCode 27
+        versionName "1.1.16"
     }
 
     signingConfigs {
@@ -37,14 +37,14 @@ android {
 
     buildTypes {
         debug {
-            // デバッグビルドだけ再設計版(index-v3.html)を読み込む。リリースは本番index.htmlのまま影響なし。
             buildConfigField "String", "WEBVIEW_URL", "\"https://training-log-v2-5vc.pages.dev/index-v3.html\""
         }
         release {
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            buildConfigField "String", "WEBVIEW_URL", "\"https://training-log-v2-5vc.pages.dev/index.html\""
+            // 本番切替: releaseも再設計版(index-v3.html)を読み込む（内部テストで検証後に製品版へ昇格）
+            buildConfigField "String", "WEBVIEW_URL", "\"https://training-log-v2-5vc.pages.dev/index-v3.html\""
             // keystore.properties または環境変数が設定されている場合のみ署名
             if (keystorePropertiesFile.exists() || System.getenv("KEYSTORE_PATH")) {
                 signingConfig signingConfigs.release
