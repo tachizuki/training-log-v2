@@ -633,6 +633,7 @@ body{background:#000;color:var(--text);font-family:'Noto Sans JP',sans-serif;}
       <button class="prem-go" style="margin-top:14px;" onclick="purchasePremium()" data-i18n="trial_btn">14日間無料で試す</button>
       <button class="restore-link" onclick="restorePremium()" data-i18n="restore">購入が反映されない場合はこちら</button>
       <div class="price-note" id="paywall-price-note">トライアル後に自動更新（いつでも解約可）</div>
+      <div class="pw-acct-note" style="font-size:11px;color:var(--faint);text-align:center;margin-top:8px;line-height:1.6;" data-i18n="paywall_account_note">※ 購入は端末のGoogle Playアカウントに紐づきます（アプリのログインとは別）。複数アカウントをお使いの場合はPlayストアのアカウントをご確認ください。解約も購入したアカウントで行えます。</div>
     </div>
 
     <div class="toast" id="toast"></div>
@@ -712,7 +713,7 @@ const I18N = {
     prem_upgrade:'⭐ プレミアムにアップグレード', prem_member:'⭐ プレミアム会員 — すべての機能が解放されています', trial_btn:'14日間無料で試す',
     pf_roadmap:'大会ロードマップ・大会設定', pf_weekly:'週次レポート', pf_gym:'筋トレ分析（1RM推移・停滞検知）', pf_sync:'複数端末のクラウド同期',
     google_login:'Googleでログイン', login_note:'ログインするとクラウド同期・機種変時のデータ引き継ぎが使えます（本番アプリ）。', btn_signout:'サインアウト', btn_delete_acc:'アカウントを削除', logged_in:'ログイン中',
-    paywall_title:'⭐ プレミアム', paywall_note:'大会に出る人・もっと深く分析したい人向けの機能を解放します。記録と全期間の履歴は無料のまま。', pf_roadmap_sub:'大会日から逆算した目標体重ラインと進捗', restore:'購入が反映されない場合はこちら', price_note:'トライアル後 {0} / 月（いつでも解約可）', price_note_generic:'トライアル後に自動更新（いつでも解約可）',
+    paywall_title:'⭐ プレミアム', paywall_note:'大会に出る人・もっと深く分析したい人向けの機能を解放します。記録と全期間の履歴は無料のまま。', pf_roadmap_sub:'大会日から逆算した目標体重ラインと進捗', restore:'購入が反映されない場合はこちら', price_note:'トライアル後 {0} / 月（いつでも解約可）', price_note_generic:'トライアル後に自動更新（いつでも解約可）', paywall_account_note:'※ 購入は端末のGoogle Playアカウントに紐づきます（アプリのログインとは別）。複数アカウントをお使いの場合はPlayストアのアカウントをご確認ください。解約も購入したアカウントで行えます。',
     confirm:'確定', next:'次へ', copy_prev:'前回コピー', prev:'前回', sw_stop:'終了', meal_input:'食事を入力', add_set:'＋ セットを追加', add_ex:'＋ 種目を追加',
     menu_title:'今日のメニュー', menu_note:'選んだ部位は「今日の記録」の筋トレ部位として保存されます',
     part_chest:'胸', part_back:'背中', part_shoulder:'肩', part_arm:'腕', part_leg:'足', part_abs:'腹筋', part_cardio:'有酸素', part_free:'自由',
@@ -761,7 +762,7 @@ const I18N = {
     prem_upgrade:'⭐ Upgrade to Premium', prem_member:'⭐ Premium member — all features unlocked', trial_btn:'Try 14 days free',
     pf_roadmap:'Contest roadmap & settings', pf_weekly:'Weekly report', pf_gym:'Workout analytics (1RM trend, plateau)', pf_sync:'Multi-device cloud sync',
     google_login:'Sign in with Google', login_note:'Sign in to enable cloud sync and data transfer on device change (real app).', btn_signout:'Sign out', btn_delete_acc:'Delete account', logged_in:'Signed in',
-    paywall_title:'⭐ Premium', paywall_note:'Unlocks features for competitors and power users. Logging and full history stay free.', pf_roadmap_sub:'Target weight line & progress from contest date', restore:"Purchase not showing? Tap here", price_note:'{0}/mo after trial (cancel anytime)', price_note_generic:'Auto-renews after trial (cancel anytime)',
+    paywall_title:'⭐ Premium', paywall_note:'Unlocks features for competitors and power users. Logging and full history stay free.', pf_roadmap_sub:'Target weight line & progress from contest date', restore:"Purchase not showing? Tap here", price_note:'{0}/mo after trial (cancel anytime)', price_note_generic:'Auto-renews after trial (cancel anytime)', paywall_account_note:'* Your subscription is tied to the Google Play account active on this device (separate from your in-app login). If you use multiple accounts, check the account in the Play Store. Cancel from the account you purchased with.',
     confirm:'OK', next:'Next', copy_prev:'Copy last', prev:'Prev', sw_stop:'Stop', meal_input:'Enter meal', add_set:'＋ Add set', add_ex:'＋ Add exercise',
     menu_title:'Today\'s menu', menu_note:'The selected muscle group is saved to today\'s workout log',
     part_chest:'Chest', part_back:'Back', part_shoulder:'Shoulders', part_arm:'Arms', part_leg:'Legs', part_abs:'Abs', part_cardio:'Cardio', part_free:'Free',
