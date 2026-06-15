@@ -242,6 +242,14 @@ body{background:#000;color:var(--text);font-family:'Noto Sans JP',sans-serif;}
 .cal-badge{font-size:8px;font-weight:800;color:#101214;border-radius:3px;padding:0 3px;line-height:1.45;}
 .cal-dot{width:6px;height:6px;border-radius:50%;background:var(--sub);margin-top:2px;}
 .gym-sel-date{font-size:13px;font-weight:800;color:var(--acc);padding:2px 4px 8px;}
+/* 細い日付ナビ＋📅 */
+.gym-datebar{display:flex;align-items:center;gap:8px;padding:2px 2px 10px;}
+.gym-datebar .dn{display:flex;align-items:center;gap:6px;flex:1;justify-content:center;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:9px 12px;}
+.gym-datebar .dn .d{font-weight:800;font-size:15px;color:var(--text);}
+.gym-datebar .dn button{width:30px;height:30px;border:none;background:none;color:var(--sub);font-size:18px;cursor:pointer;}
+.gym-datebar .cal-btn{width:46px;height:46px;border-radius:12px;background:var(--surface);border:1px solid var(--line);color:var(--acc);font-size:20px;cursor:pointer;flex-shrink:0;}
+#gymcal-sheet{max-height:90%;overflow-y:auto;}
+#gymcal-sheet::-webkit-scrollbar{display:none;}
 </style>
 </head>
 <body>
@@ -315,20 +323,16 @@ body{background:#000;color:var(--text);font-family:'Noto Sans JP',sans-serif;}
     <div class="page scrollable" id="pg-gym">
       <div class="ctx-strip"><span class="days num" id="ctx-days2">—</span><span id="ctx-contest2" onclick="goContestSettings()" style="cursor:pointer;"></span><span class="auto"><i></i>自動保存</span></div>
 
-      <!-- 筋トレ履歴カレンダー（全期間・部位フィルタ） -->
-      <div class="gym-hist">
-        <div class="gym-filter" id="gym-filter"></div>
-        <div class="cal-head">
-          <button onclick="gymCalShift(-1)">‹</button>
-          <span class="lbl num" id="gym-cal-label"></span>
-          <button onclick="gymCalShift(1)">›</button>
-          <button class="today-btn" onclick="gymCalToday()" data-i18n="today_btn">今日</button>
+      <!-- 細い日付ナビ＋📅（記録優先。履歴カレンダーはシートで開く） -->
+      <div class="gym-datebar">
+        <div class="dn">
+          <button onclick="shiftGymDay(-1)">‹</button>
+          <span class="d num" id="gym-sel-date"></span>
+          <button onclick="shiftGymDay(1)">›</button>
         </div>
-        <div class="cal-wd" id="gym-cal-wd"></div>
-        <div class="cal-days" id="gym-cal"></div>
+        <button class="cal-btn" onclick="openGymCal()" title="履歴">📅</button>
       </div>
 
-      <div class="gym-sel-date" id="gym-sel-date"></div>
       <div class="gym-top">
         <h1 onclick="openMenuSheet()"><span id="gym-title">メニュー未選択</span><span class="car">▾</span></h1>
         <div class="sw-pill"><span class="t num" id="sw">00:00</span><button onclick="toggleSw()" id="sw-btn" data-i18n="start">開始</button></div>
@@ -371,8 +375,10 @@ body{background:#000;color:var(--text);font-family:'Noto Sans JP',sans-serif;}
     <div class="page scrollable" id="pg-set">
       <div class="today-title" style="padding:8px 2px 12px;"><h1 data-i18n="set_title">設定</h1></div>
 
-      <div class="set-sec" data-i18n="sec_account">アカウント</div>
-      <div class="tile set-card" id="account-card"></div>
+      <div id="account-block">
+        <div class="set-sec" data-i18n="sec_account">アカウント</div>
+        <div class="tile set-card" id="account-card"></div>
+      </div>
 
       <div class="set-sec" data-i18n="sec_premium">プレミアム</div>
       <div class="tile prem-card" id="premium-card"></div>
@@ -500,6 +506,22 @@ body{background:#000;color:var(--text);font-family:'Noto Sans JP',sans-serif;}
       <div class="menu-grid" id="ex-grid"></div>
     </div>
 
+    <!-- 筋トレ履歴カレンダー シート -->
+    <div class="sheet-ov" id="gymcal-ov" onclick="closeGymCal()"></div>
+    <div class="sheet" id="gymcal-sheet">
+      <h3 data-i18n="gym_history">筋トレ履歴</h3>
+      <div class="note" data-i18n="gym_history_note">日付をタップするとその日の記録を開きます</div>
+      <div class="gym-filter" id="gym-filter"></div>
+      <div class="cal-head">
+        <button onclick="gymCalShift(-1)">‹</button>
+        <span class="lbl num" id="gym-cal-label"></span>
+        <button onclick="gymCalShift(1)">›</button>
+        <button class="today-btn" onclick="gymCalToday()" data-i18n="today_btn">今日</button>
+      </div>
+      <div class="cal-wd" id="gym-cal-wd"></div>
+      <div class="cal-days" id="gym-cal"></div>
+    </div>
+
     <!-- プレミアム ペイウォール -->
     <div class="sheet-ov" id="paywall-ov" onclick="closePaywall()"></div>
     <div class="sheet" id="paywall-sheet">
@@ -554,7 +576,7 @@ const I18N = {
     menu_title:'今日のメニュー', menu_note:'選んだ部位は「今日の記録」の筋トレ部位として保存されます',
     part_chest:'胸', part_back:'背中', part_shoulder:'肩', part_arm:'腕', part_leg:'足', part_abs:'腹筋', part_cardio:'有酸素', part_free:'自由',
     ex_title:'種目を追加', ex_note:'よく使う種目から選択（プリセット）',
-    rest_label:'休憩中', rest_skip:'スキップ', filter_all:'すべて',
+    rest_label:'休憩中', rest_skip:'スキップ', filter_all:'すべて', gym_history:'筋トレ履歴', gym_history_note:'日付をタップするとその日の記録を開きます',
     t_saved:'記録しました — <b>自動保存 ✓</b>', t_meal_saved:'食事を記録 — <b>自動保存 ✓</b>', t_set_saved:'設定を保存しました ✓', t_autosaved:'<b>自動保存 ✓</b>', t_rest_done:'休憩終了！次のセットへ 💪',
     t_water_edit:'編集モード: チップをタップして量を変更', l_quick_ml:'クイック追加の量 (ml)', t_water_add:'水分 +{0}ml — <b>自動保存 ✓</b>', t_menu:'メニュー: {0} — <b>自動保存 ✓</b>', t_quick_upd:'クイック追加を更新（昇順整列）— <b>保存 ✓</b>', t_meal_copied:'前回の食事をコピーしました', ex_default:'種目', confirm_del_ex:'この種目を削除しますか？', rest_next:'{0} 次のセットへ', t_copied_prev:'前回({0})をコピー', t_no_prev:'前回の記録が見つかりません', t_added:'{0} を追加', this_month:'（今月）', range_sep:'〜', insight_pace:'週ペース <span class="ok">{0}kg/週</span>', insight_target:'目標まで <b>{0}kg</b>', insight_sep:'、', insight_need:'{0}の体重記録が2日分以上あると傾向が表示されます。', goal_label:'目標', salon_unit:'分',
     t_exported:'エクスポートしました ✓', t_export_fail:'エクスポート失敗', t_imported:'インポートしました（{0}項目）✓', t_import_err:'読み込みエラー: 不正なファイル', t_login_app:'Googleログインはアプリで利用できます', t_signout_preview:'サインアウト（プレビュー）', t_delete_app:'アカウント削除はアプリで実行されます', t_purchase_app:'プレミアム購入はアプリで利用できます', t_restore_app:'購入の復元はアプリで利用できます', t_review_app:'アプリの評価はストアから（アプリで利用可）', t_contact_app:'お問い合わせはアプリから送信できます', t_login_ok:'ログインしました ✓', t_acc_deleted:'アカウントを削除しました', t_acc_del_fail:'削除に失敗しました', t_premium_welcome:'プレミアムへようこそ ✓', t_restored:'購入を復元しました ✓', t_not_restored:'有効な購入が見つかりません', t_synced:'クラウドと同期しました ✓', t_contact_sent:'送信しました ✓', t_contact_fail:'送信に失敗しました',
@@ -587,7 +609,7 @@ const I18N = {
     menu_title:'Today\'s menu', menu_note:'The selected muscle group is saved to today\'s workout log',
     part_chest:'Chest', part_back:'Back', part_shoulder:'Shoulders', part_arm:'Arms', part_leg:'Legs', part_abs:'Abs', part_cardio:'Cardio', part_free:'Free',
     ex_title:'Add exercise', ex_note:'Pick from your presets',
-    rest_label:'Resting', rest_skip:'Skip', filter_all:'All',
+    rest_label:'Resting', rest_skip:'Skip', filter_all:'All', gym_history:'Workout history', gym_history_note:'Tap a date to open that day',
     t_saved:'Saved — <b>auto-saved ✓</b>', t_meal_saved:'Meal saved — <b>auto-saved ✓</b>', t_set_saved:'Settings saved ✓', t_autosaved:'<b>Auto-saved ✓</b>', t_rest_done:'Rest over! Next set 💪',
     t_water_edit:'Edit mode: tap a chip to change the amount', l_quick_ml:'Quick-add amount (ml)', t_water_add:'Water +{0}ml — <b>auto-saved ✓</b>', t_menu:'Menu: {0} — <b>auto-saved ✓</b>', t_quick_upd:'Quick-add updated (sorted) — <b>saved ✓</b>', t_meal_copied:'Copied last meal', ex_default:'Exercise', confirm_del_ex:'Delete this exercise?', rest_next:'{0} — next set', t_copied_prev:'Copied last ({0})', t_no_prev:'No previous record found', t_added:'Added {0}', this_month:' (this month)', range_sep:'–', insight_pace:'Pace <span class="ok">{0}kg/wk</span>', insight_target:'{0}kg to target', insight_sep:', ', insight_need:'Log 2+ weight entries in {0} to see trends.', goal_label:'Goal', salon_unit:'min',
     t_exported:'Exported ✓', t_export_fail:'Export failed', t_imported:'Imported ({0} items) ✓', t_import_err:'Import error: invalid file', t_login_app:'Google sign-in is available in the app', t_signout_preview:'Signed out (preview)', t_delete_app:'Account deletion runs in the app', t_purchase_app:'Premium purchase is available in the app', t_restore_app:'Restore is available in the app', t_review_app:'Rate the app from the store (in-app)', t_contact_app:'Contact is available from the app', t_login_ok:'Signed in ✓', t_acc_deleted:'Account deleted', t_acc_del_fail:'Deletion failed', t_premium_welcome:'Welcome to Premium ✓', t_restored:'Purchase restored ✓', t_not_restored:'No active purchase found', t_synced:'Synced with cloud ✓', t_contact_sent:'Sent ✓', t_contact_fail:'Failed to send',
@@ -693,7 +715,7 @@ function showScreen(id){
 }
 // Androidバックキー: 開いているシート/パッドがあれば閉じる→true。今日以外なら今日へ→true。それ以外false（＝アプリ終了をネイティブに委譲）
 function handleAndroidBack(){
-  const ov=[['paywall-sheet',closePaywall],['pad',closePad],['mpad',closeMealPad],['menu-sheet',closeMenuSheet],['ex-sheet',closeExSheet]];
+  const ov=[['paywall-sheet',closePaywall],['gymcal-sheet',closeGymCal],['pad',closePad],['mpad',closeMealPad],['menu-sheet',closeMenuSheet],['ex-sheet',closeExSheet]];
   for(const [id,fn] of ov){ const el=document.getElementById(id); if(el && el.classList.contains('open')){ try{fn();}catch(e){} return true; } }
   if(curScreen!=='today'){ go('today'); return true; }
   return false;
@@ -740,7 +762,14 @@ function renderPremiumCard(){
   if(isPremiumReal()){ el.className='tile prem-status'; el.innerHTML=t('prem_member'); }
   else { el.className='tile prem-card'; el.innerHTML='<h3>'+t('prem_upgrade')+'</h3><ul><li>'+t('pf_roadmap')+'</li><li>'+t('pf_weekly')+'</li><li>'+t('pf_gym')+'</li><li>'+t('pf_sync')+'</li></ul><button class="prem-go" onclick="openPaywall()">'+t('trial_btn')+'</button>'; }
 }
+// ログイン後はアカウント項目を末尾へ（ログイン誘導の役目を終えたため）。未ログインは先頭（誘導）。
+function positionAccountBlock(){
+  const blk=document.getElementById('account-block'), pgset=document.getElementById('pg-set'); if(!blk||!pgset) return;
+  if(window.currentUser){ if(pgset.lastElementChild!==blk) pgset.appendChild(blk); }
+  else { const title=pgset.querySelector('.today-title'); if(title && title.nextElementSibling!==blk) title.after(blk); }
+}
 function renderAccountCard(){
+  positionAccountBlock();
   const el=document.getElementById('account-card'); if(!el) return;
   if(window.currentUser){
     el.innerHTML='<div class="set-row"><label>'+(currentUser.name||t('logged_in'))+'</label><span style="font-size:11px;color:var(--sub);">'+(currentUser.email||'')+'</span></div>'+
@@ -1068,8 +1097,11 @@ function renderGymFilter(){
 }
 function setGymFilter(m){ gymFilter=m; renderGymFilter(); renderGymCal(); }
 function gymCalShift(d){ const b=gymCalMonth||gymStartOfMonth(curDate); gymCalMonth=new Date(b.getFullYear(),b.getMonth()+d,1); renderGymCal(); }
-function gymCalToday(){ const tk=logicalToday(); gymCalMonth=gymStartOfMonth(tk); curDate=tk; renderGym(); }
-function gymCalPick(date){ curDate=date; gymCalMonth=gymStartOfMonth(date); renderGym(); }
+function gymCalToday(){ const tk=logicalToday(); gymCalMonth=gymStartOfMonth(tk); curDate=tk; closeGymCal(); renderGym(); }
+function gymCalPick(date){ curDate=date; gymCalMonth=gymStartOfMonth(date); closeGymCal(); renderGym(); }
+function openGymCal(){ gymCalMonth=gymStartOfMonth(curDate); document.getElementById('gymcal-sheet').classList.add('open'); document.getElementById('gymcal-ov').classList.add('open'); renderGymCal(); }
+function closeGymCal(){ document.getElementById('gymcal-sheet').classList.remove('open'); document.getElementById('gymcal-ov').classList.remove('open'); }
+function shiftGymDay(n){ const x=new Date(curDate+'T00:00:00'); x.setDate(x.getDate()+n); curDate=fmt(x); renderGym(); }
 function renderGymCal(){
   renderGymFilter();
   const base=gymCalMonth||gymStartOfMonth(curDate);
@@ -1100,7 +1132,6 @@ function renderGymCal(){
 }
 function renderGym(){
   if(!gymCalMonth) gymCalMonth=gymStartOfMonth(curDate);
-  renderGymCal();
   const _sd=document.getElementById('gym-sel-date'); if(_sd) _sd.textContent=fmtDateLocal(new Date(curDate+'T00:00:00'));
   const _rec=getRec(curDate);
   const _ms=(_rec&&_rec.muscles&&_rec.muscles.length)?_rec.muscles.map(partLabel).join(LANG==='ja'?'・':', '):t('menu_unset');
