@@ -213,6 +213,30 @@ body{background:#000;color:var(--text);font-family:'Noto Sans JP',sans-serif;dis
 .paywall-feat .ic{color:var(--acc);font-size:16px;}
 .restore-link{display:block;width:100%;text-align:center;background:none;border:none;color:var(--sub);font-size:12px;margin-top:12px;cursor:pointer;font-family:'Noto Sans JP';text-decoration:underline;}
 .price-note{font-size:11px;color:var(--faint);text-align:center;margin-top:8px;}
+/* 筋トレ履歴カレンダー */
+.gym-hist{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:12px;margin-bottom:14px;}
+.gym-filter{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;}
+.gym-chip{padding:5px 10px;border-radius:999px;border:1px solid var(--line);background:var(--surface2);color:var(--sub);font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;font-family:'Noto Sans JP';}
+.gym-chip.on{background:var(--acc);color:#101214;border-color:var(--acc);}
+.gym-chip .swatch{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+.cal-head{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+.cal-head .lbl{flex:1;text-align:center;font-weight:800;font-size:15px;}
+.cal-head button{width:34px;height:34px;background:var(--surface2);border:1px solid var(--line);border-radius:10px;color:var(--sub);font-size:15px;cursor:pointer;font-family:'Noto Sans JP';}
+.cal-head button.today-btn{width:auto;padding:0 12px;font-size:12px;}
+.cal-wd,.cal-days{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
+.cal-wd{margin-bottom:3px;}
+.cal-wd-c{text-align:center;font-size:10px;color:var(--faint);font-weight:700;}
+.cal-cell{min-height:48px;border-radius:9px;background:var(--surface2);border:1.5px solid transparent;padding:3px 2px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;overflow:hidden;}
+.cal-cell.blank{background:transparent;cursor:default;}
+.cal-cell.nogym{opacity:.4;}
+.cal-cell.sel{border-color:var(--acc);}
+.cal-cell.dim{opacity:.18;}
+.cal-cell.today .cal-d{color:var(--acc);font-weight:900;}
+.cal-d{font-size:11px;color:var(--text);font-family:'Inter',sans-serif;}
+.cal-badges{display:flex;flex-wrap:wrap;justify-content:center;gap:2px;}
+.cal-badge{font-size:8px;font-weight:800;color:#101214;border-radius:3px;padding:0 3px;line-height:1.45;}
+.cal-dot{width:6px;height:6px;border-radius:50%;background:var(--sub);margin-top:2px;}
+.gym-sel-date{font-size:13px;font-weight:800;color:var(--acc);padding:2px 4px 8px;}
 </style>
 </head>
 <body>
@@ -285,6 +309,21 @@ body{background:#000;color:var(--text);font-family:'Noto Sans JP',sans-serif;dis
     <!-- ===== 筋トレ ===== -->
     <div class="page scrollable" id="pg-gym">
       <div class="ctx-strip"><span class="days num" id="ctx-days2">—</span><span id="ctx-contest2" onclick="goContestSettings()" style="cursor:pointer;"></span><span class="auto"><i></i>自動保存</span></div>
+
+      <!-- 筋トレ履歴カレンダー（全期間・部位フィルタ） -->
+      <div class="gym-hist">
+        <div class="gym-filter" id="gym-filter"></div>
+        <div class="cal-head">
+          <button onclick="gymCalShift(-1)">‹</button>
+          <span class="lbl num" id="gym-cal-label"></span>
+          <button onclick="gymCalShift(1)">›</button>
+          <button class="today-btn" onclick="gymCalToday()" data-i18n="today_btn">今日</button>
+        </div>
+        <div class="cal-wd" id="gym-cal-wd"></div>
+        <div class="cal-days" id="gym-cal"></div>
+      </div>
+
+      <div class="gym-sel-date" id="gym-sel-date"></div>
       <div class="gym-top">
         <h1 onclick="openMenuSheet()"><span id="gym-title">メニュー未選択</span><span class="car">▾</span></h1>
         <div class="sw-pill"><span class="t num" id="sw">00:00</span><button onclick="toggleSw()" id="sw-btn" data-i18n="start">開始</button></div>
@@ -510,7 +549,7 @@ const I18N = {
     menu_title:'今日のメニュー', menu_note:'選んだ部位は「今日の記録」の筋トレ部位として保存されます',
     part_chest:'胸', part_back:'背中', part_shoulder:'肩', part_arm:'腕', part_leg:'足', part_abs:'腹筋', part_cardio:'有酸素', part_free:'自由',
     ex_title:'種目を追加', ex_note:'よく使う種目から選択（プリセット）',
-    rest_label:'休憩中', rest_skip:'スキップ',
+    rest_label:'休憩中', rest_skip:'スキップ', filter_all:'すべて',
     t_saved:'記録しました — <b>自動保存 ✓</b>', t_meal_saved:'食事を記録 — <b>自動保存 ✓</b>', t_set_saved:'設定を保存しました ✓', t_autosaved:'<b>自動保存 ✓</b>', t_rest_done:'休憩終了！次のセットへ 💪',
     t_water_edit:'編集モード: チップをタップして量を変更', l_quick_ml:'クイック追加の量 (ml)', t_water_add:'水分 +{0}ml — <b>自動保存 ✓</b>', t_menu:'メニュー: {0} — <b>自動保存 ✓</b>', t_quick_upd:'クイック追加を更新（昇順整列）— <b>保存 ✓</b>', t_meal_copied:'前回の食事をコピーしました', ex_default:'種目', confirm_del_ex:'この種目を削除しますか？', rest_next:'{0} 次のセットへ', t_copied_prev:'前回({0})をコピー', t_no_prev:'前回の記録が見つかりません', t_added:'{0} を追加', this_month:'（今月）', range_sep:'〜', insight_pace:'週ペース <span class="ok">{0}kg/週</span>', insight_target:'目標まで <b>{0}kg</b>', insight_sep:'、', insight_need:'{0}の体重記録が2日分以上あると傾向が表示されます。', goal_label:'目標', salon_unit:'分',
     t_exported:'エクスポートしました ✓', t_export_fail:'エクスポート失敗', t_imported:'インポートしました（{0}項目）✓', t_import_err:'読み込みエラー: 不正なファイル', t_login_app:'Googleログインはアプリで利用できます', t_signout_preview:'サインアウト（プレビュー）', t_delete_app:'アカウント削除はアプリで実行されます', t_purchase_app:'プレミアム購入はアプリで利用できます', t_restore_app:'購入の復元はアプリで利用できます', t_review_app:'アプリの評価はストアから（アプリで利用可）', t_contact_app:'お問い合わせはアプリから送信できます', t_login_ok:'ログインしました ✓', t_acc_deleted:'アカウントを削除しました', t_acc_del_fail:'削除に失敗しました', t_premium_welcome:'プレミアムへようこそ ✓', t_restored:'購入を復元しました ✓', t_not_restored:'有効な購入が見つかりません', t_synced:'クラウドと同期しました ✓', t_contact_sent:'送信しました ✓', t_contact_fail:'送信に失敗しました',
@@ -543,7 +582,7 @@ const I18N = {
     menu_title:'Today\'s menu', menu_note:'The selected muscle group is saved to today\'s workout log',
     part_chest:'Chest', part_back:'Back', part_shoulder:'Shoulders', part_arm:'Arms', part_leg:'Legs', part_abs:'Abs', part_cardio:'Cardio', part_free:'Free',
     ex_title:'Add exercise', ex_note:'Pick from your presets',
-    rest_label:'Resting', rest_skip:'Skip',
+    rest_label:'Resting', rest_skip:'Skip', filter_all:'All',
     t_saved:'Saved — <b>auto-saved ✓</b>', t_meal_saved:'Meal saved — <b>auto-saved ✓</b>', t_set_saved:'Settings saved ✓', t_autosaved:'<b>Auto-saved ✓</b>', t_rest_done:'Rest over! Next set 💪',
     t_water_edit:'Edit mode: tap a chip to change the amount', l_quick_ml:'Quick-add amount (ml)', t_water_add:'Water +{0}ml — <b>auto-saved ✓</b>', t_menu:'Menu: {0} — <b>auto-saved ✓</b>', t_quick_upd:'Quick-add updated (sorted) — <b>saved ✓</b>', t_meal_copied:'Copied last meal', ex_default:'Exercise', confirm_del_ex:'Delete this exercise?', rest_next:'{0} — next set', t_copied_prev:'Copied last ({0})', t_no_prev:'No previous record found', t_added:'Added {0}', this_month:' (this month)', range_sep:'–', insight_pace:'Pace <span class="ok">{0}kg/wk</span>', insight_target:'{0}kg to target', insight_sep:', ', insight_need:'Log 2+ weight entries in {0} to see trends.', goal_label:'Goal', salon_unit:'min',
     t_exported:'Exported ✓', t_export_fail:'Export failed', t_imported:'Imported ({0} items) ✓', t_import_err:'Import error: invalid file', t_login_app:'Google sign-in is available in the app', t_signout_preview:'Signed out (preview)', t_delete_app:'Account deletion runs in the app', t_purchase_app:'Premium purchase is available in the app', t_restore_app:'Restore is available in the app', t_review_app:'Rate the app from the store (in-app)', t_contact_app:'Contact is available from the app', t_login_ok:'Signed in ✓', t_acc_deleted:'Account deleted', t_acc_del_fail:'Deletion failed', t_premium_welcome:'Welcome to Premium ✓', t_restored:'Purchase restored ✓', t_not_restored:'No active purchase found', t_synced:'Synced with cloud ✓', t_contact_sent:'Sent ✓', t_contact_fail:'Failed to send',
@@ -784,6 +823,12 @@ function toggleSec(h){ h.classList.toggle('open'); const card=h.nextElementSibli
 function goContestSettings(){ go('set'); setTimeout(()=>{ const s=document.getElementById('sec-contest'); if(s){ s.classList.add('open'); const c=s.nextElementSibling; if(c && c.classList.contains('set-card')) c.classList.remove('sec-hidden'); s.scrollIntoView({behavior:'smooth',block:'start'}); } },140); }
 function onCalChange(v){ if(v){ curDate=v; renderToday(); } }
 const PART_KEY={'胸':'part_chest','背中':'part_back','肩':'part_shoulder','腕':'part_arm','足':'part_leg','腹筋':'part_abs','有酸素':'part_cardio','自由':'part_free'};
+const PART_ORDER=['胸','背中','肩','腕','足','腹筋','有酸素','自由'];
+const PART_COLOR={'胸':'#f87171','背中':'#60a5fa','肩':'#fbbf24','腕':'#c084fc','足':'#4ade80','腹筋':'#fb923c','有酸素':'#22d3ee','自由':'#cbd5e1'};
+const PART_ABBR_JA={'胸':'胸','背中':'背','肩':'肩','腕':'腕','足':'足','腹筋':'腹','有酸素':'有','自由':'自'};
+const PART_ABBR_EN={'胸':'Ch','背中':'Bk','肩':'Sh','腕':'Ar','足':'Lg','腹筋':'Ab','有酸素':'Ca','自由':'Fr'};
+function partColor(m){ return PART_COLOR[m]||'var(--sub)'; }
+function partAbbr(m){ return (LANG==='ja'?PART_ABBR_JA:PART_ABBR_EN)[m]||m.slice(0,2); }
 function partLabel(m){ return PART_KEY[m]?t(PART_KEY[m]):m; }
 function fmtDateLocal(d){ const wd=(LANG==='ja'?['日','月','火','水','木','金','土']:['Sun','Mon','Tue','Wed','Thu','Fri','Sat'])[d.getDay()]; return LANG==='ja'?`${d.getMonth()+1}月${d.getDate()}日（${wd}）`:`${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()]} ${d.getDate()} (${wd})`; }
 function renderToday(){
@@ -977,8 +1022,85 @@ function saveGymData(){
   localStorage.setItem('gym_data', JSON.stringify(g));
   if(typeof AndroidBridge!=='undefined'){ try{ if(window.currentUser && typeof syncToCloud==='function') syncToCloud(currentUser.uid);}catch(e){} }
 }
+// 本番loadGymDataと同じ読み込みロジック: 新形式(日付のみキー)優先、無ければ旧形式(日付_部位キー)をマージして新形式に移行
+function loadGymExercises(date){
+  const g=DB.gym();
+  if(g[date] && g[date].exercises) return g[date].exercises;
+  let ex=[];
+  Object.keys(g).filter(k=>k.startsWith(date+'_')).sort().forEach(k=>{ if(g[k] && g[k].exercises) ex=ex.concat(g[k].exercises); });
+  if(ex.length>0){ g[date]={exercises:ex}; localStorage.setItem('gym_data', JSON.stringify(g)); }
+  return ex;
+}
+/* ===== 筋トレ履歴カレンダー（全期間・部位フィルタ・部位表示） ===== */
+let gymCalMonth=null;   // 表示中の月（月初Date）
+let gymFilter=null;     // 部位フィルタ（null=すべて）
+function gymStartOfMonth(dateStr){ const d=new Date(dateStr+'T00:00:00'); return new Date(d.getFullYear(),d.getMonth(),1); }
+function gymDayMuscles(date){
+  const set=new Set();
+  const rec=getRec(date);
+  if(rec&&rec.muscles) rec.muscles.forEach(m=>{ if(m) set.add(m); });
+  if(set.size===0){ // 旧形式キー（日付_部位）のサフィックスから補完
+    const g=DB.gym();
+    Object.keys(g).filter(k=>k.startsWith(date+'_')).forEach(k=>{ k.slice(date.length+1).split('+').forEach(m=>{ if(m) set.add(m); }); });
+  }
+  return [...set].sort((a,b)=>{ const ia=PART_ORDER.indexOf(a),ib=PART_ORDER.indexOf(b); return (ia<0?99:ia)-(ib<0?99:ib); });
+}
+function gymDayHas(date){
+  const rec=getRec(date);
+  if(rec&&(rec.trained||(rec.muscles&&rec.muscles.length))) return true;
+  const g=DB.gym();
+  if(g[date]&&g[date].exercises&&g[date].exercises.length) return true;
+  return Object.keys(g).some(k=>k.startsWith(date+'_'));
+}
+function renderGymFilter(){
+  const el=document.getElementById('gym-filter'); if(!el) return;
+  let html=`<button class="gym-chip${gymFilter===null?' on':''}" onclick="setGymFilter(null)">${t('filter_all')}</button>`;
+  html+=PART_ORDER.map(m=>`<button class="gym-chip${gymFilter===m?' on':''}" onclick="setGymFilter('${m}')"><span class="swatch" style="background:${partColor(m)}"></span>${partLabel(m)}</button>`).join('');
+  el.innerHTML=html;
+}
+function setGymFilter(m){ gymFilter=m; renderGymFilter(); renderGymCal(); }
+function gymCalShift(d){ const b=gymCalMonth||gymStartOfMonth(curDate); gymCalMonth=new Date(b.getFullYear(),b.getMonth()+d,1); renderGymCal(); }
+function gymCalToday(){ const tk=logicalToday(); gymCalMonth=gymStartOfMonth(tk); curDate=tk; renderGym(); }
+function gymCalPick(date){ curDate=date; gymCalMonth=gymStartOfMonth(date); renderGym(); }
+function renderGymCal(){
+  renderGymFilter();
+  const base=gymCalMonth||gymStartOfMonth(curDate);
+  const y=base.getFullYear(), mo=base.getMonth();
+  const lbl=document.getElementById('gym-cal-label');
+  if(lbl) lbl.textContent = LANG==='ja' ? `${y}年${mo+1}月` : `${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][mo]} ${y}`;
+  const wd=(LANG==='ja'?['日','月','火','水','木','金','土']:['S','M','T','W','T','F','S']);
+  const wdEl=document.getElementById('gym-cal-wd'); if(wdEl) wdEl.innerHTML=wd.map(w=>`<div class="cal-wd-c">${w}</div>`).join('');
+  const startDow=new Date(y,mo,1).getDay(), dim=new Date(y,mo+1,0).getDate(), today=logicalToday();
+  let cells='';
+  for(let i=0;i<startDow;i++) cells+='<div class="cal-cell blank"></div>';
+  for(let d=1;d<=dim;d++){
+    const date=`${y}-${String(mo+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const has=gymDayHas(date), muscles=has?gymDayMuscles(date):[];
+    const match=!gymFilter||muscles.includes(gymFilter);
+    const cls=['cal-cell'];
+    if(date===curDate) cls.push('sel');
+    if(date===today) cls.push('today');
+    if(!has) cls.push('nogym'); else if(!match) cls.push('dim');
+    let badges='';
+    if(has){
+      if(muscles.length) badges='<div class="cal-badges">'+muscles.slice(0,4).map(mm=>`<span class="cal-badge" style="background:${partColor(mm)}">${partAbbr(mm)}</span>`).join('')+'</div>';
+      else badges='<span class="cal-dot"></span>';
+    }
+    cells+=`<div class="${cls.join(' ')}" onclick="gymCalPick('${date}')"><span class="cal-d">${d}</span>${badges}</div>`;
+  }
+  const grid=document.getElementById('gym-cal'); if(grid) grid.innerHTML=cells;
+}
 function renderGym(){
-  gymWork = JSON.parse(JSON.stringify((DB.gym()[curDate]||{}).exercises||[]));
+  if(!gymCalMonth) gymCalMonth=gymStartOfMonth(curDate);
+  renderGymCal();
+  const _sd=document.getElementById('gym-sel-date'); if(_sd) _sd.textContent=fmtDateLocal(new Date(curDate+'T00:00:00'));
+  const _rec=getRec(curDate);
+  const _ms=(_rec&&_rec.muscles&&_rec.muscles.length)?_rec.muscles.map(partLabel).join(LANG==='ja'?'・':', '):t('menu_unset');
+  const _gt=document.getElementById('gym-title'); if(_gt) _gt.textContent=_ms;
+  renderGymCards();
+}
+function renderGymCards(){
+  gymWork = JSON.parse(JSON.stringify(loadGymExercises(curDate)));
   const wrap=document.getElementById('gym-cards');
   if(!gymWork.length){ wrap.innerHTML='<div class="empty">'+t('gym_empty')+'</div>'; return; }
   wrap.innerHTML=gymWork.map((ex,ei)=>{
