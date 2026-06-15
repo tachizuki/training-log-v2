@@ -1368,30 +1368,25 @@ function weekRange(off){ const t=new Date(logicalToday()+'T00:00:00'); const day
 function monthRange(off){ const t=new Date(logicalToday()+'T00:00:00'); const s=new Date(t.getFullYear(),t.getMonth()+off,1); const e=new Date(t.getFullYear(),t.getMonth()+off+1,0); return [fmt(s),fmt(e)]; }
 function rangeWaterAvg(start,end){ const w=DB.water(); const vals=Object.keys(w).filter(d=>d>=start&&d<=end).map(d=>w[d]&&w[d].total).filter(x=>x); return vals.length?Math.round(vals.reduce((a,b)=>a+b,0)/vals.length):null; }
 function fmtU(arr,u){ const a=avg(arr); return a==='—'?'—':a+u; }
-// 体重の推移＝大会ロードマップ統合。期間に縛られず直近の推移＋目標＋（プレミアム時）大会日への理想ライン
-function drawWeightChart(cw, cd, isPrem){
+// 期間連動(週間=1週間/月間=1か月/全期間)。赤線はその期間の按分目標体重。期初でデータが薄い時は前の期間まで遡って描画
+function drawWeightChart(start, end, periodTarget){
   const svg=document.getElementById('weight-chart'); if(!svg) return;
   const ts=d=>new Date(d+'T00:00:00').getTime();
   const all=DB.records().filter(r=>r.weight!=null).sort((a,b)=>a.date.localeCompare(b.date));
-  const today=logicalToday(), todayTs=ts(today);
-  let recent=(dataPeriod==='all')?all:all.filter(r=>ts(r.date)>=todayTs-84*86400000);
-  if(recent.length<2) recent=all.slice(-10);
-  if(!recent.length){ svg.innerHTML='<text x="170" y="74" font-size="11" fill="#545c64" text-anchor="middle">'+t('insufficient')+'</text>'; return; }
-  const lastRec=recent[recent.length-1], cur=lastRec.weight, curTs=ts(lastRec.date);
-  const hasGoal=(cw!=null&&cd), cdTs=cd?ts(cd):null, projecting=hasGoal&&isPrem&&cdTs>curTs;
-  const startTs=ts(recent[0].date), endTs=projecting?cdTs:curTs, span=(endTs-startTs)||1;
-  const X=v=>10+320*((v-startTs)/span);
-  let ws=recent.map(r=>r.weight); if(hasGoal) ws=ws.concat([cw]);
-  let yMin=Math.min(...ws), yMax=Math.max(...ws); const pad=((yMax-yMin)*0.14)||0.5; yMin-=pad; yMax+=pad;
+  let ws=all.filter(r=>r.date>=start&&r.date<=end), s2=start;
+  if(ws.length<2 && dataPeriod!=='all'){ const pd=(ts(end)-ts(start))/86400000+1; for(let m=1;m<=4&&ws.length<2;m++){ s2=fmt(new Date(ts(start)-m*pd*86400000)); ws=all.filter(r=>r.date>=s2&&r.date<=end); } }
+  if(!ws.length){ svg.innerHTML='<text x="170" y="74" font-size="11" fill="#545c64" text-anchor="middle">'+t('insufficient')+'</text>'; return; }
+  const xStart=ts(s2), xEnd=Math.max(ts(end), ts(ws[ws.length-1].date)), span=(xEnd-xStart)||1;
+  const X=v=>10+320*((v-xStart)/span);
+  const vals=ws.map(r=>r.weight); if(periodTarget!=null) vals.push(periodTarget);
+  let yMin=Math.min(...vals), yMax=Math.max(...vals); const pad=((yMax-yMin)*0.16)||0.5; yMin-=pad; yMax+=pad;
   const Y=w=>18+100*(1-(w-yMin)/((yMax-yMin)||1));
   let html='';
-  const plan=projecting?roadmapPlan():null;
-  if(hasGoal){ const gy=Y(cw).toFixed(0); html+=`<line x1="0" y1="${gy}" x2="340" y2="${gy}" stroke="#f87171" stroke-width="1" stroke-dasharray="5 4" opacity="0.6"/><text x="6" y="${(+gy-4)}" font-size="9.5" fill="#f87171" font-family="Inter">${t('rm_goal')} ${cw}</text>`;
-    if(plan && !plan.trivial){ const ld=fmt(new Date(startTs)); const y1=Y(targetAt(plan, ld)).toFixed(0); html+=`<line x1="${X(startTs).toFixed(0)}" y1="${y1}" x2="${X(cdTs).toFixed(0)}" y2="${gy}" stroke="#8b939b" stroke-width="1.4" stroke-dasharray="4 4" opacity="0.7"/><circle cx="${X(cdTs).toFixed(0)}" cy="${gy}" r="4" fill="#f87171"/>`; } }
-  const dPath=recent.map((r,i)=>(i?'L':'M')+X(ts(r.date)).toFixed(0)+','+Y(r.weight).toFixed(0)).join(' ');
+  if(periodTarget!=null){ const gy=Y(periodTarget).toFixed(0); html+=`<line x1="0" y1="${gy}" x2="340" y2="${gy}" stroke="#f87171" stroke-width="1.2" stroke-dasharray="5 4" opacity="0.75"/><text x="6" y="${(+gy-4)}" font-size="9.5" fill="#f87171" font-family="Inter">${t('rm_goal')} ${periodTarget.toFixed(1)}</text>`; }
+  const dPath=ws.map((r,i)=>(i?'L':'M')+X(ts(r.date)).toFixed(0)+','+Y(r.weight).toFixed(0)).join(' ');
   html+=`<path d="${dPath}" stroke="#c9f04d" stroke-width="2.4" fill="none" stroke-linecap="round"/>`;
-  const cx=X(curTs).toFixed(0), cyy=Y(cur).toFixed(0);
-  html+=`<circle cx="${cx}" cy="${cyy}" r="4.5" fill="#101214" stroke="#c9f04d" stroke-width="3"/><text x="${(+cx-7)}" y="${(+cyy-9)}" font-size="11" fill="#c9f04d" text-anchor="end" font-family="Inter" font-weight="700">${cur.toFixed(1)}</text>`;
+  const last=ws[ws.length-1], lx=X(ts(last.date)).toFixed(0), ly=Y(last.weight).toFixed(0);
+  html+=`<circle cx="${lx}" cy="${ly}" r="4.5" fill="#101214" stroke="#c9f04d" stroke-width="3"/><text x="${(+lx-7)}" y="${(+ly-9)}" font-size="11" fill="#c9f04d" text-anchor="end" font-family="Inter" font-weight="700">${last.weight.toFixed(1)}</text>`;
   svg.innerHTML=html;
 }
 function renderData(){
@@ -1408,7 +1403,11 @@ function renderData(){
   document.getElementById('nutri-range').textContent=rangeTxt;
   const inRange=r=>r.date>=start&&r.date<=end;
   const wRecs=DB.records().filter(r=>r.weight!=null&&inRange(r)).sort((a,b)=>a.date.localeCompare(b.date));
-  drawWeightChart(DB.contestWeight(), DB.contestDate(), isPremiumReal());
+  // 赤線＝その期間の按分目標体重（プレミアムのみ）
+  const _plan=roadmapPlan();
+  let periodTarget=null;
+  if(_plan && isPremiumReal()){ periodTarget=(dataPeriod==='all')?DB.contestWeight():targetAt(_plan, end); }
+  drawWeightChart(start, end, periodTarget);
   renderRoadmapExtra();
   // 週平均（前期間比で痩せ/太り判定）＋ 期間にデータが無い時は最新記録を提示
   const thisAvgW = wRecs.length ? wRecs.reduce((a,b)=>a+b.weight,0)/wRecs.length : null;
