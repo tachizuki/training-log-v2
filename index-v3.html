@@ -221,6 +221,12 @@ body{background:#000;color:var(--text);font-family:'Noto Sans JP',sans-serif;}
 .an-row .tag.down{background:rgba(248,113,113,0.15);color:var(--bad);}
 .report-line{font-size:13px;line-height:1.9;color:var(--text);}
 .report-line b{color:var(--acc);}
+/* 体重変動分析の各行 */
+.an-l{display:flex;gap:8px;align-items:flex-start;margin-bottom:8px;font-size:12.5px;line-height:1.55;color:var(--sub);}
+.an-l:last-child{margin-bottom:0;}
+.an-l .ic{flex-shrink:0;}
+.an-l.g{color:var(--good);} .an-l.w{color:var(--warn);} .an-l.b{color:var(--bad);}
+.an-l b{font-weight:800;}
 .chart-card h3{font-size:12px;color:var(--sub);font-weight:700;margin-bottom:12px;display:flex;justify-content:space-between;}
 .chart-card h3 span{font-weight:500;color:var(--faint);}
 .kpis{display:flex;border-top:1px solid var(--line);margin-top:14px;padding-top:12px;}
@@ -343,7 +349,7 @@ body{background:#000;color:var(--text);font-family:'Noto Sans JP',sans-serif;}
   <div class="viewport">
 
     <!-- ===== 今日 ===== -->
-    <div class="page active" id="pg-today">
+    <div class="page scrollable active" id="pg-today">
       <div class="ctx-strip">
         <span class="days num" id="ctx-days">—</span><span id="ctx-contest" onclick="goContestSettings()" style="cursor:pointer;">大会未設定</span>
         <span class="auto"><i></i>自動保存</span>
@@ -440,7 +446,6 @@ body{background:#000;color:var(--text);font-family:'Noto Sans JP',sans-serif;}
         <span id="period-label">今週</span>
         <button onclick="shiftPeriod(1)">›</button>
       </div>
-      <div class="insight" id="data-insight">データを蓄積すると傾向が表示されます。</div>
       <div class="card chart-card">
         <h3><span data-i18n="weight_trend">体重の推移</span> <span id="rm-name" style="font-size:10px;color:var(--faint);font-weight:700;"></span></h3>
         <svg id="weight-chart" width="100%" height="140" viewBox="0 0 340 140" preserveAspectRatio="none"></svg>
@@ -449,7 +454,7 @@ body{background:#000;color:var(--text);font-family:'Noto Sans JP',sans-serif;}
         <div class="kpis" id="weight-kpis"></div>
       </div>
       <div class="card chart-card">
-        <h3><span data-i18n="week_table_title">週平均の推移</span></h3>
+        <h3 id="week-table-title" data-i18n="week_table_title">週平均の推移</h3>
         <div id="week-table"></div>
       </div>
       <div class="card chart-card">
@@ -727,7 +732,12 @@ const I18N = {
     rm_title:'大会ロードマップ', rm_lock:'仕上がり体重と大会日から逆算した目標ペースと進捗を表示します。', rm_setup:'大会日と仕上がり体重を設定すると進捗が表示されます。', rm_setup_btn:'大会設定へ', rm_gap:'目標まで', rm_req:'必要(kg/週)', rm_cur:'現在(kg/週)', rm_ok:'順調', rm_behind:'遅れ', rm_done:'達成', rm_nopace:'記録待ち', rm_goal:'目標', rm_teaser:'大会までの週次目標体重・ロードマップ', rm_weekly_title:'週次目標体重（目標までを按分）', rm_col_week:'週', rm_col_target:'目標', rm_col_actual:'実績(差)',
     an_title:'筋トレ分析', an_sub:'推定1RM・停滞検知', an_lock:'種目ごとの推定1RM推移と停滞を自動で検知します。', an_empty:'筋トレを記録すると分析が表示されます。', an_pr:'更新', an_plateau:'停滞', an_down:'低下',
     rep_title:'レポート', rep_lock:'期間ごとの体重・トレーニング・栄養・水分をまとめて表示します。', rep_avgw:'平均体重', rep_vs:'前期間比', rep_trained:'トレーニング', rep_times:'回', rep_kcal:'平均摂取', rep_water:'平均水分',
-    a_remain:'今日はあと <b>残り{0}kcal</b>', a_pdiff:' / P あと{0}g', a_salt_missing:'塩分が未記録です。', a_prevdiff:'前日比', a_in_pace:' — 減量ペース内 ✓', a_increase:' — 増加',
+    a_remain:'今日はあと <b>残り{0}kcal</b>',
+    wa_stable:'前日比 <b>±{0}kg</b>。ほぼ横ばい（水分誤差の範囲）。', wa_decrease:'前日比 <b>{0}kg</b> 減少。良いトレンドです。', wa_increase:'前日比 <b>{0}kg</b> 増加。下の要因を確認しましょう。', wa_no_prev:'前日の体重が未記録のため変動は計算できません（前日の要因のみ分析）。',
+    wa_salt_high:'前日の塩分 <b>{0}g</b>（目標{1}g超）。むくみで体重が増えやすい状態。', wa_salt_mid:'前日の塩分 <b>{0}g</b>（やや多め／目標{1}g）。軽度のむくみ要因の可能性。', wa_salt_ok:'前日の塩分 <b>{0}g</b>（目標{1}g内）。むくみ要因は少なめ。',
+    wa_water_high:'前日の水分 <b>{0}L</b>。塩分排出・代謝を促進。', wa_water_mid:'前日の水分 <b>{0}L</b>。もう少し増やすと排出が進みやすい。', wa_water_low:'前日の水分 <b>{0}L</b>（少なめ）。塩分が残りむくみやすい。',
+    wa_salon_long:'前日の日サロ <b>{0}分</b>。熱による炎症・むくみの可能性。', wa_salon_short:'前日の日サロ <b>{0}分</b>。',
+    wa_kcal_over:'前日のカロリー <b>{0}kcal</b>（{1}余剰）。体重増加の要因。', wa_kcal_under:'前日のカロリー <b>{0}kcal</b>（{1}赤字）。脂肪分解が進み下がりやすい。', wa_kcal_ok:'前日のカロリー <b>{0}kcal</b>（適正範囲）。', a_pdiff:' / P あと{0}g', a_salt_missing:'塩分が未記録です。', a_prevdiff:'前日比', a_in_pace:' — 減量ペース内 ✓', a_increase:' — 増加',
   },
   en: {
     nav_today:'Today', nav_gym:'Workout', nav_data:'Data', nav_set:'Settings',
@@ -771,7 +781,12 @@ const I18N = {
     rm_title:'Contest roadmap', rm_lock:'Target pace & progress back-calculated from your goal weight and contest date.', rm_setup:'Set contest date and goal weight to see progress.', rm_setup_btn:'Contest settings', rm_gap:'To goal', rm_req:'Need(kg/wk)', rm_cur:'Now(kg/wk)', rm_ok:'On track', rm_behind:'Behind', rm_done:'Reached', rm_nopace:'Need data', rm_goal:'Goal', rm_teaser:'Weekly target weights & roadmap to your contest', rm_weekly_title:'Weekly target weight (allocated to goal)', rm_col_week:'Week', rm_col_target:'Target', rm_col_actual:'Actual(Δ)',
     an_title:'Workout analytics', an_sub:'est. 1RM & plateau', an_lock:'Auto-detects estimated 1RM trend and plateaus per exercise.', an_empty:'Log workouts to see analytics.', an_pr:'PR', an_plateau:'Plateau', an_down:'Down',
     rep_title:'Report', rep_lock:'Digest of weight, training, nutrition and water per period.', rep_avgw:'Avg weight', rep_vs:'vs prev', rep_trained:'Training', rep_times:'×', rep_kcal:'Avg intake', rep_water:'Avg water',
-    a_remain:'<b>{0} kcal left</b> today', a_pdiff:' / {0}g P to go', a_salt_missing:'Salt not logged.', a_prevdiff:'vs yesterday', a_in_pace:' — within cut pace ✓', a_increase:' — up',
+    a_remain:'<b>{0} kcal left</b> today',
+    wa_stable:'<b>±{0}kg</b> vs yesterday. Roughly flat (within water noise).', wa_decrease:'<b>{0}kg</b> vs yesterday. Good trend.', wa_increase:'<b>{0}kg</b> vs yesterday. Check the factors below.', wa_no_prev:'No weight logged yesterday, so change is N/A (analyzing factors only).',
+    wa_salt_high:'Yesterday salt <b>{0}g</b> (over {1}g goal). Prone to water retention.', wa_salt_mid:'Yesterday salt <b>{0}g</b> (a bit high / {1}g goal). Mild bloat possible.', wa_salt_ok:'Yesterday salt <b>{0}g</b> (within {1}g goal). Low bloat risk.',
+    wa_water_high:'Yesterday water <b>{0}L</b>. Aids sodium flush & metabolism.', wa_water_mid:'Yesterday water <b>{0}L</b>. A bit more helps flushing.', wa_water_low:'Yesterday water <b>{0}L</b> (low). Sodium lingers, bloat risk.',
+    wa_salon_long:'Yesterday tanning <b>{0}min</b>. Heat may cause inflammation/bloat.', wa_salon_short:'Yesterday tanning <b>{0}min</b>.',
+    wa_kcal_over:'Yesterday calories <b>{0}kcal</b> ({1} surplus). Drives weight gain.', wa_kcal_under:'Yesterday calories <b>{0}kcal</b> ({1} deficit). Promotes fat loss.', wa_kcal_ok:'Yesterday calories <b>{0}kcal</b> (within range).', a_pdiff:' / {0}g P to go', a_salt_missing:'Salt not logged.', a_prevdiff:'vs yesterday', a_in_pace:' — within cut pace ✓', a_increase:' — up',
   }
 };
 function resolveLang(){ const o=localStorage.getItem('app_lang'); if(o==='ja'||o==='en') return o; return (navigator.language||'').toLowerCase().indexOf('ja')===0?'ja':'en'; }
@@ -1080,15 +1095,42 @@ function setMini(valId,subId,okId,val,unit,subFn){
   document.getElementById(subId).innerHTML = val==null?'':subFn();
 }
 function setMeal(id,val){ document.getElementById(id).querySelector('.n').innerHTML=(val==null?'<span class="ph">—</span>':val)+'<small>g</small>'; }
+// 体重変動分析：前日の塩分/水分/日サロ/カロリーを当日の体重変動と関連づけて要因分析
 function renderTodayAnalysis(rec){
-  const el=document.getElementById('today-analysis'); const parts=[];
-  const pv=prevValue('weight');
-  if(rec.weight!=null && pv!=null){ const dlt=(rec.weight-pv); parts.push(t('a_prevdiff')+' <span class="'+(dlt<=0?'g':'w')+'">'+(dlt>0?'+':'')+dlt.toFixed(1)+'kg</span>'+(dlt<=0?t('a_in_pace'):t('a_increase'))); }
-  const ng=DB.nutritionGoals(); const kc=rec.kcal!=null?rec.kcal:calcKcal(rec.p,rec.f,rec.c);
-  const goalKcal = (ng.p!=null||ng.f!=null||ng.c!=null) ? calcKcal(ng.p,ng.f,ng.c) : (ng.kcal||0);
-  if(goalKcal){ const remain=goalKcal-(kc||0); let s=t('a_remain',(remain>0?remain:0)); if(ng.p!=null&&rec.p!=null) s+=t('a_pdiff',Math.max(0,Math.round(ng.p-rec.p))); parts.push(s); }
-  if(rec.salt==null) parts.push(t('a_salt_missing'));
-  el.innerHTML = parts.length? parts.join('<br>') : t('analysis_empty');
+  const el=document.getElementById('today-analysis'); if(!el) return;
+  const ng=DB.nutritionGoals();
+  const addDays=(d,n)=>{ const x=new Date(d+'T00:00:00'); x.setDate(x.getDate()+n); return fmt(x); };
+  const prevKey=addDays(rec.date,-1);
+  const prevRec=DB.records().find(r=>r.date===prevKey);
+  const prevWater=DB.water()[prevKey];
+  const items=[];
+  const diff=(rec.weight!=null&&prevRec&&prevRec.weight!=null)?(rec.weight-prevRec.weight):null;
+  if(diff!=null){ const ad=Math.abs(diff);
+    if(ad<0.15) items.push(['⚖️','', t('wa_stable',ad.toFixed(2))]);
+    else if(diff<0) items.push(['📉','g', t('wa_decrease',diff.toFixed(2))]);
+    else items.push(['📈','w', t('wa_increase','+'+diff.toFixed(2))]);
+  } else if(rec.weight!=null){ items.push(['⚖️','', t('wa_no_prev')]); }
+  if(prevRec){
+    if(prevRec.salt!=null && ng.salt!=null){ const over=prevRec.salt-ng.salt;
+      if(over>1.5) items.push(['🧂','b', t('wa_salt_high', prevRec.salt, ng.salt)]);
+      else if(over>0) items.push(['🧂','w', t('wa_salt_mid', prevRec.salt, ng.salt)]);
+      else items.push(['🧂','g', t('wa_salt_ok', prevRec.salt, ng.salt)]); }
+    if(prevWater && prevWater.total>0){ const wl=(prevWater.total/1000).toFixed(1);
+      if(prevWater.total>=3000) items.push(['💧','g', t('wa_water_high', wl)]);
+      else if(prevWater.total>=2000) items.push(['💧','', t('wa_water_mid', wl)]);
+      else items.push(['💧','w', t('wa_water_low', wl)]); }
+    if(prevRec.salon && prevRec.salon>0){ if(prevRec.salon>=30) items.push(['🌞','w', t('wa_salon_long', prevRec.salon)]); else items.push(['🌞','', t('wa_salon_short', prevRec.salon)]); }
+    const pkc=prevRec.kcal!=null?prevRec.kcal:calcKcal(prevRec.p,prevRec.f,prevRec.c);
+    const gk=(ng.p!=null||ng.f!=null||ng.c!=null)?calcKcal(ng.p,ng.f,ng.c):0;
+    if(pkc && gk){ const sur=pkc-gk;
+      if(sur>400) items.push(['🔥', sur>800?'b':'w', t('wa_kcal_over', pkc, '+'+Math.round(sur))]);
+      else if(sur<-400) items.push(['🔥','g', t('wa_kcal_under', pkc, Math.round(sur))]);
+      else items.push(['🔥','g', t('wa_kcal_ok', pkc)]); }
+  }
+  const kc=rec.kcal!=null?rec.kcal:calcKcal(rec.p,rec.f,rec.c);
+  const gk2=(ng.p!=null||ng.f!=null||ng.c!=null)?calcKcal(ng.p,ng.f,ng.c):0;
+  if(gk2){ const remain=gk2-(kc||0); items.push(['🎯','', t('a_remain',(remain>0?remain:0))]); }
+  el.innerHTML = items.length? items.map(it=>'<div class="an-l '+(it[1]||'')+'"><span class="ic">'+it[0]+'</span><span>'+it[2]+'</span></div>').join('') : t('analysis_empty');
 }
 
 /* ===== 水分 ===== */
@@ -1375,7 +1417,7 @@ function drawWeightChart(start, end, plan){
   const all=DB.records().filter(r=>r.weight!=null).sort((a,b)=>a.date.localeCompare(b.date));
   let ws=all.filter(r=>r.date>=start&&r.date<=end), s2=start;
   if(ws.length<2 && dataPeriod!=='all'){ const pd=(ts(end)-ts(start))/86400000+1; for(let m=1;m<=4&&ws.length<2;m++){ s2=fmt(new Date(ts(start)-m*pd*86400000)); ws=all.filter(r=>r.date>=s2&&r.date<=end); } }
-  if(!ws.length){ svg.innerHTML='<text x="170" y="74" font-size="11" fill="#545c64" text-anchor="middle">'+t('insufficient')+'</text>'; return; }
+  if(ws.length<2){ svg.innerHTML='<text x="170" y="74" font-size="11" fill="#545c64" text-anchor="middle">'+t('insufficient')+'</text>'; return; }
   const xStart=ts(s2), xEnd=Math.max(ts(end), ts(ws[ws.length-1].date)), span=(xEnd-xStart)||1;
   const X=v=>10+320*((v-xStart)/span);
   const vals=ws.map(r=>r.weight);
@@ -1388,6 +1430,8 @@ function drawWeightChart(start, end, plan){
   html+=`<path d="${dPath}" stroke="#c9f04d" stroke-width="2.4" fill="none" stroke-linecap="round"/>`;
   const last=ws[ws.length-1], lx=X(ts(last.date)).toFixed(0), ly=Y(last.weight).toFixed(0);
   html+=`<circle cx="${lx}" cy="${ly}" r="4.5" fill="#101214" stroke="#c9f04d" stroke-width="3"/><text x="${(+lx-7)}" y="${(+ly-9)}" font-size="11" fill="#c9f04d" text-anchor="end" font-family="Inter" font-weight="700">${last.weight.toFixed(1)}</text>`;
+  // 日付軸ラベル（左/中央/右）
+  [['start',10,xStart],['middle',170,(xStart+xEnd)/2],['end',334,xEnd]].forEach(a=>{ html+=`<text x="${a[1]}" y="137" font-size="8.5" fill="#545c64" text-anchor="${a[0]}" font-family="Inter">${mmdd(fmt(new Date(a[2])))}</text>`; });
   svg.innerHTML=html;
 }
 function renderData(){
@@ -1430,14 +1474,6 @@ function renderData(){
   const wAvg=rangeWaterAvg(start,end);
   document.getElementById('nutri-kpis').innerHTML=
     kpi(t('kpi_kcal'),avg(kcals))+kpi(t('kpi_p'),fmtU(trecs.map(r=>r.p).filter(x=>x),'g'))+kpi(t('kpi_salt'),fmtU(trecs.map(r=>r.salt).filter(x=>x),'g'))+kpi(t('kpi_water'),wAvg!=null?wAvg.toLocaleString()+'ml':'—');
-  // インサイト
-  const ins=document.getElementById('data-insight'); const cw=DB.contestWeight();
-  if(wRecs.length>=2){
-    let msg='<b>'+label+':</b> ';
-    if(pace!=='—') msg+=t('insight_pace', pace);
-    if(cw!=null && cur!=='—') msg+=(pace!=='—'?t('insight_sep'):'')+t('insight_target',(cur-cw).toFixed(1));
-    ins.innerHTML=msg;
-  } else ins.textContent=t('insight_need', label);
   renderWeekTable(); renderGymAnalytics(); renderWeeklyReport(start,end,label);
 }
 function kpi(k,v,good){ return `<div><div class="k">${k}</div><div class="v num${good?' g':''}">${v}</div></div>`; }
@@ -1456,6 +1492,11 @@ function weekStartOf(dateStr){ const d=new Date(dateStr+'T00:00:00'); const dow=
 function weeklyAverages(){ const recs=DB.records().filter(r=>r.weight!=null); const byW={}; recs.forEach(r=>{ const w=weekStartOf(r.date); (byW[w]=byW[w]||[]).push(r.weight); }); return Object.keys(byW).sort().map(w=>({start:w, avg:byW[w].reduce((a,b)=>a+b,0)/byW[w].length, n:byW[w].length})); }
 function renderWeekTable(){
   const el=document.getElementById('week-table'); if(!el) return;
+  const titleEl=document.getElementById('week-table-title');
+  const plan=roadmapPlan();
+  // プレミアム＋大会設定済みなら「週次目標体重(目標vs実績)」、それ以外は「週平均の推移」
+  if(isPremiumReal() && plan && !plan.trivial){ if(titleEl) titleEl.textContent=t('rm_weekly_title'); el.innerHTML=renderRoadmapWeekly(plan); return; }
+  if(titleEl) titleEl.textContent=t('week_table_title');
   const wa=weeklyAverages();
   if(!wa.length){ el.innerHTML='<div class="empty" style="color:var(--faint);font-size:11px;text-align:center;padding:14px;">'+t('w_no_data')+'</div>'; return; }
   const recent=wa.slice(-8); let rows='';
@@ -1511,13 +1552,21 @@ function renderRoadmapExtra(){
   const daysLeft=Math.ceil((new Date(cd+'T00:00:00')-new Date(today+'T00:00:00'))/86400000);
   const dday='D'+(daysLeft>=0?'-'+daysLeft:'+'+(-daysLeft));
   const plan=roadmapPlan();
+  if(!plan || plan.trivial){ el.innerHTML='<div class="prem-lock"><div class="ds">'+t('rm_setup')+'</div><span class="cta" onclick="goContestSettings()">'+t('rm_setup_btn')+'</span></div>'; return; }
+  const recs=DB.records().filter(r=>r.weight!=null).sort((a,b)=>a.date.localeCompare(b.date));
+  const cur=recs.length?recs[recs.length-1].weight:null;
+  const gap=cur!=null?(cur-cw):null;
+  let curPace=null; const cutoff=fmt(new Date(Date.now()-21*86400000)); const rc=recs.filter(r=>r.date>=cutoff);
+  if(rc.length>=2){ const f=rc[0],l=rc[rc.length-1]; const dd=(new Date(l.date)-new Date(f.date))/86400000; if(dd>0) curPace=(l.weight-f.weight)/dd*7; }
+  const weeksLeft=Math.max(daysLeft/7,0.1); const reqPace=gap!=null?(-gap/weeksLeft):null;
   let judge=t('rm_nopace'), jcls='flat';
-  if(plan){ const recs=DB.records().filter(r=>r.weight!=null).sort((a,b)=>a.date.localeCompare(b.date)); const cur=recs.length?recs[recs.length-1].weight:null;
-    if(cur!=null){ if(cur-cw<=0.05){ judge=t('rm_done'); jcls='done'; } else { const d=cur-targetAt(plan,today); judge=(d<=0.1)?t('rm_ok'):t('rm_behind'); jcls=(d<=0.1)?'ok':'behind'; } } }
-  let h='<div class="rm-head"><span class="rm-dday">'+dday+'</span><span class="rm-judge '+jcls+'">'+judge+'</span></div>';
-  if(plan && !plan.trivial){ h+='<div class="rm-wkttl">'+t('rm_weekly_title')+'</div>'+renderRoadmapWeekly(plan); }
-  else { h+='<div class="prem-lock"><div class="ds">'+t('rm_setup')+'</div><span class="cta" onclick="goContestSettings()">'+t('rm_setup_btn')+'</span></div>'; }
-  el.innerHTML=h;
+  if(cur!=null){ if(gap!=null&&gap<=0.05){ judge=t('rm_done'); jcls='done'; } else { const d=cur-targetAt(plan,today); judge=(d<=0.1)?t('rm_ok'):t('rm_behind'); jcls=(d<=0.1)?'ok':'behind'; } }
+  el.innerHTML='<div class="rm-head"><span class="rm-dday">'+dday+'</span><span class="rm-judge '+jcls+'">'+judge+'</span></div>'
+    +'<div class="rm-rows">'
+    +'<div><div class="k">'+t('rm_gap')+'</div><div class="v">'+(gap!=null?(gap>0?gap.toFixed(1):'±0')+'kg':'—')+'</div></div>'
+    +'<div><div class="k">'+t('rm_req')+'</div><div class="v">'+(reqPace!=null?reqPace.toFixed(2):'—')+'</div></div>'
+    +'<div><div class="k">'+t('rm_cur')+'</div><div class="v">'+(curPace!=null?(curPace>0?'+':'')+curPace.toFixed(2):'—')+'</div></div>'
+    +'</div>';
 }
 /* ===== 筋トレ分析 1RM・停滞（プレミアム） ===== */
 function gymExerciseStats(){
