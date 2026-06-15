@@ -1010,7 +1010,16 @@ function saveSet(){
 }
 /* 自動保存: 設定の各項目を変更/確定した瞬間に保存（保存ボタンなし＝アプリ全体の自動保存と統一） */
 let _autoSaveToastT=null;
-function autoSaveSet(){ saveSet(); clearTimeout(_autoSaveToastT); _autoSaveToastT=setTimeout(()=>toast(t('t_autosaved')),350); }
+function autoSaveSet(){
+  const _ot=logicalToday();
+  saveSet();
+  // 起点時刻変更で「今日」が変わる場合、今日を見ていればcurDateを追従。設定変更を各画面へ即反映
+  if(curDate===_ot) curDate=logicalToday();
+  try{ renderToday(); }catch(e){}
+  try{ if(document.getElementById('pg-data').classList.contains('active')) renderData(); }catch(e){}
+  try{ if(document.getElementById('pg-gym').classList.contains('active')) renderGym(); }catch(e){}
+  clearTimeout(_autoSaveToastT); _autoSaveToastT=setTimeout(()=>toast(t('t_autosaved')),350);
+}
 function wireSettingsAutoSave(){
   ['set-name','set-contest-name','set-sex','set-day-start','set-contest-date','set-peak-date','set-notif-time'].forEach(id=>{
     const el=document.getElementById(id); if(el && !el._asWired){ el._asWired=true; el.addEventListener('change', autoSaveSet); }
