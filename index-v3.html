@@ -123,7 +123,8 @@ body{background:#000;color:var(--text);font-family:'Noto Sans JP',sans-serif;dis
 .rest button{height:44px;padding:0 14px;background:rgba(255,255,255,0.07);border:none;border-radius:10px;color:var(--text);font-size:12px;font-weight:700;cursor:pointer;font-family:'Noto Sans JP';}
 .pad-ov{position:absolute;inset:0;z-index:48;display:none;}
 .pad-ov.open{display:block;}
-.pad{position:absolute;left:0;right:0;bottom:0;z-index:50;background:#15181c;border-top:1px solid var(--line);border-radius:24px 24px 0 0;padding:14px 14px calc(28px + var(--sab));transform:translateY(110%);transition:transform .22s ease;}
+.pad{position:absolute;left:0;right:0;bottom:0;z-index:50;background:#15181c;border-top:1px solid var(--line);border-radius:24px 24px 0 0;padding:14px 14px calc(28px + var(--sab));transform:translateY(110%);visibility:hidden;pointer-events:none;transition:transform .22s ease, visibility 0s linear .22s;}
+.pad.open{visibility:visible;pointer-events:auto;transition:transform .22s ease, visibility 0s;}
 .pad.open{transform:none;}
 .pad-head{display:flex;align-items:center;padding:2px 6px 12px;gap:10px;}
 .pad-head .lbl{font-size:12px;color:var(--sub);font-weight:700;}
@@ -143,7 +144,8 @@ body{background:#000;color:var(--text);font-family:'Noto Sans JP',sans-serif;dis
 .pad-grid .ok1{background:var(--acc);color:#101214;border:none;font-family:'Noto Sans JP';font-size:15px;font-weight:900;}
 .sheet-ov{position:absolute;inset:0;background:rgba(0,0,0,0.6);z-index:48;display:none;}
 .sheet-ov.open{display:block;}
-.sheet{position:absolute;left:0;right:0;bottom:0;z-index:50;background:#15181c;border-top:1px solid var(--line);border-radius:24px 24px 0 0;padding:16px 18px calc(30px + var(--sab));transform:translateY(110%);transition:transform .22s ease;}
+.sheet{position:absolute;left:0;right:0;bottom:0;z-index:50;background:#15181c;border-top:1px solid var(--line);border-radius:24px 24px 0 0;padding:16px 18px calc(30px + var(--sab));transform:translateY(110%);visibility:hidden;pointer-events:none;transition:transform .22s ease, visibility 0s linear .22s;}
+.sheet.open{visibility:visible;pointer-events:auto;transition:transform .22s ease, visibility 0s;}
 .sheet.open{transform:none;}
 .sheet h3{font-size:14px;font-weight:900;margin-bottom:4px;}
 .sheet .note{font-size:11px;color:var(--faint);margin-bottom:14px;}
@@ -666,8 +668,11 @@ function prevValue(field){
 
 /* ===== ナビ ===== */
 let curScreen='today';
+// 開いているシート/パッド/オーバーレイを全部閉じる（画面遷移時に呼び、取り残し防止）
+function closeAllOverlays(){ document.querySelectorAll('.sheet.open,.sheet-ov.open,.pad.open,.pad-ov.open').forEach(e=>e.classList.remove('open')); }
 function go(n){
   curScreen=n;
+  closeAllOverlays();
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   const pg=document.getElementById('pg-'+n); if(pg) pg.classList.add('active');
   document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('on'));
@@ -820,7 +825,7 @@ function goToday(){ curDate=logicalToday(); renderToday(); }
 function openCal(){ const c=document.getElementById('cal'); c.value=curDate; if(c.showPicker){ try{ c.showPicker(); return; }catch(e){} } c.click(); }
 function dpick(el){ if(el && el.showPicker){ try{ el.showPicker(); }catch(e){} } }
 function toggleSec(h){ h.classList.toggle('open'); const card=h.nextElementSibling; if(card && card.classList.contains('set-card')) card.classList.toggle('sec-hidden'); }
-function goContestSettings(){ go('set'); setTimeout(()=>{ const s=document.getElementById('sec-contest'); if(s){ s.classList.add('open'); const c=s.nextElementSibling; if(c && c.classList.contains('set-card')) c.classList.remove('sec-hidden'); s.scrollIntoView({behavior:'smooth',block:'start'}); } },140); }
+function goContestSettings(){ go('set'); requestAnimationFrame(()=>{ const s=document.getElementById('sec-contest'); if(s){ s.classList.add('open'); const c=s.nextElementSibling; if(c && c.classList.contains('set-card')) c.classList.remove('sec-hidden'); try{ s.scrollIntoView({block:'start'}); }catch(e){} } }); }
 function onCalChange(v){ if(v){ curDate=v; renderToday(); } }
 const PART_KEY={'胸':'part_chest','背中':'part_back','肩':'part_shoulder','腕':'part_arm','足':'part_leg','腹筋':'part_abs','有酸素':'part_cardio','自由':'part_free'};
 const PART_ORDER=['胸','背中','肩','腕','足','腹筋','有酸素','自由'];
