@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PhysiqueLog v3（再設計）— アクター別テスト設計書</title>
+<style>
+:root {
+  --bg: #0f1117;
+  --surface: #1a1d27;
+  --surface2: #22263a;
+  --border: #2e3350;
+  --text: #e2e8f0;
+  --text-muted: #8892b0;
+  --accent: #64b5f6;
+  --green: #4caf50;
+  --red: #ef5350;
+  --yellow: #ffb74d;
+  --purple: #ba68c8;
+  --cyan: #4dd0e1;
+  --pink: #f48fb1;
+  --pass: #1b5e20;
+  --fail: #b71c1c;
+  --skip: #37474f;
+  --pending: #1a237e;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', 'Hiragino Sans', sans-serif; font-size: 14px; line-height: 1.6; }
+h1 { font-size: 1.5rem; padding: 20px 24px 8px; color: var(--accent); }
+.meta { padding: 0 24px 16px; color: var(--text-muted); font-size: 12px; }
+.meta span { margin-right: 20px; }
+.tabs { display: flex; gap: 2px; padding: 0 24px; border-bottom: 2px solid var(--border); position: sticky; top: 0; background: var(--bg); z-index: 100; flex-wrap: wrap; }
+.tab { padding: 10px 18px; cursor: pointer; color: var(--text-muted); border-bottom: 3px solid transparent; margin-bottom: -2px; font-size: 13px; white-space: nowrap; }
+.tab.active { color: var(--accent); border-color: var(--accent); }
+.tab:hover { color: var(--text); }
+.pane { display: none; padding: 20px 24px; }
+.pane.active { display: block; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 16px; overflow: hidden; }
+.card-head { background: var(--surface2); padding: 10px 16px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+.card-body { padding: 12px 16px; }
+.badge { display: inline-block; padding: 1px 7px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+.badge-eq { background: #0d47a1; color: #90caf9; }
+.badge-bva { background: #1a237e; color: #9fa8da; }
+.badge-st { background: #4a148c; color: #ce93d8; }
+.badge-dt { background: #880e4f; color: #f48fb1; }
+.badge-pw { background: #004d40; color: #80cbc4; }
+.badge-eg { background: #e65100; color: #ffcc02; }
+.badge-uc { background: #1b5e20; color: #a5d6a7; }
+.badge-prio-high { background: #b71c1c; color: #ffcdd2; }
+.badge-prio-med { background: #e65100; color: #ffe0b2; }
+.badge-prio-low { background: #37474f; color: #b0bec5; }
+.badge-actor-g { background: #263238; color: #b0bec5; }
+.badge-actor-f { background: #1a237e; color: #9fa8da; }
+.badge-actor-p { background: #4a148c; color: #e1bee7; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { background: var(--surface2); padding: 8px 10px; text-align: left; color: var(--text-muted); font-weight: 600; white-space: nowrap; border-bottom: 1px solid var(--border); }
+td { padding: 7px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: rgba(255,255,255,0.02); }
+select.status { font-size: 12px; padding: 2px 6px; border-radius: 4px; border: 1px solid var(--border); background: var(--surface2); color: var(--text); cursor: pointer; }
+select.status[data-v="pass"] { background: var(--pass); }
+select.status[data-v="fail"] { background: var(--fail); }
+select.status[data-v="skip"] { background: var(--skip); }
+select.status[data-v="pending"] { background: var(--pending); }
+input.note { background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; color: var(--text); padding: 3px 7px; width: 100%; font-size: 12px; }
+input.note:focus { outline: none; border-color: var(--accent); }
+.progress-wrap { display: flex; align-items: center; gap: 10px; margin: 8px 0; }
+.progress-bar { flex: 1; height: 8px; background: var(--surface2); border-radius: 4px; overflow: hidden; }
+.progress-fill { height: 100%; background: var(--accent); border-radius: 4px; transition: width 0.3s; }
+.progress-label { font-size: 12px; color: var(--text-muted); min-width: 60px; text-align: right; }
+.summary { display: flex; gap: 12px; flex-wrap: wrap; margin: 12px 0; }
+.chip { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+.chip-pass { background: var(--pass); color: #a5d6a7; }
+.chip-fail { background: var(--fail); color: #ffcdd2; }
+.chip-skip { background: var(--skip); color: #b0bec5; }
+.chip-total { background: var(--surface2); color: var(--text-muted); }
+.vp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+.vp-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; }
+.vp-card h4 { font-size: 13px; color: var(--accent); margin-bottom: 6px; }
+.vp-card ul { padding-left: 16px; color: var(--text-muted); font-size: 12px; }
+.vp-card ul li { margin-bottom: 3px; }
+.sec { font-size: 15px; font-weight: 700; color: var(--accent); margin: 20px 0 10px; border-left: 3px solid var(--accent); padding-left: 10px; }
+.legend { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+[contenteditable] { outline: none; }
+[contenteditable]:hover { background: rgba(255,255,255,0.03); border-radius: 3px; }
+[contenteditable]:focus { background: rgba(100,181,246,0.08); border-radius: 3px; }
+.collapsible { cursor: pointer; user-select: none; }
+.collapsible::after { content: ' ▾'; font-size: 11px; }
+.collapsible.collapsed::after { content: ' ▸'; }
+.collapse-body.hidden { display: none; }
+.actor-banner { padding: 10px 14px; border-radius: 8px; margin-bottom: 14px; font-size: 13px; }
+.actor-banner.g { background: #1c2530; border: 1px solid #37474f; }
+.actor-banner.f { background: #161a36; border: 1px solid #283593; }
+.actor-banner.p { background: #25103a; border: 1px solid #6a1b9a; }
+@media print {
+  .tabs, .tab { display: none !important; }
+  .pane { display: block !important; page-break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+<h1>PhysiqueLog v3（再設計）— アクター別テスト設計書</h1>
+<div class="meta">
+  <span>対象: <b contenteditable>index-v3.html（debugビルド / pages.dev プレビュー）</b></span>
+  <span>作成日: <b contenteditable>2026-06-15</b></span>
+  <span>テスター: <b contenteditable>-</b></span>
+  <span>対象OS: <b contenteditable>Android 10〜15 / iOS Safari</b></span>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="showTab('overview')">テスト観点・前提</div>
+  <div class="tab" onclick="showTab('guest')">👤 未ログイン</div>
+  <div class="tab" onclick="showTab('free')">🆓 無課金</div>
+  <div class="tab" onclick="showTab('paid')">⭐ 有料会員</div>
+  <div class="tab" onclick="showTab('summary')">進捗サマリー</div>
+</div>
+
+<!-- ===== 観点・前提 ===== -->
+<div id="pane-overview" class="pane active">
+  <div class="sec">アクター定義と前提条件</div>
+  <div class="vp-grid">
+    <div class="vp-card">
+      <h4>👤 未ログイン（ゲスト）</h4>
+      <ul>
+        <li>Googleログインしていない状態</li>
+        <li>記録・全期間履歴・エクスポート/インポートは無料で全機能利用可</li>
+        <li>設定の先頭にアカウント（ログイン誘導）</li>
+        <li>クラウド同期なし（ローカルのみ）</li>
+        <li>プレミアム機能はロック（ペイウォール）</li>
+        <li>新規インストール時はオンボーディング表示</li>
+      </ul>
+    </div>
+    <div class="vp-card">
+      <h4>🆓 無課金（ログイン済）</h4>
+      <ul>
+        <li>Googleログイン済み・プレミアム未購入</li>
+        <li>設定の末尾にアカウント（名前/メール/サインアウト/削除）</li>
+        <li>クラウド同期はされない（プレミアム機能のため）</li>
+        <li>プレミアム機能はロック（ペイウォール・アップグレード訴求）</li>
+        <li>記録系は未ログインと同等に利用可</li>
+      </ul>
+    </div>
+    <div class="vp-card">
+      <h4>⭐ 有料会員</h4>
+      <ul>
+        <li>Googleログイン済み・プレミアム購入済み（Playアカウント基準）</li>
+        <li>大会設定・ロードマップが解放（編集可）</li>
+        <li>クラウド同期が有効（自動保存・機種変引き継ぎ）</li>
+        <li>プレミアムカードは会員ステータス表示</li>
+        <li>起動/復帰時に課金状態を自動反映（復元不要）</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="sec">アクター × 機能 早見表</div>
+  <div class="card"><div class="card-body" style="overflow-x:auto;">
+    <table>
+      <tr><th>機能</th><th>👤 未ログイン</th><th>🆓 無課金</th><th>⭐ 有料会員</th></tr>
+      <tr><td>体重・食事・水分・睡眠・歩数の記録</td><td>○</td><td>○</td><td>○</td></tr>
+      <tr><td>筋トレ記録・履歴カレンダー・部位フィルタ</td><td>○</td><td>○</td><td>○</td></tr>
+      <tr><td>全期間の履歴・データ画面</td><td>○</td><td>○</td><td>○</td></tr>
+      <tr><td>エクスポート / インポート（JSON）</td><td>○</td><td>○</td><td>○</td></tr>
+      <tr><td>オンボーディング（初回のみ）</td><td>○（新規時）</td><td>—</td><td>—</td></tr>
+      <tr><td>設定のアカウント位置</td><td>先頭（誘導）</td><td>末尾</td><td>末尾</td></tr>
+      <tr><td>クラウド同期</td><td>×（ログイン誘導）</td><td>×（課金誘導）</td><td>○</td></tr>
+      <tr><td>大会設定・ロードマップ</td><td>🔒 ペイウォール</td><td>🔒 ペイウォール</td><td>○ 編集可</td></tr>
+      <tr><td>プレミアムカード表示</td><td>アップグレード</td><td>アップグレード</td><td>会員ステータス</td></tr>
+      <tr><td>購入 / 復元</td><td>○（ストア）</td><td>○（ストア）</td><td>復元・自動反映</td></tr>
+    </table>
+  </div></div>
+
+  <div class="sec">テスト技法レジェンド</div>
+  <div class="legend">
+    <span class="badge badge-eq">同値分割</span>
+    <span class="badge badge-bva">境界値</span>
+    <span class="badge badge-st">状態遷移</span>
+    <span class="badge badge-dt">デシジョン</span>
+    <span class="badge badge-pw">ペアワイズ</span>
+    <span class="badge badge-eg">エラー推測</span>
+    <span class="badge badge-uc">ユースケース</span>
+    <span class="badge badge-prio-high">HIGH</span>
+    <span class="badge badge-prio-med">MED</span>
+    <span class="badge badge-prio-low">LOW</span>
+  </div>
+
+  <div class="sec">共通の事前条件・備考</div>
+  <div class="card"><div class="card-body" style="color:var(--text-muted);font-size:13px;">
+    <ul style="padding-left:18px;">
+      <li>数値入力はアプリ内パッド／日付はカレンダー。設定は<b>自動保存</b>（保存ボタンなし）。</li>
+      <li>課金・ログイン・同期・通知・タイマーは<b>実機（debugビルド）でのみ実動作</b>。ブラウザプレビューは見た目＋ローカルデータのみ。</li>
+      <li>課金はPlayストアのアカウントに紐づく（端末基準）。サイドロードのdebug APKでは実購入は不可、内部テストトラックで確認。</li>
+      <li>レイアウトはレスポンシブ（端末はフルスクリーン）。複数画面サイズで確認すること。</li>
+    </ul>
+  </div></div>
+</div>
+
+<!-- ===== 未ログイン ===== -->
+<div id="pane-guest" class="pane">
+  <div class="actor-banner g">👤 <b>未ログイン（ゲスト）</b>：ログインせず記録機能を利用。アカウントは設定の先頭、クラウド同期なし、プレミアムはロック。新規はオンボーディング。</div>
+
+  <div class="card">
+    <div class="card-head collapsible" onclick="toggle(this)">G-OB: オンボーディング（初回）</div>
+    <div class="card-body collapse-body">
+      <table>
+        <tr><th>#</th><th>技法</th><th>優先</th><th>操作手順</th><th>期待結果</th><th>状態</th><th>メモ</th></tr>
+        <tr><td>G-OB01</td><td><span class="badge badge-uc">ユースケース</span></td><td><span class="badge badge-prio-high">HIGH</span></td><td>新規インストール（記録なし）で初回起動</td><td>4スライドのオンボーディングが全画面表示される</td><td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td><td><input class="note" placeholder="メモ"></td></tr>
+        <tr><td>G-OB02</td><td><span class="badge badge-st">状態遷移</span></td><td><span class="badge badge-prio-med">MED</span></td><td>「次へ」「戻る」とドットでスライド移動</td><td>スライド/ドットが連動。1枚目で戻る非表示、最終で「はじめる」</td><td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td><td><input class="note" placeholder="メモ"></td></tr>
+        <tr><td>G-OB03</td><td><span class="badge badge-st">状態遷移</span></td><td><span class="badge badge-prio-high">HIGH</span></td><td>「はじめる」を押下→アプリ起動後に再起動</td><td>今日画面へ。再起動してもオンボーディングは出ない</td><td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td><td><input class="note" placeholder="メモ"></td></tr>
+        <tr><td>G-OB04</td><td><span class="badge badge-eg">エラー推測</span></td><td><span class="badge badge-prio-med">MED</span></td><td>オンボーディング中に「スキップ」</td><td>即終了し以後表示されない</td><td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td><td><input class="note" placeholder="メモ"></td></tr>
+        <tr><td>G-OB05</td><td><span class="badge badge-st">状態遷移</span></td><td><span class="badge badge-prio-high">HIGH</span></td><td>JA/EN 両方でオンボーディング表示</td><td>端末言語に応じてスライド文言が切り替わる</td><td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td><td><input class="note" placeholder="メモ"></td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head collapsible" onclick="toggle(this)">G-T: 今日の記録</div>
+    <div class="card-body collapse-body">
+      <table>
+        <tr><th>#</th><th>技法</th><th>優先</th><th>操作手順</th><th>期待結果</th><th>状態</th><th>メモ</th></tr>
+        <tr><td>G-T01</td><td><span class="badge badge-eq">同値分割</span></td><td><span class="badge badge-prio-high">HIGH</span></td><td>体重をパッドで入力</td><td>「自動保存✓」表示、リロード後も保持</td><td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td><td><input class="note" placeholder="メモ"></td></tr>
+        <tr><td>G-T02</td><td><span class="badge badge-bva">境界値</span></td><td><span class="badge badge-prio-high">HIGH</span></td><td>体重に「60.5」など小数を入力</td><td>小数が欠落せず正しく保存・表示</td><td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td><td><input class="note" placeholder="メモ"></td></tr>
+        <tr><td>G-T03</td><td><span class="badge badge-eq">同値分割</span></td><td><span class="badge badge-prio-high">HIGH</span></td><td>食事のP/F/Cを入力</td><td>kcalが自動計算（P×4+F×9+C×4）で表示</td><td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td><td><input class="note" placeholder="メモ"></td></tr>
+        <tr><td>G-T04</td><td><span class="badge badge-eq">同値分割</span></td><td><span class="badge badge-prio-med">MED</span></td><td>食事パッドで塩分を入力、前回コピー</td><td>塩分が保存。前回コピーで前日値が入る</td><td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td><td><input class="note" placeholder="メモ"></td></tr>
+        <tr><td>G-T05</td><td><span class="badge badge-eq">同値分割</span></td><td><span class="badge badge-prio-high">HIGH</span></td><td>水分 +250/+500/+1000 をタップ</td><td>合計と達成率（/目標ml）が更新される</td><td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td><td><input class="note" placeholder="メモ"></td></tr>
+        <tr><td>G-T06</td><td><span class="badge badge-st">状態遷移</span></td><td><span class="badge badge-prio-med">MED</span></td><td>日付ナビ ‹ › で前後日へ、「今日」ボタン</td><td>日付が移動。今日ボタンで本日へ戻る</td><td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td><td><input class="note" placeholder="メモ"></td></tr>
+        <tr><td>G-T07</td><td><span class="badge badge-st">状態遷移</span></td><td><span class="badge badge-prio-med">MED</span></td><td>日付（📅）タップでカレンダーから過去日選択</td><td>選んだ日の記録が表示される</td><td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td><td><input class="note" placeholder="メモ"></td></tr>
+        <tr><td>G-T08</td><td><span class="badge badge-eq">同値分割</span></td><td><span class="badge badge-prio-med">MED</span></td><td>筋トレメニュー（部位）を選択</td><td>部位がその日の記録に保存される</td><td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td><td><input class="note" placeholder="メモ"></td></tr>
+        <tr><td>G-T09</td><td><span class="badge badge-eg">エラー推測</span></td><td><span class="badge badge-prio-low">LOW</span></td><td>未記録の状態で今日の分析を確認</td><td>残りkcal/塩分未記録などの案内、クラッシュなし</td><td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td><td><input class="note" placeholder="メモ"></td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head collapsible" onclick="toggle(this)">G-GY: 筋トレ・履歴カレンダー</div>
+    <div class="card-body collapse-body">
+      <table>
+        <tr><th>#</th><th>技法</th><th>優先</th><th>操作手順</th><th>期待結果</th><th>状態</th><th>メモ</th></tr>
+        <tr><td>G-GY01</td><td><span class="badge badge-st">状態遷移</span></td><td><span class="badge badge-prio-med">MED</span></td><td>筋トレ画面の日付バー ‹ › で前後日へ</td><td>記録UIが即操作可能（スクロール不要）でその日に切替</td><td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td><td><input class="note" placeholder="メモ"></td></tr>
+        <tr><td>G-GY02</td><td><span class="badge badge-st">状態遷移</span></td><td><span class="badge badge-prio-high">HIGH</span></td><td>📅で履歴カレンダーシートを開く／閉じる</td><td>下からシートが開閉。背景タップ/バックキーで閉じる</td><td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td><td><input class="note" placeholder="メモ"></td></tr>
+        <tr><td>G-GY03</td><td><span class="badge badge-dt">デシジョン</span></td><td><span class="badge badge-prio-med">MED</span></td><td>部位フィルタ（胸/背中等）を選択</td><td>該当部位の日だけ強調、他は淡色。色付き部位バッジ表示</td><td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td><td><input class="note" placeholder="メモ"></td></tr>
+        <tr><td>G-GY04</td><td><span class="badge badge-eq">同値分割</span></td><td><span class="badge badge-prio-high">HIGH</span></td><td>種目を追加→セット（重量/レップ）入力</td><td>自動保存され、カレンダーにも部位が反映</td><td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td><td><input class="note" placeholder="メモ"></td></tr>
+        <tr><td>G-GY05</td><td><span class="badge badge-eg">エラー推測</span></td><td><span class="badge badge-prio-med">MED</span></td><td>前回コピーを押す／前回記録がない日で押す</td><td>前回値が入る／無い場合は「前回の記録がありません」</td><td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td><td><input class="note" placeholder="メモ"></td></tr>
+        <tr><td>G-GY06</td><td><span class="badge badge-st">状態遷移</span></td><td><span class="badge badge-prio-med">MED</span></td><td>レストタイマー開始→完了（実機）</td><td>バックグラウンドでも完了通知・音/バイブ、JS復帰</td><td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td><td><input class="note" placeholder="メモ"></td></tr>
+        <tr><td>G-GY07</td><td><span class="badge badge-uc">ユースケース</span></td><td><span class="badge badge-prio-med">MED</span></td><td>インポートした過去（旧形式 日付_部位）データを開く</td><td>カレンダー/エディタに正しく表示（新形式へ移行）</td><td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td><td><input class="note" placeholder="メモ"></td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head collapsible" onclick="toggle(this)">G-D: データ画面</div>
+    <div class="card-body collapse-body">
+      <table>
+        <tr><th>#</th><th>技法</th><th>優先</th><th>操作手順</th><th>期待結果</th><th>状態</th><th>メモ</th></tr>
+        <tr><td>G-D01</td><td><span class="badge badge-eq">同値分割</span></td><td><span class="badge badge-prio-med">MED</span></td><td>週間/月間/全期間を切替、期間を前後移動</td><td>各期間でKPI・範囲表記が正しく更新</td><td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td><td><input class="note" placeholder="メモ"></td></tr>
+        <tr><td>G-D02</td><td><span class="badge badge-bva">境界値</span></td><td><span class="badge badge-prio-med">MED</span></td><td>体重記録が2日分以上ある状態でグラフ確認</td><td>推移グラフと週ペース等が表示</td><td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td><td><input class="note" placeholder="メモ"></td></tr>
+        <tr><td>G-D03</td><td><span class="badge badge-eg">エラー推測</span></td><td><span class="badge badge-prio-low">LOW</span></td><td>記録1日以下でデータ画面を開く</td><td>「データが足りません」案内、クラッシュなし</td><td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td><td><input class="note" placeholder="メモ"></td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head collapsible" onclick="toggle(this)">G-A/S: アカウント・設定</div>
+    <div class="card-body collapse-body">
+      <table>
+        <tr><th>#</th><th>技法</th><th>優先</th><th>操作手順</th><th>期待結果</th><th>状態</th><th>メモ</th></tr>
+        <tr><td>G-A01</td><td><span class="badge badge-dt">デシジョン</span></td><td><span class="badge badge-prio-high">HIGH</span></td><td>未ログインで設定画面を開く</td><td>アカウントが<b>先頭</b>に表示（ログイン誘導）</td><td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td><td><input class="note" placeholder="メモ"></td></tr>
+        <tr><td>G-A02</td><td><span class="badge badge-uc">ユースケース</span></td><td><span class="badge badge-prio-high">HIGH</span></td><td>「Googleでログイン」を押下</td><td>ネイティブのGoogleログインが起動（実機）</td><td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td><td><input class="note" placeholder="メモ"></td></tr>
+        <tr><td>G-S01</td><td><span class="badge badge-eq">同値分割</span></td><td><span class="badge badge-prio-med">MED</span></td><td>プロフィール（身長/年齢/性別/起点時刻/通知）を変更</td><td>変更時に自動保存（保存ボタンなし）</td><td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td><td><input class="note" placeholder="メモ"></td></tr>
+        <tr><td>G-S02</td><td><span class="badge badge-eq">同値分割</span></td><td><span class="badge badge-prio-high">HIGH</span></td><td>1日の栄養目標（P/F/C/塩分/許容/水分目標）を変更</td><td>自動保存。kcal目標が自動計算で表示</td><td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td><td><input class="note" placeholder="メモ"></td></tr>
+        <tr><td>G-S03</td><td><span class="badge badge-st">状態遷移</span></td><td><span class="badge badge-prio-high">HIGH</span></td><td>言語を 自動/日本語/English に切替</td><td>UIが即座に全面切替。再起動後も保持</td><td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td><td><input class="note" placeholder="メモ"></td></tr>
+        <tr><td>G-S04</td><td><span class="badge badge-uc">ユースケース</span></td><td><span class="badge badge-prio-high">HIGH</span></td><td>データ→エクスポート</td><td>全データがJSONで保存される（無料）</td><td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td><td><input class="note" placeholder="メモ"></td></tr>
+        <tr><td>G-S05</td><td><span class="badge badge-uc">ユースケース</span></td><td><span class="badge badge-prio-high">HIGH</span></td><td>データ→インポート（本番エクスポートのJSON）</td><td>体重/食事/水分/筋トレ/設定が反映、件数トースト</td><td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td><td><input class="note" placeholder="メモ"></td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head collapsible" onclick="toggle(this)">G-B/SY/SYS: 課金誘導・同期・システム</div>
+    <div class="card-body collapse-body">
+      <table>
+        <tr><th>#</th><th>技法</th><th>優先</th><th>操作手順</th><th>期待結果</th><th>状態</th><th>メモ</th></tr>
+        <tr><td>G-B01</td><td><span class="badge badge-dt">デシジョン</span></td><td><span class="badge badge-prio-med">MED</span></td><td>設定のプレミアム欄を確認</td><td>「プレミアムにアップグレード」カード（未会員）</td><td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td><td><input class="note" placeholder="メモ"></td></tr>
+        <tr><td>G-B02</td><td><span class="badge badge-dt">デシジョン</span></td><td><span class="badge badge-prio-high">HIGH</span></td><td>大会設定を開く</td><td>🔒ロック表示。「プレミアムで解放」でペイウォール</td><td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td><td><input class="note" placeholder="メモ"></td></tr>
+        <tr><td>G-B03</td><td><span class="badge badge-uc">ユースケース</span></td><td><span class="badge badge-prio-high">HIGH</span></td><td>ペイウォールの「14日間無料で試す」を押下</td><td>ネイティブ購入フロー起動（実機/内部テスト）</td><td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td><td><input class="note" placeholder="メモ"></td></tr>
+        <tr><td>G-B04</td><td><span class="badge badge-uc">ユースケース</span></td><td><span class="badge badge-prio-med">MED</span></td><td>「購入が反映されない場合はこちら」を押下</td><td>購入の復元（restorePurchases）が走る</td><td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td><td><input class="note" placeholder="メモ"></td></tr>
+        <tr><td>G-SY01</td><td><span class="badge badge-dt">デシジョン</span></td><td><span class="badge badge-prio-high">HIGH</span></td><td>未ログインで記録→別の機会に確認</td><td>クラウドへ同期されず、ローカルのみで保持</td><td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td><td><input class="note" placeholder="メモ"></td></tr>
+        <tr><td>G-SYS01</td><td><span class="badge badge-bva">境界値</span></td><td><span class="badge badge-prio-high">HIGH</span></td><td>複数の画面サイズ（小型〜Pro Max/タブレット）で表示</td><td>全画面でぴったり、黒い余白・横スクロールなし</td><td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td><td><input class="note" placeholder="メモ"></td></tr>
+        <tr><td>G-SYS02</td><td><span class="badge badge-st">状態遷移</span></td><td><span class="badge badge-prio-high">HIGH</span></td><td>各シート/パッドを開いてAndroidバックキー</td><td>シート/パッドが閉じる。最上位で今日へ→終了</td><td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td><td><input class="note" placeholder="メモ"></td></tr>
+        <tr><td>G-SYS03</td><td><span class="badge badge-dt">デシジョン</span></td><td><span class="badge badge-prio-med">MED</span></td><td>端末言語を日本語/英語にして初回起動</td><td>言語が自動判定されUIに反映（自動設定時）</td><td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td><td><input class="note" placeholder="メモ"></td></tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 無課金 ===== -->
+<div id="pane-free" class="pane">
+  <div class="actor-banner f">🆓 <b>無課金（ログイン済）</b>：ログイン済みでプレミアム未購入。アカウントは末尾、クラウド同期はされず、プレミアム機能はロック（アップグレード訴求）。記録系は未ログインと同等。</div>
+
+  <div class="card">
+    <div class="card-head collapsible" onclick="toggle(this)">F-A: アカウント（ログイン状態）</div>
+    <div class="card-body collapse-body">
+      <table>
+        <tr><th>#</th><th>技法</th><th>優先</th><th>操作手順</th><th>期待結果</th><th>状態</th><th>メモ</th></tr>
+        <tr><td>F-A01</td><td><span class="badge badge-dt">デシジョン</span></td><td><span class="badge badge-prio-high">HIGH</span></td><td>ログイン後に設定画面を開く</td><td>アカウントが<b>末尾</b>へ移動。先頭はプレミアム</td><td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td><td><input class="note" placeholder="メモ"></td></tr>
+        <tr><td>F-A02</td><td><span class="badge badge-eq">同値分割</span></td><td><span class="badge badge-prio-med">MED</span></td><td>アカウントカードを確認</td><td>表示名/メール・サインアウト・アカウント削除が表示</td><td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td><td><input class="note" placeholder="メモ"></td></tr>
+        <tr><td>F-A03</td><td><span class="badge badge-st">状態遷移</span></td><td><span class="badge badge-prio-high">HIGH</span></td><td>サインアウトを実行</td><td>未ログイン状態へ。アカウントが先頭に戻る</td><td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td><td><input class="note" placeholder="メモ"></td></tr>
+        <tr><td>F-A04</td><td><span class="badge badge-eg">エラー推測</span></td><td><span class="badge badge-prio-med">MED</span></td><td>アカウント削除を押下→確認ダイアログ</td><td>確認後にネイティブで削除実行（キャンセル可）</td><td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td><td><input class="note" placeholder="メモ"></td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head collapsible" onclick="toggle(this)">F-B: 課金（未購入＝アップグレード訴求）</div>
+    <div class="card-body collapse-body">
+      <table>
+        <tr><th>#</th><th>技法</th><th>優先</th><th>操作手順</th><th>期待結果</th><th>状態</th><th>メモ</th></tr>
+        <tr><td>F-B01</td><td><span class="badge badge-dt">デシジョン</span></td><td><span class="badge badge-prio-high">HIGH</span></td><td>プレミアム欄を確認</td><td>「アップグレード」カード（会員ステータスではない）</td><td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td><td><input class="note" placeholder="メモ"></td></tr>
+        <tr><td>F-B02</td><td><span class="badge badge-dt">デシジョン</span></td><td><span class="badge badge-prio-high">HIGH</span></td><td>大会設定を開く</td><td>🔒ロック。「プレミアムで解放」でペイウォール</td><td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td><td><input class="note" placeholder="メモ"></td></tr>
+        <tr><td>F-B03</td><td><span class="badge badge-uc">ユースケース</span></td><td><span class="badge badge-prio-high">HIGH</span></td><td>購入フローを実行→購入成功（内部テスト）</td><td>onPremiumPurchasedで有料会員UIへ遷移（要再確認は⭐タブ）</td><td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td><td><input class="note" placeholder="メモ"></td></tr>
+        <tr><td>F-B04</td><td><span class="badge badge-eg">エラー推測</span></td><td><span class="badge badge-prio-med">MED</span></td><td>課金初期化前にすぐ購入を押す</td><td>「初期化中」等の案内（showToast）。クラッシュなし</td><td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td><td><input class="note" placeholder="メモ"></td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head collapsible" onclick="toggle(this)">F-SY: クラウド同期（無課金＝同期されない）</div>
+    <div class="card-body collapse-body">
+      <table>
+        <tr><th>#</th><th>技法</th><th>優先</th><th>操作手順</th><th>期待結果</th><th>状態</th><th>メモ</th></tr>
+        <tr><td>F-SY01</td><td><span class="badge badge-dt">デシジョン</span></td><td><span class="badge badge-prio-high">HIGH</span></td><td>ログイン状態で記録を追加</td><td>クラウドへ保存されない（同期はプレミアム機能）</td><td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td><td><input class="note" placeholder="メモ"></td></tr>
+        <tr><td>F-SY02</td><td><span class="badge badge-uc">ユースケース</span></td><td><span class="badge badge-prio-med">MED</span></td><td>別端末に同じアカウントでログイン</td><td>データは引き継がれない（同期未契約のため）</td><td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td><td><input class="note" placeholder="メモ"></td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head collapsible" onclick="toggle(this)">F-共通: 記録・設定（未ログインと同等／回帰）</div>
+    <div class="card-body collapse-body">
+      <table>
+        <tr><th>#</th><th>技法</th><th>優先</th><th>操作手順</th><th>期待結果</th><th>状態</th><th>メモ</th></tr>
+        <tr><td>F-T01</td><td><span class="badge badge-eq">同値分割</span></td><td><span class="badge badge-prio-high">HIGH</span></td><td>体重/食事/水分を記録</td><td>自動保存され表示（未ログインと同様に全機能可）</td><td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td><td><input class="note" placeholder="メモ"></td></tr>
+        <tr><td>F-GY01</td><td><span class="badge badge-eq">同値分割</span></td><td><span class="badge badge-prio-high">HIGH</span></td><td>筋トレ記録・履歴カレンダー・部位フィルタ</td><td>未ログインと同等に動作</td><td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td><td><input class="note" placeholder="メモ"></td></tr>
+        <tr><td>F-S01</td><td><span class="badge badge-uc">ユースケース</span></td><td><span class="badge badge-prio-med">MED</span></td><td>エクスポート/インポート</td><td>無料で利用可（同期未契約でもバックアップ可能）</td><td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td><td><input class="note" placeholder="メモ"></td></tr>
+        <tr><td>F-S02</td><td><span class="badge badge-st">状態遷移</span></td><td><span class="badge badge-prio-med">MED</span></td><td>言語切替・各画面レイアウト</td><td>未ログインと同等に動作</td><td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td><td><input class="note" placeholder="メモ"></td></tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 有料会員 ===== -->
+<div id="pane-paid" class="pane">
+  <div class="actor-banner p">⭐ <b>有料会員</b>：ログイン＋プレミアム購入済み。大会設定・ロードマップ解放、クラウド同期有効、会員ステータス表示、起動/復帰で課金自動反映。</div>
+
+  <div class="card">
+    <div class="card-head collapsible" onclick="toggle(this)">P-PR: プレミアム機能の解放</div>
+    <div class="card-body collapse-body">
+      <table>
+        <tr><th>#</th><th>技法</th><th>優先</th><th>操作手順</th><th>期待結果</th><th>状態</th><th>メモ</th></tr>
+        <tr><td>P-PR01</td><td><span class="badge badge-dt">デシジョン</span></td><td><span class="badge badge-prio-high">HIGH</span></td><td>設定のプレミアム欄を確認</td><td>「プレミアム会員 — すべて解放」ステータス表示</td><td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td><td><input class="note" placeholder="メモ"></td></tr>
+        <tr><td>P-PR02</td><td><span class="badge badge-dt">デシジョン</span></td><td><span class="badge badge-prio-high">HIGH</span></td><td>大会設定を開く</td><td>ロック解除。大会名/大会日/ピーク日/目標体重が編集可</td><td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td><td><input class="note" placeholder="メモ"></td></tr>
+        <tr><td>P-PR03</td><td><span class="badge badge-eq">同値分割</span></td><td><span class="badge badge-prio-high">HIGH</span></td><td>大会日・目標体重を入力して保存</td><td>自動保存。今日画面に D-XX と大会名が表示</td><td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td><td><input class="note" placeholder="メモ"></td></tr>
+        <tr><td>P-PR04</td><td><span class="badge badge-st">状態遷移</span></td><td><span class="badge badge-prio-high">HIGH</span></td><td>今日/筋トレ画面の大会名をタップ</td><td>設定の大会設定へ遷移。<b>下部に余白やシートが残らない</b></td><td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td><td><input class="note" placeholder="メモ"></td></tr>
+        <tr><td>P-PR05</td><td><span class="badge badge-dt">デシジョン</span></td><td><span class="badge badge-prio-med">MED</span></td><td>各所でプレミアム導線を確認</td><td>ペイウォール/ロックが表示されない</td><td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td><td><input class="note" placeholder="メモ"></td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head collapsible" onclick="toggle(this)">P-SY: クラウド同期（有効）</div>
+    <div class="card-body collapse-body">
+      <table>
+        <tr><th>#</th><th>技法</th><th>優先</th><th>操作手順</th><th>期待結果</th><th>状態</th><th>メモ</th></tr>
+        <tr><td>P-SY01</td><td><span class="badge badge-uc">ユースケース</span></td><td><span class="badge badge-prio-high">HIGH</span></td><td>記録を追加（数秒待つ）</td><td>クラウドへ自動保存（デバウンス）。「同期✓」</td><td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td><td><input class="note" placeholder="メモ"></td></tr>
+        <tr><td>P-SY02</td><td><span class="badge badge-uc">ユースケース</span></td><td><span class="badge badge-prio-high">HIGH</span></td><td>再インストール/別端末で同アカウントにログイン</td><td>クラウドからデータが復元される</td><td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td><td><input class="note" placeholder="メモ"></td></tr>
+        <tr><td>P-SY03</td><td><span class="badge badge-dt">デシジョン</span></td><td><span class="badge badge-prio-med">MED</span></td><td>ローカルとクラウドに差異がある状態で読込</td><td>ローカル優先マージ（筋トレ）/記録系はローカル優先</td><td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td><td><input class="note" placeholder="メモ"></td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head collapsible" onclick="toggle(this)">P-B: 課金状態の反映・復元・解約</div>
+    <div class="card-body collapse-body">
+      <table>
+        <tr><th>#</th><th>技法</th><th>優先</th><th>操作手順</th><th>期待結果</th><th>状態</th><th>メモ</th></tr>
+        <tr><td>P-B01</td><td><span class="badge badge-st">状態遷移</span></td><td><span class="badge badge-prio-high">HIGH</span></td><td>購入済みアカウントでアプリ起動・フォアグラウンド復帰</td><td>課金状態が自動反映（手動復元不要でプレミアムに）</td><td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td><td><input class="note" placeholder="メモ"></td></tr>
+        <tr><td>P-B02</td><td><span class="badge badge-uc">ユースケース</span></td><td><span class="badge badge-prio-med">MED</span></td><td>自動反映されない場合に「復元」を押す</td><td>restorePurchasesで会員に復帰、「復元しました✓」</td><td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td><td><input class="note" placeholder="メモ"></td></tr>
+        <tr><td>P-B03</td><td><span class="badge badge-st">状態遷移</span></td><td><span class="badge badge-prio-med">MED</span></td><td>サブスク解約後に再起動</td><td>非プレミアムへ。大会設定が再ロック・同期停止</td><td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td><td><input class="note" placeholder="メモ"></td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head collapsible" onclick="toggle(this)">P-共通: 記録・アカウント（回帰）</div>
+    <div class="card-body collapse-body">
+      <table>
+        <tr><th>#</th><th>技法</th><th>優先</th><th>操作手順</th><th>期待結果</th><th>状態</th><th>メモ</th></tr>
+        <tr><td>P-T01</td><td><span class="badge badge-eq">同値分割</span></td><td><span class="badge badge-prio-med">MED</span></td><td>体重/食事/水分/筋トレを記録</td><td>記録機能は他アクターと同様に動作（＋同期）</td><td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td><td><input class="note" placeholder="メモ"></td></tr>
+        <tr><td>P-A01</td><td><span class="badge badge-dt">デシジョン</span></td><td><span class="badge badge-prio-med">MED</span></td><td>設定画面でアカウント位置を確認</td><td>ログイン済みなのでアカウントは末尾</td><td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td><td><input class="note" placeholder="メモ"></td></tr>
+        <tr><td>P-S01</td><td><span class="badge badge-st">状態遷移</span></td><td><span class="badge badge-prio-low">LOW</span></td><td>言語切替・レスポンシブ・バックキー</td><td>他アクターと同等に動作</td><td><select class="status" onchange="updateStatus(this)"><option value="pending">未実施</option><option value="pass">PASS</option><option value="fail">FAIL</option><option value="skip">SKIP</option></select></td><td><input class="note" placeholder="メモ"></td></tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 進捗サマリー ===== -->
+<div id="pane-summary" class="pane">
+  <div class="sec">テスト進捗サマリー（全アクター）</div>
+  <div id="summary-stats" class="summary">
+    <span class="chip chip-total" id="chip-total">総計: 0件</span>
+    <span class="chip chip-pass" id="chip-pass">PASS: 0</span>
+    <span class="chip chip-fail" id="chip-fail">FAIL: 0</span>
+    <span class="chip chip-skip" id="chip-skip">SKIP: 0</span>
+    <span class="chip chip-total" id="chip-pending">未実施: 0</span>
+  </div>
+  <div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+    <div class="progress-label" id="progress-label">0%</div>
+  </div>
+
+  <div class="sec" style="margin-top:24px;">テスト所見・備考</div>
+  <div class="card">
+    <div class="card-body">
+      <div contenteditable style="min-height:120px;color:var(--text-muted);font-size:13px;">テスト実施後の所見を記入してください...</div>
+    </div>
+  </div>
+</div>
+
+<script>
+function showTab(id) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.pane').forEach(p => p.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('pane-' + id).classList.add('active');
+  updateSummary();
+}
+function toggle(el) {
+  el.classList.toggle('collapsed');
+  el.nextElementSibling.classList.toggle('hidden');
+}
+function updateStatus(sel) {
+  sel.setAttribute('data-v', sel.value);
+  updateSummary();
+}
+function updateSummary() {
+  const all = document.querySelectorAll('select.status');
+  let pass = 0, fail = 0, skip = 0, pending = 0;
+  all.forEach(s => {
+    const v = s.value;
+    if (v === 'pass') pass++;
+    else if (v === 'fail') fail++;
+    else if (v === 'skip') skip++;
+    else pending++;
+  });
+  const total = all.length;
+  const done = pass + fail + skip;
+  const pct = total ? Math.round(done / total * 100) : 0;
+  document.getElementById('chip-total').textContent = '総計: ' + total + '件';
+  document.getElementById('chip-pass').textContent = 'PASS: ' + pass;
+  document.getElementById('chip-fail').textContent = 'FAIL: ' + fail;
+  document.getElementById('chip-skip').textContent = 'SKIP: ' + skip;
+  document.getElementById('chip-pending').textContent = '未実施: ' + pending;
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('progress-label').textContent = pct + '%';
+}
+(function() {
+  const saved = localStorage.getItem('test-design-v3-state');
+  if (saved) {
+    try {
+      const state = JSON.parse(saved);
+      const sels = document.querySelectorAll('select.status');
+      const notes = document.querySelectorAll('input.note');
+      if (state.statuses) sels.forEach((s, i) => {
+        if (state.statuses[i]) { s.value = state.statuses[i]; s.setAttribute('data-v', state.statuses[i]); }
+      });
+      if (state.notes) notes.forEach((n, i) => { if (state.notes[i]) n.value = state.notes[i]; });
+    } catch(e) {}
+  }
+  updateSummary();
+})();
+function saveState() {
+  const sels = document.querySelectorAll('select.status');
+  const notes = document.querySelectorAll('input.note');
+  localStorage.setItem('test-design-v3-state', JSON.stringify({
+    statuses: Array.from(sels).map(s => s.value),
+    notes: Array.from(notes).map(n => n.value)
+  }));
+}
+document.addEventListener('change', saveState);
+document.addEventListener('input', saveState);
+</script>
+</body>
+</html>
