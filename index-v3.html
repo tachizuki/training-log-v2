@@ -19,6 +19,7 @@
   --sab:env(safe-area-inset-bottom,0px); --sat:env(safe-area-inset-top,0px);
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;overscroll-behavior:none;}
 body{background:#000;color:var(--text);font-family:'Noto Sans JP',sans-serif;}
 .num{font-family:'Inter',sans-serif;font-variant-numeric:tabular-nums;}
 /* 機種非依存の流動レイアウト: 高さは常に全画面、幅はスマホ100%/大画面は中央寄せ最大幅カラム */
@@ -827,7 +828,7 @@ function goToday(){ curDate=logicalToday(); renderToday(); }
 function openCal(){ const c=document.getElementById('cal'); c.value=curDate; if(c.showPicker){ try{ c.showPicker(); return; }catch(e){} } c.click(); }
 function dpick(el){ if(el && el.showPicker){ try{ el.showPicker(); }catch(e){} } }
 function toggleSec(h){ h.classList.toggle('open'); const card=h.nextElementSibling; if(card && card.classList.contains('set-card')) card.classList.toggle('sec-hidden'); }
-function goContestSettings(){ go('set'); requestAnimationFrame(()=>{ const s=document.getElementById('sec-contest'); if(s){ s.classList.add('open'); const c=s.nextElementSibling; if(c && c.classList.contains('set-card')) c.classList.remove('sec-hidden'); try{ s.scrollIntoView({block:'start'}); }catch(e){} } }); }
+function goContestSettings(){ go('set'); requestAnimationFrame(()=>{ const s=document.getElementById('sec-contest'); if(s){ s.classList.add('open'); const c=s.nextElementSibling; if(c && c.classList.contains('set-card')) c.classList.remove('sec-hidden'); const pgset=document.getElementById('pg-set'); if(pgset) pgset.scrollTop=Math.max(0, s.offsetTop-12); } }); }
 function onCalChange(v){ if(v){ curDate=v; renderToday(); } }
 const PART_KEY={'胸':'part_chest','背中':'part_back','肩':'part_shoulder','腕':'part_arm','足':'part_leg','腹筋':'part_abs','有酸素':'part_cardio','自由':'part_free'};
 const PART_ORDER=['胸','背中','肩','腕','足','腹筋','有酸素','自由'];
