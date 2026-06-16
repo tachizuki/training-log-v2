@@ -1038,6 +1038,8 @@ function restorePremium(){ if(!bridge('restorePremium')) toast(t('t_restore_app'
 // 評価ボタンは確実にストア詳細を開く（In-AppレビューはPlay本番以外で無反応＋成功扱いになるため使わない）
 function reviewApp(){ if(!bridge('openPlayStore')) toast(t('t_review_app')); }
 const SUPPORT_EMAIL='physiquelog.support@gmail.com';
+// GAS Web App（即時メール通知＋スプレッドシート保存）。旧アプリと同じ送信経路。
+const CONTACT_GAS_URL='https://script.google.com/macros/s/AKfycbwInqZSNJMbQMqNSXcGoLPdQd8EkI_BQqBS3nIH0r4hj4GlcHwGWfG6P11-KmN3maVeAQ/exec';
 function contactApp(){ document.getElementById('contact-sheet').classList.add('open'); document.getElementById('contact-ov').classList.add('open'); }
 function closeContactSheet(){ document.getElementById('contact-sheet').classList.remove('open'); document.getElementById('contact-ov').classList.remove('open'); }
 function submitContact(){
@@ -1045,9 +1047,19 @@ function submitContact(){
   const subj=document.getElementById('contact-subject').value.trim();
   const body=document.getElementById('contact-body').value.trim();
   if(!cat || !subj || !body){ toast(t('contact_required')); return; }
-  const payload={category:cat, subject:subj, body:body, lang:LANG, source:'v3', ua:(navigator.userAgent||'')};
-  if(bridge('sendContactForm', JSON.stringify(payload))) return; // 結果は onContactSent で
-  // ブリッジ無し（ブラウザ等）→ mailto フォールバック
+  const payload={ category:cat, subject:subj, body:body, meta:{
+    version:(typeof APP_VERSION!=='undefined'?APP_VERSION:'v3'),
+    loggedIn:(window.currentUser?(window.currentUser.email||'yes'):'no'),
+    premium:((typeof isPremiumReal==='function'&&isPremiumReal())?'yes':'no'),
+    lang:LANG, ua:(navigator.userAgent||'').slice(0,150) } };
+  const js=JSON.stringify(payload);
+  // ① 実機: GASへブリッジ経由POST（メール通知）。結果は onContactSent。
+  if(CONTACT_GAS_URL && bridge('httpPost', CONTACT_GAS_URL, js)) return;
+  // ② ブラウザ: GASへ GET(no-cors)
+  if(CONTACT_GAS_URL && typeof AndroidBridge==='undefined'){ try{ fetch(CONTACT_GAS_URL+'?payload='+encodeURIComponent(js),{method:'GET',mode:'no-cors'}).then(()=>onContactSent(true)).catch(()=>onContactSent(false,t('t_contact_fail'))); return; }catch(e){} }
+  // ③ Firestore フォールバック（GAS未設定時）
+  if(bridge('sendContactForm', js)) return;
+  // ④ mailto
   try{ window.location.href='mailto:'+SUPPORT_EMAIL+'?subject='+encodeURIComponent('['+cat+'] '+subj)+'&body='+encodeURIComponent(body); }catch(e){}
   toast(t('t_contact_app'));
 }

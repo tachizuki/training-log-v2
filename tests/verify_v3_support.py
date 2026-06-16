@@ -33,17 +33,19 @@ with sync_playwright() as p:
     pg=newpage()
     pg.evaluate("""()=>{ window.AndroidBridge={ _calls:[],
         openPlayStore(){ this._calls.push(['openPlayStore']); },
+        httpPost(url, body){ this._calls.push(['httpPost', url, body]); },
         sendContactForm(s){ this._calls.push(['sendContactForm', s]); } }; }""")
     # 評価 → openPlayStore を呼ぶ
     pg.evaluate("reviewApp()"); pg.wait_for_timeout(20)
     rec('S-REVIEW-STORE', pg.evaluate("()=>AndroidBridge._calls.some(c=>c[0]==='openPlayStore')"), 'review calls openPlayStore')
-    # お問い合わせ → フォーム入力 → sendContactForm に本文付きで渡る
+    # お問い合わせ → フォーム入力 → GAS(httpPost) に本文付きで渡る（メール通知経路）
     pg.evaluate("contactApp()"); pg.wait_for_timeout(20)
     pg.evaluate("""()=>{ document.getElementById('contact-category').value='bug';
         document.getElementById('contact-subject').value='テスト件名';
         document.getElementById('contact-body').value='テスト本文です'; submitContact(); }"""); pg.wait_for_timeout(30)
-    sent=pg.evaluate("""()=>{ const c=AndroidBridge._calls.find(x=>x[0]==='sendContactForm'); if(!c) return null; try{ return JSON.parse(c[1]); }catch(e){ return {raw:c[1]}; } }""")
-    rec('S-CONTACT-SEND', sent and sent.get('body')=='テスト本文です' and sent.get('subject')=='テスト件名' and sent.get('category')=='bug', f'payload={sent}')
+    sent=pg.evaluate("""()=>{ const c=AndroidBridge._calls.find(x=>x[0]==='httpPost'); if(!c) return null; try{ return {url:c[1], p:JSON.parse(c[2])}; }catch(e){ return {url:c[1], raw:c[2]}; } }""")
+    ok_send = bool(sent) and 'script.google.com' in (sent.get('url') or '') and sent.get('p',{}).get('body')=='テスト本文です' and sent.get('p',{}).get('subject')=='テスト件名'
+    rec('S-CONTACT-SEND', ok_send, f'gas call={sent}')
     # 送信成功コールバック → シートが閉じ、入力クリア
     pg.evaluate("onContactSent(true)"); pg.wait_for_timeout(30)
     after=pg.evaluate("()=>({open:document.getElementById('contact-sheet').classList.contains('open'), subj:document.getElementById('contact-subject').value, body:document.getElementById('contact-body').value})")
