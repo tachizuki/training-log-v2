@@ -28,7 +28,7 @@ class TimerService : Service() {
 
     companion object {
         const val CHANNEL_ID      = "timer_channel"
-        const val DONE_CHANNEL_ID = "timer_done_channel_v5" // v5: 同梱キッチンタイマー音(res/raw/timer_done)＋チャンネル再作成
+        const val DONE_CHANNEL_ID = "timer_done_channel_v6" // v6: 同梱キッチンタイマー音3回版に更新（チャンネル再作成で確実に反映）
         const val NOTIF_ID        = 2001
         const val DONE_NOTIF_ID   = 2002
         const val ACTION_START    = "com.traininglog.app.TIMER_START"
