@@ -4,7 +4,7 @@ platform: "X（Twitter）"
 pillar: "実用Tips（ゼロカロリーゼリー食べ比べ）＋実体験フック"
 status: review
 publish_date: "2026-06-17"
-publish_time: "—"
+publish_time: "21:30"
 tags: [SNS, 減量, ダイエット, ゼロカロリー, ゼリー, 食べ比べ]
 source: オーナー口頭ネタ（2026-06-16）
 ---
