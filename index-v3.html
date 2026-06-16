@@ -488,6 +488,11 @@ body{background:#000;color:var(--text);font-family:'Noto Sans JP',sans-serif;}
         <div class="set-row"><label data-i18n="l_height">身長 (cm)</label><input type="number" id="set-height" readonly inputmode="none" onclick="openSetPad('set-height','l_height')" placeholder="168"></div>
         <div class="set-row"><label data-i18n="l_age">年齢</label><input type="number" id="set-age" readonly inputmode="none" onclick="openSetPad('set-age','l_age')" placeholder="25"></div>
         <div class="set-row"><label data-i18n="l_sex">性別</label><select id="set-sex"><option value="male" data-i18n="sex_male">男性</option><option value="female" data-i18n="sex_female">女性</option></select></div>
+      </div>
+
+      <div class="set-sec collap" onclick="toggleSec(this)" data-i18n="sec_app">アプリ設定</div>
+      <div class="tile set-card sec-hidden">
+        <div class="set-row"><label data-i18n="lang_label">言語</label><select id="set-lang" onchange="setLang(this.value)"><option value="auto" data-i18n="lang_auto">自動</option><option value="ja">日本語</option><option value="en">English</option></select></div>
         <div class="set-row"><label data-i18n="l_day_start">1日の起点時刻</label><select id="set-day-start"></select></div>
         <div class="set-row"><label><span data-i18n="l_reminder">リマインダー通知</span><br><span style="font-size:10px;color:var(--faint);" data-i18n="off_empty">空欄でオフ</span></label><input type="time" id="set-notif-time" onclick="dpick(this)"></div>
       </div>
@@ -516,7 +521,6 @@ body{background:#000;color:var(--text);font-family:'Noto Sans JP',sans-serif;}
 
       <div class="set-sec collap" onclick="toggleSec(this)" data-i18n="sec_support">サポート</div>
       <div class="tile set-card sec-hidden">
-        <div class="set-row"><label data-i18n="lang_label">言語</label><select id="set-lang" onchange="setLang(this.value)"><option value="auto" data-i18n="lang_auto">自動</option><option value="ja">日本語</option><option value="en">English</option></select></div>
         <div class="set-btn-row">
           <button class="set-btn" data-i18n="btn_review" onclick="reviewApp()">★ アプリを評価</button>
           <button class="set-btn" data-i18n="btn_contact" onclick="contactApp()">✉ お問い合わせ</button>
@@ -700,7 +704,7 @@ const I18N = {
     seg_week:'週間', seg_month:'月間', seg_all:'全期間', data_title:'データ', data_empty:'データを蓄積すると傾向が表示されます。',
     weight_trend:'体重の推移', training:'トレーニング', nutrition:'栄養', this_week:'今週', last_week:'先週', all_period:'全期間',
     kpi_avg:'平均', kpi_pace:'週ペース', kpi_change:'変化', kpi_latest:'最新', kpi_count:'回数', kpi_parts:'部位数', kpi_steps:'歩数平均', kpi_salon:'日サロ計', kpi_kcal:'摂取kcal', kpi_p:'P平均', kpi_salt:'塩分平均', kpi_water:'水分平均',
-    set_title:'設定', sec_profile:'プロフィール', sec_contest:'大会設定', sec_nutrition:'1日の栄養目標', sec_other:'その他', sec_data:'データ', sec_premium:'プレミアム', sec_account:'アカウント', sec_support:'サポート',
+    set_title:'設定', sec_profile:'プロフィール', sec_app:'アプリ設定', sec_contest:'大会設定', sec_nutrition:'1日の栄養目標', sec_other:'その他', sec_data:'データ', sec_premium:'プレミアム', sec_account:'アカウント', sec_support:'サポート',
     l_name:'表示名', ph_name:'ニックネーム', l_height:'身長 (cm)', l_age:'年齢', l_sex:'性別', sex_male:'男性', sex_female:'女性',
     salt:'塩分',
     l_contest_name:'大会名', l_contest_date:'大会日', l_peak_date:'ピーク日', l_target_w:'目標体重 (kg)',
@@ -749,7 +753,7 @@ const I18N = {
     seg_week:'Week', seg_month:'Month', seg_all:'All', data_title:'Data', data_empty:'Trends appear as you log data.',
     weight_trend:'Weight trend', training:'Training', nutrition:'Nutrition', this_week:'This week', last_week:'Last week', all_period:'All time',
     kpi_avg:'Avg', kpi_pace:'Pace/wk', kpi_change:'Change', kpi_latest:'Latest', kpi_count:'Sessions', kpi_parts:'Muscles', kpi_steps:'Avg steps', kpi_salon:'Tanning', kpi_kcal:'kcal', kpi_p:'Avg P', kpi_salt:'Avg salt', kpi_water:'Avg water',
-    set_title:'Settings', sec_profile:'Profile', sec_contest:'Contest', sec_nutrition:'Daily nutrition goals', sec_other:'Other', sec_data:'Data', sec_premium:'Premium', sec_account:'Account', sec_support:'Support',
+    set_title:'Settings', sec_profile:'Profile', sec_app:'App settings', sec_contest:'Contest', sec_nutrition:'Daily nutrition goals', sec_other:'Other', sec_data:'Data', sec_premium:'Premium', sec_account:'Account', sec_support:'Support',
     l_name:'Display name', ph_name:'Nickname', l_height:'Height (cm)', l_age:'Age', l_sex:'Sex', sex_male:'Male', sex_female:'Female',
     salt:'Salt',
     l_contest_name:'Contest name', l_contest_date:'Contest date', l_peak_date:'Peak date', l_target_w:'Target weight (kg)',
