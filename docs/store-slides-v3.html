@@ -11,6 +11,11 @@
 body{background:#05070a;font-family:'Noto Sans JP',sans-serif;display:flex;flex-direction:column;align-items:center;gap:24px;padding:24px;}
 .hint{color:#8b939b;font-size:13px;max-width:900px;text-align:center;line-height:1.7;}
 .hint b{color:#c9f04d;}
+.dlbar{position:sticky;top:0;z-index:20;display:flex;flex-wrap:wrap;gap:10px;justify-content:center;align-items:center;background:rgba(5,7,10,.94);padding:14px;border-radius:14px;border:1px solid #1d2126;}
+.dlbar button{background:#1d2126;border:1px solid #262b31;color:#edf0f2;font-weight:700;font-size:14px;padding:10px 16px;border-radius:10px;cursor:pointer;font-family:'Noto Sans JP';}
+.dlbar button:hover{border-color:#c9f04d;}
+.dlbar button.all{background:#c9f04d;color:#0d0f10;border-color:#c9f04d;}
+.dlbar .st{color:#8b939b;font-size:13px;margin-left:6px;}
 /* 1080x1920 スライド。DevToolsで各 .slide を「ノードをキャプチャ」→ 正確なPNG */
 .slide{width:1080px;height:1920px;background:radial-gradient(120% 80% at 50% 0%, #14181c 0%, var(--bg) 55%);color:var(--text);position:relative;overflow:hidden;display:flex;flex-direction:column;padding:120px 96px;flex:0 0 auto;}
 .slide .badge{display:inline-block;align-self:flex-start;background:var(--acc-dim);border:1px solid var(--acc);color:var(--acc);font-weight:900;font-size:30px;padding:12px 28px;border-radius:999px;letter-spacing:.04em;}
@@ -65,7 +70,8 @@ svg{width:100%;height:auto;}
 </style>
 </head>
 <body>
-<div class="hint">📐 <b>1080×1920 書き出し用テンプレート</b>。各スライドをPNG化するには、ブラウザのDevToolsで該当の <b>.slide</b> 要素を右クリック →「ノードのスクリーンショットをキャプチャ」(Capture node screenshot)。テキストは自由に編集可。</div>
+<div class="hint">📐 <b>1080×1920 書き出し用テンプレート</b>。下のボタンで各スライドを <b>PNGダウンロード</b>できます（「すべて」で一括）。テキストは自由に編集可。<br><span style="color:#545c64;font-size:12px;">※ フォント読込のため、開いて数秒待ってからダウンロードしてください。</span></div>
+<div class="dlbar" id="dlbar"></div>
 
 <!-- 1 HERO -->
 <div class="slide hero">
@@ -170,5 +176,34 @@ svg{width:100%;height:auto;}
   <div class="foot"><span class="dot">7</span>大会ロードマップなど上級機能のみプレミアム（初回14日無料）</div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>
+const NAMES=['hero','record','roadmap','analysis','gym','chart','free'];
+const slides=[...document.querySelectorAll('.slide')];
+const bar=document.getElementById('dlbar');
+const st=document.createElement('span'); st.className='st';
+slides.forEach((s,i)=>{ const b=document.createElement('button'); b.textContent='⬇ '+(i+1); b.title=NAMES[i]; b.onclick=()=>dl(i); bar.appendChild(b); });
+const all=document.createElement('button'); all.className='all'; all.textContent='⬇ すべて'; all.onclick=dlAll; bar.appendChild(all);
+bar.appendChild(st);
+function setStatus(m){ st.textContent=m; }
+async function render(i){
+  if(typeof html2canvas==='undefined'){ alert('html2canvas を読み込めませんでした（ネット接続をご確認ください）。'); throw new Error('no html2canvas'); }
+  return await html2canvas(slides[i], {width:1080, height:1920, scale:1, backgroundColor:'#0d0f10', useCORS:true, logging:false});
+}
+async function dl(i){
+  setStatus('生成中… '+(i+1));
+  try{
+    const c=await render(i);
+    const a=document.createElement('a');
+    a.download='physiquelog_v3_slide_'+(i+1)+'_'+NAMES[i]+'.png';
+    a.href=c.toDataURL('image/png'); a.click();
+    setStatus('保存: '+(i+1));
+  }catch(e){ setStatus('失敗: '+(i+1)); }
+}
+async function dlAll(){
+  for(let i=0;i<slides.length;i++){ await dl(i); await new Promise(r=>setTimeout(r,500)); }
+  setStatus('すべて完了 ✓');
+}
+</script>
 </body>
 </html>
