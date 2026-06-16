@@ -174,6 +174,24 @@ body{background:#000;color:var(--text);font-family:'Noto Sans JP',sans-serif;}
 .ex-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;height:248px;overflow-y:auto;align-content:start;}
 .ex-cell{position:relative;}
 .ex-cell button{width:100%;min-height:50px;background:var(--surface);border:1px solid var(--line);border-radius:13px;color:var(--text);font-size:12.5px;font-weight:700;cursor:pointer;padding:6px 8px;line-height:1.3;font-family:'Noto Sans JP';}
+.ex-cell button.added{background:var(--acc-dim);border-color:var(--acc);color:var(--acc);}
+.srow-del{width:30px;height:40px;flex:0 0 auto;background:none;border:none;color:var(--faint);font-size:12px;cursor:pointer;}
+.srow-del:active{color:#ef6b6b;}
+.srow-memo{display:block;box-sizing:border-box;width:calc(100% - 54px);margin:2px 0 8px 40px;background:var(--surface2);border:1px solid var(--line);border-radius:8px;color:var(--text);font-size:12px;padding:7px 10px;outline:none;font-family:'Noto Sans JP';}
+.srow-memo:focus{border-color:var(--acc);}
+.srow-memo::placeholder{color:var(--faint);}
+.tm-presets{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 14px;}
+.tm-chip{padding:10px 16px;border-radius:999px;background:var(--surface);border:1px solid var(--line);color:var(--sub);font-size:14px;font-weight:700;cursor:pointer;font-family:'Noto Sans JP';}
+.tm-chip.on{background:var(--acc-dim);border-color:var(--acc);color:var(--acc);}
+.tm-custom{display:flex;align-items:center;gap:10px;color:var(--sub);font-size:13px;}
+.tm-custom input{width:110px;background:var(--surface);border:1px solid var(--line);border-radius:12px;color:var(--text);font-size:18px;font-weight:800;padding:10px 12px;outline:none;text-align:center;font-family:'Inter';}
+.tm-custom input:focus{border-color:var(--acc);}
+.cardio-tag{font-size:10px;font-weight:800;color:var(--acc);background:var(--acc-dim);border:1px solid rgba(201,240,77,0.4);border-radius:999px;padding:3px 9px;margin-left:auto;margin-right:8px;}
+.crow{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;border-top:1px solid var(--line);cursor:pointer;}
+.crow .cl{font-size:13px;color:var(--sub);font-weight:700;}
+.crow .cv{font-size:17px;font-weight:800;color:var(--text);}
+.crow .cv small{font-size:11px;color:var(--faint);font-weight:700;margin-left:2px;}
+.crow .cv .ph{color:var(--faint);}
 .ex-cell .del{position:absolute;top:4px;right:4px;width:20px;height:20px;border-radius:50%;background:#ef6b6b;color:#fff;border:none;font-size:11px;font-weight:900;display:none;align-items:center;justify-content:center;cursor:pointer;z-index:2;}
 #ex-sheet.editing .ex-cell .del{display:flex;}
 #ex-sheet.editing .ex-cell button{border-style:dashed;padding-right:26px;}
@@ -452,6 +470,8 @@ textarea.cf-in{resize:none;line-height:1.5;}
           <span class="d num" id="gym-sel-date"></span>
           <button onclick="shiftGymDay(1)">›</button>
         </div>
+        <button class="cal-btn" onclick="openTimerSheet()" title="レストタイマー">⏱</button>
+        <button class="cal-btn" onclick="gymShare()" title="シェア">📷</button>
         <button class="cal-btn" onclick="openGymCal()" title="履歴">📅</button>
       </div>
 
@@ -574,6 +594,16 @@ textarea.cf-in{resize:none;line-height:1.5;}
       <div class="meta"><div class="l" id="rest-label">休憩中</div><div class="bar"><i id="rest-bar" style="width:100%"></i></div></div>
       <button onclick="restAdd()">＋30s</button>
       <button onclick="restStop()" data-i18n="rest_skip">スキップ</button>
+    </div>
+
+    <!-- レストタイマー（独立・プリセット＋カスタム） -->
+    <div class="sheet-ov" id="timer-ov" onclick="closeTimerSheet()"></div>
+    <div class="sheet" id="timer-sheet">
+      <h3 data-i18n="timer_title">⏱ レストタイマー</h3>
+      <div class="note" data-i18n="timer_note">休憩時間を選んで開始</div>
+      <div class="tm-presets" id="tm-presets"></div>
+      <div class="tm-custom"><input id="tm-custom" type="number" min="5" max="3600" inputmode="numeric" oninput="tmCustom()"><span data-i18n="timer_sec">秒</span></div>
+      <button class="prem-go" style="margin-top:14px;" onclick="startRestFromSheet()" data-i18n="timer_start">開始</button>
     </div>
 
     <!-- 数値パッド -->
@@ -775,7 +805,7 @@ const I18N = {
     menu_title:'今日のメニュー', menu_note:'選んだ部位は「今日の記録」の筋トレ部位として保存されます',
     part_chest:'胸', part_back:'背中', part_shoulder:'肩', part_arm:'腕', part_leg:'足', part_abs:'腹筋', part_cardio:'有酸素', part_free:'自由',
     ex_title:'種目を追加', ex_note:'部位を選ぶか、検索／自由入力で追加', ex_search_ph:'種目を検索…', ex_edit:'編集', ex_done:'完了', ex_reset:'この部位をデフォルトに戻す', ex_add_btn:'追加', ex_add_to:'{0} に種目を追加', ex_empty:'種目がありません。下の自由入力で追加できます。', ex_search_result:'検索結果', confirm_reset_cat:'「{0}」の種目を初期状態に戻しますか？\n追加・削除した内容は失われます。', t_ex_removed:'{0} を削除', t_ex_reset:'{0} をデフォルトに戻しました', t_ex_added_cat:'{0} を {1} に追加', t_ex_pick_cat:'検索を消して部位を選んでください',
-    rest_label:'休憩中', rest_skip:'スキップ', filter_all:'すべて', gym_history:'筋トレ履歴', gym_history_note:'日付をタップするとその日の記録を開きます',
+    rest_label:'休憩中', rest_skip:'スキップ', filter_all:'すべて', gym_history:'筋トレ履歴', gym_history_note:'日付をタップするとその日の記録を開きます', set_memo_ph:'一言メモ（任意）', timer_title:'⏱ レストタイマー', timer_note:'休憩時間を選んで開始', timer_start:'開始', timer_sec:'秒', cardio_tag:'有酸素', cf_time:'時間', cf_dist:'距離', cf_speed:'速度', cf_incline:'傾斜', cf_kcal:'消費カロリー', t_no_gym_share:'この日の筋トレ記録がありません', t_share_open:'共有メニューを開きます…', t_share_fail:'シェアに失敗しました',
     ob_skip:'スキップ', ob_next:'次へ', ob_start:'はじめる', back:'戻る',
     ob_s1_desc:'大会を目指す人の<strong>記録パートナー</strong>。<br>食事・水分・トレーニングを一元管理。',
     ob_s2_title:'毎日の<br>記録', ob_s2_f1:'体重・栄養', ob_s2_f1d:'PFCバランスとカロリーを記録', ob_s2_f2:'水分', ob_s2_f2d:'目標に対する達成率を管理', ob_s2_f3:'睡眠・歩数', ob_s2_f3d:'コンディションも記録に残せる',
@@ -830,7 +860,7 @@ const I18N = {
     menu_title:'Today\'s menu', menu_note:'The selected muscle group is saved to today\'s workout log',
     part_chest:'Chest', part_back:'Back', part_shoulder:'Shoulders', part_arm:'Arms', part_leg:'Legs', part_abs:'Abs', part_cardio:'Cardio', part_free:'Free',
     ex_title:'Add exercise', ex_note:'Pick a part, or search / type your own', ex_search_ph:'Search exercises…', ex_edit:'Edit', ex_done:'Done', ex_reset:'Reset this part to default', ex_add_btn:'Add', ex_add_to:'Add to {0}', ex_empty:'No exercises. Add one below.', ex_search_result:'Results', confirm_reset_cat:'Reset "{0}" exercises to default?\nYour added/removed items will be lost.', t_ex_removed:'Removed {0}', t_ex_reset:'Reset {0} to default', t_ex_added_cat:'Added {0} to {1}', t_ex_pick_cat:'Clear search and pick a part',
-    rest_label:'Resting', rest_skip:'Skip', filter_all:'All', gym_history:'Workout history', gym_history_note:'Tap a date to open that day',
+    rest_label:'Resting', rest_skip:'Skip', filter_all:'All', gym_history:'Workout history', gym_history_note:'Tap a date to open that day', set_memo_ph:'Note (optional)', timer_title:'⏱ Rest timer', timer_note:'Pick a rest time and start', timer_start:'Start', timer_sec:'sec', cardio_tag:'Cardio', cf_time:'Time', cf_dist:'Distance', cf_speed:'Speed', cf_incline:'Incline', cf_kcal:'Calories', t_no_gym_share:'No workout logged for this day', t_share_open:'Opening share…', t_share_fail:'Share failed',
     ob_skip:'Skip', ob_next:'Next', ob_start:'Get started', back:'Back',
     ob_s1_desc:'A <strong>logging partner</strong> for athletes.<br>Track food, water and training in one place.',
     ob_s2_title:'Daily<br>logging', ob_s2_f1:'Weight & nutrition', ob_s2_f1d:'Log PFC balance and calories', ob_s2_f2:'Water', ob_s2_f2d:'Track progress toward your goal', ob_s2_f3:'Sleep & steps', ob_s2_f3d:'Keep your condition on record',
@@ -902,16 +932,29 @@ const STORAGE_KEYS=['training_records','gym_data','water_data','user_profile','g
 let _syncTimer=null;
 function syncToCloud(uid, delay){ delay=(delay==null?3000:delay); if(!uid) return; if(!isPremium()) return; clearTimeout(_syncTimer); _syncTimer=setTimeout(()=>{ const data={}; STORAGE_KEYS.forEach(k=>{ const v=localStorage.getItem(k); if(v) data[k]=v; }); if(typeof AndroidBridge!=='undefined' && typeof AndroidBridge.saveToFirestore==='function'){ try{ AndroidBridge.saveToFirestore(uid, JSON.stringify(data)); }catch(e){} } else if(typeof firebase!=='undefined' && firebase.firestore){ try{ firebase.firestore().collection('users').doc(uid).set({data:JSON.stringify(data),updatedAt:Date.now()}); }catch(e){} } }, delay); }
 function loadFromCloud(uid){ if(!uid) return; if(!isPremium()) return; if(typeof AndroidBridge!=='undefined' && typeof AndroidBridge.loadFromFirestore==='function'){ try{ AndroidBridge.loadFromFirestore(uid); }catch(e){} } else if(typeof firebase!=='undefined' && firebase.firestore){ try{ firebase.firestore().collection('users').doc(uid).get().then(doc=>{ if(doc.exists) receiveFirestoreData(doc.data().data||'{}'); }); }catch(e){} } }
+// 日付ごとに最終更新時刻 u で新しい方を採用（多端末で更新が伝播するように）
+function mergeRecordsByDate(localArr, cloudArr){
+  const by={};
+  (localArr||[]).forEach(r=>{ if(r&&r.date) by[r.date]=r; });
+  (cloudArr||[]).forEach(r=>{ if(!r||!r.date) return; const ex=by[r.date]; if(!ex || (r.u||0) > (ex.u||0)) by[r.date]=r; });
+  return Object.keys(by).sort((a,b)=>b.localeCompare(a)).map(d=>by[d]);
+}
+function mergeByDateObj(localObj, cloudObj){
+  const out=Object.assign({}, localObj||{});
+  Object.keys(cloudObj||{}).forEach(d=>{ const c=cloudObj[d], l=out[d]; const cu=(c&&c.u)||0, lu=(l&&l.u)||0; if(!l || cu>lu) out[d]=c; });
+  return out;
+}
 function receiveFirestoreData(jsonStr){
   try{
     const data=JSON.parse(jsonStr);
     STORAGE_KEYS.forEach(k=>{
       if(!data[k]) return;
-      if(k==='gym_data'){ const cloud=JSON.parse(data[k]); const local=JSON.parse(localStorage.getItem('gym_data')||'{}'); localStorage.setItem('gym_data', JSON.stringify(Object.assign({},cloud,local))); } // ローカル優先マージ
-      else if(k==='training_records'||k==='water_data'){ const local=localStorage.getItem(k); const isEmpty=!local||local==='[]'||local==='{}'; if(isEmpty) localStorage.setItem(k,data[k]); } // 記録系はローカル優先
+      if(k==='training_records'){ try{ const m=mergeRecordsByDate(JSON.parse(localStorage.getItem('training_records')||'[]'), JSON.parse(data[k])); localStorage.setItem('training_records', JSON.stringify(m)); }catch(e){ const l=localStorage.getItem(k); if(!l||l==='[]') localStorage.setItem(k,data[k]); } }
+      else if(k==='gym_data'||k==='water_data'){ try{ const m=mergeByDateObj(JSON.parse(localStorage.getItem(k)||'{}'), JSON.parse(data[k])); localStorage.setItem(k, JSON.stringify(m)); }catch(e){ const l=localStorage.getItem(k); if(!l||l==='{}') localStorage.setItem(k,data[k]); } }
       else { localStorage.setItem(k,data[k]); }
     });
-    renderToday(); toast(t('t_synced'));
+    try{ renderToday(); }catch(e){} try{ if(document.getElementById('pg-data').classList.contains('active')) renderData(); }catch(e){} try{ if(document.getElementById('pg-gym').classList.contains('active')) renderGym(); }catch(e){}
+    toast(t('t_synced'));
   }catch(e){}
 }
 
@@ -924,6 +967,7 @@ let curDate = logicalToday();
 
 function getRec(date){ return DB.records().find(r=>r.date===date) || null; }
 function upsertRec(rec){
+  rec.u=Date.now(); // 多端末同期の競合解消用（日付ごとの最終更新時刻）
   const recs=DB.records(); const i=recs.findIndex(r=>r.date===rec.date);
   if(i>=0) recs[i]=rec; else recs.push(rec);
   recs.sort((a,b)=>b.date.localeCompare(a.date));
@@ -962,7 +1006,7 @@ function showScreen(id){
 }
 // Androidバックキー: 開いているシート/パッドがあれば閉じる→true。今日以外なら今日へ→true。それ以外false（＝アプリ終了をネイティブに委譲）
 function handleAndroidBack(){
-  const ov=[['paywall-sheet',closePaywall],['gymcal-sheet',closeGymCal],['pad',closePad],['mpad',closeMealPad],['menu-sheet',closeMenuSheet],['ex-sheet',closeExSheet],['contact-sheet',closeContactSheet]];
+  const ov=[['paywall-sheet',closePaywall],['gymcal-sheet',closeGymCal],['pad',closePad],['mpad',closeMealPad],['menu-sheet',closeMenuSheet],['ex-sheet',closeExSheet],['contact-sheet',closeContactSheet],['timer-sheet',closeTimerSheet]];
   for(const [id,fn] of ov){ const el=document.getElementById(id); if(el && el.classList.contains('open')){ try{fn();}catch(e){} return true; } }
   if(curScreen!=='today'){ go('today'); return true; }
   return false;
@@ -1144,6 +1188,8 @@ function importData(file){
   r.readAsText(file);
 }
 let _tt; function toast(msg){ const t=document.getElementById('toast'); t.innerHTML=msg; t.classList.add('show'); clearTimeout(_tt); _tt=setTimeout(()=>t.classList.remove('show'),1600); }
+// キーボード表示時に入力欄が隠れないよう、フォーカス時に見える位置へスクロール（type=text/textarea等。カスタム数値パッドは対象外）
+document.addEventListener('focusin', function(e){ const el=e.target; if(!el) return; const tag=(el.tagName||'').toLowerCase(); const isText=(tag==='textarea')||(tag==='input'&&['text','number','search','email','tel','url','date','time'].indexOf((el.type||'text').toLowerCase())>=0&&!el.readOnly); if(!isText) return; setTimeout(function(){ try{ el.scrollIntoView({block:'center', behavior:'smooth'}); }catch(_){ } }, 280); });
 // 本番ネイティブが呼ぶトースト（クラウド保存/通知設定/課金メッセージ等）。第2引数isErrorは現状未使用
 function showToast(msg, isError){ toast(msg); }
 // お問い合わせ送信結果のコールバック（sendContactForm後にネイティブが呼ぶ）
@@ -1280,7 +1326,7 @@ function waterChip(i){
   const w=DB.water(); const key=curDate;
   if(!w[key]) w[key]={total:0,log:[]};
   const now=new Date(); const tm=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
-  w[key].total+=qb[i]; w[key].log.push({ml:qb[i],time:tm}); DB.saveWater(w);
+  w[key].total+=qb[i]; w[key].log.push({ml:qb[i],time:tm}); w[key].u=Date.now(); DB.saveWater(w);
   renderWaterTile(); toast(t('t_water_add', qb[i]));
 }
 
@@ -1340,6 +1386,7 @@ function padKey(k){
 function padPrev(){ if(padPrev_!=null) document.getElementById('pad-val').textContent=String(padPrev_).replace(/,/g,''); }
 function padDone(){
   const v=document.getElementById('pad-val').textContent; const n=parseFloat(v);
+  if(padTarget.startsWith('gymc:')){ const pr=padTarget.split(':'); const ei=+pr[1], key=pr[2]; gymWork[ei].cardio=gymWork[ei].cardio||{}; gymWork[ei].cardio[key]=isNaN(n)?null:n; saveGymData(); closePad(); renderGym(); toast(t('t_saved')); return; }
   if(padTarget.startsWith('gym:')){ const pr=padTarget.split(':'); const ei=+pr[1],si=+pr[2],which=pr[3]; if(which==='w') gymWork[ei].sets[si].weight=isNaN(n)?null:n; else gymWork[ei].sets[si].reps=isNaN(n)?null:n; saveGymData(); closePad(); renderGym(); toast(t('t_saved')); return; }
   if(padTarget.startsWith('wchip')){ const i=parseInt(padTarget.slice(5)); const qb=DB.quickBtns(); qb[i]=Math.round(n)||0; qb.sort((a,b)=>a-b); DB.saveQuickBtns(qb); renderWaterTile(); closePad(); toast(t('t_quick_upd')); return; }
   if(padTarget.startsWith('set:')){ const id=padTarget.slice(4); const el=document.getElementById(id); if(el) el.value=v; if(typeof updateSetKcal==='function') updateSetKcal(); closePad(); autoSaveSet(); return; }
@@ -1390,10 +1437,11 @@ function mealCopyPrev(){ mVals=[prevValue('p'),prevValue('f'),prevValue('c'),pre
 /* ===== 筋トレ画面（gym_data 編集配線） ===== */
 let gymWork=[];
 function saveGymData(){
-  const g=DB.gym(); g[curDate]=Object.assign({},g[curDate],{exercises:gymWork});
+  const g=DB.gym(); g[curDate]=Object.assign({},g[curDate],{exercises:gymWork,u:Date.now()});
   localStorage.setItem('gym_data', JSON.stringify(g));
   if(typeof AndroidBridge!=='undefined'){ try{ if(window.currentUser && typeof syncToCloud==='function') syncToCloud(currentUser.uid);}catch(e){} }
 }
+function gymSetMemo(ei,si,val){ if(!gymWork[ei]||!gymWork[ei].sets||!gymWork[ei].sets[si]) return; gymWork[ei].sets[si].memo=val; saveGymData(); }
 // 本番loadGymDataと同じ読み込みロジック: 新形式(日付のみキー)優先、無ければ旧形式(日付_部位キー)をマージして新形式に移行
 function loadGymExercises(date){
   const g=DB.gym();
@@ -1478,13 +1526,22 @@ function renderGymCards(){
   const wrap=document.getElementById('gym-cards');
   if(!gymWork.length){ wrap.innerHTML='<div class="empty">'+t('gym_empty')+'</div>'; return; }
   wrap.innerHTML=gymWork.map((ex,ei)=>{
+    const _ct=cardioType(ex.name);
+    if(_ct){
+      ex.cardio=ex.cardio||{};
+      const _f=CARDIO_FIELDS[_ct]||CARDIO_FIELDS.other;
+      const _rows=_f.map(f=>{ const raw=ex.cardio[f.key]; const val=(raw==null||raw==='')?'<span class="ph">—</span>':raw; return '<div class="crow" onclick="openGymCardioPad('+ei+',\''+f.key+'\')"><span class="cl">'+t(f.label)+'</span><span class="cv num">'+val+' <small>'+f.unit+'</small></span></div>'; }).join('');
+      return '<div class="card"><div class="ex-h"><span class="nm">'+(ex.name||t('ex_default'))+'</span><span class="cardio-tag">'+t('cardio_tag')+'</span><button class="ex-del-btn" onclick="gymDelEx('+ei+')" aria-label="delete">🗑</button></div>'+_rows+'</div>';
+    }
     const sets=(ex.sets||[]).map((s,si)=>{
       const w=(s.weight===''||s.weight==null)?'<span class="ph">—</span>':s.weight;
       const r=(s.reps==null||s.reps==='')?'<span class="ph">—</span>':s.reps;
-      return `<div class="srow"><span class="n">${si+1}</span>`+
+      const mv=String(s.memo||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+      return `<div class="sset"><div class="srow"><span class="n">${si+1}</span>`+
         `<div class="cell" onclick="openGymPad(${ei},${si},'w')">${w}<small>kg</small></div>`+
         `<div class="cell" onclick="openGymPad(${ei},${si},'r')">${r}<small>rep</small></div>`+
-        `<button class="chk${s.done?' on':''}" onclick="gymCheck(${ei},${si})">✓</button></div>`;
+        `<button class="srow-del" onclick="gymDelSet(${ei},${si})" aria-label="delete set">✕</button></div>`+
+        `<input class="srow-memo" type="text" placeholder="${t('set_memo_ph')}" value="${mv}" oninput="gymSetMemo(${ei},${si},this.value)"></div>`;
     }).join('');
     return `<div class="card"><div class="ex-h"><span class="nm">${ex.name||t('ex_default')}</span>`+
       `<button class="copy-prev" onclick="gymCopyPrev(${ei})">↺ ${t('copy_prev')}</button>`+
@@ -1494,8 +1551,46 @@ function renderGymCards(){
   }).join('');
 }
 function gymAddSet(ei){ gymWork[ei].sets=gymWork[ei].sets||[]; const last=gymWork[ei].sets[gymWork[ei].sets.length-1]; gymWork[ei].sets.push({weight:last?last.weight:null,reps:last?last.reps:null}); saveGymData(); renderGym(); }
+function gymDelSet(ei,si){ if(!gymWork[ei]||!gymWork[ei].sets) return; gymWork[ei].sets.splice(si,1); saveGymData(); renderGym(); }
+/* ===== 有酸素：種目タイプ別の入力項目（重量×レップではなく） ===== */
+const CARDIO_TYPE_MAP={'ランニング':'run','ウォーキング':'run','トレッドミル':'tread','水泳':'swim','自転車':'bike','エアロバイク':'bike','縄跳び':'other'};
+const CARDIO_FIELDS={
+  run:[{key:'time',label:'cf_time',unit:'分'},{key:'distance',label:'cf_dist',unit:'km'},{key:'kcal',label:'cf_kcal',unit:'kcal'}],
+  tread:[{key:'time',label:'cf_time',unit:'分'},{key:'speed',label:'cf_speed',unit:'km/h'},{key:'incline',label:'cf_incline',unit:'%'},{key:'kcal',label:'cf_kcal',unit:'kcal'}],
+  swim:[{key:'time',label:'cf_time',unit:'分'},{key:'distance',label:'cf_dist',unit:'m'},{key:'kcal',label:'cf_kcal',unit:'kcal'}],
+  bike:[{key:'time',label:'cf_time',unit:'分'},{key:'distance',label:'cf_dist',unit:'km'},{key:'kcal',label:'cf_kcal',unit:'kcal'}],
+  other:[{key:'time',label:'cf_time',unit:'分'},{key:'kcal',label:'cf_kcal',unit:'kcal'}],
+};
+const CARDIO_LABEL={time:'cf_time',distance:'cf_dist',speed:'cf_speed',incline:'cf_incline',kcal:'cf_kcal'};
+function cardioType(name){ if(!name) return null; if(CARDIO_TYPE_MAP[name]) return CARDIO_TYPE_MAP[name]; try{ if(!gymPresets) loadGymPresets(); if(gymPresets && gymPresets['有酸素'] && gymPresets['有酸素'].indexOf(name)>=0) return 'other'; }catch(e){} return null; }
+function openGymCardioPad(ei,key){ padTarget='gymc:'+ei+':'+key; padFresh=true; padPrev_=null; const cd=gymWork[ei].cardio||{}; const cur=(cd[key]!=null&&cd[key]!=='')?String(cd[key]):'0'; document.getElementById('pad-lbl').textContent=t(CARDIO_LABEL[key]||key); document.getElementById('pad-val').textContent=cur; document.getElementById('pad-prev').classList.add('hide'); document.getElementById('pad').classList.add('open'); document.getElementById('pad-ov').classList.add('open'); }
+/* ===== 筋トレのシェア画像（Canvas → ネイティブ共有 saveStart/Chunk/Done。ブラウザはDL） ===== */
+function gymShare(){
+  const exs=loadGymExercises(curDate)||[];
+  if(!exs.length){ toast(t('t_no_gym_share')); return; }
+  const rec=getRec(curDate); const parts=(rec&&rec.muscles?rec.muscles:[]).map(partLabel).join(' / ');
+  const blocks=exs.map(ex=>{ const ct=cardioType(ex.name);
+    if(ct){ const f=CARDIO_FIELDS[ct]||CARDIO_FIELDS.other; const cd=ex.cardio||{}; const lines=f.filter(x=>cd[x.key]!=null&&cd[x.key]!=='').map(x=>t(x.label)+'  '+cd[x.key]+x.unit); return {name:ex.name, cardio:true, lines: lines.length?lines:['—']}; }
+    const lines=(ex.sets||[]).map((s,i)=>{ const w=(s.weight==null||s.weight==='')?'—':s.weight+'kg'; const r=(s.reps==null||s.reps==='')?'—':s.reps+'rep'; return (i+1)+'.   '+w+'   ×   '+r; }); return {name:ex.name, lines: lines.length?lines:['—']}; });
+  const W=1080, PADX=72, NAME_H=66, LINE_H=46, GAP=30, FOOT_H=120;
+  const TITLE_H = parts ? 322 : 268;
+  let H=TITLE_H; blocks.forEach(b=>{ H+=NAME_H + b.lines.length*LINE_H + GAP; }); H+=FOOT_H; H=Math.max(H,720);
+  const c=document.createElement('canvas'); c.width=W; c.height=H; const x=c.getContext('2d');
+  x.fillStyle='#101214'; x.fillRect(0,0,W,H);
+  x.fillStyle='#c9f04d'; x.fillRect(0,0,W,10);
+  x.fillStyle='#c9f04d'; x.font='800 40px Inter, sans-serif'; x.fillText('PhysiqueLog', PADX, 104);
+  x.fillStyle='#edf0f2'; x.font='900 70px Inter, "Noto Sans JP", sans-serif'; x.fillText(fmtDateLocal(new Date(curDate+'T00:00:00')), PADX, 190);
+  if(parts){ x.fillStyle='#8b939b'; x.font='700 34px "Noto Sans JP", sans-serif'; x.fillText(parts, PADX, 254); }
+  let y=TITLE_H+18;
+  blocks.forEach(b=>{ x.fillStyle=b.cardio?'#7fd4ff':'#c9f04d'; x.font='800 44px "Noto Sans JP", sans-serif'; x.fillText(b.name, PADX, y); y+=NAME_H;
+    x.fillStyle='#cfd6dd'; x.font='600 36px "Noto Sans JP", sans-serif'; b.lines.forEach(ln=>{ x.fillText(ln, PADX+26, y); y+=LINE_H; }); y+=GAP; });
+  x.fillStyle='#3f4750'; x.font='700 30px Inter, "Noto Sans JP", sans-serif'; x.fillText('#筋トレ記録  PhysiqueLog', PADX, H-44);
+  const dataUrl=c.toDataURL('image/jpeg',0.9); const b64=(dataUrl.split(',')[1]||'');
+  if(typeof AndroidBridge!=='undefined' && AndroidBridge.saveStart){
+    try{ const CS=60000, n=Math.ceil(b64.length/CS); AndroidBridge.saveStart('workout_'+curDate+'.jpg', n); for(let i=0;i<n;i++) AndroidBridge.saveChunk(i, b64.slice(i*CS,(i+1)*CS)); AndroidBridge.saveDone(); toast(t('t_share_open')); }catch(e){ toast(t('t_share_fail')); }
+  } else { try{ const a=document.createElement('a'); a.href=dataUrl; a.download='workout_'+curDate+'.jpg'; document.body.appendChild(a); a.click(); a.remove(); }catch(e){ toast(t('t_share_fail')); } }
+}
 function gymDelEx(ei){ if(!confirm(t('confirm_del_ex'))) return; gymWork.splice(ei,1); saveGymData(); renderGym(); }
-function gymCheck(ei,si){ const s=gymWork[ei].sets[si]; s.done=!s.done; saveGymData(); renderGym(); if(s.done) startRest(t('rest_next', gymWork[ei].name||'')); }
 function gymCopyPrev(ei){
   const name=gymWork[ei].name, g=DB.gym();
   const dates=Object.keys(g).filter(d=>d<curDate).sort().reverse();
@@ -1554,7 +1649,8 @@ function exShowCat(c){
 function exRenderGrid(list){
   const g=document.getElementById('ex-grid');
   if(!list.length){ g.innerHTML='<div class="ex-empty">'+t('ex_empty')+'</div>'; return; }
-  g.innerHTML=list.map(n=>{ const e=n.replace(/'/g,"\\'"); return '<div class="ex-cell"><button onclick="pickEx(\''+e+'\')">'+n+'</button><div class="del" onclick="event.stopPropagation();exDel(\''+e+'\')">✕</div></div>'; }).join('');
+  const added=new Set((gymWork||[]).map(e=>e&&e.name));
+  g.innerHTML=list.map(n=>{ const e=n.replace(/'/g,"\\'"); const on=added.has(n); return '<div class="ex-cell"><button class="'+(on?'added':'')+'" onclick="pickEx(\''+e+'\')">'+(on?'✓ ':'')+n+'</button><div class="del" onclick="event.stopPropagation();exDel(\''+e+'\')">✕</div></div>'; }).join('');
 }
 function exSearch(){
   const q=document.getElementById('ex-q').value.trim();
@@ -1616,6 +1712,12 @@ function drawWeightChart(start, end, plan){
   let yMin=Math.min(...vals), yMax=Math.max(...vals); const pad=((yMax-yMin)*0.16)||0.5; yMin-=pad; yMax+=pad;
   const Y=w=>18+100*(1-(w-yMin)/((yMax-yMin)||1));
   let html='';
+  // 横罫線＋体重目盛り（読みやすさ向上）
+  const GN=4;
+  for(let i=0;i<=GN;i++){ const wv=yMin+(yMax-yMin)*(i/GN); const gy=+Y(wv).toFixed(1);
+    html+=`<line x1="10" y1="${gy}" x2="334" y2="${gy}" stroke="#23282e" stroke-width="0.7"/>`;
+    if(i>0&&i<GN) html+=`<text x="12" y="${(gy-2)}" font-size="7" fill="#3f4750" font-family="Inter">${wv.toFixed(1)}</text>`;
+  }
   if(plan){ const N=24; let tp=''; for(let i=0;i<=N;i++){ const v=xStart+(xEnd-xStart)*i/N; const tw=targetAt(plan, fmt(new Date(v))); tp+=(i?' L':'M')+X(v).toFixed(0)+','+Y(tw).toFixed(0); } html+=`<path d="${tp}" stroke="#f87171" stroke-width="1.3" fill="none" stroke-dasharray="5 4" opacity="0.8"/>`; }
   const dPath=ws.map((r,i)=>(i?'L':'M')+X(ts(r.date)).toFixed(0)+','+Y(r.weight).toFixed(0)).join(' ');
   html+=`<path d="${dPath}" stroke="#c9f04d" stroke-width="2.4" fill="none" stroke-linecap="round"/>`;
@@ -1795,9 +1897,9 @@ function avg(arr){ if(!arr||!arr.length) return '—'; return Math.round(arr.red
 function avgWater(){ const w=DB.water(); const vals=Object.values(w).map(d=>d&&d.total).filter(x=>x); return vals.length?Math.round(vals.slice(-7).reduce((s,x)=>s+x,0)/Math.min(7,vals.length)):'—'; }
 
 /* ===== レストタイマー（本番ネイティブサービス連携・Stage4②） ===== */
-let restEnd=0, restTotal=90, restTimer=null, _restDoneFired=false, REST_DEFAULT=90;
-function startRest(label){
-  restTotal=REST_DEFAULT; restEnd=Date.now()+restTotal*1000; _restDoneFired=false;
+let restEnd=0, restTotal=90, restTimer=null, _restDoneFired=false, REST_DEFAULT=(parseInt(localStorage.getItem('rest_sec'))||90);
+function startRest(label, sec){
+  restTotal=sec||REST_DEFAULT; restEnd=Date.now()+restTotal*1000; _restDoneFired=false;
   document.getElementById('rest-label').textContent=label||t('rest_label');
   document.getElementById('rest').classList.add('show');
   if(typeof AndroidBridge!=='undefined' && AndroidBridge.startTimer){ try{ AndroidBridge.startTimer(restTotal); }catch(e){} } // BG動作＋音/バイブをネイティブに委譲
@@ -1811,6 +1913,16 @@ function tickRest(){
 }
 function restAdd(){ restTotal+=30; restEnd+=30000; if(typeof AndroidBridge!=='undefined' && AndroidBridge.startTimer){ try{ AndroidBridge.startTimer(Math.max(0,Math.round((restEnd-Date.now())/1000))); }catch(e){} } tickRest(); }
 function restStop(){ clearInterval(restTimer); restTimer=null; document.getElementById('rest').classList.remove('show'); if(typeof AndroidBridge!=='undefined' && AndroidBridge.stopTimer){ try{ AndroidBridge.stopTimer(); }catch(e){} } }
+/* ===== 独立レストタイマー（プリセット＋カスタム・チェックとは無関係） ===== */
+const TM_PRESETS=[30,60,90,120,180];
+let tmSel=REST_DEFAULT;
+function tmLabel(s){ const m=Math.floor(s/60), sec=s%60; const MM=(LANG==='ja'?'分':'m'), SS=(LANG==='ja'?'秒':'s'); if(m<=0) return sec+SS; return m+MM+(sec?(sec+SS):''); }
+function renderTmPresets(){ const el=document.getElementById('tm-presets'); if(!el) return; el.innerHTML=TM_PRESETS.map(s=>'<button class="tm-chip'+(s===tmSel?' on':'')+'" onclick="tmPick('+s+')">'+tmLabel(s)+'</button>').join(''); }
+function tmPick(s){ tmSel=s; const c=document.getElementById('tm-custom'); if(c) c.value=s; renderTmPresets(); }
+function tmCustom(){ const v=parseInt(document.getElementById('tm-custom').value); tmSel=(isNaN(v)?tmSel:v); renderTmPresets(); }
+function openTimerSheet(){ tmSel=REST_DEFAULT; const c=document.getElementById('tm-custom'); if(c) c.value=tmSel; renderTmPresets(); document.getElementById('timer-sheet').classList.add('open'); document.getElementById('timer-ov').classList.add('open'); }
+function closeTimerSheet(){ document.getElementById('timer-sheet').classList.remove('open'); document.getElementById('timer-ov').classList.remove('open'); }
+function startRestFromSheet(){ let sec=parseInt(document.getElementById('tm-custom').value); if(isNaN(sec)) sec=tmSel; if(sec<5) sec=5; if(sec>3600) sec=3600; REST_DEFAULT=sec; localStorage.setItem('rest_sec', String(sec)); closeTimerSheet(); startRest(t('rest_label'), sec); }
 // ネイティブから呼ばれる完了コールバック（またはJS到達0時）
 function onTimerDone(){
   if(_restDoneFired) return; _restDoneFired=true;

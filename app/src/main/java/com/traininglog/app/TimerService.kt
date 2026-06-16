@@ -28,7 +28,7 @@ class TimerService : Service() {
 
     companion object {
         const val CHANNEL_ID      = "timer_channel"
-        const val DONE_CHANNEL_ID = "timer_done_channel_v3" // v3: 音URIのnullフォールバック＋チャンネル再作成（音が鳴らない端末対策）
+        const val DONE_CHANNEL_ID = "timer_done_channel_v4" // v4: USAGE_NOTIFICATION（着信/通知音量で鳴る）＋チャンネル再作成
         const val NOTIF_ID        = 2001
         const val DONE_NOTIF_ID   = 2002
         const val ACTION_START    = "com.traininglog.app.TIMER_START"
@@ -198,16 +198,17 @@ class TimerService : Service() {
                 setSound(null, null)
                 enableVibration(false)
             }
-            // タイマー完了通知（USAGE_ALARM: イヤホン接続中もスピーカーから鳴動）
+            // タイマー完了通知（USAGE_NOTIFICATION: 通常の「音を出すモード」=着信/通知音量で鳴る。
+            // 以前は USAGE_ALARM でアラーム音量基準だったため、アラーム音量0だと音モードでも無音だった）
             val vibPattern = longArrayOf(0, 400, 150, 400, 150, 400, 150, 400)
             val audioAttrs = AudioAttributes.Builder()
-                .setUsage(AudioAttributes.USAGE_ALARM)
+                .setUsage(AudioAttributes.USAGE_NOTIFICATION)
                 .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
                 .build()
-            // 端末によっては ALARM のデフォルトURIが null（→無音チャンネルになる）ので段階的にフォールバック
-            val soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
-                ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+            // 通知音URIを段階的にフォールバック（端末によりnullの場合に無音チャンネル化するのを防ぐ）
+            val soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
                 ?: RingtoneManager.getActualDefaultRingtoneUri(this, RingtoneManager.TYPE_RINGTONE)
+                ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
             val doneChannel = NotificationChannel(
                 DONE_CHANNEL_ID, "タイマー完了",
                 NotificationManager.IMPORTANCE_HIGH
