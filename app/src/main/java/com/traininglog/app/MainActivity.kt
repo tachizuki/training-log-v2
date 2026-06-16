@@ -50,6 +50,8 @@ class MainActivity : AppCompatActivity() {
     // release=本番index.html / debug=再設計版index-v3.html（build.gradleのbuildConfigFieldで切替）
     private val REMOTE_URL = BuildConfig.WEBVIEW_URL
     private val LOCAL_URL = "file:///android_asset/index.html"
+    // ナビゲーション許可ドメイン（ブリッジ付きWebViewに外部サイトを読み込ませない）
+    private val TRUSTED_HOST: String = runCatching { Uri.parse(BuildConfig.WEBVIEW_URL).host ?: "" }.getOrDefault("")
 
     private val chunks = mutableMapOf<Int, String>()
     private var totalChunks = 0
@@ -416,6 +418,13 @@ class MainActivity : AppCompatActivity() {
          */
         @JavascriptInterface
         fun httpPost(url: String, body: String) {
+            // 送信先を Google Apps Script ホストに限定（万一のXSS時に任意ホストへ情報送信されるのを防ぐ）
+            val host = runCatching { java.net.URL(url).host?.lowercase() }.getOrNull()
+            val allowed = host != null && (host == "script.google.com" || host.endsWith(".googleusercontent.com"))
+            if (!allowed) {
+                webView.post { webView.evaluateJavascript("if(typeof onContactSent==='function')onContactSent(false,'blocked')", null) }
+                return
+            }
             CoroutineScope(Dispatchers.IO).launch {
                 try {
                     val encoded = java.net.URLEncoder.encode(body, "UTF-8")
@@ -603,12 +612,18 @@ class MainActivity : AppCompatActivity() {
 
         webView = findViewById(R.id.webView)
         webView.clearCache(true)
+        // リモートデバッグはデバッグビルドのみ（リリースで遠隔Inspectを防ぐ）
+        WebView.setWebContentsDebuggingEnabled(BuildConfig.DEBUG)
 
         webView.settings.apply {
             javaScriptEnabled = true
             domStorageEnabled = true
-            databaseEnabled = true
-            allowFileAccess = true
+            databaseEnabled = false                       // 旧WebSQLは不要
+            allowFileAccess = true                         // オフライン用 file:///android_asset フォールバックに必要
+            allowContentAccess = false                     // content:// へのアクセスを禁止
+            allowFileAccessFromFileURLs = false            // file:// から別ファイルの読み出し禁止
+            allowUniversalAccessFromFileURLs = false       // file:// からの全オリジンアクセス禁止
+            mixedContentMode = WebSettings.MIXED_CONTENT_NEVER_ALLOW  // https内のhttp読込を禁止（MITM対策）
             cacheMode = WebSettings.LOAD_NO_CACHE
             useWideViewPort = true
             loadWithOverviewMode = true
@@ -636,7 +651,21 @@ class MainActivity : AppCompatActivity() {
         }
 
         webView.webViewClient = object : WebViewClient() {
-            override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean = false
+            // 信頼ドメイン(pages.dev)と同梱asset以外への遷移はWebView内で読み込ませず外部アプリで開く。
+            // → 万一のリダイレクト/外部リンクでブリッジ付きWebViewが攻撃者ページを読むのを防ぐ。
+            override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
+                val u = request.url
+                val scheme = u.scheme?.lowercase()
+                val host = u.host?.lowercase()
+                // 同梱asset(オフラインフォールバック)のみ file:// を許可
+                if (scheme == "file") return !u.toString().startsWith("file:///android_asset/")
+                if (scheme == "https" && host != null && (host == TRUSTED_HOST || host.endsWith(".$TRUSTED_HOST"))) return false
+                // それ以外（別ドメイン/http/mailto/tel/market/intent 等）は外部で処理
+                try {
+                    startActivity(Intent(Intent.ACTION_VIEW, u).apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) })
+                } catch (e: Exception) { /* 対応アプリ無し時は何もしない */ }
+                return true
+            }
 
             override fun onPageFinished(view: WebView, url: String) {
                 super.onPageFinished(view, url)
