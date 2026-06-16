@@ -43,6 +43,15 @@ with sync_playwright() as p:
     rec('GF-PICKER', added and added['hasClass'] and added['check'], f'{added}')
     pg.evaluate("closeExSheet()")
 
+    # ② レストタイマーの時間入力（タップ→パッド→秒数設定・既定保存）
+    pg.evaluate("go('gym'); startRest('test')"); pg.wait_for_timeout(20)
+    pg.evaluate("openRestPad()"); pg.wait_for_timeout(20)
+    padopen=pg.evaluate("()=>document.getElementById('pad').classList.contains('open') && padTarget==='rest'")
+    pg.evaluate("padKey('1'); padKey('2'); padKey('0'); padDone()"); pg.wait_for_timeout(20)
+    restset=pg.evaluate("()=>({tot:restTotal, saved:localStorage.getItem('rest_sec'), shown:document.getElementById('rest').classList.contains('show')})")
+    rec('GF-REST', padopen and restset['tot']==120 and restset['saved']=='120' and restset['shown'], f'open={padopen} {restset}')
+    pg.evaluate("restStop()")
+
     # ③ キーボードscroll: focusinハンドラでテキスト入力がscrollIntoView（関数存在＝エラーなし確認）
     rec('GF-KEY', not pg._errs, f'no page errors (focusin wired), errs={pg._errs[:2]}')
     pg.close(); b.close()

@@ -576,7 +576,7 @@ textarea.cf-in{resize:none;line-height:1.5;}
 
     <!-- レストタイマー -->
     <div class="rest" id="rest">
-      <span class="t num" id="rest-t">1:30</span>
+      <span class="t num" id="rest-t" onclick="openRestPad()" style="cursor:pointer;" title="タップで休憩時間を変更">1:30</span>
       <div class="meta"><div class="l" id="rest-label">休憩中</div><div class="bar"><i id="rest-bar" style="width:100%"></i></div></div>
       <button onclick="restAdd()">＋30s</button>
       <button onclick="restStop()" data-i18n="rest_skip">スキップ</button>
@@ -781,7 +781,7 @@ const I18N = {
     menu_title:'今日のメニュー', menu_note:'選んだ部位は「今日の記録」の筋トレ部位として保存されます',
     part_chest:'胸', part_back:'背中', part_shoulder:'肩', part_arm:'腕', part_leg:'足', part_abs:'腹筋', part_cardio:'有酸素', part_free:'自由',
     ex_title:'種目を追加', ex_note:'部位を選ぶか、検索／自由入力で追加', ex_search_ph:'種目を検索…', ex_edit:'編集', ex_done:'完了', ex_reset:'この部位をデフォルトに戻す', ex_add_btn:'追加', ex_add_to:'{0} に種目を追加', ex_empty:'種目がありません。下の自由入力で追加できます。', ex_search_result:'検索結果', confirm_reset_cat:'「{0}」の種目を初期状態に戻しますか？\n追加・削除した内容は失われます。', t_ex_removed:'{0} を削除', t_ex_reset:'{0} をデフォルトに戻しました', t_ex_added_cat:'{0} を {1} に追加', t_ex_pick_cat:'検索を消して部位を選んでください',
-    rest_label:'休憩中', rest_skip:'スキップ', filter_all:'すべて', gym_history:'筋トレ履歴', gym_history_note:'日付をタップするとその日の記録を開きます', gym_memo_ph:'メモ（種目の補足・調子・気づきなど）',
+    rest_label:'休憩中', rest_skip:'スキップ', filter_all:'すべて', gym_history:'筋トレ履歴', gym_history_note:'日付をタップするとその日の記録を開きます', gym_memo_ph:'メモ（種目の補足・調子・気づきなど）', rest_set_label:'休憩時間（秒）', t_rest_set:'休憩を{0}秒に設定 ✓',
     ob_skip:'スキップ', ob_next:'次へ', ob_start:'はじめる', back:'戻る',
     ob_s1_desc:'大会を目指す人の<strong>記録パートナー</strong>。<br>食事・水分・トレーニングを一元管理。',
     ob_s2_title:'毎日の<br>記録', ob_s2_f1:'体重・栄養', ob_s2_f1d:'PFCバランスとカロリーを記録', ob_s2_f2:'水分', ob_s2_f2d:'目標に対する達成率を管理', ob_s2_f3:'睡眠・歩数', ob_s2_f3d:'コンディションも記録に残せる',
@@ -836,7 +836,7 @@ const I18N = {
     menu_title:'Today\'s menu', menu_note:'The selected muscle group is saved to today\'s workout log',
     part_chest:'Chest', part_back:'Back', part_shoulder:'Shoulders', part_arm:'Arms', part_leg:'Legs', part_abs:'Abs', part_cardio:'Cardio', part_free:'Free',
     ex_title:'Add exercise', ex_note:'Pick a part, or search / type your own', ex_search_ph:'Search exercises…', ex_edit:'Edit', ex_done:'Done', ex_reset:'Reset this part to default', ex_add_btn:'Add', ex_add_to:'Add to {0}', ex_empty:'No exercises. Add one below.', ex_search_result:'Results', confirm_reset_cat:'Reset "{0}" exercises to default?\nYour added/removed items will be lost.', t_ex_removed:'Removed {0}', t_ex_reset:'Reset {0} to default', t_ex_added_cat:'Added {0} to {1}', t_ex_pick_cat:'Clear search and pick a part',
-    rest_label:'Resting', rest_skip:'Skip', filter_all:'All', gym_history:'Workout history', gym_history_note:'Tap a date to open that day', gym_memo_ph:'Notes (exercise details, condition, etc.)',
+    rest_label:'Resting', rest_skip:'Skip', filter_all:'All', gym_history:'Workout history', gym_history_note:'Tap a date to open that day', gym_memo_ph:'Notes (exercise details, condition, etc.)', rest_set_label:'Rest (seconds)', t_rest_set:'Rest set to {0}s ✓',
     ob_skip:'Skip', ob_next:'Next', ob_start:'Get started', back:'Back',
     ob_s1_desc:'A <strong>logging partner</strong> for athletes.<br>Track food, water and training in one place.',
     ob_s2_title:'Daily<br>logging', ob_s2_f1:'Weight & nutrition', ob_s2_f1d:'Log PFC balance and calories', ob_s2_f2:'Water', ob_s2_f2d:'Track progress toward your goal', ob_s2_f3:'Sleep & steps', ob_s2_f3d:'Keep your condition on record',
@@ -1348,6 +1348,7 @@ function padKey(k){
 function padPrev(){ if(padPrev_!=null) document.getElementById('pad-val').textContent=String(padPrev_).replace(/,/g,''); }
 function padDone(){
   const v=document.getElementById('pad-val').textContent; const n=parseFloat(v);
+  if(padTarget==='rest'){ closePad(); applyRestSec(n); return; }
   if(padTarget.startsWith('gym:')){ const pr=padTarget.split(':'); const ei=+pr[1],si=+pr[2],which=pr[3]; if(which==='w') gymWork[ei].sets[si].weight=isNaN(n)?null:n; else gymWork[ei].sets[si].reps=isNaN(n)?null:n; saveGymData(); closePad(); renderGym(); toast(t('t_saved')); return; }
   if(padTarget.startsWith('wchip')){ const i=parseInt(padTarget.slice(5)); const qb=DB.quickBtns(); qb[i]=Math.round(n)||0; qb.sort((a,b)=>a-b); DB.saveQuickBtns(qb); renderWaterTile(); closePad(); toast(t('t_quick_upd')); return; }
   if(padTarget.startsWith('set:')){ const id=padTarget.slice(4); const el=document.getElementById(id); if(el) el.value=v; if(typeof updateSetKcal==='function') updateSetKcal(); closePad(); autoSaveSet(); return; }
@@ -1815,7 +1816,7 @@ function avg(arr){ if(!arr||!arr.length) return '—'; return Math.round(arr.red
 function avgWater(){ const w=DB.water(); const vals=Object.values(w).map(d=>d&&d.total).filter(x=>x); return vals.length?Math.round(vals.slice(-7).reduce((s,x)=>s+x,0)/Math.min(7,vals.length)):'—'; }
 
 /* ===== レストタイマー（本番ネイティブサービス連携・Stage4②） ===== */
-let restEnd=0, restTotal=90, restTimer=null, _restDoneFired=false, REST_DEFAULT=90;
+let restEnd=0, restTotal=90, restTimer=null, _restDoneFired=false, REST_DEFAULT=(parseInt(localStorage.getItem('rest_sec'))||90);
 function startRest(label){
   restTotal=REST_DEFAULT; restEnd=Date.now()+restTotal*1000; _restDoneFired=false;
   document.getElementById('rest-label').textContent=label||t('rest_label');
@@ -1831,6 +1832,9 @@ function tickRest(){
 }
 function restAdd(){ restTotal+=30; restEnd+=30000; if(typeof AndroidBridge!=='undefined' && AndroidBridge.startTimer){ try{ AndroidBridge.startTimer(Math.max(0,Math.round((restEnd-Date.now())/1000))); }catch(e){} } tickRest(); }
 function restStop(){ clearInterval(restTimer); restTimer=null; document.getElementById('rest').classList.remove('show'); if(typeof AndroidBridge!=='undefined' && AndroidBridge.stopTimer){ try{ AndroidBridge.stopTimer(); }catch(e){} } }
+// 休憩時間をタップで変更（数値パッド流用）。設定値は既定としても保存。
+function openRestPad(){ padTarget='rest'; padFresh=true; padPrev_=null; document.getElementById('pad-lbl').textContent=t('rest_set_label'); document.getElementById('pad-val').textContent=String(restTotal||REST_DEFAULT); document.getElementById('pad-prev').classList.add('hide'); document.getElementById('pad').classList.add('open'); document.getElementById('pad-ov').classList.add('open'); }
+function applyRestSec(sec){ sec=Math.round(sec); if(isNaN(sec)||sec<5) sec=5; if(sec>3600) sec=3600; REST_DEFAULT=sec; localStorage.setItem('rest_sec', String(sec)); restTotal=sec; restEnd=Date.now()+sec*1000; _restDoneFired=false; if(typeof AndroidBridge!=='undefined' && AndroidBridge.startTimer){ try{ AndroidBridge.startTimer(sec); }catch(e){} } document.getElementById('rest').classList.add('show'); clearInterval(restTimer); tickRest(); restTimer=setInterval(tickRest,500); toast(t('t_rest_set', sec)); }
 // ネイティブから呼ばれる完了コールバック（またはJS到達0時）
 function onTimerDone(){
   if(_restDoneFired) return; _restDoneFired=true;
