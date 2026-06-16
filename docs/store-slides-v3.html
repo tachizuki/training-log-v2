@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PhysiqueLog ストアスライド v3（1080×1920 書き出し用）</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Inter:wght@700;900&display=swap');
+:root{--bg:#0d0f10;--surface:#16191d;--surface2:#1d2126;--line:#262b31;--acc:#c9f04d;--acc-dim:rgba(201,240,77,0.12);--text:#edf0f2;--sub:#8b939b;--faint:#545c64;--red:#f87171;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#05070a;font-family:'Noto Sans JP',sans-serif;display:flex;flex-direction:column;align-items:center;gap:24px;padding:24px;}
+.hint{color:#8b939b;font-size:13px;max-width:900px;text-align:center;line-height:1.7;}
+.hint b{color:#c9f04d;}
+/* 1080x1920 スライド。DevToolsで各 .slide を「ノードをキャプチャ」→ 正確なPNG */
+.slide{width:1080px;height:1920px;background:radial-gradient(120% 80% at 50% 0%, #14181c 0%, var(--bg) 55%);color:var(--text);position:relative;overflow:hidden;display:flex;flex-direction:column;padding:120px 96px;flex:0 0 auto;}
+.slide .badge{display:inline-block;align-self:flex-start;background:var(--acc-dim);border:1px solid var(--acc);color:var(--acc);font-weight:900;font-size:30px;padding:12px 28px;border-radius:999px;letter-spacing:.04em;}
+.slide h1{font-size:104px;font-weight:900;line-height:1.12;margin-top:40px;letter-spacing:-.02em;}
+.slide h1 .ac{color:var(--acc);}
+.slide .sub{font-size:40px;color:var(--sub);margin-top:34px;line-height:1.6;font-weight:400;}
+.slide .foot{margin-top:auto;display:flex;align-items:center;gap:20px;color:var(--faint);font-size:30px;}
+.dot{width:54px;height:54px;border-radius:14px;background:var(--acc);display:flex;align-items:center;justify-content:center;color:#0d0f10;font-weight:900;font-family:'Inter';font-size:30px;}
+.mock{margin-top:70px;background:var(--surface);border:1px solid var(--line);border-radius:36px;padding:54px;flex:1;display:flex;flex-direction:column;}
+.row{display:flex;align-items:center;gap:28px;padding:30px 0;border-bottom:1px solid var(--line);}
+.row:last-child{border-bottom:none;}
+.row .ic{font-size:54px;width:80px;text-align:center;}
+.row .tx{font-size:40px;font-weight:700;}
+.row .tx small{display:block;font-size:28px;color:var(--sub);font-weight:400;margin-top:6px;}
+.row .val{margin-left:auto;font-family:'Inter';font-weight:900;font-size:48px;}
+.g{color:var(--acc);} .r{color:var(--red);}
+/* hero */
+.hero{justify-content:center;align-items:center;text-align:center;}
+.logo{font-family:'Inter';font-weight:900;font-size:120px;letter-spacing:-.03em;}
+.logo .ac{color:var(--acc);}
+.hero .tag{font-size:52px;color:var(--text);margin-top:50px;font-weight:700;line-height:1.4;}
+.hero .tag2{font-size:36px;color:var(--sub);margin-top:30px;}
+.pill{display:flex;gap:18px;flex-wrap:wrap;justify-content:center;margin-top:64px;}
+.pill span{background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:18px 34px;font-size:32px;font-weight:700;color:var(--sub);}
+/* table */
+.rmt{width:100%;border-collapse:collapse;font-size:40px;margin-top:20px;}
+.rmt th{color:var(--faint);font-size:30px;text-align:right;padding:22px 14px;font-weight:700;border-bottom:2px solid var(--line);}
+.rmt th:first-child{text-align:left;}
+.rmt td{padding:26px 14px;text-align:right;border-bottom:1px solid var(--line);font-family:'Inter';font-weight:900;}
+.rmt td:first-child{text-align:left;font-family:'Noto Sans JP';color:var(--sub);font-weight:700;}
+.rmt tr.cur td{background:var(--acc-dim);}
+.rmt .ok{color:var(--acc);} .rmt .bad{color:var(--red);}
+/* chips */
+.chips{display:flex;flex-wrap:wrap;gap:20px;margin-bottom:40px;}
+.chip{padding:20px 36px;border-radius:999px;background:var(--surface2);border:1px solid var(--line);color:var(--sub);font-size:34px;font-weight:700;}
+.chip.on{background:var(--acc-dim);border-color:var(--acc);color:var(--acc);}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:24px;}
+.grid div{background:var(--surface2);border:1px solid var(--line);border-radius:22px;padding:40px;text-align:center;font-size:38px;font-weight:700;}
+/* premium compare */
+.cmp{display:flex;gap:34px;flex:1;}
+.col{flex:1;background:var(--surface);border:1px solid var(--line);border-radius:30px;padding:50px 40px;}
+.col.pro{border-color:var(--acc);background:linear-gradient(180deg, var(--acc-dim), var(--surface));}
+.col h3{font-size:46px;margin-bottom:30px;}
+.col.pro h3{color:var(--acc);}
+.col li{list-style:none;font-size:34px;line-height:1.5;padding:18px 0;border-bottom:1px solid var(--line);color:var(--text);}
+.col li:last-child{border-bottom:none;}
+.trial{margin-top:36px;background:var(--acc);color:#0d0f10;font-weight:900;font-size:40px;text-align:center;padding:30px;border-radius:20px;}
+/* chart */
+.chartwrap{flex:1;display:flex;align-items:center;justify-content:center;}
+svg{width:100%;height:auto;}
+.cap{font-size:34px;color:var(--sub);margin-top:30px;text-align:center;}
+</style>
+</head>
+<body>
+<div class="hint">📐 <b>1080×1920 書き出し用テンプレート</b>。各スライドをPNG化するには、ブラウザのDevToolsで該当の <b>.slide</b> 要素を右クリック →「ノードのスクリーンショットをキャプチャ」(Capture node screenshot)。テキストは自由に編集可。</div>
+
+<!-- 1 HERO -->
+<div class="slide hero">
+  <div class="logo">Physique<span class="ac">Log</span></div>
+  <div class="tag">大会で仕上げる人の、<br>体づくり記録アプリ</div>
+  <div class="tag2">体重・食事・水分・睡眠・筋トレを、ひとつに。</div>
+  <div class="pill"><span>⚖️ 体重</span><span>🍚 PFC</span><span>💧 水分</span><span>💪 筋トレ</span><span>🗺 大会ロードマップ</span></div>
+</div>
+
+<!-- 2 RECORD -->
+<div class="slide">
+  <span class="badge">毎日の記録</span>
+  <h1>毎日を、<span class="ac">ひとつに。</span></h1>
+  <div class="sub">体重・食事(PFC)・水分・睡眠・歩数・筋トレ。<br>1画面でサッと、自動保存。</div>
+  <div class="mock">
+    <div class="row"><span class="ic">⚖️</span><span class="tx">体重</span><span class="val g">60.0<span style="font-size:30px">kg</span></span></div>
+    <div class="row"><span class="ic">🍚</span><span class="tx">食事 PFC<small>kcal 自動計算</small></span><span class="val">2,180</span></div>
+    <div class="row"><span class="ic">💧</span><span class="tx">水分</span><span class="val">2.5<span style="font-size:30px">L</span></span></div>
+    <div class="row"><span class="ic">💪</span><span class="tx">筋トレ<small>部位・セット・レップ</small></span><span class="val g">記録</span></div>
+  </div>
+  <div class="foot"><span class="dot">2</span>記録はすべて無料</div>
+</div>
+
+<!-- 3 ROADMAP -->
+<div class="slide">
+  <span class="badge">⭐ 大会ロードマップ</span>
+  <h1>目標体重を、<br><span class="ac">週ごとに。</span></h1>
+  <div class="sub">大会日から逆算し、減量を週・月で按分。<br>「今週いるべき体重」が一目で分かる。</div>
+  <div class="mock">
+    <table class="rmt">
+      <tr><th>週</th><th>目標</th><th>実績</th></tr>
+      <tr><td>6/02-08</td><td>61.4</td><td class="ok">61.3 <small>-0.1</small></td></tr>
+      <tr><td>6/09-15</td><td>60.8</td><td class="ok">60.7 <small>-0.1</small></td></tr>
+      <tr class="cur"><td>6/16-22</td><td>60.2</td><td class="bad">60.6 <small>+0.4</small></td></tr>
+      <tr><td>6/23-29</td><td>59.6</td><td>—</td></tr>
+      <tr><td>6/30-7/06</td><td>59.0</td><td>—</td></tr>
+    </table>
+  </div>
+  <div class="foot"><span class="dot">3</span>初回14日間無料</div>
+</div>
+
+<!-- 4 ANALYSIS -->
+<div class="slide">
+  <span class="badge">🔍 体重変動分析</span>
+  <h1>なぜ増えた？<br><span class="ac">が分かる。</span></h1>
+  <div class="sub">前日の塩分・水分・炭水化物・カロリー・筋トレ・睡眠から、<br>増減の要因を毎日ひと目で。</div>
+  <div class="mock">
+    <div class="row"><span class="ic">📈</span><span class="tx r">前日比 +0.4kg<small>下の要因を確認</small></span></div>
+    <div class="row"><span class="ic">🧂</span><span class="tx">前日の塩分 9g（目標超）<small>むくみで増えやすい</small></span></div>
+    <div class="row"><span class="ic">🍚</span><span class="tx">前日の炭水化物 260g（多め）<small>糖質は水分を抱える</small></span></div>
+    <div class="row"><span class="ic">💪</span><span class="tx">前日に 脚 をトレ<small>大筋群は一時的に増えやすい</small></span></div>
+    <div class="row"><span class="ic">😴</span><span class="tx">当日の睡眠 5h（不足）<small>水分を溜めやすい</small></span></div>
+  </div>
+  <div class="foot"><span class="dot">4</span>無料で使えます</div>
+</div>
+
+<!-- 5 GYM -->
+<div class="slide">
+  <span class="badge">💪 筋トレ</span>
+  <h1>種目を、<span class="ac">サッと。</span></h1>
+  <div class="sub">部位別カテゴリ＋検索＋カスタム登録。<br>履歴カレンダーとレストタイマーも。</div>
+  <div class="mock">
+    <div class="chips"><span class="chip">胸</span><span class="chip">背中</span><span class="chip">肩</span><span class="chip">腕</span><span class="chip on">足</span><span class="chip">腹筋</span><span class="chip">有酸素</span></div>
+    <div class="grid"><div>バーベルスクワット</div><div>レッグプレス</div><div>レッグカール</div><div>ブルガリアン</div><div>ハックスクワット</div><div>＋ カスタム</div></div>
+  </div>
+  <div class="foot"><span class="dot">5</span>記録は無料</div>
+</div>
+
+<!-- 6 CHART -->
+<div class="slide">
+  <span class="badge">📈 データ</span>
+  <h1>推移を、<br><span class="ac">目標ラインと。</span></h1>
+  <div class="sub">期間グラフに、日毎に按分した目標体重ライン。<br>今いるべき体重との差が見える。</div>
+  <div class="mock">
+    <div class="chartwrap">
+      <svg viewBox="0 0 900 460" preserveAspectRatio="xMidYMid meet">
+        <path d="M40,120 L860,360" stroke="#f87171" stroke-width="4" stroke-dasharray="14 10" fill="none" opacity="0.85"/>
+        <path d="M40,110 L210,150 L380,140 L550,210 L720,250 L860,300" stroke="#c9f04d" stroke-width="7" fill="none" stroke-linecap="round"/>
+        <circle cx="860" cy="300" r="12" fill="#0d0f10" stroke="#c9f04d" stroke-width="7"/>
+        <circle cx="860" cy="360" r="9" fill="#f87171"/>
+        <text x="828" y="278" fill="#c9f04d" font-family="Inter" font-weight="900" font-size="34" text-anchor="end">60.6</text>
+        <text x="828" y="398" fill="#f87171" font-family="Inter" font-weight="900" font-size="30" text-anchor="end">目標 60.2</text>
+      </svg>
+    </div>
+    <div class="cap">実体重（緑）と日毎按分の目標（赤・点線）</div>
+  </div>
+  <div class="foot"><span class="dot">6</span>基本グラフは無料／目標ラインはプレミアム</div>
+</div>
+
+<!-- 7 PREMIUM -->
+<div class="slide">
+  <span class="badge">プラン</span>
+  <h1>記録は無料。<br><span class="ac">競技機能はプレミアム。</span></h1>
+  <div class="cmp" style="margin-top:80px;">
+    <div class="col">
+      <h3>無料</h3>
+      <ul>
+        <li>全記録（体重/食事/水分/筋トレ）</li>
+        <li>全期間の履歴・基本グラフ</li>
+        <li>体重変動分析</li>
+        <li>エクスポート/インポート</li>
+      </ul>
+    </div>
+    <div class="col pro">
+      <h3>⭐ プレミアム</h3>
+      <ul>
+        <li>🗺 大会ロードマップ（週次按分）</li>
+        <li>📈 目標体重ライン</li>
+        <li>📋 週次レポート</li>
+        <li>💪 筋トレ分析（1RM・停滞）</li>
+        <li>☁️ 複数端末クラウド同期</li>
+      </ul>
+      <div class="trial">初回 14日間 無料</div>
+    </div>
+  </div>
+  <div class="foot"><span class="dot">7</span>PhysiqueLog</div>
+</div>
+
+</body>
+</html>
