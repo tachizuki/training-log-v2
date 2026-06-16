@@ -1916,7 +1916,7 @@ function restStop(){ clearInterval(restTimer); restTimer=null; document.getEleme
 /* ===== 独立レストタイマー（プリセット＋カスタム・チェックとは無関係） ===== */
 const TM_PRESETS=[30,60,90,120,180];
 let tmSel=REST_DEFAULT;
-function tmLabel(s){ return s<60?(s+(LANG==='ja'?'秒':'s')):((s/60)+(LANG==='ja'?'分':'m')+(s%60?(s%60)+(LANG==='ja'?'秒':'s'):'')); }
+function tmLabel(s){ const m=Math.floor(s/60), sec=s%60; const MM=(LANG==='ja'?'分':'m'), SS=(LANG==='ja'?'秒':'s'); if(m<=0) return sec+SS; return m+MM+(sec?(sec+SS):''); }
 function renderTmPresets(){ const el=document.getElementById('tm-presets'); if(!el) return; el.innerHTML=TM_PRESETS.map(s=>'<button class="tm-chip'+(s===tmSel?' on':'')+'" onclick="tmPick('+s+')">'+tmLabel(s)+'</button>').join(''); }
 function tmPick(s){ tmSel=s; const c=document.getElementById('tm-custom'); if(c) c.value=s; renderTmPresets(); }
 function tmCustom(){ const v=parseInt(document.getElementById('tm-custom').value); tmSel=(isNaN(v)?tmSel:v); renderTmPresets(); }
