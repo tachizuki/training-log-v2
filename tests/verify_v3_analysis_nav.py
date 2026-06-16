@@ -29,6 +29,10 @@ with sync_playwright() as p:
     rec('AN-FACTORS', all(factors.values()) and nlines>=7, f'lines={nlines} {factors}')
     rec('AN-TRAIN-BIG', '足' in h or 'Leg' in h, 'big muscle named')
     rec('AN-TRAIN-2D', '2日前' in h or '2 days' in h, 'prev2 training shown')
+    rec('AN-NO-REMAIN', ('🎯' not in h) and ('残り' not in h), 'remaining-kcal line removed')
+    # ラベルは単一（体重変動分析のみ、今日の分析/サブlabel無し）
+    lbl=pg.evaluate("()=>{const t=document.querySelector('[data-i18n=analysis_title]'); const s=document.querySelector('[data-i18n=analysis_sub]'); return {title:t?t.textContent:'', subExists:!!s};}")
+    rec('AN-LABEL', ('体重変動分析' in lbl['title']) and ('今日の分析' not in lbl['title']) and (not lbl['subExists']), f"{lbl}")
     rec('AN-ERR', not errs, f'errs={errs[:2]}')
 
     # 今日ボタン: 今日は非表示、過去日は「↩今日へ」
