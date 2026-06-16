@@ -44,13 +44,15 @@ with sync_playwright() as p:
     rec('GF-PICKER', added and added['hasClass'] and added['check'], f'{added}')
     pg.evaluate("closeExSheet()")
 
-    # ② レストタイマーの時間入力（タップ→パッド→秒数設定・既定保存）
-    pg.evaluate("go('gym'); startRest('test')"); pg.wait_for_timeout(20)
-    pg.evaluate("openRestPad()"); pg.wait_for_timeout(20)
-    padopen=pg.evaluate("()=>document.getElementById('pad').classList.contains('open') && padTarget==='rest'")
-    pg.evaluate("padKey('1'); padKey('2'); padKey('0'); padDone()"); pg.wait_for_timeout(20)
-    restset=pg.evaluate("()=>({tot:restTotal, saved:localStorage.getItem('rest_sec'), shown:document.getElementById('rest').classList.contains('show')})")
-    rec('GF-REST', padopen and restset['tot']==120 and restset['saved']=='120' and restset['shown'], f'open={padopen} {restset}')
+    # ② 独立レストタイマー（プリセット＋カスタム→開始）。✓チェック/自動開始は廃止
+    pg.evaluate("go('gym'); openTimerSheet()"); pg.wait_for_timeout(20)
+    topen=pg.evaluate("()=>document.getElementById('timer-sheet').classList.contains('open') && document.querySelectorAll('#tm-presets .tm-chip').length>=5")
+    pg.evaluate("tmPick(120); startRestFromSheet()"); pg.wait_for_timeout(20)
+    tres=pg.evaluate("()=>({tot:restTotal, saved:localStorage.getItem('rest_sec'), shown:document.getElementById('rest').classList.contains('show'), sheetClosed:!document.getElementById('timer-sheet').classList.contains('open')})")
+    # セット行に✓チェックが無いこと（自動開始の撤去）
+    pg.evaluate("restStop(); gymWork=[{name:'ベンチプレス',sets:[{weight:60,reps:8}]}]; saveGymData(); renderGym();"); pg.wait_for_timeout(20)
+    nochk=pg.evaluate("()=>document.querySelectorAll('#gym-cards .chk').length===0")
+    rec('GF-TIMER', topen and tres['tot']==120 and tres['saved']=='120' and tres['shown'] and tres['sheetClosed'] and nochk, f'open={topen} {tres} nochk={nochk}')
     pg.evaluate("restStop()")
 
     # ⑧ 有酸素の種目別入力
