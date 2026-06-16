@@ -52,6 +52,21 @@ with sync_playwright() as p:
     rec('GF-REST', padopen and restset['tot']==120 and restset['saved']=='120' and restset['shown'], f'open={padopen} {restset}')
     pg.evaluate("restStop()")
 
+    # ⑧ 有酸素の種目別入力
+    pg.evaluate("curDate=logicalToday(); gymWork=[{name:'トレッドミル',sets:[]}]; saveGymData(); renderGym();"); pg.wait_for_timeout(30)
+    crows=pg.evaluate("()=>[...document.querySelectorAll('#gym-cards .crow .cl')].map(e=>e.textContent)")
+    ok_fields = ('時間' in crows and '速度' in crows and '傾斜' in crows and '消費カロリー' in crows) and pg.evaluate("()=>document.querySelectorAll('#gym-cards .srow').length===0")
+    pg.evaluate("openGymCardioPad(0,'speed')"); pg.wait_for_timeout(10)
+    pg.evaluate("padKey('8'); padDone()"); pg.wait_for_timeout(20)
+    cspeed=pg.evaluate("()=>DB.gym()[curDate].exercises[0].cardio.speed")
+    rec('GF-CARDIO', ok_fields and cspeed==8, f'fields={crows} speed={cspeed}')
+    # 水泳=時間/距離/消費カロリー、強度種目はセット維持（回帰）
+    pg.evaluate("gymWork=[{name:'水泳',sets:[]}]; saveGymData(); renderGym();"); pg.wait_for_timeout(20)
+    swim=pg.evaluate("()=>[...document.querySelectorAll('#gym-cards .crow .cl')].map(e=>e.textContent)")
+    pg.evaluate("gymWork=[{name:'ベンチプレス',sets:[{weight:60,reps:8}]}]; saveGymData(); renderGym();"); pg.wait_for_timeout(20)
+    strength=pg.evaluate("()=>document.querySelectorAll('#gym-cards .srow').length>0 && document.querySelectorAll('#gym-cards .crow').length===0")
+    rec('GF-CARDIO2', ('時間' in swim and '距離' in swim and '消費カロリー' in swim and '速度' not in swim) and strength, f'swim={swim} strengthOK={strength}')
+
     # ③ キーボードscroll: focusinハンドラでテキスト入力がscrollIntoView（関数存在＝エラーなし確認）
     rec('GF-KEY', not pg._errs, f'no page errors (focusin wired), errs={pg._errs[:2]}')
     pg.close(); b.close()

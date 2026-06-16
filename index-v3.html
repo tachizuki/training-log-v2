@@ -179,6 +179,12 @@ body{background:#000;color:var(--text);font-family:'Noto Sans JP',sans-serif;}
 .srow-del:active{color:#ef6b6b;}
 .gym-memo{width:100%;margin-top:12px;background:var(--surface);border:1px solid var(--line);border-radius:14px;color:var(--text);font-size:13px;padding:12px;min-height:70px;resize:none;outline:none;font-family:'Noto Sans JP';line-height:1.5;}
 .gym-memo:focus{border-color:var(--acc);}
+.cardio-tag{font-size:10px;font-weight:800;color:var(--acc);background:var(--acc-dim);border:1px solid rgba(201,240,77,0.4);border-radius:999px;padding:3px 9px;margin-left:auto;margin-right:8px;}
+.crow{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;border-top:1px solid var(--line);cursor:pointer;}
+.crow .cl{font-size:13px;color:var(--sub);font-weight:700;}
+.crow .cv{font-size:17px;font-weight:800;color:var(--text);}
+.crow .cv small{font-size:11px;color:var(--faint);font-weight:700;margin-left:2px;}
+.crow .cv .ph{color:var(--faint);}
 .ex-cell .del{position:absolute;top:4px;right:4px;width:20px;height:20px;border-radius:50%;background:#ef6b6b;color:#fff;border:none;font-size:11px;font-weight:900;display:none;align-items:center;justify-content:center;cursor:pointer;z-index:2;}
 #ex-sheet.editing .ex-cell .del{display:flex;}
 #ex-sheet.editing .ex-cell button{border-style:dashed;padding-right:26px;}
@@ -781,7 +787,7 @@ const I18N = {
     menu_title:'今日のメニュー', menu_note:'選んだ部位は「今日の記録」の筋トレ部位として保存されます',
     part_chest:'胸', part_back:'背中', part_shoulder:'肩', part_arm:'腕', part_leg:'足', part_abs:'腹筋', part_cardio:'有酸素', part_free:'自由',
     ex_title:'種目を追加', ex_note:'部位を選ぶか、検索／自由入力で追加', ex_search_ph:'種目を検索…', ex_edit:'編集', ex_done:'完了', ex_reset:'この部位をデフォルトに戻す', ex_add_btn:'追加', ex_add_to:'{0} に種目を追加', ex_empty:'種目がありません。下の自由入力で追加できます。', ex_search_result:'検索結果', confirm_reset_cat:'「{0}」の種目を初期状態に戻しますか？\n追加・削除した内容は失われます。', t_ex_removed:'{0} を削除', t_ex_reset:'{0} をデフォルトに戻しました', t_ex_added_cat:'{0} を {1} に追加', t_ex_pick_cat:'検索を消して部位を選んでください',
-    rest_label:'休憩中', rest_skip:'スキップ', filter_all:'すべて', gym_history:'筋トレ履歴', gym_history_note:'日付をタップするとその日の記録を開きます', gym_memo_ph:'メモ（種目の補足・調子・気づきなど）', rest_set_label:'休憩時間（秒）', t_rest_set:'休憩を{0}秒に設定 ✓',
+    rest_label:'休憩中', rest_skip:'スキップ', filter_all:'すべて', gym_history:'筋トレ履歴', gym_history_note:'日付をタップするとその日の記録を開きます', gym_memo_ph:'メモ（種目の補足・調子・気づきなど）', rest_set_label:'休憩時間（秒）', t_rest_set:'休憩を{0}秒に設定 ✓', cardio_tag:'有酸素', cf_time:'時間', cf_dist:'距離', cf_speed:'速度', cf_incline:'傾斜', cf_kcal:'消費カロリー',
     ob_skip:'スキップ', ob_next:'次へ', ob_start:'はじめる', back:'戻る',
     ob_s1_desc:'大会を目指す人の<strong>記録パートナー</strong>。<br>食事・水分・トレーニングを一元管理。',
     ob_s2_title:'毎日の<br>記録', ob_s2_f1:'体重・栄養', ob_s2_f1d:'PFCバランスとカロリーを記録', ob_s2_f2:'水分', ob_s2_f2d:'目標に対する達成率を管理', ob_s2_f3:'睡眠・歩数', ob_s2_f3d:'コンディションも記録に残せる',
@@ -836,7 +842,7 @@ const I18N = {
     menu_title:'Today\'s menu', menu_note:'The selected muscle group is saved to today\'s workout log',
     part_chest:'Chest', part_back:'Back', part_shoulder:'Shoulders', part_arm:'Arms', part_leg:'Legs', part_abs:'Abs', part_cardio:'Cardio', part_free:'Free',
     ex_title:'Add exercise', ex_note:'Pick a part, or search / type your own', ex_search_ph:'Search exercises…', ex_edit:'Edit', ex_done:'Done', ex_reset:'Reset this part to default', ex_add_btn:'Add', ex_add_to:'Add to {0}', ex_empty:'No exercises. Add one below.', ex_search_result:'Results', confirm_reset_cat:'Reset "{0}" exercises to default?\nYour added/removed items will be lost.', t_ex_removed:'Removed {0}', t_ex_reset:'Reset {0} to default', t_ex_added_cat:'Added {0} to {1}', t_ex_pick_cat:'Clear search and pick a part',
-    rest_label:'Resting', rest_skip:'Skip', filter_all:'All', gym_history:'Workout history', gym_history_note:'Tap a date to open that day', gym_memo_ph:'Notes (exercise details, condition, etc.)', rest_set_label:'Rest (seconds)', t_rest_set:'Rest set to {0}s ✓',
+    rest_label:'Resting', rest_skip:'Skip', filter_all:'All', gym_history:'Workout history', gym_history_note:'Tap a date to open that day', gym_memo_ph:'Notes (exercise details, condition, etc.)', rest_set_label:'Rest (seconds)', t_rest_set:'Rest set to {0}s ✓', cardio_tag:'Cardio', cf_time:'Time', cf_dist:'Distance', cf_speed:'Speed', cf_incline:'Incline', cf_kcal:'Calories',
     ob_skip:'Skip', ob_next:'Next', ob_start:'Get started', back:'Back',
     ob_s1_desc:'A <strong>logging partner</strong> for athletes.<br>Track food, water and training in one place.',
     ob_s2_title:'Daily<br>logging', ob_s2_f1:'Weight & nutrition', ob_s2_f1d:'Log PFC balance and calories', ob_s2_f2:'Water', ob_s2_f2d:'Track progress toward your goal', ob_s2_f3:'Sleep & steps', ob_s2_f3d:'Keep your condition on record',
@@ -1349,6 +1355,7 @@ function padPrev(){ if(padPrev_!=null) document.getElementById('pad-val').textCo
 function padDone(){
   const v=document.getElementById('pad-val').textContent; const n=parseFloat(v);
   if(padTarget==='rest'){ closePad(); applyRestSec(n); return; }
+  if(padTarget.startsWith('gymc:')){ const pr=padTarget.split(':'); const ei=+pr[1], key=pr[2]; gymWork[ei].cardio=gymWork[ei].cardio||{}; gymWork[ei].cardio[key]=isNaN(n)?null:n; saveGymData(); closePad(); renderGym(); toast(t('t_saved')); return; }
   if(padTarget.startsWith('gym:')){ const pr=padTarget.split(':'); const ei=+pr[1],si=+pr[2],which=pr[3]; if(which==='w') gymWork[ei].sets[si].weight=isNaN(n)?null:n; else gymWork[ei].sets[si].reps=isNaN(n)?null:n; saveGymData(); closePad(); renderGym(); toast(t('t_saved')); return; }
   if(padTarget.startsWith('wchip')){ const i=parseInt(padTarget.slice(5)); const qb=DB.quickBtns(); qb[i]=Math.round(n)||0; qb.sort((a,b)=>a-b); DB.saveQuickBtns(qb); renderWaterTile(); closePad(); toast(t('t_quick_upd')); return; }
   if(padTarget.startsWith('set:')){ const id=padTarget.slice(4); const el=document.getElementById(id); if(el) el.value=v; if(typeof updateSetKcal==='function') updateSetKcal(); closePad(); autoSaveSet(); return; }
@@ -1490,6 +1497,13 @@ function renderGymCards(){
   const wrap=document.getElementById('gym-cards');
   if(!gymWork.length){ wrap.innerHTML='<div class="empty">'+t('gym_empty')+'</div>'; return; }
   wrap.innerHTML=gymWork.map((ex,ei)=>{
+    const _ct=cardioType(ex.name);
+    if(_ct){
+      ex.cardio=ex.cardio||{};
+      const _f=CARDIO_FIELDS[_ct]||CARDIO_FIELDS.other;
+      const _rows=_f.map(f=>{ const raw=ex.cardio[f.key]; const val=(raw==null||raw==='')?'<span class="ph">—</span>':raw; return '<div class="crow" onclick="openGymCardioPad('+ei+',\''+f.key+'\')"><span class="cl">'+t(f.label)+'</span><span class="cv num">'+val+' <small>'+f.unit+'</small></span></div>'; }).join('');
+      return '<div class="card"><div class="ex-h"><span class="nm">'+(ex.name||t('ex_default'))+'</span><span class="cardio-tag">'+t('cardio_tag')+'</span><button class="ex-del-btn" onclick="gymDelEx('+ei+')" aria-label="delete">🗑</button></div>'+_rows+'</div>';
+    }
     const sets=(ex.sets||[]).map((s,si)=>{
       const w=(s.weight===''||s.weight==null)?'<span class="ph">—</span>':s.weight;
       const r=(s.reps==null||s.reps==='')?'<span class="ph">—</span>':s.reps;
@@ -1508,6 +1522,18 @@ function renderGymCards(){
 }
 function gymAddSet(ei){ gymWork[ei].sets=gymWork[ei].sets||[]; const last=gymWork[ei].sets[gymWork[ei].sets.length-1]; gymWork[ei].sets.push({weight:last?last.weight:null,reps:last?last.reps:null}); saveGymData(); renderGym(); }
 function gymDelSet(ei,si){ if(!gymWork[ei]||!gymWork[ei].sets) return; gymWork[ei].sets.splice(si,1); saveGymData(); renderGym(); }
+/* ===== 有酸素：種目タイプ別の入力項目（重量×レップではなく） ===== */
+const CARDIO_TYPE_MAP={'ランニング':'run','ウォーキング':'run','トレッドミル':'tread','水泳':'swim','自転車':'bike','エアロバイク':'bike','縄跳び':'other'};
+const CARDIO_FIELDS={
+  run:[{key:'time',label:'cf_time',unit:'分'},{key:'distance',label:'cf_dist',unit:'km'},{key:'kcal',label:'cf_kcal',unit:'kcal'}],
+  tread:[{key:'time',label:'cf_time',unit:'分'},{key:'speed',label:'cf_speed',unit:'km/h'},{key:'incline',label:'cf_incline',unit:'%'},{key:'kcal',label:'cf_kcal',unit:'kcal'}],
+  swim:[{key:'time',label:'cf_time',unit:'分'},{key:'distance',label:'cf_dist',unit:'m'},{key:'kcal',label:'cf_kcal',unit:'kcal'}],
+  bike:[{key:'time',label:'cf_time',unit:'分'},{key:'distance',label:'cf_dist',unit:'km'},{key:'kcal',label:'cf_kcal',unit:'kcal'}],
+  other:[{key:'time',label:'cf_time',unit:'分'},{key:'kcal',label:'cf_kcal',unit:'kcal'}],
+};
+const CARDIO_LABEL={time:'cf_time',distance:'cf_dist',speed:'cf_speed',incline:'cf_incline',kcal:'cf_kcal'};
+function cardioType(name){ if(!name) return null; if(CARDIO_TYPE_MAP[name]) return CARDIO_TYPE_MAP[name]; try{ if(!gymPresets) loadGymPresets(); if(gymPresets && gymPresets['有酸素'] && gymPresets['有酸素'].indexOf(name)>=0) return 'other'; }catch(e){} return null; }
+function openGymCardioPad(ei,key){ padTarget='gymc:'+ei+':'+key; padFresh=true; padPrev_=null; const cd=gymWork[ei].cardio||{}; const cur=(cd[key]!=null&&cd[key]!=='')?String(cd[key]):'0'; document.getElementById('pad-lbl').textContent=t(CARDIO_LABEL[key]||key); document.getElementById('pad-val').textContent=cur; document.getElementById('pad-prev').classList.add('hide'); document.getElementById('pad').classList.add('open'); document.getElementById('pad-ov').classList.add('open'); }
 function gymDelEx(ei){ if(!confirm(t('confirm_del_ex'))) return; gymWork.splice(ei,1); saveGymData(); renderGym(); }
 function gymCheck(ei,si){ const s=gymWork[ei].sets[si]; s.done=!s.done; saveGymData(); renderGym(); if(s.done) startRest(t('rest_next', gymWork[ei].name||'')); }
 function gymCopyPrev(ei){
