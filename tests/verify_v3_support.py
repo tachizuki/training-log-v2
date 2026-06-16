@@ -46,6 +46,11 @@ with sync_playwright() as p:
     sent=pg.evaluate("""()=>{ const c=AndroidBridge._calls.find(x=>x[0]==='httpPost'); if(!c) return null; try{ return {url:c[1], p:JSON.parse(c[2])}; }catch(e){ return {url:c[1], raw:c[2]}; } }""")
     ok_send = bool(sent) and 'script.google.com' in (sent.get('url') or '') and sent.get('p',{}).get('body')=='テスト本文です' and sent.get('p',{}).get('subject')=='テスト件名'
     rec('S-CONTACT-SEND', ok_send, f'gas call={sent}')
+    # 二重送信ガード: 応答前にもう一度押してもhttpPostは増えない
+    pg.evaluate("submitContact(); submitContact();"); pg.wait_for_timeout(20)
+    n_http=pg.evaluate("()=>AndroidBridge._calls.filter(c=>c[0]==='httpPost').length")
+    disabled=pg.evaluate("()=>document.getElementById('contact-send-btn').disabled")
+    rec('S-NO-DUP', n_http==1 and disabled, f'httpPost count={n_http} disabled={disabled}')
     # 送信成功コールバック → シートが閉じ、入力クリア
     pg.evaluate("onContactSent(true)"); pg.wait_for_timeout(30)
     after=pg.evaluate("()=>({open:document.getElementById('contact-sheet').classList.contains('open'), subj:document.getElementById('contact-subject').value, body:document.getElementById('contact-body').value})")

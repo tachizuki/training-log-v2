@@ -656,7 +656,7 @@ textarea.cf-in{resize:none;line-height:1.5;}
       </select>
       <input id="contact-subject" class="cf-in" type="text" maxlength="80" data-i18n-ph="contact_subject_ph" placeholder="タイトル">
       <textarea id="contact-body" class="cf-in" rows="5" data-i18n-ph="contact_body_ph" placeholder="内容を入力してください"></textarea>
-      <button class="prem-go" style="margin-top:12px;" onclick="submitContact()" data-i18n="contact_send">送信する</button>
+      <button class="prem-go" id="contact-send-btn" style="margin-top:12px;" onclick="submitContact()" data-i18n="contact_send">送信する</button>
     </div>
 
     <!-- 筋トレ履歴カレンダー シート -->
@@ -762,7 +762,7 @@ const I18N = {
     l_water_goal:'水分目標 (ml)', l_day_start:'1日の起点時刻', l_reminder:'リマインダー通知', off_empty:'空欄でオフ',
     btn_export:'📤 エクスポート', btn_import:'📥 インポート', data_note:'全データ（記録・水分・筋トレ・設定）をJSONで保存／復元します。無料で利用できます。',
     btn_review:'★ アプリを評価', btn_contact:'✉ お問い合わせ', support_note:'サインイン・購入・同期・通知は本番アプリ（Androidブリッジ）に接続されます。このプレビューはローカルデータで動作します。',
-    contact_title:'✉ お問い合わせ', contact_note:'不具合報告・機能要望・ご質問はこちらから。', contact_cat_bug:'🐛 不具合報告', contact_cat_feature:'💡 機能要望', contact_cat_payment:'💳 課金・サブスク', contact_cat_account:'👤 アカウント・データ', contact_cat_other:'❓ その他', contact_subject_ph:'タイトル（例：体重グラフが表示されない）', contact_body_ph:'内容を入力してください', contact_send:'送信する', contact_required:'種類・タイトル・内容をすべて入力してください',
+    contact_title:'✉ お問い合わせ', contact_note:'不具合報告・機能要望・ご質問はこちらから。', contact_cat_bug:'🐛 不具合報告', contact_cat_feature:'💡 機能要望', contact_cat_payment:'💳 課金・サブスク', contact_cat_account:'👤 アカウント・データ', contact_cat_other:'❓ その他', contact_subject_ph:'タイトル（例：体重グラフが表示されない）', contact_body_ph:'内容を入力してください', contact_send:'送信する', contact_sending:'送信中…', contact_required:'種類・タイトル・内容をすべて入力してください',
     btn_save_set:'設定を保存', lang_label:'言語', lang_auto:'自動',
     contest_lock:'🔒 大会ロードマップ・大会設定はプレミアム機能です', unlock_premium:'プレミアムで解放',
     prem_upgrade:'⭐ プレミアムにアップグレード', prem_member:'⭐ プレミアム会員 — すべての機能が解放されています', trial_btn:'14日間無料で試す',
@@ -817,7 +817,7 @@ const I18N = {
     l_water_goal:'Water goal (ml)', l_day_start:'Day start hour', l_reminder:'Reminder', off_empty:'Empty = off',
     btn_export:'📤 Export', btn_import:'📥 Import', data_note:'Back up & restore all data (logs, water, workouts, settings) as JSON. Free.',
     btn_review:'★ Rate app', btn_contact:'✉ Contact', support_note:'Sign-in, purchase, sync and notifications connect in the real app (Android bridge). This preview runs on local data.',
-    contact_title:'✉ Contact', contact_note:'Bug reports, feature requests and questions.', contact_cat_bug:'🐛 Bug report', contact_cat_feature:'💡 Feature request', contact_cat_payment:'💳 Billing / subscription', contact_cat_account:'👤 Account / data', contact_cat_other:'❓ Other', contact_subject_ph:'Subject (e.g. weight graph not showing)', contact_body_ph:'Type your message', contact_send:'Send', contact_required:'Please fill in category, subject and message',
+    contact_title:'✉ Contact', contact_note:'Bug reports, feature requests and questions.', contact_cat_bug:'🐛 Bug report', contact_cat_feature:'💡 Feature request', contact_cat_payment:'💳 Billing / subscription', contact_cat_account:'👤 Account / data', contact_cat_other:'❓ Other', contact_subject_ph:'Subject (e.g. weight graph not showing)', contact_body_ph:'Type your message', contact_send:'Send', contact_sending:'Sending…', contact_required:'Please fill in category, subject and message',
     btn_save_set:'Save settings', lang_label:'Language', lang_auto:'Auto',
     contest_lock:'🔒 Contest roadmap & settings are a Premium feature', unlock_premium:'Unlock with Premium',
     prem_upgrade:'⭐ Upgrade to Premium', prem_member:'⭐ Premium member — all features unlocked', trial_btn:'Try 14 days free',
@@ -1042,7 +1042,16 @@ const SUPPORT_EMAIL='physiquelog.support@gmail.com';
 const CONTACT_GAS_URL='https://script.google.com/macros/s/AKfycbwInqZSNJMbQMqNSXcGoLPdQd8EkI_BQqBS3nIH0r4hj4GlcHwGWfG6P11-KmN3maVeAQ/exec';
 function contactApp(){ document.getElementById('contact-sheet').classList.add('open'); document.getElementById('contact-ov').classList.add('open'); }
 function closeContactSheet(){ document.getElementById('contact-sheet').classList.remove('open'); document.getElementById('contact-ov').classList.remove('open'); }
+let contactSending=false, _contactTimer=null;
+function setContactSending(on){
+  contactSending=on;
+  const b=document.getElementById('contact-send-btn');
+  if(b){ b.disabled=on; b.textContent=on?t('contact_sending'):t('contact_send'); }
+  clearTimeout(_contactTimer);
+  if(on) _contactTimer=setTimeout(()=>setContactSending(false), 20000); // 応答が来ない場合の保険
+}
 function submitContact(){
+  if(contactSending) return; // 二重送信防止
   const cat=document.getElementById('contact-category').value;
   const subj=document.getElementById('contact-subject').value.trim();
   const body=document.getElementById('contact-body').value.trim();
@@ -1053,6 +1062,7 @@ function submitContact(){
     premium:((typeof isPremiumReal==='function'&&isPremiumReal())?'yes':'no'),
     lang:LANG, ua:(navigator.userAgent||'').slice(0,150) } };
   const js=JSON.stringify(payload);
+  setContactSending(true);
   // ① 実機: GASへブリッジ経由POST（メール通知）。結果は onContactSent。
   if(CONTACT_GAS_URL && bridge('httpPost', CONTACT_GAS_URL, js)) return;
   // ② ブラウザ: GASへ GET(no-cors)
@@ -1061,6 +1071,7 @@ function submitContact(){
   if(bridge('sendContactForm', js)) return;
   // ④ mailto
   try{ window.location.href='mailto:'+SUPPORT_EMAIL+'?subject='+encodeURIComponent('['+cat+'] '+subj)+'&body='+encodeURIComponent(body); }catch(e){}
+  setContactSending(false);
   toast(t('t_contact_app'));
 }
 /* 本番ブリッジからのコールバック（実機ではここに繋がる） */
@@ -1134,7 +1145,7 @@ let _tt; function toast(msg){ const t=document.getElementById('toast'); t.innerH
 // 本番ネイティブが呼ぶトースト（クラウド保存/通知設定/課金メッセージ等）。第2引数isErrorは現状未使用
 function showToast(msg, isError){ toast(msg); }
 // お問い合わせ送信結果のコールバック（sendContactForm後にネイティブが呼ぶ）
-function onContactSent(ok, msg){ if(ok){ try{ closeContactSheet(); document.getElementById('contact-subject').value=''; document.getElementById('contact-body').value=''; }catch(e){} } toast(ok ? t('t_contact_sent') : (msg || t('t_contact_fail'))); }
+function onContactSent(ok, msg){ setContactSending(false); if(ok){ try{ closeContactSheet(); document.getElementById('contact-subject').value=''; document.getElementById('contact-body').value=''; }catch(e){} } toast(ok ? t('t_contact_sent') : (msg || t('t_contact_fail'))); }
 
 /* ===== 今日 描画 ===== */
 const WD=['日','月','火','水','木','金','土'];
