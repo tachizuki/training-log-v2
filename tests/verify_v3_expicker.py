@@ -8,8 +8,9 @@ def rec(tc,ok,detail=''): results[tc]=(bool(ok),detail)
 with sync_playwright() as p:
     b=p.chromium.launch(headless=True,channel='msedge')
     def newpage():
-        pg=b.new_page(viewport={'width':412,'height':915}); pg._errs=[]
+        pg=b.new_page(viewport={'width':412,'height':915}); pg._errs=[]; pg._dialog='accept'
         pg.on('pageerror',lambda e:pg._errs.append(str(e)))
+        pg.on('dialog', lambda d: d.accept() if pg._dialog=='accept' else d.dismiss())
         pg.goto(URI,wait_until='load'); pg.evaluate('obFinish()'); pg.evaluate("go('gym'); curDate=logicalToday();")
         return pg
 
@@ -44,10 +45,19 @@ with sync_playwright() as p:
     deleted=pg.evaluate("()=>{const saved=JSON.parse(localStorage.getItem('gym_presets')); return !(saved['胸']||[]).includes('マイベンチ');}")
     rec('E-DEL', editing and deleted, f'editing={editing} deleted={deleted}')
 
-    # デフォルトに戻す
+    # 戻す確認: キャンセル時は戻らない
+    pg._dialog='dismiss'
     pg.evaluate("exDel('ベンチプレス'); exResetCat()"); pg.wait_for_timeout(30)
+    not_reset=pg.evaluate("()=>!JSON.parse(localStorage.getItem('gym_presets'))['胸'].includes('ベンチプレス')")
+    rec('E-RESET-CANCEL', not_reset, 'dismiss -> not reset')
+    # 戻す確認: OK時は戻る
+    pg._dialog='accept'
+    pg.evaluate("exResetCat()"); pg.wait_for_timeout(30)
     reset_ok=pg.evaluate("()=>JSON.parse(localStorage.getItem('gym_presets'))['胸'].includes('ベンチプレス')")
-    rec('E-RESET', reset_ok, 'reset restores defaults')
+    rec('E-RESET', reset_ok, 'accept -> reset restores defaults')
+    # ✕ボタンがセル内側に配置（負オフセットでない＝見切れ対策）
+    delpos=pg.evaluate("()=>{const d=document.querySelector('.ex-cell .del'); const cs=getComputedStyle(d); return {top:cs.top, right:cs.right};}")
+    rec('E-DELPOS', delpos['top']=='4px' and delpos['right']=='4px', f'del pos={delpos}')
 
     # 種目を選ぶ→gymWorkに追加＋シート閉じる
     pg.evaluate("exToggleEdit()") # 編集解除
@@ -55,6 +65,10 @@ with sync_playwright() as p:
     pg.evaluate("pickEx('ベンチプレス')"); pg.wait_for_timeout(30)
     pick=pg.evaluate("()=>({len:gymWork.length, last:gymWork[gymWork.length-1]&&gymWork[gymWork.length-1].name, closed:!document.getElementById('ex-sheet').classList.contains('open')})")
     rec('E-PICK', pick['len']==n0+1 and pick['last']=='ベンチプレス' and pick['closed'], f"{pick}")
+    # 前回コピーボタンのスタイル（既定ボタンでなくテーマ適用＝枠線あり）＋ 削除アイコン別クラス
+    pg.evaluate("curDate=logicalToday(); gymWork=[{name:'ベンチプレス',sets:[{weight:60,reps:8}]}]; saveGymData(); renderGym();"); pg.wait_for_timeout(30)
+    btn=pg.evaluate("()=>{const cp=document.querySelector('.copy-prev'); const del=document.querySelector('.ex-del-btn'); if(!cp) return null; const cs=getComputedStyle(cp); return {bw:cs.borderTopWidth, hasDel:!!del, txt:cp.textContent.trim()};}")
+    rec('E-COPYBTN', btn and btn['bw']!='0px' and btn['hasDel'], f"{btn}")
     rec('E-ERR', not pg._errs, f'errs={pg._errs[:2]}')
     pg.close()
 
