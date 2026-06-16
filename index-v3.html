@@ -155,6 +155,28 @@ body{background:#000;color:var(--text);font-family:'Noto Sans JP',sans-serif;}
 .menu-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
 .menu-grid button{height:56px;background:var(--surface);border:1px solid var(--line);border-radius:13px;color:var(--text);font-size:13px;font-weight:700;cursor:pointer;font-family:'Noto Sans JP';}
 .menu-grid button.sel{background:var(--acc-dim);border-color:var(--acc);color:var(--acc);}
+/* 種目追加ピッカー */
+.ex-head{display:flex;align-items:baseline;justify-content:space-between;}
+.ex-edit{font-size:12px;font-weight:700;color:var(--sub);background:none;border:none;cursor:pointer;font-family:'Noto Sans JP';}
+.ex-edit.on{color:var(--acc);}
+.ex-search{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:9px 12px;margin:10px 0 12px;}
+.ex-search input{flex:1;background:none;border:none;outline:none;color:var(--text);font-size:13px;font-family:'Noto Sans JP';}
+.ex-search .ic{color:var(--faint);font-size:14px;}
+.ex-cats{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:10px;}
+.ex-cat{padding:7px 13px;border-radius:999px;background:var(--surface);border:1px solid var(--line);color:var(--sub);font-size:12.5px;font-weight:700;cursor:pointer;font-family:'Noto Sans JP';}
+.ex-cat.on{background:var(--acc-dim);border-color:var(--acc);color:var(--acc);}
+.ex-glabel{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--faint);margin:2px 2px 8px;}
+.ex-glabel .rst{color:var(--sub);cursor:pointer;text-decoration:underline;}
+.ex-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;height:248px;overflow-y:auto;align-content:start;}
+.ex-cell{position:relative;}
+.ex-cell button{width:100%;min-height:50px;background:var(--surface);border:1px solid var(--line);border-radius:13px;color:var(--text);font-size:12.5px;font-weight:700;cursor:pointer;padding:6px 8px;line-height:1.3;font-family:'Noto Sans JP';}
+.ex-cell .del{position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;background:#ef6b6b;color:#fff;border:2px solid #15181c;font-size:12px;font-weight:900;display:none;align-items:center;justify-content:center;cursor:pointer;}
+#ex-sheet.editing .ex-cell .del{display:flex;}
+#ex-sheet.editing .ex-cell button{border-style:dashed;}
+.ex-empty{grid-column:1/-1;color:var(--faint);font-size:12px;text-align:center;padding:30px 0;}
+.ex-custom{display:flex;gap:8px;margin-top:12px;border-top:1px solid var(--line);padding-top:12px;}
+.ex-custom input{flex:1;background:var(--surface);border:1px solid var(--line);border-radius:12px;color:var(--text);font-size:13px;padding:10px 12px;outline:none;font-family:'Noto Sans JP';}
+.ex-custom .addbtn{background:var(--acc);color:#0d0f10;border:none;border-radius:12px;font-weight:900;font-size:13px;padding:0 16px;cursor:pointer;font-family:'Noto Sans JP';}
 .insight{padding:16px;border-left:3px solid var(--acc);background:linear-gradient(90deg,var(--acc-dim),transparent 60%);border-radius:0 16px 16px 0;margin-bottom:10px;font-size:13px;line-height:1.8;color:var(--sub);}
 .insight b{color:var(--text);}
 .insight .ok{color:var(--good);font-weight:700;}
@@ -604,9 +626,13 @@ body{background:#000;color:var(--text);font-family:'Noto Sans JP',sans-serif;}
     <!-- 種目追加シート -->
     <div class="sheet-ov" id="ex-ov" onclick="closeExSheet()"></div>
     <div class="sheet" id="ex-sheet">
-      <h3 data-i18n="ex_title">種目を追加</h3>
-      <div class="note" data-i18n="ex_note">よく使う種目から選択（プリセット）</div>
-      <div class="menu-grid" id="ex-grid"></div>
+      <div class="ex-head"><h3 data-i18n="ex_title">種目を追加</h3><button class="ex-edit" id="ex-edit-btn" onclick="exToggleEdit()" data-i18n="ex_edit">編集</button></div>
+      <div class="note" data-i18n="ex_note">部位を選ぶか、検索／自由入力で追加</div>
+      <div class="ex-search"><span class="ic">🔍</span><input id="ex-q" type="text" data-i18n-ph="ex_search_ph" placeholder="種目を検索…" oninput="exSearch()"></div>
+      <div class="ex-cats" id="ex-cats"></div>
+      <div class="ex-glabel"><span id="ex-glabel"></span><span class="rst" id="ex-reset" onclick="exResetCat()" data-i18n="ex_reset">この部位をデフォルトに戻す</span></div>
+      <div class="ex-grid" id="ex-grid"></div>
+      <div class="ex-custom"><input id="ex-cust" type="text" placeholder=""><button class="addbtn" onclick="exAddCustom()" data-i18n="ex_add_btn">追加</button></div>
     </div>
 
     <!-- 筋トレ履歴カレンダー シート -->
@@ -721,7 +747,7 @@ const I18N = {
     confirm:'確定', next:'次へ', copy_prev:'前回コピー', prev:'前回', sw_stop:'終了', meal_input:'食事を入力', add_set:'＋ セットを追加', add_ex:'＋ 種目を追加',
     menu_title:'今日のメニュー', menu_note:'選んだ部位は「今日の記録」の筋トレ部位として保存されます',
     part_chest:'胸', part_back:'背中', part_shoulder:'肩', part_arm:'腕', part_leg:'足', part_abs:'腹筋', part_cardio:'有酸素', part_free:'自由',
-    ex_title:'種目を追加', ex_note:'よく使う種目から選択（プリセット）',
+    ex_title:'種目を追加', ex_note:'部位を選ぶか、検索／自由入力で追加', ex_search_ph:'種目を検索…', ex_edit:'編集', ex_done:'完了', ex_reset:'この部位をデフォルトに戻す', ex_add_btn:'追加', ex_add_to:'{0} に種目を追加', ex_empty:'種目がありません。下の自由入力で追加できます。', ex_search_result:'検索結果', t_ex_removed:'{0} を削除', t_ex_reset:'{0} をデフォルトに戻しました', t_ex_added_cat:'{0} を {1} に追加', t_ex_pick_cat:'検索を消して部位を選んでください',
     rest_label:'休憩中', rest_skip:'スキップ', filter_all:'すべて', gym_history:'筋トレ履歴', gym_history_note:'日付をタップするとその日の記録を開きます',
     ob_skip:'スキップ', ob_next:'次へ', ob_start:'はじめる', back:'戻る',
     ob_s1_desc:'大会を目指す人の<strong>記録パートナー</strong>。<br>食事・水分・トレーニングを一元管理。',
@@ -770,7 +796,7 @@ const I18N = {
     confirm:'OK', next:'Next', copy_prev:'Copy last', prev:'Prev', sw_stop:'Stop', meal_input:'Enter meal', add_set:'＋ Add set', add_ex:'＋ Add exercise',
     menu_title:'Today\'s menu', menu_note:'The selected muscle group is saved to today\'s workout log',
     part_chest:'Chest', part_back:'Back', part_shoulder:'Shoulders', part_arm:'Arms', part_leg:'Legs', part_abs:'Abs', part_cardio:'Cardio', part_free:'Free',
-    ex_title:'Add exercise', ex_note:'Pick from your presets',
+    ex_title:'Add exercise', ex_note:'Pick a part, or search / type your own', ex_search_ph:'Search exercises…', ex_edit:'Edit', ex_done:'Done', ex_reset:'Reset this part to default', ex_add_btn:'Add', ex_add_to:'Add to {0}', ex_empty:'No exercises. Add one below.', ex_search_result:'Results', t_ex_removed:'Removed {0}', t_ex_reset:'Reset {0} to default', t_ex_added_cat:'Added {0} to {1}', t_ex_pick_cat:'Clear search and pick a part',
     rest_label:'Resting', rest_skip:'Skip', filter_all:'All', gym_history:'Workout history', gym_history_note:'Tap a date to open that day',
     ob_skip:'Skip', ob_next:'Next', ob_start:'Get started', back:'Back',
     ob_s1_desc:'A <strong>logging partner</strong> for athletes.<br>Track food, water and training in one place.',
@@ -1391,17 +1417,82 @@ function gymCopyPrev(ei){
   for(const d of dates){ const ex=(g[d].exercises||[]).find(e=>e.name===name); if(ex&&ex.sets&&ex.sets.length){ gymWork[ei].sets=ex.sets.map(s=>({weight:s.weight,reps:s.reps})); saveGymData(); renderGym(); toast(t('t_copied_prev', d.slice(5).replace('-','/'))); return; } }
   toast(t('t_no_prev'));
 }
-function gymPresetList(){
-  let arr=[]; try{ const p=JSON.parse(localStorage.getItem('gym_presets')||'null'); if(Array.isArray(p)) arr=p.map(x=>typeof x==='string'?x:(x&&x.name)).filter(Boolean);}catch(e){}
-  const defaults=['ベンチプレス','スクワット','デッドリフト','ショルダープレス','ラットプルダウン','サイドレイズ','アームカール','レッグプレス'];
-  return arr.length?arr:defaults;
+/* ===== 種目プリセット（カテゴリ別。旧アプリと同形 {部位:[種目]}） ===== */
+const EX_DEFAULTS={
+  '胸':['ベンチプレス','ダンベルフライ','ケーブルクロスオーバー','インクラインベンチプレス','ディップス','ペックデック','インクラインダンベルフライ'],
+  '背中':['デッドリフト','ラットプルダウン','チンニング','ワンハンドロウ','シーテッドロウ','ベントオーバーロウ','バックエクステンション','Tバーロウ'],
+  '肩':['ダンベルショルダープレス','サイドレイズ','フロントレイズ','リアレイズ','アーノルドプレス','フェイスプル','バーベルショルダープレス'],
+  '腕':['バーベルカール','ダンベルカール','ハンマーカール','スカルクラッシャー','トライセプスプッシュダウン','クローズグリップベンチ','インクラインカール'],
+  '足':['バーベルスクワット','ハックスクワット','レッグプレス','ブルガリアンスクワット','レッグエクステンション','レッグカール','アウターサイ','ルーマニアンデッドリフト'],
+  '腹筋':['クランチ','レッグレイズ','プランク','ロシアンツイスト','アブローラー','ハンギングレッグレイズ'],
+  '有酸素':['ランニング','ウォーキング','自転車','トレッドミル','縄跳び','水泳','エアロバイク'],
+};
+let gymPresets=null, exCat=null, exEdit=false, exSearching=false;
+function loadGymPresets(){
+  let p=null; try{ p=JSON.parse(localStorage.getItem('gym_presets')||'null'); }catch(e){}
+  if(!p || typeof p!=='object' || Array.isArray(p)){
+    gymPresets=JSON.parse(JSON.stringify(EX_DEFAULTS));
+    if(Array.isArray(p) && p.length){ gymPresets['その他']=p.map(x=>typeof x==='string'?x:(x&&x.name)).filter(Boolean); } // 旧フラット移行
+    saveGymPresets();
+  } else {
+    gymPresets=p;
+    let changed=false; // 既定カテゴリが欠けていれば補完（後方互換）
+    Object.keys(EX_DEFAULTS).forEach(c=>{ if(!gymPresets[c]){ gymPresets[c]=EX_DEFAULTS[c].slice(); changed=true; } });
+    if(changed) saveGymPresets();
+  }
+  return gymPresets;
 }
+function saveGymPresets(){ try{ localStorage.setItem('gym_presets', JSON.stringify(gymPresets)); }catch(e){} }
+function exCats(){ return Object.keys(gymPresets); }
 function openExSheet(){
-  const grid=document.getElementById('ex-grid'); grid.innerHTML='';
-  gymPresetList().forEach(n=>{ const b=document.createElement('button'); b.textContent=n; b.onclick=()=>pickEx(n); grid.appendChild(b); });
+  loadGymPresets(); exEdit=false; exSearching=false;
+  document.getElementById('ex-sheet').classList.remove('editing');
+  document.getElementById('ex-edit-btn').classList.remove('on');
+  document.getElementById('ex-edit-btn').textContent=t('ex_edit');
+  document.getElementById('ex-q').value='';
+  const cats=exCats(); if(!exCat || !gymPresets[exCat]){ exCat=localStorage.getItem('ex_last_cat'); if(!exCat||!gymPresets[exCat]) exCat=cats[0]; }
+  exRenderCats(); exShowCat(exCat);
   document.getElementById('ex-sheet').classList.add('open'); document.getElementById('ex-ov').classList.add('open');
 }
 function closeExSheet(){ document.getElementById('ex-sheet').classList.remove('open'); document.getElementById('ex-ov').classList.remove('open'); }
+function exRenderCats(){
+  document.getElementById('ex-cats').innerHTML=exCats().map(c=>'<div class="ex-cat'+(c===exCat&&!exSearching?' on':'')+'" onclick="exShowCat(\''+c.replace(/'/g,"\\'")+'\')">'+c+'</div>').join('');
+}
+function exShowCat(c){
+  exCat=c; exSearching=false; localStorage.setItem('ex_last_cat',c);
+  document.getElementById('ex-q').value='';
+  document.getElementById('ex-glabel').textContent=c;
+  document.getElementById('ex-cust').placeholder=t('ex_add_to', c);
+  document.getElementById('ex-reset').style.visibility='visible';
+  exRenderCats(); exRenderGrid(gymPresets[c]||[]);
+}
+function exRenderGrid(list){
+  const g=document.getElementById('ex-grid');
+  if(!list.length){ g.innerHTML='<div class="ex-empty">'+t('ex_empty')+'</div>'; return; }
+  g.innerHTML=list.map(n=>{ const e=n.replace(/'/g,"\\'"); return '<div class="ex-cell"><button onclick="pickEx(\''+e+'\')">'+n+'</button><div class="del" onclick="event.stopPropagation();exDel(\''+e+'\')">✕</div></div>'; }).join('');
+}
+function exSearch(){
+  const q=document.getElementById('ex-q').value.trim();
+  if(!q){ exShowCat(exCat); return; }
+  exSearching=true; document.querySelectorAll('.ex-cat').forEach(e=>e.classList.remove('on'));
+  document.getElementById('ex-glabel').textContent=t('ex_search_result')+'：'+q;
+  document.getElementById('ex-reset').style.visibility='hidden';
+  const all=[]; exCats().forEach(c=>(gymPresets[c]||[]).forEach(n=>{ if(n.indexOf(q)>=0 && all.indexOf(n)<0) all.push(n); }));
+  exRenderGrid(all);
+}
+function exToggleEdit(){ exEdit=!exEdit; document.getElementById('ex-sheet').classList.toggle('editing',exEdit); const b=document.getElementById('ex-edit-btn'); b.classList.toggle('on',exEdit); b.textContent=exEdit?t('ex_done'):t('ex_edit'); }
+function exDel(n){
+  if(exSearching){ exCats().forEach(c=>{ gymPresets[c]=(gymPresets[c]||[]).filter(x=>x!==n); }); saveGymPresets(); exSearch(); }
+  else { gymPresets[exCat]=(gymPresets[exCat]||[]).filter(x=>x!==n); saveGymPresets(); exRenderGrid(gymPresets[exCat]); }
+  toast(t('t_ex_removed', n));
+}
+function exResetCat(){ if(!exCat) return; gymPresets[exCat]=(EX_DEFAULTS[exCat]||[]).slice(); saveGymPresets(); exRenderGrid(gymPresets[exCat]); toast(t('t_ex_reset', exCat)); }
+function exAddCustom(){
+  const inp=document.getElementById('ex-cust'); const v=inp.value.trim(); if(!v) return;
+  if(exSearching){ toast(t('t_ex_pick_cat')); return; }
+  if((gymPresets[exCat]||[]).indexOf(v)<0){ (gymPresets[exCat]=gymPresets[exCat]||[]).push(v); saveGymPresets(); }
+  inp.value=''; exRenderGrid(gymPresets[exCat]); toast(t('t_ex_added_cat', v, exCat));
+}
 function pickEx(name){ gymWork.push({name,sets:[{weight:null,reps:null}]}); saveGymData(); closeExSheet(); renderGym(); toast(t('t_added', name)); }
 function openGymPad(ei,si,which){
   padTarget='gym:'+ei+':'+si+':'+which; padFresh=true;
