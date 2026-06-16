@@ -9,7 +9,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.media.AudioAttributes
-import android.media.RingtoneManager
+import android.net.Uri
 import android.os.Build
 import android.os.CountDownTimer
 import android.os.IBinder
@@ -28,7 +28,7 @@ class TimerService : Service() {
 
     companion object {
         const val CHANNEL_ID      = "timer_channel"
-        const val DONE_CHANNEL_ID = "timer_done_channel_v4" // v4: USAGE_NOTIFICATION（着信/通知音量で鳴る）＋チャンネル再作成
+        const val DONE_CHANNEL_ID = "timer_done_channel_v5" // v5: 同梱キッチンタイマー音(res/raw/timer_done)＋チャンネル再作成
         const val NOTIF_ID        = 2001
         const val DONE_NOTIF_ID   = 2002
         const val ACTION_START    = "com.traininglog.app.TIMER_START"
@@ -205,10 +205,8 @@ class TimerService : Service() {
                 .setUsage(AudioAttributes.USAGE_NOTIFICATION)
                 .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
                 .build()
-            // 通知音URIを段階的にフォールバック（端末によりnullの場合に無音チャンネル化するのを防ぐ）
-            val soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
-                ?: RingtoneManager.getActualDefaultRingtoneUri(this, RingtoneManager.TYPE_RINGTONE)
-                ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
+            // 同梱のキッチンタイマー音（res/raw/timer_done.mp3 = OtoLogic「キッチンタイマー03」）
+            val soundUri = Uri.parse("android.resource://" + packageName + "/raw/timer_done")
             val doneChannel = NotificationChannel(
                 DONE_CHANNEL_ID, "タイマー完了",
                 NotificationManager.IMPORTANCE_HIGH
