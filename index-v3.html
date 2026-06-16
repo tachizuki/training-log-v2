@@ -463,6 +463,7 @@ textarea.cf-in{resize:none;line-height:1.5;}
           <span class="d num" id="gym-sel-date"></span>
           <button onclick="shiftGymDay(1)">›</button>
         </div>
+        <button class="cal-btn" onclick="gymShare()" title="シェア">📷</button>
         <button class="cal-btn" onclick="openGymCal()" title="履歴">📅</button>
       </div>
 
@@ -787,7 +788,7 @@ const I18N = {
     menu_title:'今日のメニュー', menu_note:'選んだ部位は「今日の記録」の筋トレ部位として保存されます',
     part_chest:'胸', part_back:'背中', part_shoulder:'肩', part_arm:'腕', part_leg:'足', part_abs:'腹筋', part_cardio:'有酸素', part_free:'自由',
     ex_title:'種目を追加', ex_note:'部位を選ぶか、検索／自由入力で追加', ex_search_ph:'種目を検索…', ex_edit:'編集', ex_done:'完了', ex_reset:'この部位をデフォルトに戻す', ex_add_btn:'追加', ex_add_to:'{0} に種目を追加', ex_empty:'種目がありません。下の自由入力で追加できます。', ex_search_result:'検索結果', confirm_reset_cat:'「{0}」の種目を初期状態に戻しますか？\n追加・削除した内容は失われます。', t_ex_removed:'{0} を削除', t_ex_reset:'{0} をデフォルトに戻しました', t_ex_added_cat:'{0} を {1} に追加', t_ex_pick_cat:'検索を消して部位を選んでください',
-    rest_label:'休憩中', rest_skip:'スキップ', filter_all:'すべて', gym_history:'筋トレ履歴', gym_history_note:'日付をタップするとその日の記録を開きます', gym_memo_ph:'メモ（種目の補足・調子・気づきなど）', rest_set_label:'休憩時間（秒）', t_rest_set:'休憩を{0}秒に設定 ✓', cardio_tag:'有酸素', cf_time:'時間', cf_dist:'距離', cf_speed:'速度', cf_incline:'傾斜', cf_kcal:'消費カロリー',
+    rest_label:'休憩中', rest_skip:'スキップ', filter_all:'すべて', gym_history:'筋トレ履歴', gym_history_note:'日付をタップするとその日の記録を開きます', gym_memo_ph:'メモ（種目の補足・調子・気づきなど）', rest_set_label:'休憩時間（秒）', t_rest_set:'休憩を{0}秒に設定 ✓', cardio_tag:'有酸素', cf_time:'時間', cf_dist:'距離', cf_speed:'速度', cf_incline:'傾斜', cf_kcal:'消費カロリー', t_no_gym_share:'この日の筋トレ記録がありません', t_share_open:'共有メニューを開きます…', t_share_fail:'シェアに失敗しました',
     ob_skip:'スキップ', ob_next:'次へ', ob_start:'はじめる', back:'戻る',
     ob_s1_desc:'大会を目指す人の<strong>記録パートナー</strong>。<br>食事・水分・トレーニングを一元管理。',
     ob_s2_title:'毎日の<br>記録', ob_s2_f1:'体重・栄養', ob_s2_f1d:'PFCバランスとカロリーを記録', ob_s2_f2:'水分', ob_s2_f2d:'目標に対する達成率を管理', ob_s2_f3:'睡眠・歩数', ob_s2_f3d:'コンディションも記録に残せる',
@@ -842,7 +843,7 @@ const I18N = {
     menu_title:'Today\'s menu', menu_note:'The selected muscle group is saved to today\'s workout log',
     part_chest:'Chest', part_back:'Back', part_shoulder:'Shoulders', part_arm:'Arms', part_leg:'Legs', part_abs:'Abs', part_cardio:'Cardio', part_free:'Free',
     ex_title:'Add exercise', ex_note:'Pick a part, or search / type your own', ex_search_ph:'Search exercises…', ex_edit:'Edit', ex_done:'Done', ex_reset:'Reset this part to default', ex_add_btn:'Add', ex_add_to:'Add to {0}', ex_empty:'No exercises. Add one below.', ex_search_result:'Results', confirm_reset_cat:'Reset "{0}" exercises to default?\nYour added/removed items will be lost.', t_ex_removed:'Removed {0}', t_ex_reset:'Reset {0} to default', t_ex_added_cat:'Added {0} to {1}', t_ex_pick_cat:'Clear search and pick a part',
-    rest_label:'Resting', rest_skip:'Skip', filter_all:'All', gym_history:'Workout history', gym_history_note:'Tap a date to open that day', gym_memo_ph:'Notes (exercise details, condition, etc.)', rest_set_label:'Rest (seconds)', t_rest_set:'Rest set to {0}s ✓', cardio_tag:'Cardio', cf_time:'Time', cf_dist:'Distance', cf_speed:'Speed', cf_incline:'Incline', cf_kcal:'Calories',
+    rest_label:'Resting', rest_skip:'Skip', filter_all:'All', gym_history:'Workout history', gym_history_note:'Tap a date to open that day', gym_memo_ph:'Notes (exercise details, condition, etc.)', rest_set_label:'Rest (seconds)', t_rest_set:'Rest set to {0}s ✓', cardio_tag:'Cardio', cf_time:'Time', cf_dist:'Distance', cf_speed:'Speed', cf_incline:'Incline', cf_kcal:'Calories', t_no_gym_share:'No workout logged for this day', t_share_open:'Opening share…', t_share_fail:'Share failed',
     ob_skip:'Skip', ob_next:'Next', ob_start:'Get started', back:'Back',
     ob_s1_desc:'A <strong>logging partner</strong> for athletes.<br>Track food, water and training in one place.',
     ob_s2_title:'Daily<br>logging', ob_s2_f1:'Weight & nutrition', ob_s2_f1d:'Log PFC balance and calories', ob_s2_f2:'Water', ob_s2_f2d:'Track progress toward your goal', ob_s2_f3:'Sleep & steps', ob_s2_f3d:'Keep your condition on record',
@@ -1534,6 +1535,31 @@ const CARDIO_FIELDS={
 const CARDIO_LABEL={time:'cf_time',distance:'cf_dist',speed:'cf_speed',incline:'cf_incline',kcal:'cf_kcal'};
 function cardioType(name){ if(!name) return null; if(CARDIO_TYPE_MAP[name]) return CARDIO_TYPE_MAP[name]; try{ if(!gymPresets) loadGymPresets(); if(gymPresets && gymPresets['有酸素'] && gymPresets['有酸素'].indexOf(name)>=0) return 'other'; }catch(e){} return null; }
 function openGymCardioPad(ei,key){ padTarget='gymc:'+ei+':'+key; padFresh=true; padPrev_=null; const cd=gymWork[ei].cardio||{}; const cur=(cd[key]!=null&&cd[key]!=='')?String(cd[key]):'0'; document.getElementById('pad-lbl').textContent=t(CARDIO_LABEL[key]||key); document.getElementById('pad-val').textContent=cur; document.getElementById('pad-prev').classList.add('hide'); document.getElementById('pad').classList.add('open'); document.getElementById('pad-ov').classList.add('open'); }
+/* ===== 筋トレのシェア画像（Canvas → ネイティブ共有 saveStart/Chunk/Done。ブラウザはDL） ===== */
+function gymShare(){
+  const exs=loadGymExercises(curDate)||[];
+  if(!exs.length){ toast(t('t_no_gym_share')); return; }
+  const rec=getRec(curDate); const parts=(rec&&rec.muscles?rec.muscles:[]).map(partLabel).join(' / ');
+  const blocks=exs.map(ex=>{ const ct=cardioType(ex.name);
+    if(ct){ const f=CARDIO_FIELDS[ct]||CARDIO_FIELDS.other; const cd=ex.cardio||{}; const lines=f.filter(x=>cd[x.key]!=null&&cd[x.key]!=='').map(x=>t(x.label)+'  '+cd[x.key]+x.unit); return {name:ex.name, cardio:true, lines: lines.length?lines:['—']}; }
+    const lines=(ex.sets||[]).map((s,i)=>{ const w=(s.weight==null||s.weight==='')?'—':s.weight+'kg'; const r=(s.reps==null||s.reps==='')?'—':s.reps+'rep'; return (i+1)+'.   '+w+'   ×   '+r; }); return {name:ex.name, lines: lines.length?lines:['—']}; });
+  const W=1080, PADX=72, TITLE_H=240, NAME_H=66, LINE_H=46, GAP=26, FOOT_H=110;
+  let H=TITLE_H; blocks.forEach(b=>{ H+=NAME_H + b.lines.length*LINE_H + GAP; }); H+=FOOT_H; H=Math.max(H,720);
+  const c=document.createElement('canvas'); c.width=W; c.height=H; const x=c.getContext('2d');
+  x.fillStyle='#101214'; x.fillRect(0,0,W,H);
+  x.fillStyle='#c9f04d'; x.fillRect(0,0,W,10);
+  x.fillStyle='#c9f04d'; x.font='800 40px Inter, sans-serif'; x.fillText('PhysiqueLog', PADX, 92);
+  x.fillStyle='#edf0f2'; x.font='900 72px Inter, "Noto Sans JP", sans-serif'; x.fillText(fmtDateLocal(new Date(curDate+'T00:00:00')), PADX, 176);
+  if(parts){ x.fillStyle='#8b939b'; x.font='700 34px "Noto Sans JP", sans-serif'; x.fillText(parts, PADX, 222); }
+  let y=TITLE_H+20;
+  blocks.forEach(b=>{ x.fillStyle=b.cardio?'#7fd4ff':'#c9f04d'; x.font='800 44px "Noto Sans JP", sans-serif'; x.fillText(b.name, PADX, y); y+=NAME_H;
+    x.fillStyle='#cfd6dd'; x.font='600 36px "Noto Sans JP", sans-serif'; b.lines.forEach(ln=>{ x.fillText(ln, PADX+26, y); y+=LINE_H; }); y+=GAP; });
+  x.fillStyle='#3f4750'; x.font='700 30px Inter, "Noto Sans JP", sans-serif'; x.fillText('#筋トレ記録  PhysiqueLog', PADX, H-44);
+  const dataUrl=c.toDataURL('image/jpeg',0.9); const b64=(dataUrl.split(',')[1]||'');
+  if(typeof AndroidBridge!=='undefined' && AndroidBridge.saveStart){
+    try{ const CS=60000, n=Math.ceil(b64.length/CS); AndroidBridge.saveStart('workout_'+curDate+'.jpg', n); for(let i=0;i<n;i++) AndroidBridge.saveChunk(i, b64.slice(i*CS,(i+1)*CS)); AndroidBridge.saveDone(); toast(t('t_share_open')); }catch(e){ toast(t('t_share_fail')); }
+  } else { try{ const a=document.createElement('a'); a.href=dataUrl; a.download='workout_'+curDate+'.jpg'; document.body.appendChild(a); a.click(); a.remove(); }catch(e){ toast(t('t_share_fail')); } }
+}
 function gymDelEx(ei){ if(!confirm(t('confirm_del_ex'))) return; gymWork.splice(ei,1); saveGymData(); renderGym(); }
 function gymCheck(ei,si){ const s=gymWork[ei].sets[si]; s.done=!s.done; saveGymData(); renderGym(); if(s.done) startRest(t('rest_next', gymWork[ei].name||'')); }
 function gymCopyPrev(ei){

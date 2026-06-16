@@ -67,6 +67,14 @@ with sync_playwright() as p:
     strength=pg.evaluate("()=>document.querySelectorAll('#gym-cards .srow').length>0 && document.querySelectorAll('#gym-cards .crow').length===0")
     rec('GF-CARDIO2', ('時間' in swim and '距離' in swim and '消費カロリー' in swim and '速度' not in swim) and strength, f'swim={swim} strengthOK={strength}')
 
+    # ⑦ シェア画像（Canvas→ネイティブ saveStart/Chunk/Done）
+    pg.evaluate("""()=>{ window.AndroidBridge={ _c:[], saveStart(f,n){this._c.push(['start',f,n]);}, saveChunk(i,d){this._c.push(['chunk',i,d.length]);}, saveDone(){this._c.push(['done']);} }; }""")
+    pg.evaluate("curDate=logicalToday(); gymWork=[{name:'ベンチプレス',sets:[{weight:60,reps:8},{weight:60,reps:7}]},{name:'トレッドミル',sets:[],cardio:{time:20,speed:8,kcal:200}}]; saveGymData(); renderGym();"); pg.wait_for_timeout(30)
+    pg.evaluate("gymShare()"); pg.wait_for_timeout(40)
+    sh=pg.evaluate("""()=>{ const c=AndroidBridge._c; const start=c.find(x=>x[0]==='start'); const nchunk=c.filter(x=>x[0]==='chunk').length; const done=c.some(x=>x[0]==='done'); return {fname:start?start[1]:null, n:start?start[2]:0, nchunk:nchunk, done:done}; }""")
+    rec('GF-SHARE', sh['fname'] and sh['fname'].startswith('workout_') and sh['n']>=1 and sh['nchunk']==sh['n'] and sh['done'], f'{sh}')
+    pg.evaluate("delete window.AndroidBridge")
+
     # ③ キーボードscroll: focusinハンドラでテキスト入力がscrollIntoView（関数存在＝エラーなし確認）
     rec('GF-KEY', not pg._errs, f'no page errors (focusin wired), errs={pg._errs[:2]}')
     pg.close(); b.close()
