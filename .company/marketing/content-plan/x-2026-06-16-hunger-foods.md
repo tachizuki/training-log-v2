@@ -2,9 +2,10 @@
 created: "2026-06-16"
 platform: "X（Twitter）"
 pillar: "実用Tips（減量中の空腹対策・コスパ食材）＋実体験フック"
-status: review
+status: published
 publish_date: "2026-06-16"
 publish_time: "21:30"
+published_at: "2026-06-16 21:30頃"
 tags: [SNS, 減量, ダイエット, フィジーク, ゼロカロリー, オイコス]
 source: オーナー口頭ネタ（2026-06-16）
 ---
