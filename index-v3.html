@@ -174,6 +174,11 @@ body{background:#000;color:var(--text);font-family:'Noto Sans JP',sans-serif;}
 .ex-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;height:248px;overflow-y:auto;align-content:start;}
 .ex-cell{position:relative;}
 .ex-cell button{width:100%;min-height:50px;background:var(--surface);border:1px solid var(--line);border-radius:13px;color:var(--text);font-size:12.5px;font-weight:700;cursor:pointer;padding:6px 8px;line-height:1.3;font-family:'Noto Sans JP';}
+.ex-cell button.added{background:var(--acc-dim);border-color:var(--acc);color:var(--acc);}
+.srow-del{width:30px;height:40px;flex:0 0 auto;background:none;border:none;color:var(--faint);font-size:12px;cursor:pointer;}
+.srow-del:active{color:#ef6b6b;}
+.gym-memo{width:100%;margin-top:12px;background:var(--surface);border:1px solid var(--line);border-radius:14px;color:var(--text);font-size:13px;padding:12px;min-height:70px;resize:none;outline:none;font-family:'Noto Sans JP';line-height:1.5;}
+.gym-memo:focus{border-color:var(--acc);}
 .ex-cell .del{position:absolute;top:4px;right:4px;width:20px;height:20px;border-radius:50%;background:#ef6b6b;color:#fff;border:none;font-size:11px;font-weight:900;display:none;align-items:center;justify-content:center;cursor:pointer;z-index:2;}
 #ex-sheet.editing .ex-cell .del{display:flex;}
 #ex-sheet.editing .ex-cell button{border-style:dashed;padding-right:26px;}
@@ -461,6 +466,7 @@ textarea.cf-in{resize:none;line-height:1.5;}
       </div>
       <div id="gym-cards"></div>
       <button class="big-add" onclick="openExSheet()" data-i18n="add_ex">＋ 種目を追加</button>
+      <textarea id="gym-memo" class="gym-memo" data-i18n-ph="gym_memo_ph" placeholder="メモ（種目の補足・調子・気づきなど）" oninput="saveGymMemo(this.value)"></textarea>
     </div>
 
     <!-- ===== データ ===== -->
@@ -775,7 +781,7 @@ const I18N = {
     menu_title:'今日のメニュー', menu_note:'選んだ部位は「今日の記録」の筋トレ部位として保存されます',
     part_chest:'胸', part_back:'背中', part_shoulder:'肩', part_arm:'腕', part_leg:'足', part_abs:'腹筋', part_cardio:'有酸素', part_free:'自由',
     ex_title:'種目を追加', ex_note:'部位を選ぶか、検索／自由入力で追加', ex_search_ph:'種目を検索…', ex_edit:'編集', ex_done:'完了', ex_reset:'この部位をデフォルトに戻す', ex_add_btn:'追加', ex_add_to:'{0} に種目を追加', ex_empty:'種目がありません。下の自由入力で追加できます。', ex_search_result:'検索結果', confirm_reset_cat:'「{0}」の種目を初期状態に戻しますか？\n追加・削除した内容は失われます。', t_ex_removed:'{0} を削除', t_ex_reset:'{0} をデフォルトに戻しました', t_ex_added_cat:'{0} を {1} に追加', t_ex_pick_cat:'検索を消して部位を選んでください',
-    rest_label:'休憩中', rest_skip:'スキップ', filter_all:'すべて', gym_history:'筋トレ履歴', gym_history_note:'日付をタップするとその日の記録を開きます',
+    rest_label:'休憩中', rest_skip:'スキップ', filter_all:'すべて', gym_history:'筋トレ履歴', gym_history_note:'日付をタップするとその日の記録を開きます', gym_memo_ph:'メモ（種目の補足・調子・気づきなど）',
     ob_skip:'スキップ', ob_next:'次へ', ob_start:'はじめる', back:'戻る',
     ob_s1_desc:'大会を目指す人の<strong>記録パートナー</strong>。<br>食事・水分・トレーニングを一元管理。',
     ob_s2_title:'毎日の<br>記録', ob_s2_f1:'体重・栄養', ob_s2_f1d:'PFCバランスとカロリーを記録', ob_s2_f2:'水分', ob_s2_f2d:'目標に対する達成率を管理', ob_s2_f3:'睡眠・歩数', ob_s2_f3d:'コンディションも記録に残せる',
@@ -830,7 +836,7 @@ const I18N = {
     menu_title:'Today\'s menu', menu_note:'The selected muscle group is saved to today\'s workout log',
     part_chest:'Chest', part_back:'Back', part_shoulder:'Shoulders', part_arm:'Arms', part_leg:'Legs', part_abs:'Abs', part_cardio:'Cardio', part_free:'Free',
     ex_title:'Add exercise', ex_note:'Pick a part, or search / type your own', ex_search_ph:'Search exercises…', ex_edit:'Edit', ex_done:'Done', ex_reset:'Reset this part to default', ex_add_btn:'Add', ex_add_to:'Add to {0}', ex_empty:'No exercises. Add one below.', ex_search_result:'Results', confirm_reset_cat:'Reset "{0}" exercises to default?\nYour added/removed items will be lost.', t_ex_removed:'Removed {0}', t_ex_reset:'Reset {0} to default', t_ex_added_cat:'Added {0} to {1}', t_ex_pick_cat:'Clear search and pick a part',
-    rest_label:'Resting', rest_skip:'Skip', filter_all:'All', gym_history:'Workout history', gym_history_note:'Tap a date to open that day',
+    rest_label:'Resting', rest_skip:'Skip', filter_all:'All', gym_history:'Workout history', gym_history_note:'Tap a date to open that day', gym_memo_ph:'Notes (exercise details, condition, etc.)',
     ob_skip:'Skip', ob_next:'Next', ob_start:'Get started', back:'Back',
     ob_s1_desc:'A <strong>logging partner</strong> for athletes.<br>Track food, water and training in one place.',
     ob_s2_title:'Daily<br>logging', ob_s2_f1:'Weight & nutrition', ob_s2_f1d:'Log PFC balance and calories', ob_s2_f2:'Water', ob_s2_f2d:'Track progress toward your goal', ob_s2_f3:'Sleep & steps', ob_s2_f3d:'Keep your condition on record',
@@ -1144,6 +1150,8 @@ function importData(file){
   r.readAsText(file);
 }
 let _tt; function toast(msg){ const t=document.getElementById('toast'); t.innerHTML=msg; t.classList.add('show'); clearTimeout(_tt); _tt=setTimeout(()=>t.classList.remove('show'),1600); }
+// キーボード表示時に入力欄が隠れないよう、フォーカス時に見える位置へスクロール（type=text/textarea等。カスタム数値パッドは対象外）
+document.addEventListener('focusin', function(e){ const el=e.target; if(!el) return; const tag=(el.tagName||'').toLowerCase(); const isText=(tag==='textarea')||(tag==='input'&&['text','number','search','email','tel','url','date','time'].indexOf((el.type||'text').toLowerCase())>=0&&!el.readOnly); if(!isText) return; setTimeout(function(){ try{ el.scrollIntoView({block:'center', behavior:'smooth'}); }catch(_){ } }, 280); });
 // 本番ネイティブが呼ぶトースト（クラウド保存/通知設定/課金メッセージ等）。第2引数isErrorは現状未使用
 function showToast(msg, isError){ toast(msg); }
 // お問い合わせ送信結果のコールバック（sendContactForm後にネイティブが呼ぶ）
@@ -1394,6 +1402,8 @@ function saveGymData(){
   localStorage.setItem('gym_data', JSON.stringify(g));
   if(typeof AndroidBridge!=='undefined'){ try{ if(window.currentUser && typeof syncToCloud==='function') syncToCloud(currentUser.uid);}catch(e){} }
 }
+function loadGymMemo(date){ const d=DB.gym()[date]; return (d&&d.memo)||''; }
+function saveGymMemo(val){ const g=DB.gym(); g[curDate]=Object.assign({},g[curDate],{memo:val}); localStorage.setItem('gym_data', JSON.stringify(g)); if(typeof AndroidBridge!=='undefined'){ try{ if(window.currentUser && typeof syncToCloud==='function') syncToCloud(currentUser.uid);}catch(e){} } }
 // 本番loadGymDataと同じ読み込みロジック: 新形式(日付のみキー)優先、無ければ旧形式(日付_部位キー)をマージして新形式に移行
 function loadGymExercises(date){
   const g=DB.gym();
@@ -1472,6 +1482,7 @@ function renderGym(){
   const _ms=(_rec&&_rec.muscles&&_rec.muscles.length)?_rec.muscles.map(partLabel).join(LANG==='ja'?'・':', '):t('menu_unset');
   const _gt=document.getElementById('gym-title'); if(_gt) _gt.textContent=_ms;
   renderGymCards();
+  const _gm=document.getElementById('gym-memo'); if(_gm && document.activeElement!==_gm) _gm.value=loadGymMemo(curDate);
 }
 function renderGymCards(){
   gymWork = JSON.parse(JSON.stringify(loadGymExercises(curDate)));
@@ -1484,7 +1495,8 @@ function renderGymCards(){
       return `<div class="srow"><span class="n">${si+1}</span>`+
         `<div class="cell" onclick="openGymPad(${ei},${si},'w')">${w}<small>kg</small></div>`+
         `<div class="cell" onclick="openGymPad(${ei},${si},'r')">${r}<small>rep</small></div>`+
-        `<button class="chk${s.done?' on':''}" onclick="gymCheck(${ei},${si})">✓</button></div>`;
+        `<button class="chk${s.done?' on':''}" onclick="gymCheck(${ei},${si})">✓</button>`+
+        `<button class="srow-del" onclick="gymDelSet(${ei},${si})" aria-label="delete set">✕</button></div>`;
     }).join('');
     return `<div class="card"><div class="ex-h"><span class="nm">${ex.name||t('ex_default')}</span>`+
       `<button class="copy-prev" onclick="gymCopyPrev(${ei})">↺ ${t('copy_prev')}</button>`+
@@ -1494,6 +1506,7 @@ function renderGymCards(){
   }).join('');
 }
 function gymAddSet(ei){ gymWork[ei].sets=gymWork[ei].sets||[]; const last=gymWork[ei].sets[gymWork[ei].sets.length-1]; gymWork[ei].sets.push({weight:last?last.weight:null,reps:last?last.reps:null}); saveGymData(); renderGym(); }
+function gymDelSet(ei,si){ if(!gymWork[ei]||!gymWork[ei].sets) return; gymWork[ei].sets.splice(si,1); saveGymData(); renderGym(); }
 function gymDelEx(ei){ if(!confirm(t('confirm_del_ex'))) return; gymWork.splice(ei,1); saveGymData(); renderGym(); }
 function gymCheck(ei,si){ const s=gymWork[ei].sets[si]; s.done=!s.done; saveGymData(); renderGym(); if(s.done) startRest(t('rest_next', gymWork[ei].name||'')); }
 function gymCopyPrev(ei){
@@ -1554,7 +1567,8 @@ function exShowCat(c){
 function exRenderGrid(list){
   const g=document.getElementById('ex-grid');
   if(!list.length){ g.innerHTML='<div class="ex-empty">'+t('ex_empty')+'</div>'; return; }
-  g.innerHTML=list.map(n=>{ const e=n.replace(/'/g,"\\'"); return '<div class="ex-cell"><button onclick="pickEx(\''+e+'\')">'+n+'</button><div class="del" onclick="event.stopPropagation();exDel(\''+e+'\')">✕</div></div>'; }).join('');
+  const added=new Set((gymWork||[]).map(e=>e&&e.name));
+  g.innerHTML=list.map(n=>{ const e=n.replace(/'/g,"\\'"); const on=added.has(n); return '<div class="ex-cell"><button class="'+(on?'added':'')+'" onclick="pickEx(\''+e+'\')">'+(on?'✓ ':'')+n+'</button><div class="del" onclick="event.stopPropagation();exDel(\''+e+'\')">✕</div></div>'; }).join('');
 }
 function exSearch(){
   const q=document.getElementById('ex-q').value.trim();
@@ -1616,6 +1630,12 @@ function drawWeightChart(start, end, plan){
   let yMin=Math.min(...vals), yMax=Math.max(...vals); const pad=((yMax-yMin)*0.16)||0.5; yMin-=pad; yMax+=pad;
   const Y=w=>18+100*(1-(w-yMin)/((yMax-yMin)||1));
   let html='';
+  // 横罫線＋体重目盛り（読みやすさ向上）
+  const GN=4;
+  for(let i=0;i<=GN;i++){ const wv=yMin+(yMax-yMin)*(i/GN); const gy=+Y(wv).toFixed(1);
+    html+=`<line x1="10" y1="${gy}" x2="334" y2="${gy}" stroke="#23282e" stroke-width="0.7"/>`;
+    if(i>0&&i<GN) html+=`<text x="12" y="${(gy-2)}" font-size="7" fill="#3f4750" font-family="Inter">${wv.toFixed(1)}</text>`;
+  }
   if(plan){ const N=24; let tp=''; for(let i=0;i<=N;i++){ const v=xStart+(xEnd-xStart)*i/N; const tw=targetAt(plan, fmt(new Date(v))); tp+=(i?' L':'M')+X(v).toFixed(0)+','+Y(tw).toFixed(0); } html+=`<path d="${tp}" stroke="#f87171" stroke-width="1.3" fill="none" stroke-dasharray="5 4" opacity="0.8"/>`; }
   const dPath=ws.map((r,i)=>(i?'L':'M')+X(ts(r.date)).toFixed(0)+','+Y(r.weight).toFixed(0)).join(' ');
   html+=`<path d="${dPath}" stroke="#c9f04d" stroke-width="2.4" fill="none" stroke-linecap="round"/>`;
