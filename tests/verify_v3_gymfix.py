@@ -19,13 +19,14 @@ with sync_playwright() as p:
     ticks=pg.evaluate("()=>document.querySelectorAll('#weight-chart text').length")
     rec('GF-CHART', lines>=4 and ticks>=3, f'gridlines={lines} texts={ticks}')
 
-    # ① 筋トレメモ
-    pg.evaluate("go('gym'); curDate=logicalToday();")
-    pg.evaluate("saveGymMemo('胸の日。ベンチ伸びた')"); pg.wait_for_timeout(20)
-    saved=pg.evaluate("()=>JSON.parse(localStorage.getItem('gym_data'))[curDate].memo")
+    # ① セットごとのメモ
+    pg.evaluate("go('gym'); curDate=logicalToday(); gymWork=[{name:'ベンチプレス',sets:[{weight:60,reps:8}]}]; saveGymData(); renderGym();"); pg.wait_for_timeout(20)
+    nmemo=pg.evaluate("()=>document.querySelectorAll('#gym-cards .srow-memo').length")
+    pg.evaluate("gymSetMemo(0,0,'重い、フォーム意識')"); pg.wait_for_timeout(20)
+    sm=pg.evaluate("()=>DB.gym()[curDate].exercises[0].sets[0].memo")
     pg.evaluate("renderGym()"); pg.wait_for_timeout(20)
-    shown=pg.evaluate("()=>document.getElementById('gym-memo').value")
-    rec('GF-MEMO', saved=='胸の日。ベンチ伸びた' and shown==saved, f'saved={saved!r} shown={shown!r}')
+    shown=pg.evaluate("()=>{const i=document.querySelector('#gym-cards .srow-memo'); return i?i.value:null;}")
+    rec('GF-SETMEMO', nmemo>=1 and sm=='重い、フォーム意識' and shown==sm, f'inputs={nmemo} saved={sm!r} shown={shown!r}')
 
     # ④ セット単位削除
     pg.evaluate("curDate=logicalToday(); gymWork=[{name:'ベンチプレス',sets:[{weight:60,reps:8},{weight:60,reps:7},{weight:55,reps:6}]}]; saveGymData(); renderGym();"); pg.wait_for_timeout(30)
