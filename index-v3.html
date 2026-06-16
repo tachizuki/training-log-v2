@@ -915,16 +915,29 @@ const STORAGE_KEYS=['training_records','gym_data','water_data','user_profile','g
 let _syncTimer=null;
 function syncToCloud(uid, delay){ delay=(delay==null?3000:delay); if(!uid) return; if(!isPremium()) return; clearTimeout(_syncTimer); _syncTimer=setTimeout(()=>{ const data={}; STORAGE_KEYS.forEach(k=>{ const v=localStorage.getItem(k); if(v) data[k]=v; }); if(typeof AndroidBridge!=='undefined' && typeof AndroidBridge.saveToFirestore==='function'){ try{ AndroidBridge.saveToFirestore(uid, JSON.stringify(data)); }catch(e){} } else if(typeof firebase!=='undefined' && firebase.firestore){ try{ firebase.firestore().collection('users').doc(uid).set({data:JSON.stringify(data),updatedAt:Date.now()}); }catch(e){} } }, delay); }
 function loadFromCloud(uid){ if(!uid) return; if(!isPremium()) return; if(typeof AndroidBridge!=='undefined' && typeof AndroidBridge.loadFromFirestore==='function'){ try{ AndroidBridge.loadFromFirestore(uid); }catch(e){} } else if(typeof firebase!=='undefined' && firebase.firestore){ try{ firebase.firestore().collection('users').doc(uid).get().then(doc=>{ if(doc.exists) receiveFirestoreData(doc.data().data||'{}'); }); }catch(e){} } }
+// 日付ごとに最終更新時刻 u で新しい方を採用（多端末で更新が伝播するように）
+function mergeRecordsByDate(localArr, cloudArr){
+  const by={};
+  (localArr||[]).forEach(r=>{ if(r&&r.date) by[r.date]=r; });
+  (cloudArr||[]).forEach(r=>{ if(!r||!r.date) return; const ex=by[r.date]; if(!ex || (r.u||0) > (ex.u||0)) by[r.date]=r; });
+  return Object.keys(by).sort((a,b)=>b.localeCompare(a)).map(d=>by[d]);
+}
+function mergeByDateObj(localObj, cloudObj){
+  const out=Object.assign({}, localObj||{});
+  Object.keys(cloudObj||{}).forEach(d=>{ const c=cloudObj[d], l=out[d]; const cu=(c&&c.u)||0, lu=(l&&l.u)||0; if(!l || cu>lu) out[d]=c; });
+  return out;
+}
 function receiveFirestoreData(jsonStr){
   try{
     const data=JSON.parse(jsonStr);
     STORAGE_KEYS.forEach(k=>{
       if(!data[k]) return;
-      if(k==='gym_data'){ const cloud=JSON.parse(data[k]); const local=JSON.parse(localStorage.getItem('gym_data')||'{}'); localStorage.setItem('gym_data', JSON.stringify(Object.assign({},cloud,local))); } // ローカル優先マージ
-      else if(k==='training_records'||k==='water_data'){ const local=localStorage.getItem(k); const isEmpty=!local||local==='[]'||local==='{}'; if(isEmpty) localStorage.setItem(k,data[k]); } // 記録系はローカル優先
+      if(k==='training_records'){ try{ const m=mergeRecordsByDate(JSON.parse(localStorage.getItem('training_records')||'[]'), JSON.parse(data[k])); localStorage.setItem('training_records', JSON.stringify(m)); }catch(e){ const l=localStorage.getItem(k); if(!l||l==='[]') localStorage.setItem(k,data[k]); } }
+      else if(k==='gym_data'||k==='water_data'){ try{ const m=mergeByDateObj(JSON.parse(localStorage.getItem(k)||'{}'), JSON.parse(data[k])); localStorage.setItem(k, JSON.stringify(m)); }catch(e){ const l=localStorage.getItem(k); if(!l||l==='{}') localStorage.setItem(k,data[k]); } }
       else { localStorage.setItem(k,data[k]); }
     });
-    renderToday(); toast(t('t_synced'));
+    try{ renderToday(); }catch(e){} try{ if(document.getElementById('pg-data').classList.contains('active')) renderData(); }catch(e){} try{ if(document.getElementById('pg-gym').classList.contains('active')) renderGym(); }catch(e){}
+    toast(t('t_synced'));
   }catch(e){}
 }
 
@@ -937,6 +950,7 @@ let curDate = logicalToday();
 
 function getRec(date){ return DB.records().find(r=>r.date===date) || null; }
 function upsertRec(rec){
+  rec.u=Date.now(); // 多端末同期の競合解消用（日付ごとの最終更新時刻）
   const recs=DB.records(); const i=recs.findIndex(r=>r.date===rec.date);
   if(i>=0) recs[i]=rec; else recs.push(rec);
   recs.sort((a,b)=>b.date.localeCompare(a.date));
@@ -1295,7 +1309,7 @@ function waterChip(i){
   const w=DB.water(); const key=curDate;
   if(!w[key]) w[key]={total:0,log:[]};
   const now=new Date(); const tm=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
-  w[key].total+=qb[i]; w[key].log.push({ml:qb[i],time:tm}); DB.saveWater(w);
+  w[key].total+=qb[i]; w[key].log.push({ml:qb[i],time:tm}); w[key].u=Date.now(); DB.saveWater(w);
   renderWaterTile(); toast(t('t_water_add', qb[i]));
 }
 
@@ -1407,7 +1421,7 @@ function mealCopyPrev(){ mVals=[prevValue('p'),prevValue('f'),prevValue('c'),pre
 /* ===== 筋トレ画面（gym_data 編集配線） ===== */
 let gymWork=[];
 function saveGymData(){
-  const g=DB.gym(); g[curDate]=Object.assign({},g[curDate],{exercises:gymWork});
+  const g=DB.gym(); g[curDate]=Object.assign({},g[curDate],{exercises:gymWork,u:Date.now()});
   localStorage.setItem('gym_data', JSON.stringify(g));
   if(typeof AndroidBridge!=='undefined'){ try{ if(window.currentUser && typeof syncToCloud==='function') syncToCloud(currentUser.uid);}catch(e){} }
 }
