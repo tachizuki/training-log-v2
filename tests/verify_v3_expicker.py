@@ -45,16 +45,14 @@ with sync_playwright() as p:
     deleted=pg.evaluate("()=>{const saved=JSON.parse(localStorage.getItem('gym_presets')); return !(saved['胸']||[]).includes('マイベンチ');}")
     rec('E-DEL', editing and deleted, f'editing={editing} deleted={deleted}')
 
-    # 戻す確認: キャンセル時は戻らない
-    pg._dialog='dismiss'
-    pg.evaluate("exDel('ベンチプレス'); exResetCat()"); pg.wait_for_timeout(30)
+    # 戻す確認: キャンセル時は戻らない（アプリ内ダイアログをキャンセル）
+    pg.evaluate("exDel('ベンチプレス'); exResetCat(); closeConfirm()"); pg.wait_for_timeout(30)
     not_reset=pg.evaluate("()=>!JSON.parse(localStorage.getItem('gym_presets'))['胸'].includes('ベンチプレス')")
-    rec('E-RESET-CANCEL', not_reset, 'dismiss -> not reset')
-    # 戻す確認: OK時は戻る
-    pg._dialog='accept'
-    pg.evaluate("exResetCat()"); pg.wait_for_timeout(30)
+    rec('E-RESET-CANCEL', not_reset, 'cancel -> not reset')
+    # 戻す確認: OK時は戻る（アプリ内ダイアログのOK）
+    pg.evaluate("exResetCat(); document.getElementById('confirm-ok').click()"); pg.wait_for_timeout(30)
     reset_ok=pg.evaluate("()=>JSON.parse(localStorage.getItem('gym_presets'))['胸'].includes('ベンチプレス')")
-    rec('E-RESET', reset_ok, 'accept -> reset restores defaults')
+    rec('E-RESET', reset_ok, 'OK -> reset restores defaults')
     # ✕ボタンがセル内側に配置（負オフセットでない＝見切れ対策）
     delpos=pg.evaluate("()=>{const d=document.querySelector('.ex-cell .del'); const cs=getComputedStyle(d); return {top:cs.top, right:cs.right};}")
     rec('E-DELPOS', delpos['top']=='4px' and delpos['right']=='4px', f'del pos={delpos}')

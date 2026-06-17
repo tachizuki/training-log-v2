@@ -22,7 +22,7 @@ with sync_playwright() as p:
       localStorage.setItem('is_premium','true');
       onFirebaseSignIn('u1','テスト太郎','t@example.com');
     }""")
-    pg.evaluate("doSignOut()"); pg.wait_for_timeout(60)
+    pg.evaluate("doSignOut()"); pg.evaluate("document.getElementById('confirm-ok').click()"); pg.wait_for_timeout(60)
     after=pg.evaluate("""()=>({
       rec: localStorage.getItem('training_records'),
       gym: localStorage.getItem('gym_data'),

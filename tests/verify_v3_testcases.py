@@ -163,7 +163,7 @@ with sync_playwright() as p:
     last = pg.evaluate("()=>{const c=[...document.querySelectorAll('#pg-set > *')]; return c[c.length-1].id==='account-block'}")
     rec('F-A01', last, 'account at end when logged in')
     rec('F-A02', pg.evaluate("()=>{const h=document.getElementById('account-card').innerHTML; return h.indexOf('テスト太郎')>=0 && h.indexOf('t@example.com')>=0}"))
-    pg.evaluate("doSignOut()"); pg.evaluate("go('set')"); pg.wait_for_timeout(40)
+    pg.evaluate("doSignOut()"); pg.evaluate("document.getElementById('confirm-ok').click()"); pg.evaluate("go('set')"); pg.wait_for_timeout(40)
     rec('F-A03', pg.evaluate("()=>{const c=[...document.querySelectorAll('#pg-set > *')]; const i=c.findIndex(e=>e.id==='account-block'); return i<=1}"), 'account back to top after signout')
     pg.evaluate("onFirebaseSignIn('u1','テスト太郎','t@example.com'); localStorage.removeItem('is_premium'); renderPremiumCard()")
     rec('F-B01', pg.evaluate("()=>document.getElementById('premium-card').className.indexOf('prem-card')>=0 && getComputedStyle(document.getElementById('premium-card')).display!=='none'"))
