@@ -1056,8 +1056,9 @@ function bridge(m){ const a=[].slice.call(arguments,1); if(typeof AndroidBridge!
 function isPremiumReal(){ if(isAdmin()) return true; if(typeof AndroidBridge!=='undefined' && typeof AndroidBridge.isPremium==='function'){ const r=AndroidBridge.isPremium(); return r===true||r==='true'; } return localStorage.getItem('is_premium')==='true'; }
 function renderPremiumCard(){
   const el=document.getElementById('premium-card'); if(!el) return;
-  if(isPremiumReal()){ el.className='tile prem-status'; el.innerHTML=t('prem_member'); }
-  else { el.className='tile prem-card'; el.innerHTML='<h3>'+t('prem_upgrade')+'</h3><ul><li>'+t('pf_roadmap')+'</li><li>'+t('pf_weekly')+'</li><li>'+t('pf_gym')+'</li><li>'+t('pf_sync')+'</li></ul><button class="prem-go" onclick="openPaywall()">'+t('trial_btn')+'</button>'; }
+  if(isPremiumReal()){ el.style.display=''; el.className='tile prem-status'; el.innerHTML=t('prem_member'); }
+  else if(!window.currentUser){ el.style.display='none'; el.innerHTML=''; }  // 未ログインは入会バナーを出さない（ロック/ペイウォールからは発見可）
+  else { el.style.display=''; el.className='tile prem-card'; el.innerHTML='<h3>'+t('prem_upgrade')+'</h3><ul><li>'+t('pf_roadmap')+'</li><li>'+t('pf_weekly')+'</li><li>'+t('pf_gym')+'</li><li>'+t('pf_sync')+'</li></ul><button class="prem-go" onclick="openPaywall()">'+t('trial_btn')+'</button>'; }
 }
 // ログイン後はアカウント項目を末尾へ（ログイン誘導の役目を終えたため）。未ログインは先頭（誘導）。
 function positionAccountBlock(){

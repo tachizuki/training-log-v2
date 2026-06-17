@@ -139,9 +139,9 @@ with sync_playwright() as p:
     pg.evaluate("setLang('ja')"); pg.wait_for_timeout(30)
     ja = pg.evaluate("()=>t('weight')")
     rec('G-S03', en=='Weight' and ja=='体重')
-    # G-B01 premium card non-premium
-    pg.evaluate("localStorage.removeItem('is_premium'); renderPremiumCard()")
-    rec('G-B01', pg.evaluate("()=>document.getElementById('premium-card').className.indexOf('prem-card')>=0"))
+    # G-B01 未ログイン(ゲスト)は入会バナーを出さない
+    pg.evaluate("window.currentUser=null; localStorage.removeItem('is_premium'); renderPremiumCard()")
+    rec('G-B01', pg.evaluate("()=>getComputedStyle(document.getElementById('premium-card')).display==='none'"), 'guest: premium banner hidden')
     # G-B02 contest locked + paywall opens
     pg.evaluate("renderSet()"); pg.wait_for_timeout(30)
     locked = pg.evaluate("()=>document.getElementById('contest-card').classList.contains('locked')")
@@ -165,8 +165,8 @@ with sync_playwright() as p:
     rec('F-A02', pg.evaluate("()=>{const h=document.getElementById('account-card').innerHTML; return h.indexOf('テスト太郎')>=0 && h.indexOf('t@example.com')>=0}"))
     pg.evaluate("doSignOut()"); pg.evaluate("go('set')"); pg.wait_for_timeout(40)
     rec('F-A03', pg.evaluate("()=>{const c=[...document.querySelectorAll('#pg-set > *')]; const i=c.findIndex(e=>e.id==='account-block'); return i<=1}"), 'account back to top after signout')
-    pg.evaluate("localStorage.removeItem('is_premium'); renderPremiumCard()")
-    rec('F-B01', pg.evaluate("()=>document.getElementById('premium-card').className.indexOf('prem-card')>=0"))
+    pg.evaluate("onFirebaseSignIn('u1','テスト太郎','t@example.com'); localStorage.removeItem('is_premium'); renderPremiumCard()")
+    rec('F-B01', pg.evaluate("()=>document.getElementById('premium-card').className.indexOf('prem-card')>=0 && getComputedStyle(document.getElementById('premium-card')).display!=='none'"))
     pg.evaluate("renderSet()")
     rec('F-B02', pg.evaluate("()=>document.getElementById('contest-card').classList.contains('locked')"))
     # F regression (logged-in non-premium records same as guest)

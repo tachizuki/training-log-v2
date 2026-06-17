@@ -6,15 +6,10 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     // ユーザーデータ（クラウド同期）: 本人のみ読み書き可
+    // ※ ドキュメントサイズはFirestore自体の1MB上限で制限されるため、ルールでのサイズ判定は行わない
+    //   （以前のサイズ判定はデータの大きいアカウントの同期を誤って拒否=PERMISSION_DENIEDしていた）
     match /users/{uid} {
-      allow read, write: if request.auth != null
-                         && request.auth.uid == uid
-                         // 1ドキュメントのサイズ上限（肥大化/濫用対策）
-                         && (request.resource == null || request.resource.data.size() < 50)
-                         && (request.resource == null
-                             || !('data' in request.resource.data)
-                             || (request.resource.data.data is string
-                                 && request.resource.data.data.size() < 1500000));
+      allow read, write: if request.auth != null && request.auth.uid == uid;
       // サブコレクションは個別に許可しない限り拒否
       match /{document=**} {
         allow read, write: if false;
