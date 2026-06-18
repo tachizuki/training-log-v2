@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self' https://script.google.com https://script.googleusercontent.com; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
-<title>PhysiqueLog v3（再設計・実データ配線プレビュー）</title>
+<title>PhysiqueLog</title>
 <!--
   index-v3.html — UX主導の再設計（uimockux.html）を実データ配線で実装したプレビュー。
   本番 index.html には影響しない独立ファイル。localStorageキーは本番と共通なのでデータは共有される。
@@ -395,7 +395,7 @@ textarea.cf-in{resize:none;line-height:1.5;}
 </head>
 <body>
 <div class="phone">
-  <div class="statusbar"><span id="sb-time">--:--</span><span class="v3-badge">PhysiqueLog v3 preview</span><span id="sb-batt">●</span></div>
+  <div class="statusbar"><span id="sb-time">--:--</span><span id="sb-batt">●</span></div>
   <div class="viewport">
 
     <!-- ===== 今日 ===== -->
@@ -575,7 +575,7 @@ textarea.cf-in{resize:none;line-height:1.5;}
           <button class="set-btn" data-i18n="btn_review" onclick="reviewApp()">★ アプリを評価</button>
           <button class="set-btn" data-i18n="btn_contact" onclick="contactApp()">✉ お問い合わせ</button>
         </div>
-        <div class="set-note" data-i18n="support_note">サインイン・購入・同期・通知は本番アプリ（Androidブリッジ）に接続されます。このプレビューはローカルデータで動作します。</div>
+        <div class="set-note" id="support-note" data-i18n="support_note">サインイン・購入・同期・通知は本番アプリ（Androidブリッジ）に接続されます。このプレビューはローカルデータで動作します。</div>
         <div class="set-note" style="margin-top:8px;"><a href="https://training-log-v2-5vc.pages.dev/privacy.html" style="color:var(--acc);text-decoration:underline;" data-i18n="privacy_link">プライバシーポリシー</a></div>
         <div class="set-note" style="margin-top:6px;color:var(--faint);" data-i18n="credits_note">効果音: OtoLogic（otologic.jp）</div>
       </div>
@@ -2008,6 +2008,8 @@ function checkOnboarding(){
 
 /* 初期化 */
 applyI18n();
+// 本番アプリ（Androidブリッジあり）ではブラウザプレビュー用の注記を隠す
+if(typeof AndroidBridge!=='undefined'){ var _sn=document.getElementById('support-note'); if(_sn) _sn.style.display='none'; }
 wireSettingsAutoSave();
 renderToday();
 checkOnboarding();
