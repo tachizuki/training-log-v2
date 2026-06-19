@@ -31,6 +31,17 @@ with sync_playwright() as p:
     pg.evaluate("goContestSettings()"); pg.wait_for_timeout(60)
     con=pg.evaluate("()=>{const s=document.getElementById('sec-contest'); return {open:s.classList.contains('open')};}")
     rec('CONTEST_OPEN', con['open'], f"{con}")
+    # アカウント欄: 未ログイン時はアコーディオンにしない（ログインボタン常時表示）
+    pg.evaluate("onFirebaseSignOut && onFirebaseSignOut()"); pg.evaluate("window.currentUser=null; renderAccountCard(); go('set')"); pg.wait_for_timeout(40)
+    out=pg.evaluate("()=>{const h=document.getElementById('sec-account-head'); const c=document.getElementById('account-card'); return {collap:h.classList.contains('collap'), shown:!c.classList.contains('sec-hidden'), hasLogin:!!c.querySelector('.acc-google')};}")
+    rec('ACC_LOGGEDOUT', (not out['collap']) and out['shown'] and out['hasLogin'], f"{out}")
+    # ログイン時はアコーディオン（初期は閉）、展開で削除ボタン出現
+    pg.evaluate("onFirebaseSignIn('u1','テスト太郎','t@example.com'); go('set')"); pg.wait_for_timeout(40)
+    li=pg.evaluate("()=>{const h=document.getElementById('sec-account-head'); const c=document.getElementById('account-card'); return {collap:h.classList.contains('collap'), hiddenDefault:c.classList.contains('sec-hidden')};}")
+    rec('ACC_LOGGEDIN', li['collap'] and li['hiddenDefault'], f"{li}")
+    pg.evaluate("()=>document.getElementById('sec-account-head').click()"); pg.wait_for_timeout(40)
+    ex=pg.evaluate("()=>{const h=document.getElementById('sec-account-head'); const c=document.getElementById('account-card'); return {open:h.classList.contains('open'), shown:!c.classList.contains('sec-hidden'), hasDel:!!c.querySelector('.acc-danger')};}")
+    rec('ACC_EXPAND', ex['open'] and ex['shown'] and ex['hasDel'], f"{ex}")
     rec('NOERR', not pg._errs, f"errs={pg._errs[:2]}")
     pg.close(); b.close()
 passed=[k for k,v in results.items() if v[0]]; failed=[k for k,v in results.items() if not v[0]]

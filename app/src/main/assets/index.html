@@ -527,7 +527,7 @@ textarea.cf-in{resize:none;line-height:1.5;}
       <div class="today-title" style="padding:8px 2px 12px;"><h1 data-i18n="set_title">設定</h1></div>
 
       <div id="account-block">
-        <div class="set-sec" data-i18n="sec_account">アカウント</div>
+        <div class="set-sec" id="sec-account-head" data-i18n="sec_account">アカウント</div>
         <div class="tile set-card" id="account-card"></div>
       </div>
 
@@ -1082,12 +1082,19 @@ function positionAccountBlock(){
 }
 function renderAccountCard(){
   positionAccountBlock();
+  const head=document.getElementById('sec-account-head');
   const el=document.getElementById('account-card'); if(!el) return;
   if(window.currentUser){
+    // ログイン中: アカウント欄を開閉式（初期は閉）にし、サインアウト/削除を1段奥へ
+    if(head){ head.classList.add('collap'); head.classList.remove('open'); head.onclick=function(){ toggleSec(head); }; }
+    el.classList.add('sec-hidden');
     el.innerHTML='<div class="set-row"><label>'+esc(currentUser.name||t('logged_in'))+'</label><span style="font-size:11px;color:var(--sub);">'+esc(currentUser.email||'')+'</span></div>'+
       '<div class="set-btn-row"><button class="set-btn" onclick="doSignOut()">'+t('btn_signout')+'</button></div>'+
       '<button class="acc-btn acc-danger" style="margin-top:8px;" onclick="doDeleteAccount()">'+t('btn_delete_acc')+'</button>';
   } else {
+    // 未ログイン: ログインボタンは常時表示（アコーディオンにしない）
+    if(head){ head.classList.remove('collap','open'); head.onclick=null; }
+    el.classList.remove('sec-hidden');
     el.innerHTML='<button class="acc-btn acc-google" onclick="doSignIn()">'+GOOGLE_ICON+t('google_login')+'</button>'+
       '<div class="set-note">'+t('login_note')+'</div>';
   }
