@@ -58,6 +58,46 @@ PhysiqueLog（フィジークログ）は、体重記録・筋トレ記録・食
 
 ---
 
+## English (separate index — optimize independently)
+
+### Title (≤30 chars)
+- Recommended: `PhysiqueLog: Weight & Gym Log` (29)
+- Alt: `PhysiqueLog: Weight & Diet Log` (30)
+- Captures: weight tracker / gym (workout) log / diet
+
+### Short description (≤80)
+Track weight, workouts & macros. Analyze weight swings & hit weekly cut goals.
+
+### Full description
+PhysiqueLog is a weight tracker, gym (workout) log and diet/macro tracker in one app — built for fat loss, lean bulking and physique contest prep. Log your weight, workouts, food (PFC macros), water, sleep and steps, and understand WHY your weight moved with a multi-factor weight-change analysis.
+
+Free for everyone
+- Weight tracking with a clear weight trend graph
+- Workout log: category-based exercise picker, search, custom exercises, rest timer, history calendar
+- Food calories & PFC macros (protein / fat / carbs) and sodium
+- Water, sleep and steps logging
+- Weight-change analysis: see how yesterday's sodium, water, carbs, calories, training and sleep affected today's weight
+- Full history + JSON export/import backup
+
+Premium (for competitors and serious cutters — 14-day free trial)
+- 🗺 Contest roadmap: target weight allocated by week and month from your show date; target vs actual at a glance
+- 📈 Daily-allocated target line on the weight graph
+- 📋 Weekly report
+- 💪 Workout analysis (estimated 1RM trend, plateau detection)
+- ☁️ Multi-device cloud sync
+
+Great for
+- Tracking weight to run a planned diet / cut
+- Logging gym weights & reps to catch plateaus early
+- Managing weight by reverse-planning toward a physique / bodybuilding contest
+- Understanding the cause of daily weight swings instead of being ruled by them
+
+Weight tracking, workout logging and full history are free forever. Start with today's weight.
+
+(Your Premium subscription is tied to the Google Play account on your device, not your in-app login. If you use multiple Google accounts, check the account in the Play Store.)
+
+---
+
 ## 運用ルール
 - 詰め込み（キーワード羅列）はポリシー違反＆逆効果。自然な反復2〜3回まで。
 - 日本語と英語は別索引 → 英語版も別途最適化。
