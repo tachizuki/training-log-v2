@@ -1681,7 +1681,11 @@ function openExSheet(){
   document.getElementById('ex-edit-btn').classList.remove('on');
   document.getElementById('ex-edit-btn').textContent=t('ex_edit');
   document.getElementById('ex-q').value='';
-  const cats=exCats(); if(!exCat || !gymPresets[exCat]){ exCat=localStorage.getItem('ex_last_cat'); if(!exCat||!gymPresets[exCat]) exCat=cats[0]; }
+  const cats=exCats();
+  // その日に選択した部位があれば、その部位カテゴリを既定で開く
+  let dayPart=null; try{ const r=getRec(curDate); dayPart=(r&&r.muscles&&r.muscles[0])||null; }catch(e){}
+  if(dayPart && gymPresets[dayPart]){ exCat=dayPart; }
+  else if(!exCat || !gymPresets[exCat]){ exCat=localStorage.getItem('ex_last_cat'); if(!exCat||!gymPresets[exCat]) exCat=cats[0]; }
   exRenderCats(); exShowCat(exCat);
   document.getElementById('ex-sheet').classList.add('open'); document.getElementById('ex-ov').classList.add('open');
 }
