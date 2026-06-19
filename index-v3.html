@@ -301,6 +301,8 @@ textarea.cf-in{resize:none;line-height:1.5;}
 .set-sec.collap{cursor:pointer;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:13px 14px;margin:8px 0 0;}
 .set-sec.collap::after{content:'▾';margin-left:auto;font-size:11px;color:var(--faint);transition:transform .15s;}
 .set-sec.collap:not(.open)::after{transform:rotate(-90deg);}
+.set-sec.collap.open{color:var(--text);background:var(--acc-dim);border-color:rgba(201,240,77,0.5);}
+.set-sec.collap.open::after{color:var(--acc);}
 .set-sec.collap+.set-card{margin-top:4px;}
 .sec-hidden{display:none;}
 .contest-lock{display:none;text-align:center;padding:18px 8px;color:var(--sub);font-size:13px;line-height:1.7;cursor:pointer;}
@@ -1032,6 +1034,8 @@ function handleAndroidBack(){
 const EXPORT_KEYS=['training_records','water_data','gym_data','gym_presets','user_profile','display_name_custom','contest_name','contest_date','peak_date','contest_weight','nutrition_goals','weekly_goals','week_weight_goal','water_goal','water_quick_btns','water_custom_btns','day_start_hour','activity_presets','my_sets','app_options'];
 function setV(id,v){ const e=document.getElementById(id); if(e!=null && v!=null) e.value=v; }
 function renderSet(){
+  // 設定タブに入るたびにアコーディオンは全て閉じた状態に戻す（他タブ往復後の開きっぱなし防止）
+  document.querySelectorAll('.set-sec.collap.open').forEach(h=>{ h.classList.remove('open'); const c=h.nextElementSibling; if(c && c.classList.contains('set-card')) c.classList.add('sec-hidden'); });
   // 起点時刻セレクトを生成（0〜12時）
   const ds=document.getElementById('set-day-start');
   if(ds){ const cur=ds.value; ds.innerHTML=''; for(let h=0;h<=12;h++){ const o=document.createElement('option'); o.value=h; o.textContent=(LANG==='ja'?h+'時':h+':00'); ds.appendChild(o);} if(cur) ds.value=cur; }
