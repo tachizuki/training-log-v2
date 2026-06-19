@@ -423,6 +423,18 @@ textarea.cf-in{resize:none;line-height:1.5;}
           <div class="s" id="sleep-sub"></div>
         </div>
       </div>
+      <div class="grid2">
+        <div class="tile mini" onclick="openPad('','steps')">
+          <div class="k"><span data-i18n="steps">歩数</span> <span class="ok" id="ok-steps" style="display:none">✓</span></div>
+          <div class="v num" id="steps-val"><span class="ph">—</span><small></small></div>
+          <div class="s" id="steps-sub"></div>
+        </div>
+        <div class="tile mini" onclick="openPad('','salon')">
+          <div class="k"><span data-i18n="salon">日サロ</span> <span class="ok" id="ok-salon" style="display:none">✓</span></div>
+          <div class="v num" id="salon-val"><span class="ph">—</span><small>分</small></div>
+          <div class="s" id="salon-sub"></div>
+        </div>
+      </div>
       <div class="tile meal" onclick="openMealPad(0)">
         <div class="meal-head">
           <span class="k" data-i18n="meal">食事</span>
@@ -796,7 +808,7 @@ const I18N = {
   ja: {
     nav_today:'今日', nav_gym:'筋トレ', nav_data:'データ', nav_set:'設定',
     today:'今日', today_btn:'今日', contest_unset:'大会未設定', tap_part:'タップして部位を選択', menu_unset:'メニュー未選択', start:'開始',
-    weight:'体重', sleep:'睡眠', meal:'食事', water:'水分', gym:'筋トレ',
+    weight:'体重', sleep:'睡眠', meal:'食事', water:'水分', gym:'筋トレ', steps:'歩数', salon:'日サロ', salon_unit:'分',
     kcal_auto:'kcal 自動計算', analysis_title:'🔍 体重変動分析', analysis_sub:'体重変動分析', analysis_empty:'記録を入力すると分析が表示されます。',
     seg_week:'週間', seg_month:'月間', seg_all:'全期間', data_title:'データ', data_empty:'データを蓄積すると傾向が表示されます。',
     weight_trend:'体重の推移', training:'トレーニング', nutrition:'栄養', this_week:'今週', last_week:'先週', all_period:'全期間',
@@ -851,7 +863,7 @@ const I18N = {
   en: {
     nav_today:'Today', nav_gym:'Workout', nav_data:'Data', nav_set:'Settings',
     today:'Today', today_btn:'Today', contest_unset:'No contest', tap_part:'Tap to pick muscle group', menu_unset:'No menu', start:'Start',
-    weight:'Weight', sleep:'Sleep', meal:'Meal', water:'Water', gym:'Workout',
+    weight:'Weight', sleep:'Sleep', meal:'Meal', water:'Water', gym:'Workout', steps:'Steps', salon:'Tanning', salon_unit:'min',
     kcal_auto:'kcal auto', analysis_title:'🔍 Weight change', analysis_sub:'Weight change', analysis_empty:'Log data to see your analysis.',
     seg_week:'Week', seg_month:'Month', seg_all:'All', data_title:'Data', data_empty:'Trends appear as you log data.',
     weight_trend:'Weight trend', training:'Training', nutrition:'Nutrition', this_week:'This week', last_week:'Last week', all_period:'All time',
@@ -1288,6 +1300,9 @@ function renderToday(){
   });
   // 睡眠
   setMini('sleep-val','sleep-sub','ok-sleep', rec.sleep, 'h', ()=> rec.bedtime&&rec.waketime ? rec.bedtime+' → '+rec.waketime : '');
+  // 歩数・日サロ（v3で入力欄が落ちていた分を復活。分析が参照する指標）
+  setMini('steps-val','steps-sub','ok-steps', rec.steps, '', ()=>'');
+  setMini('salon-val','salon-sub','ok-salon', rec.salon, t('salon_unit'), ()=>'');
   // 食事
   setMeal('mc-p',rec.p); setMeal('mc-f',rec.f); setMeal('mc-c',rec.c); setMeal('mc-salt',rec.salt);
   const kc = rec.kcal!=null?rec.kcal:calcKcal(rec.p,rec.f,rec.c);
@@ -1401,7 +1416,7 @@ function normBuf(s){
   else { s=s.replace(/^0+(?=\d)/,''); }
   return s;
 }
-function padLabel(tg){ const k={weight:'weight',sleep:'sleep',p:'l_p',f:'l_f',c:'l_c',salt:'l_salt',steps:'kpi_steps'}; const u={weight:' (kg)',sleep:' (h)'}; return k[tg]?(t(k[tg])+(u[tg]||'')):tg; }
+function padLabel(tg){ const k={weight:'weight',sleep:'sleep',p:'l_p',f:'l_f',c:'l_c',salt:'l_salt',steps:'steps',salon:'salon'}; const u={weight:' (kg)',sleep:' (h)',salon:' ('+t('salon_unit')+')'}; return k[tg]?(t(k[tg])+(u[tg]||'')):tg; }
 function openPad(label,target){
   padTarget=target; padFresh=true;
   const rec=getRec(curDate)||blankRec(curDate);
