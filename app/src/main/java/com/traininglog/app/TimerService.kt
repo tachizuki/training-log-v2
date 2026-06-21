@@ -9,6 +9,10 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.media.AudioAttributes
+import android.media.AudioDeviceInfo
+import android.media.AudioFocusRequest
+import android.media.AudioManager
+import android.media.MediaPlayer
 import android.net.Uri
 import android.os.Build
 import android.os.CountDownTimer
@@ -25,10 +29,13 @@ class TimerService : Service() {
     private var totalSeconds: Int = 90
     private lateinit var notificationManager: NotificationManager
     private var wakeLock: PowerManager.WakeLock? = null
+    private var mediaPlayer: MediaPlayer? = null
+    private var audioFocusReq: AudioFocusRequest? = null
 
     companion object {
         const val CHANNEL_ID      = "timer_channel"
         const val DONE_CHANNEL_ID = "timer_done_channel_v6" // v6: 同梱キッチンタイマー音3回版に更新（チャンネル再作成で確実に反映）
+        const val DONE_SILENT_CHANNEL_ID = "timer_done_silent_v1" // イヤホン時: 音はMediaPlayerで再生する無音チャンネル
         const val NOTIF_ID        = 2001
         const val DONE_NOTIF_ID   = 2002
         const val ACTION_START    = "com.traininglog.app.TIMER_START"
@@ -61,11 +68,11 @@ class TimerService : Service() {
     override fun onTimeout(startId: Int) {
         countDownTimer?.cancel()
         try { vibrate() } catch (_: Exception) {}
-        notificationManager.notify(DONE_NOTIF_ID, buildDoneNotification())
-        stopForeground(STOP_FOREGROUND_REMOVE)
+        // onTimeout は3分超(SHORT_SERVICE上限)のみ＝レストタイマー(≤180s)では発生しない稀ケース。
+        // OSのタイムアウト中は速やかに終了させるため、従来どおり通知音で完了し即停止する。
+        notificationManager.notify(DONE_NOTIF_ID, buildDoneNotification(DONE_CHANNEL_ID))
         sendBroadcast(Intent(BROADCAST_DONE))
-        releaseWakeLock()
-        stopSelf()
+        finishService()
         // super を呼ばない — デフォルト実装はクラッシュする
     }
 
@@ -99,14 +106,14 @@ class TimerService : Service() {
             override fun onFinish() {
                 // ① 直接バイブ（フォアグラウンド時の即時フィードバック）
                 try { vibrate() } catch (_: Exception) {}
-                // ② 完了通知を発行 — OS が音＋バイブを担当（バックグラウンド・画面オフでも確実）
-                notificationManager.notify(DONE_NOTIF_ID, buildDoneNotification())
-                // ③ フォアグラウンドサービスを解除してブロードキャスト
-                stopForeground(STOP_FOREGROUND_REMOVE)
+                // ② 完了通知。イヤホン接続時は無音チャンネルで出し、音はMediaPlayer(USAGE_MEDIA)で自前再生
+                //    （通知音がイヤホンに乗らない端末対策。非接続時は従来どおりOSの通知音）
+                val ear = earphonesConnected()
+                notificationManager.notify(DONE_NOTIF_ID, buildDoneNotification(if (ear) DONE_SILENT_CHANNEL_ID else DONE_CHANNEL_ID))
                 sendBroadcast(Intent(BROADCAST_DONE))
-                // ④ WakeLock 解放 → 即座に停止（Handler.postDelayed は使わない）
-                releaseWakeLock()
-                stopSelf()
+                // ③ イヤホン時は音の再生完了まで WakeLock/フォアグラウンドを保持（画面オフでも切れない）→完了でfinishService。
+                //    それ以外は即終了（OSの通知音が担当）。
+                if (ear) playAlarmSound() else finishService()
             }
         }.start()
     }
@@ -136,7 +143,82 @@ class TimerService : Service() {
         }
     }
 
-    private fun buildDoneNotification(): Notification {
+    // イヤホン（有線/USB/Bluetooth）が出力に接続されているか
+    private fun earphonesConnected(): Boolean {
+        return try {
+            val am = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                am.getDevices(AudioManager.GET_DEVICES_OUTPUTS).any { d ->
+                    d.type == AudioDeviceInfo.TYPE_WIRED_HEADPHONES ||
+                    d.type == AudioDeviceInfo.TYPE_WIRED_HEADSET ||
+                    d.type == AudioDeviceInfo.TYPE_USB_HEADSET ||
+                    d.type == AudioDeviceInfo.TYPE_BLUETOOTH_A2DP ||
+                    d.type == AudioDeviceInfo.TYPE_BLUETOOTH_SCO ||
+                    (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && d.type == AudioDeviceInfo.TYPE_BLE_HEADSET)
+                }
+            } else {
+                @Suppress("DEPRECATION")
+                (am.isWiredHeadsetOn || am.isBluetoothA2dpOn)
+            }
+        } catch (_: Exception) { false }
+    }
+
+    // 完了音を自前で再生（USAGE_MEDIA＝イヤホンに確実にルーティング、音楽はダッキング）。再生完了で stopSelf。
+    private fun playAlarmSound() {
+        try {
+            val am = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+            val attrs = AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_MEDIA)
+                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                .build()
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                val req = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT)
+                    .setAudioAttributes(attrs).build()
+                audioFocusReq = req
+                am.requestAudioFocus(req)
+            } else {
+                @Suppress("DEPRECATION")
+                am.requestAudioFocus(null, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN_TRANSIENT)
+            }
+            val soundUri = Uri.parse("android.resource://" + packageName + "/raw/timer_done")
+            mediaPlayer = MediaPlayer().apply {
+                setAudioAttributes(attrs)
+                setDataSource(this@TimerService, soundUri)
+                setOnCompletionListener {
+                    try { it.release() } catch (_: Exception) {}
+                    mediaPlayer = null
+                    abandonFocus()
+                    finishService()
+                }
+                prepare()
+                start()
+            }
+        } catch (_: Exception) {
+            abandonFocus()
+            finishService()
+        }
+    }
+
+    // フォアグラウンド解除 → WakeLock 解放 → サービス停止（完了処理の共通化）
+    private fun finishService() {
+        stopForeground(STOP_FOREGROUND_REMOVE)
+        releaseWakeLock()
+        stopSelf()
+    }
+
+    private fun abandonFocus() {
+        try {
+            val am = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                audioFocusReq?.let { am.abandonAudioFocusRequest(it) }
+            } else {
+                @Suppress("DEPRECATION") am.abandonAudioFocus(null)
+            }
+        } catch (_: Exception) {}
+        audioFocusReq = null
+    }
+
+    private fun buildDoneNotification(channelId: String): Notification {
         val launchIntent = Intent(this, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
             putExtra("target_screen", "gym-screen")
@@ -145,7 +227,7 @@ class TimerService : Service() {
             this, 0, launchIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
-        return NotificationCompat.Builder(this, DONE_CHANNEL_ID)
+        return NotificationCompat.Builder(this, channelId)
             .setSmallIcon(R.mipmap.ic_launcher)
             .setContentTitle("⏱ インターバル終了！")
             .setContentText("次のセットを始めよう")
@@ -216,13 +298,27 @@ class TimerService : Service() {
                 vibrationPattern = vibPattern
                 setSound(soundUri, audioAttrs)
             }
+            // タイマー完了（イヤホン時）: 無音。音は MediaPlayer 側で再生する
+            val doneSilentChannel = NotificationChannel(
+                DONE_SILENT_CHANNEL_ID, "タイマー完了（イヤホン）",
+                NotificationManager.IMPORTANCE_HIGH
+            ).apply {
+                description = "イヤホン接続時のインターバル終了（音はアプリ側で再生）"
+                enableVibration(true)
+                vibrationPattern = vibPattern
+                setSound(null, null)
+            }
             notificationManager.createNotificationChannel(timerChannel)
             notificationManager.createNotificationChannel(doneChannel)
+            notificationManager.createNotificationChannel(doneSilentChannel)
         }
     }
 
     override fun onDestroy() {
         countDownTimer?.cancel()
+        try { mediaPlayer?.release() } catch (_: Exception) {}
+        mediaPlayer = null
+        abandonFocus()
         releaseWakeLock()
         super.onDestroy()
     }
