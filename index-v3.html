@@ -638,6 +638,7 @@ textarea.cf-in{resize:none;line-height:1.5;}
     <div class="pad" id="pad">
       <div class="pad-head">
         <span class="lbl" id="pad-lbl">体重 (kg)</span>
+        <button class="prev hide" id="pad-bw" onclick="padBodyweight()" data-i18n="bodyweight">自重</button>
         <button class="prev" id="pad-prev" onclick="padPrev()">前回 —</button>
         <span class="val num" id="pad-val">0</span>
       </div>
@@ -808,7 +809,7 @@ const I18N = {
   ja: {
     nav_today:'今日', nav_gym:'筋トレ', nav_data:'データ', nav_set:'設定',
     today:'今日', today_btn:'今日', contest_unset:'大会未設定', tap_part:'タップして部位を選択', menu_unset:'メニュー未選択', start:'開始',
-    weight:'体重', sleep:'睡眠', meal:'食事', water:'水分', gym:'筋トレ', steps:'歩数', salon:'日サロ', salon_unit:'分',
+    weight:'体重', sleep:'睡眠', meal:'食事', water:'水分', gym:'筋トレ', steps:'歩数', salon:'日サロ', salon_unit:'分', bodyweight:'自重',
     kcal_auto:'kcal 自動計算', analysis_title:'🔍 体重変動分析', analysis_sub:'体重変動分析', analysis_empty:'記録を入力すると分析が表示されます。',
     seg_week:'週間', seg_month:'月間', seg_all:'全期間', data_title:'データ', data_empty:'データを蓄積すると傾向が表示されます。',
     weight_trend:'体重の推移', training:'トレーニング', nutrition:'栄養', this_week:'今週', last_week:'先週', all_period:'全期間',
@@ -863,7 +864,7 @@ const I18N = {
   en: {
     nav_today:'Today', nav_gym:'Workout', nav_data:'Data', nav_set:'Settings',
     today:'Today', today_btn:'Today', contest_unset:'No contest', tap_part:'Tap to pick muscle group', menu_unset:'No menu', start:'Start',
-    weight:'Weight', sleep:'Sleep', meal:'Meal', water:'Water', gym:'Workout', steps:'Steps', salon:'Tanning', salon_unit:'min',
+    weight:'Weight', sleep:'Sleep', meal:'Meal', water:'Water', gym:'Workout', steps:'Steps', salon:'Tanning', salon_unit:'min', bodyweight:'BW',
     kcal_auto:'kcal auto', analysis_title:'🔍 Weight change', analysis_sub:'Weight change', analysis_empty:'Log data to see your analysis.',
     seg_week:'Week', seg_month:'Month', seg_all:'All', data_title:'Data', data_empty:'Trends appear as you log data.',
     weight_trend:'Weight trend', training:'Training', nutrition:'Nutrition', this_week:'This week', last_week:'Last week', all_period:'All time',
@@ -1428,6 +1429,7 @@ function openPad(label,target){
   document.getElementById('pad-val').textContent=cur;
   const pb=document.getElementById('pad-prev');
   if(pv!=null){ pb.classList.remove('hide'); pb.textContent=t('prev')+' '+pv; } else pb.classList.add('hide');
+  document.getElementById('pad-bw').classList.add('hide');
   document.getElementById('pad').classList.add('open'); document.getElementById('pad-ov').classList.add('open');
 }
 function closePad(){ document.getElementById('pad').classList.remove('open'); document.getElementById('pad-ov').classList.remove('open'); }
@@ -1437,6 +1439,7 @@ function openSetPad(id,label){
   document.getElementById('pad-lbl').textContent=t(label||'');
   document.getElementById('pad-val').textContent=cur;
   document.getElementById('pad-prev').classList.add('hide');
+  document.getElementById('pad-bw').classList.add('hide');
   document.getElementById('pad').classList.add('open'); document.getElementById('pad-ov').classList.add('open');
 }
 function padKey(k){
@@ -1450,6 +1453,8 @@ function padKey(k){
   v=normBuf(v); el.textContent= v===''?'0':v;
 }
 function padPrev(){ if(padPrev_!=null) document.getElementById('pad-val').textContent=String(padPrev_).replace(/,/g,''); }
+// 自重（重量0として保存し、表示は「自重」）。gym重量入力時のみ
+function padBodyweight(){ if(!padTarget.startsWith('gym:')) return; const pr=padTarget.split(':'); if(pr[3]!=='w') return; const ei=+pr[1],si=+pr[2]; if(gymWork[ei]&&gymWork[ei].sets[si]){ gymWork[ei].sets[si].weight=0; saveGymData(); } closePad(); renderGym(); toast(t('t_saved')); }
 function padDone(){
   const v=document.getElementById('pad-val').textContent; const n=parseFloat(v);
   if(padTarget.startsWith('gymc:')){ const pr=padTarget.split(':'); const ei=+pr[1], key=pr[2]; gymWork[ei].cardio=gymWork[ei].cardio||{}; gymWork[ei].cardio[key]=isNaN(n)?null:n; saveGymData(); closePad(); renderGym(); toast(t('t_saved')); return; }
@@ -1600,11 +1605,12 @@ function renderGymCards(){
       return '<div class="card"><div class="ex-h"><span class="nm">'+esc(ex.name||t('ex_default'))+'</span><span class="cardio-tag">'+t('cardio_tag')+'</span><button class="ex-del-btn" onclick="gymDelEx('+ei+')" aria-label="delete">🗑</button></div>'+_rows+'</div>';
     }
     const sets=(ex.sets||[]).map((s,si)=>{
-      const w=(s.weight===''||s.weight==null)?'<span class="ph">—</span>':esc(s.weight);
+      const _bw=(s.weight===0);
+      const w=_bw?t('bodyweight'):((s.weight===''||s.weight==null)?'<span class="ph">—</span>':esc(s.weight));
       const r=(s.reps==null||s.reps==='')?'<span class="ph">—</span>':esc(s.reps);
       const mv=String(s.memo||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
       return `<div class="sset"><div class="srow"><span class="n">${esc(si+1)}</span>`+
-        `<div class="cell" onclick="openGymPad(${ei},${si},'w')">${w}<small>kg</small></div>`+
+        `<div class="cell" onclick="openGymPad(${ei},${si},'w')">${w}<small>${_bw?'':'kg'}</small></div>`+
         `<div class="cell" onclick="openGymPad(${ei},${si},'r')">${r}<small>rep</small></div>`+
         `<button class="srow-del" onclick="gymDelSet(${ei},${si})" aria-label="delete set">✕</button></div>`+
         `<input class="srow-memo" type="text" placeholder="${t('set_memo_ph')}" value="${mv}" oninput="gymSetMemo(${ei},${si},this.value)"></div>`;
@@ -1629,7 +1635,7 @@ const CARDIO_FIELDS={
 };
 const CARDIO_LABEL={time:'cf_time',distance:'cf_dist',speed:'cf_speed',incline:'cf_incline',kcal:'cf_kcal'};
 function cardioType(name){ if(!name) return null; if(CARDIO_TYPE_MAP[name]) return CARDIO_TYPE_MAP[name]; try{ if(!gymPresets) loadGymPresets(); if(gymPresets && gymPresets['有酸素'] && gymPresets['有酸素'].indexOf(name)>=0) return 'other'; }catch(e){} return null; }
-function openGymCardioPad(ei,key){ padTarget='gymc:'+ei+':'+key; padFresh=true; padPrev_=null; const cd=gymWork[ei].cardio||{}; const cur=(cd[key]!=null&&cd[key]!=='')?String(cd[key]):'0'; document.getElementById('pad-lbl').textContent=t(CARDIO_LABEL[key]||key); document.getElementById('pad-val').textContent=cur; document.getElementById('pad-prev').classList.add('hide'); document.getElementById('pad').classList.add('open'); document.getElementById('pad-ov').classList.add('open'); }
+function openGymCardioPad(ei,key){ padTarget='gymc:'+ei+':'+key; padFresh=true; padPrev_=null; const cd=gymWork[ei].cardio||{}; const cur=(cd[key]!=null&&cd[key]!=='')?String(cd[key]):'0'; document.getElementById('pad-lbl').textContent=t(CARDIO_LABEL[key]||key); document.getElementById('pad-val').textContent=cur; document.getElementById('pad-prev').classList.add('hide'); document.getElementById('pad-bw').classList.add('hide'); document.getElementById('pad').classList.add('open'); document.getElementById('pad-ov').classList.add('open'); }
 /* ===== 筋トレのシェア画像（Canvas → ネイティブ共有 saveStart/Chunk/Done。ブラウザはDL） ===== */
 function gymShare(){
   const exs=loadGymExercises(curDate)||[];
@@ -1637,7 +1643,7 @@ function gymShare(){
   const rec=getRec(curDate); const parts=(rec&&rec.muscles?rec.muscles:[]).map(partLabel).join(' / ');
   const blocks=exs.map(ex=>{ const ct=cardioType(ex.name);
     if(ct){ const f=CARDIO_FIELDS[ct]||CARDIO_FIELDS.other; const cd=ex.cardio||{}; const lines=f.filter(x=>cd[x.key]!=null&&cd[x.key]!=='').map(x=>t(x.label)+'  '+cd[x.key]+x.unit); return {name:ex.name, cardio:true, lines: lines.length?lines:['—']}; }
-    const lines=(ex.sets||[]).map((s,i)=>{ const w=(s.weight==null||s.weight==='')?'—':s.weight+'kg'; const r=(s.reps==null||s.reps==='')?'—':s.reps+'rep'; return (i+1)+'.   '+w+'   ×   '+r; }); return {name:ex.name, lines: lines.length?lines:['—']}; });
+    const lines=(ex.sets||[]).map((s,i)=>{ const w=(s.weight===0)?t('bodyweight'):((s.weight==null||s.weight==='')?'—':s.weight+'kg'); const r=(s.reps==null||s.reps==='')?'—':s.reps+'rep'; return (i+1)+'.   '+w+'   ×   '+r; }); return {name:ex.name, lines: lines.length?lines:['—']}; });
   const W=1080, PADX=72, NAME_H=66, LINE_H=46, GAP=30, FOOT_H=120;
   const TITLE_H = parts ? 322 : 268;
   let H=TITLE_H; blocks.forEach(b=>{ H+=NAME_H + b.lines.length*LINE_H + GAP; }); H+=FOOT_H; H=Math.max(H,720);
@@ -1760,6 +1766,7 @@ function openGymPad(ei,si,which){
   document.getElementById('pad-lbl').textContent=name+' — '+(which==='w'?'kg':'rep');
   document.getElementById('pad-val').textContent=(cur===''||cur==null)?'0':String(cur);
   const pb=document.getElementById('pad-prev'); if(pv!=null){pb.classList.remove('hide');pb.textContent=t('prev')+' '+pv;}else pb.classList.add('hide');
+  const _bw=document.getElementById('pad-bw'); if(_bw){ if(which==='w') _bw.classList.remove('hide'); else _bw.classList.add('hide'); }
   document.getElementById('pad').classList.add('open'); document.getElementById('pad-ov').classList.add('open');
 }
 
