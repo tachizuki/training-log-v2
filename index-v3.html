@@ -42,6 +42,10 @@ body{background:#000;color:var(--text);font-family:'Noto Sans JP',sans-serif;}
 .ctx-strip .days{font-family:'Inter';font-weight:800;font-size:12px;color:var(--acc);}
 .ctx-strip .auto{margin-left:auto;font-size:10px;color:var(--faint);display:flex;align-items:center;gap:4px;}
 .ctx-strip .auto i{width:6px;height:6px;border-radius:50%;background:var(--good);}
+/* 固定ヘッダー（擬似時計を置き換え、大会カウントダウンを常時表示） */
+.statusbar.topbar{justify-content:flex-start;gap:7px;color:var(--sub);padding-left:16px;padding-right:16px;}
+.statusbar.topbar .days{font-family:'Inter';font-weight:800;font-size:12px;color:var(--acc);flex-shrink:0;}
+.statusbar.topbar #ctx-contest{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 #pg-today{gap:8px;}
 .today-title{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 2px;}
 .today-title h1{font-size:clamp(17px,5vw,21px);font-weight:900;}
@@ -397,15 +401,11 @@ textarea.cf-in{resize:none;line-height:1.5;}
 </head>
 <body>
 <div class="phone">
-  <div class="statusbar"><span id="sb-time">--:--</span><span id="sb-batt">●</span></div>
+  <div class="statusbar topbar"><span class="days num" id="ctx-days">—</span><span id="ctx-contest" onclick="goContestSettings()" style="cursor:pointer;">大会未設定</span></div>
   <div class="viewport">
 
     <!-- ===== 今日 ===== -->
     <div class="page scrollable active" id="pg-today">
-      <div class="ctx-strip">
-        <span class="days num" id="ctx-days">—</span><span id="ctx-contest" onclick="goContestSettings()" style="cursor:pointer;">大会未設定</span>
-        <span class="auto"><i></i>自動保存</span>
-      </div>
       <div class="today-title">
         <h1 onclick="openCal()" style="cursor:pointer;"><span id="today-label">今日</span><small id="today-date"></small> <span style="font-size:13px;">📅</span></h1>
         <input type="date" id="cal" style="position:absolute;opacity:0;width:1px;height:1px;pointer-events:none;left:0;" onchange="onCalChange(this.value)">
@@ -476,7 +476,6 @@ textarea.cf-in{resize:none;line-height:1.5;}
 
     <!-- ===== 筋トレ ===== -->
     <div class="page scrollable" id="pg-gym">
-      <div class="ctx-strip"><span class="days num" id="ctx-days2">—</span><span id="ctx-contest2" onclick="goContestSettings()" style="cursor:pointer;"></span><span class="auto"><i></i>自動保存</span></div>
 
       <!-- 細い日付ナビ＋📅（記録優先。履歴カレンダーはシートで開く） -->
       <div class="gym-datebar">
@@ -500,7 +499,6 @@ textarea.cf-in{resize:none;line-height:1.5;}
 
     <!-- ===== データ ===== -->
     <div class="page scrollable" id="pg-data">
-      <div class="ctx-strip"><span class="days num" id="ctx-days3">—</span><span id="ctx-contest3" onclick="goContestSettings()" style="cursor:pointer;"></span><span class="auto"><i></i>自動保存</span></div>
       <div class="today-title" style="padding-bottom:10px;"><h1 data-i18n="data_title">データ</h1></div>
       <div class="seg" id="data-seg">
         <button class="seg-btn on" onclick="setPeriod('week')" data-i18n="seg_week">週間</button>
@@ -1936,7 +1934,7 @@ function renderRoadmapExtra(){
   const gap=cur!=null?(cur-cw):null;
   let judge=t('rm_nopace'), jcls='flat';
   if(cur!=null){ if(gap!=null&&gap<=0.05){ judge=t('rm_done'); jcls='done'; } else { const d=cur-targetAt(plan,today); judge=(d<=0.1)?t('rm_ok'):t('rm_behind'); jcls=(d<=0.1)?'ok':'behind'; } }
-  el.innerHTML='<div class="rm-head2"><span class="rm-days">'+daysTxt+(gap!=null&&gap>0.05?' ・ '+t('rm_gap')+' '+gap.toFixed(1)+'kg':'')+'</span><span class="rm-judge '+jcls+'">'+judge+'</span></div>';
+  el.innerHTML='<div class="rm-head2"><span class="rm-days">'+t('kpi_pace')+'</span><span class="rm-judge '+jcls+'">'+judge+'</span></div>';
 }
 /* ===== 筋トレ分析 1RM・停滞（プレミアム） ===== */
 function gymExerciseStats(){
@@ -2022,8 +2020,6 @@ let swRunning=false, swS=0, swTimer=null;
 function toggleSw(){ swRunning=!swRunning; document.getElementById('sw-btn').textContent=swRunning?t('sw_stop'):t('start'); if(swRunning){ swTimer=setInterval(()=>{swS++; const m=Math.floor(swS/60),s=swS%60; document.getElementById('sw').textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');},1000);} else clearInterval(swTimer); }
 
 /* ===== ステータスバー時計 ===== */
-function tickClock(){ const d=new Date(); document.getElementById('sb-time').textContent=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); }
-setInterval(tickClock,10000); tickClock();
 
 /* ===== 初回オンボーディング ===== */
 let obIdx=0; const OB_N=4;
