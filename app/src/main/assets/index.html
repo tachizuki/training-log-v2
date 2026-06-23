@@ -468,6 +468,10 @@ textarea.cf-in{resize:none;line-height:1.5;}
         </div>
         <button class="go" data-i18n="start" onclick="go('gym')">開始</button>
       </div>
+      <div class="tile" style="padding:14px 16px;">
+        <div class="k" data-i18n="memo_today">今日のメモ</div>
+        <textarea id="today-memo" class="cf-in" rows="2" maxlength="200" oninput="saveTodayMemo(this.value)" data-i18n-ph="memo_ph" placeholder="飲み会・外食・体調・コンディションなど"></textarea>
+      </div>
       <div class="tile analysis">
         <div class="hd"><span data-i18n="analysis_title">🔍 体重変動分析</span></div>
         <div class="body" id="today-analysis">記録を入力すると分析が表示されます。</div>
@@ -801,7 +805,7 @@ textarea.cf-in{resize:none;line-height:1.5;}
 
 <script>
 /* アプリのバージョン表記（日付ベースで一意・修正のたびに更新）。お問い合わせ等のメタに使用。 */
-const APP_VERSION = 'v20260616a';
+const APP_VERSION = 'v20260623a';
 /* ===== i18n（自動判定＋設定で手動切替。未翻訳キーは日本語フォールバック） ===== */
 const I18N = {
   ja: {
@@ -854,6 +858,8 @@ const I18N = {
     wa_salon_long:'前日の日サロ <b>{0}分</b>。熱による炎症・むくみの可能性。', wa_salon_short:'前日の日サロ <b>{0}分</b>。',
     wa_kcal_over:'前日のカロリー <b>{0}kcal</b>（{1}余剰）。体重増加の要因。', wa_kcal_under:'前日のカロリー <b>{0}kcal</b>（{1}赤字）。脂肪分解が進み下がりやすい。', wa_kcal_ok:'前日のカロリー <b>{0}kcal</b>（適正範囲・収支{1}kcal）。', wa_balance_good:'前日の摂取 <b>{2}kcal</b>・推定収支 <b>{0}kcal</b>。十分な赤字。（{1}）', wa_balance_ok:'前日の摂取 <b>{2}kcal</b>・推定収支 <b>{0}kcal</b>。適度な赤字。（{1}）', wa_balance_over:'前日の摂取 <b>{2}kcal</b>・推定収支 <b>{0}kcal</b>。黒字気味。体重増加につながりやすい。（{1}）', wa_need_profile:'カロリー収支の推定にはプロフィール（身長・年齢・性別）が必要です。設定 → プロフィールから入力してください。',
     wa_carb_high:'前日の炭水化物 <b>{0}g</b>（多め）。糖質は水分を抱え一時的に増えやすい。', wa_carb_low:'前日の炭水化物 <b>{0}g</b>（少なめ）。グリコーゲン減で水分も抜け下がりやすい。',
+    wa_fat_high:'前日の脂質 <b>{0}g</b>（多め）。脂質は消化が遅く翌朝も腸内に残りやすく、体重を一時的に押し上げる一因。', wa_fat_low:'前日の脂質 <b>{0}g</b>（少なめ）。消化が速く翌朝の残留が少なく体重に出にくい。', wa_protein_low:'前日のタンパク質 <b>{0}g</b>（不足気味）。減量中は筋肉分解のリスク。{1}g以上を目標に。', wa_protein_ok:'前日のタンパク質 <b>{0}g</b>。筋肉維持に十分な量。', wa_memo_drink:'前日のメモに飲み会・アルコールの記録。利尿→翌日の水分リバウンドで増えやすいパターン。', wa_memo_eat:'前日のメモに外食の記録。塩分・脂質が高くなりやすく体重変動の一因。', wa_memo_out:'前日のメモにアウトドア・旅行の記録。環境や食事の変化が体重に影響する場合あり。',
+    memo_today:'今日のメモ', memo_ph:'飲み会・外食・体調・コンディションなど',
     wa_when_prev:'前日', wa_when_prev2:'2日前', wa_train_big:'{0}に <b>{1}</b> をトレ。大筋群は水分貯留・炎症で一時増えやすい。', wa_train_small:'{0}に <b>{1}</b> をトレ。',
     wa_cardio_high:'前日の有酸素 <b>{0}kcal</b>。脂肪燃焼に有効。', wa_cardio_low:'前日の有酸素 <b>{0}kcal</b>。', wa_steps_high:'前日の歩数 <b>{0}</b>。活動量しっかり。', wa_steps_low:'前日の歩数 <b>{0}</b>（少なめ）。',
     wa_sleep_short:'当日の睡眠 <b>{0}h</b>（不足）。コルチゾール増で水分を溜めやすい。', wa_sleep_mid:'当日の睡眠 <b>{0}h</b>（やや短め）。7h以上で回復・燃焼が改善。', wa_sleep_ok:'当日の睡眠 <b>{0}h</b>。回復・脂肪燃焼をサポート。',
@@ -909,6 +915,8 @@ const I18N = {
     wa_salon_long:'Yesterday tanning <b>{0}min</b>. Heat may cause inflammation/bloat.', wa_salon_short:'Yesterday tanning <b>{0}min</b>.',
     wa_kcal_over:'Yesterday calories <b>{0}kcal</b> ({1} surplus). Drives weight gain.', wa_kcal_under:'Yesterday calories <b>{0}kcal</b> ({1} deficit). Promotes fat loss.', wa_kcal_ok:'Yesterday calories <b>{0}kcal</b> (within range · {1}kcal).', wa_balance_good:'Yesterday intake <b>{2}kcal</b> · est. balance <b>{0}kcal</b>. Significant deficit. ({1})', wa_balance_ok:'Yesterday intake <b>{2}kcal</b> · est. balance <b>{0}kcal</b>. Moderate deficit. ({1})', wa_balance_over:'Yesterday intake <b>{2}kcal</b> · est. balance <b>{0}kcal</b>. Slight surplus — may add weight. ({1})', wa_need_profile:'Set up your profile (height, age, sex) in Settings → Profile to estimate calorie balance.',
     wa_carb_high:'Yesterday carbs <b>{0}g</b> (high). Carbs hold water — temporary gain.', wa_carb_low:'Yesterday carbs <b>{0}g</b> (low). Glycogen & water drop, easier loss.',
+    wa_fat_high:'Yesterday fat <b>{0}g</b> (high). Fat digests slowly and may remain by morning — a factor in a temporary weight bump.', wa_fat_low:'Yesterday fat <b>{0}g</b> (low). Faster digestion, less morning residue.', wa_protein_low:'Yesterday protein <b>{0}g</b> (low). Risk of muscle loss on a cut. Aim for {1}g+.', wa_protein_ok:'Yesterday protein <b>{0}g</b>. Enough to retain muscle.', wa_memo_drink:'Memo notes drinking/alcohol. Diuresis → next-day water rebound can raise weight.', wa_memo_eat:'Memo notes eating out. Often high in salt/fat — a factor in weight swings.', wa_memo_out:'Memo notes outdoors/travel. Changes in environment & diet can affect weight.',
+    memo_today:'Today\'s note', memo_ph:'Drinking, eating out, condition, etc.',
     wa_when_prev:'yesterday', wa_when_prev2:'2 days ago', wa_train_big:'Trained <b>{1}</b> {0}. Large muscles retain water/inflammation — temporary gain.', wa_train_small:'Trained <b>{1}</b> {0}.',
     wa_cardio_high:'Yesterday cardio <b>{0}kcal</b>. Good for fat loss.', wa_cardio_low:'Yesterday cardio <b>{0}kcal</b>.', wa_steps_high:'Yesterday steps <b>{0}</b>. Solid activity.', wa_steps_low:'Yesterday steps <b>{0}</b> (low).',
     wa_sleep_short:'Sleep <b>{0}h</b> (low). Cortisol up → water retention.', wa_sleep_mid:'Sleep <b>{0}h</b> (a bit short). 7h+ aids recovery & burn.', wa_sleep_ok:'Sleep <b>{0}h</b>. Supports recovery & fat loss.',
@@ -1314,9 +1322,12 @@ function renderToday(){
   document.getElementById('gym-title').textContent=mn;
   const lastGym=DB.records().filter(r=>r.date<curDate && r.trained && r.muscles&&r.muscles.length).sort((a,b)=>b.date.localeCompare(a.date))[0];
   document.getElementById('menu-sub').textContent= lastGym ? (t('prev')+' '+lastGym.date.slice(5).replace('-','/')+' '+lastGym.muscles.map(partLabel).join(LANG==='ja'?'・':', ')) : t('tap_part');
+  // 今日のメモ（入力中はカーソル保持のため上書きしない）
+  const _tm=document.getElementById('today-memo'); if(_tm && document.activeElement!==_tm) _tm.value=rec.memo||'';
   // 分析
   renderTodayAnalysis(rec);
 }
+function saveTodayMemo(v){ const rec=getRec(curDate)||blankRec(curDate); rec.memo=v; upsertRec(rec); }
 function setMini(valId,subId,okId,val,unit,subFn){
   document.getElementById(valId).innerHTML = (val==null?'<span class="ph">—</span>':val)+'<small>'+unit+'</small>';
   document.getElementById(okId).style.display = val==null?'none':'';
@@ -1375,6 +1386,12 @@ function renderTodayAnalysis(rec){
     if(prevRec.c!=null && ng.c!=null){ const dc=prevRec.c-ng.c;
       if(dc>40) items.push(['🍚','w', t('wa_carb_high', prevRec.c)]);
       else if(dc<-40) items.push(['🍚','g', t('wa_carb_low', prevRec.c)]); }
+    // 脂質（前日）→ 消化が遅く翌朝に残留しやすい
+    if(prevRec.f!=null && ng.f!=null){ if(prevRec.f>ng.f+25) items.push(['🫒', prevRec.f>ng.f+50?'b':'w', t('wa_fat_high', prevRec.f)]); else if(prevRec.f<ng.f-20) items.push(['🫒','g', t('wa_fat_low', prevRec.f)]); }
+    // タンパク質（前日）→ 不足で筋分解リスク／十分なら維持
+    if(prevRec.p!=null && ng.p!=null){ if(prevRec.p<ng.p-40) items.push(['🥩','w', t('wa_protein_low', prevRec.p, ng.p)]); else if(prevRec.p>=ng.p) items.push(['🥩','g', t('wa_protein_ok', prevRec.p)]); }
+    // 前日のメモ → 飲み会/外食/アウトドアのキーワード解析
+    if(prevRec.memo){ const _m=prevRec.memo; if(/飲み会|飲み|アルコール|ビール|お酒|呑/.test(_m)) items.push(['🍺','w', t('wa_memo_drink')]); if(/外食|ラーメン|焼肉|寿司|中華|ピザ|ファミレス|居酒屋|food|dinner/i.test(_m)) items.push(['🍜','w', t('wa_memo_eat')]); if(/キャンプ|旅行|遠征|登山|アウトドア|camp|travel/i.test(_m)) items.push(['🏕️','', t('wa_memo_out')]); }
     // 筋トレ（前日・2日前）→ 大筋群は水分貯留・炎症で一時増
     const BIG=['足','背中','胸'];
     [[prevRec, t('wa_when_prev')],[DB.records().find(r=>r.date===addDays(rec.date,-2)), t('wa_when_prev2')]].forEach(p=>{ const r2=p[0]; if(r2 && r2.trained && r2.muscles && r2.muscles.length){ const ms=esc(r2.muscles.map(partLabel).join(LANG==='ja'?'・':', ')); const big=r2.muscles.some(m=>BIG.indexOf(m)>=0); items.push(['💪', big?'w':'', t(big?'wa_train_big':'wa_train_small', p[1], ms)]); } });
