@@ -852,7 +852,7 @@ const I18N = {
     wa_salt_high:'前日の塩分 <b>{0}g</b>（目標{1}g超）。むくみで体重が増えやすい状態。', wa_salt_mid:'前日の塩分 <b>{0}g</b>（やや多め／目標{1}g）。軽度のむくみ要因の可能性。', wa_salt_ok:'前日の塩分 <b>{0}g</b>（目標{1}g内）。むくみ要因は少なめ。',
     wa_water_high:'前日の水分 <b>{0}L</b>。塩分排出・代謝を促進。', wa_water_mid:'前日の水分 <b>{0}L</b>。もう少し増やすと排出が進みやすい。', wa_water_low:'前日の水分 <b>{0}L</b>（少なめ）。塩分が残りむくみやすい。',
     wa_salon_long:'前日の日サロ <b>{0}分</b>。熱による炎症・むくみの可能性。', wa_salon_short:'前日の日サロ <b>{0}分</b>。',
-    wa_kcal_over:'前日のカロリー <b>{0}kcal</b>（{1}余剰）。体重増加の要因。', wa_kcal_under:'前日のカロリー <b>{0}kcal</b>（{1}赤字）。脂肪分解が進み下がりやすい。', wa_kcal_ok:'前日のカロリー <b>{0}kcal</b>（適正範囲）。',
+    wa_kcal_over:'前日のカロリー <b>{0}kcal</b>（{1}余剰）。体重増加の要因。', wa_kcal_under:'前日のカロリー <b>{0}kcal</b>（{1}赤字）。脂肪分解が進み下がりやすい。', wa_kcal_ok:'前日のカロリー <b>{0}kcal</b>（適正範囲・収支{1}kcal）。',
     wa_carb_high:'前日の炭水化物 <b>{0}g</b>（多め）。糖質は水分を抱え一時的に増えやすい。', wa_carb_low:'前日の炭水化物 <b>{0}g</b>（少なめ）。グリコーゲン減で水分も抜け下がりやすい。',
     wa_when_prev:'前日', wa_when_prev2:'2日前', wa_train_big:'{0}に <b>{1}</b> をトレ。大筋群は水分貯留・炎症で一時増えやすい。', wa_train_small:'{0}に <b>{1}</b> をトレ。',
     wa_cardio_high:'前日の有酸素 <b>{0}kcal</b>。脂肪燃焼に有効。', wa_cardio_low:'前日の有酸素 <b>{0}kcal</b>。', wa_steps_high:'前日の歩数 <b>{0}</b>。活動量しっかり。', wa_steps_low:'前日の歩数 <b>{0}</b>（少なめ）。',
@@ -907,7 +907,7 @@ const I18N = {
     wa_salt_high:'Yesterday salt <b>{0}g</b> (over {1}g goal). Prone to water retention.', wa_salt_mid:'Yesterday salt <b>{0}g</b> (a bit high / {1}g goal). Mild bloat possible.', wa_salt_ok:'Yesterday salt <b>{0}g</b> (within {1}g goal). Low bloat risk.',
     wa_water_high:'Yesterday water <b>{0}L</b>. Aids sodium flush & metabolism.', wa_water_mid:'Yesterday water <b>{0}L</b>. A bit more helps flushing.', wa_water_low:'Yesterday water <b>{0}L</b> (low). Sodium lingers, bloat risk.',
     wa_salon_long:'Yesterday tanning <b>{0}min</b>. Heat may cause inflammation/bloat.', wa_salon_short:'Yesterday tanning <b>{0}min</b>.',
-    wa_kcal_over:'Yesterday calories <b>{0}kcal</b> ({1} surplus). Drives weight gain.', wa_kcal_under:'Yesterday calories <b>{0}kcal</b> ({1} deficit). Promotes fat loss.', wa_kcal_ok:'Yesterday calories <b>{0}kcal</b> (within range).',
+    wa_kcal_over:'Yesterday calories <b>{0}kcal</b> ({1} surplus). Drives weight gain.', wa_kcal_under:'Yesterday calories <b>{0}kcal</b> ({1} deficit). Promotes fat loss.', wa_kcal_ok:'Yesterday calories <b>{0}kcal</b> (within range · {1}kcal).',
     wa_carb_high:'Yesterday carbs <b>{0}g</b> (high). Carbs hold water — temporary gain.', wa_carb_low:'Yesterday carbs <b>{0}g</b> (low). Glycogen & water drop, easier loss.',
     wa_when_prev:'yesterday', wa_when_prev2:'2 days ago', wa_train_big:'Trained <b>{1}</b> {0}. Large muscles retain water/inflammation — temporary gain.', wa_train_small:'Trained <b>{1}</b> {0}.',
     wa_cardio_high:'Yesterday cardio <b>{0}kcal</b>. Good for fat loss.', wa_cardio_low:'Yesterday cardio <b>{0}kcal</b>.', wa_steps_high:'Yesterday steps <b>{0}</b>. Solid activity.', wa_steps_low:'Yesterday steps <b>{0}</b> (low).',
@@ -1351,9 +1351,10 @@ function renderTodayAnalysis(rec){
     const pkc=prevRec.kcal!=null?prevRec.kcal:calcKcal(prevRec.p,prevRec.f,prevRec.c);
     const gk=(ng.p!=null||ng.f!=null||ng.c!=null)?calcKcal(ng.p,ng.f,ng.c):0;
     if(pkc && gk){ const sur=pkc-gk;
-      if(sur>400) items.push(['🔥', sur>800?'b':'w', t('wa_kcal_over', pkc, '+'+Math.round(sur))]);
-      else if(sur<-400) items.push(['🔥','g', t('wa_kcal_under', pkc, Math.round(sur))]);
-      else items.push(['🔥','g', t('wa_kcal_ok', pkc)]); }
+      const ss=(sur>=0?'+':'')+Math.round(sur);
+      if(sur>400) items.push(['🔥', sur>800?'b':'w', t('wa_kcal_over', pkc, ss)]);
+      else if(sur<-400) items.push(['🔥','g', t('wa_kcal_under', pkc, ss)]);
+      else items.push(['🔥','g', t('wa_kcal_ok', pkc, ss)]); }
     // 炭水化物（前日）→ グリコーゲン＋水分で一時変動
     if(prevRec.c!=null && ng.c!=null){ const dc=prevRec.c-ng.c;
       if(dc>40) items.push(['🍚','w', t('wa_carb_high', prevRec.c)]);
