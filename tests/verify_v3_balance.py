@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# 推定カロリー収支：摂取表示／プロフィール未設定時メッセージ／情報色(an-l i)を検証。
+# 推定カロリー収支：摂取表示／符号で色(マイナス=g緑/プラス=b赤)／未設定時のみ情報色(i)メッセージ。
 import pathlib, sys
 from playwright.sync_api import sync_playwright
 URI = pathlib.Path('index-v3.html').resolve().as_uri()
@@ -21,16 +21,19 @@ with sync_playwright() as p:
           ]));
         }}""")
         pg.evaluate("go('today'); curDate=logicalToday(); renderToday();"); pg.wait_for_timeout(40)
-        return pg.evaluate("()=>document.getElementById('today-analysis').innerHTML")
-    # プロフィールあり
-    h = setup("{height:168,age:25,sex:'male'}", 1700)
-    rec('INTAKE', ('摂取' in h) and ('1700' in h), f"摂取={'摂取' in h} 1700={'1700' in h}")
-    rec('BALANCE', ('推定収支' in h) and ('基礎代謝' in h) and ('歩行' in h), f"")
-    rec('INFO_COLOR', 'an-l i' in h.replace('  ',' '), f"info色クラス {'an-l i' in h}")
-    rec('NO_GR', ('an-l g"' not in h) or True, '収支は緑/赤を使わない（情報色）')  # 参考
-    # プロフィールなし
-    h2 = setup("{}", 1700)
-    rec('NEED_PROFILE', ('プロフィール' in h2) and ('推定収支' not in h2), f"msg={'プロフィール' in h2} no収支={'推定収支' not in h2}")
+        return pg.evaluate("""()=>{const root=document.getElementById('today-analysis');
+          const bal=[...root.querySelectorAll('.an-l')].find(d=>d.textContent.includes('収支'));
+          const msg=[...root.querySelectorAll('.an-l')].find(d=>d.textContent.includes('プロフィール'));
+          return {html:root.innerHTML, balCls:(bal?bal.className:''), msgCls:(msg?msg.className:'')};}""")
+    # プロフィールあり・赤字 → 緑(g)
+    r1 = setup("{height:168,age:25,sex:'male'}", 1100)
+    rec('DEFICIT_GREEN', ('摂取' in r1['html']) and ('1100' in r1['html']) and ('g' in r1['balCls'].split()), f"balCls={r1['balCls']}")
+    # プロフィールあり・黒字 → 赤(b)
+    r2 = setup("{height:168,age:25,sex:'male'}", 2500)
+    rec('SURPLUS_RED', 'b' in r2['balCls'].split(), f"balCls={r2['balCls']}")
+    # プロフィールなし → 情報色(i)メッセージ・収支なし
+    r3 = setup("{}", 1700)
+    rec('NEED_PROFILE_INFO', ('i' in r3['msgCls'].split()) and ('推定収支' not in r3['html']), f"msgCls={r3['msgCls']}")
     rec('NOERR', not pg._errs, f"{pg._errs[:2]}")
     pg.close(); b.close()
 passed=[k for k,v in results.items() if v[0]]; failed=[k for k,v in results.items() if not v[0]]

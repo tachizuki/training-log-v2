@@ -1367,7 +1367,7 @@ function renderTodayAnalysis(rec){
         if(_stepsK>0) _parts.push((_L?'歩行':'steps ')+_stepsK);
         const _bd=_parts.join('+');
         const _jk=_bal<-500?'wa_balance_good':(_bal<0?'wa_balance_ok':'wa_balance_over');
-        items.push(['📊','i', t(_jk, _bs, _bd, pkc)]); } }
+        items.push(['📊', _bal<0?'g':'b', t(_jk, _bs, _bd, pkc)]); } }
     // 炭水化物（前日）→ グリコーゲン＋水分で一時変動
     if(prevRec.c!=null && ng.c!=null){ const dc=prevRec.c-ng.c;
       if(dc>40) items.push(['🍚','w', t('wa_carb_high', prevRec.c)]);
