@@ -143,8 +143,9 @@ body{background:#000;color:var(--text);font-family:'Noto Sans JP',sans-serif;}
 .pad-head .prev{background:var(--surface2);border:1px solid var(--line);color:var(--sub);border-radius:9px;padding:7px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:'Noto Sans JP';}
 .pad-head .prev:active{color:var(--acc);border-color:var(--acc);}
 .pad-head .prev.hide{display:none;}
-.pad-head #pad-bw{background:var(--acc-dim);border-color:var(--acc);color:var(--acc);}
-.pad-head #pad-bw:active{background:var(--acc);border-color:var(--acc);color:#0d0f10;}
+.pad-head #pad-bw{background:var(--surface2);border:1px dashed var(--acc);color:var(--text);}
+.pad-head #pad-bw:active{background:var(--acc-dim);}
+.pad-head #pad-bw.on{background:var(--acc);border:1px solid var(--acc);color:#0d0f10;}
 .pad-head .val{font-family:'Inter';font-size:30px;font-weight:800;color:var(--acc);margin-left:auto;}
 .pad-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
 .pad-grid button{height:58px;background:var(--surface);border:1px solid var(--line);border-radius:14px;color:var(--text);font-family:'Inter';font-size:22px;font-weight:700;cursor:pointer;}
@@ -807,7 +808,7 @@ textarea.cf-in{resize:none;line-height:1.5;}
 
 <script>
 /* アプリのバージョン表記（日付ベースで一意・修正のたびに更新）。お問い合わせ等のメタに使用。 */
-const APP_VERSION = 'v20260623b';
+const APP_VERSION = 'v20260623c';
 /* ===== i18n（自動判定＋設定で手動切替。未翻訳キーは日本語フォールバック） ===== */
 const I18N = {
   ja: {
@@ -1800,7 +1801,7 @@ function openGymPad(ei,si,which){
   document.getElementById('pad-lbl').textContent=name+' — '+(which==='w'?'kg':'rep');
   document.getElementById('pad-val').textContent=(cur===''||cur==null)?'0':String(cur);
   const pb=document.getElementById('pad-prev'); if(pv!=null){pb.classList.remove('hide');pb.textContent=t('prev')+' '+pv;}else pb.classList.add('hide');
-  const _bw=document.getElementById('pad-bw'); if(_bw){ if(which==='w') _bw.classList.remove('hide'); else _bw.classList.add('hide'); }
+  const _bw=document.getElementById('pad-bw'); if(_bw){ if(which==='w'){ _bw.classList.remove('hide'); _bw.classList.toggle('on', s.weight===0); } else { _bw.classList.add('hide'); _bw.classList.remove('on'); } }
   document.getElementById('pad').classList.add('open'); document.getElementById('pad-ov').classList.add('open');
 }
 
