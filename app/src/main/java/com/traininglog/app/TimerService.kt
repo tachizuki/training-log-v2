@@ -69,10 +69,9 @@ class TimerService : Service() {
         countDownTimer?.cancel()
         try { vibrate() } catch (_: Exception) {}
         // onTimeout は3分超(SHORT_SERVICE上限)のみ＝レストタイマー(≤180s)では発生しない稀ケース。
-        // OSのタイムアウト中は速やかに終了させるため、従来どおり通知音で完了し即停止する。
-        notificationManager.notify(DONE_NOTIF_ID, buildDoneNotification(DONE_CHANNEL_ID))
+        notificationManager.notify(DONE_NOTIF_ID, buildDoneNotification(DONE_SILENT_CHANNEL_ID))
         sendBroadcast(Intent(BROADCAST_DONE))
-        finishService()
+        playAlarmSound()
         // super を呼ばない — デフォルト実装はクラッシュする
     }
 
@@ -104,16 +103,12 @@ class TimerService : Service() {
                 notificationManager.notify(NOTIF_ID, buildNotification(remaining, totalSeconds))
             }
             override fun onFinish() {
-                // ① 直接バイブ（フォアグラウンド時の即時フィードバック）
                 try { vibrate() } catch (_: Exception) {}
-                // ② 完了通知。イヤホン接続時は無音チャンネルで出し、音はMediaPlayer(USAGE_MEDIA)で自前再生
-                //    （通知音がイヤホンに乗らない端末対策。非接続時は従来どおりOSの通知音）
-                val ear = earphonesConnected()
-                notificationManager.notify(DONE_NOTIF_ID, buildDoneNotification(if (ear) DONE_SILENT_CHANNEL_ID else DONE_CHANNEL_ID))
+                // 通知システムに依存せず、常に自前のMediaPlayer(USAGE_MEDIA＋音声フォーカス)で鳴らす。
+                // → 通知OFF/マナー/DND でも、イヤホン・スピーカー両方で確実に鳴る（再生完了で finishService）。
+                notificationManager.notify(DONE_NOTIF_ID, buildDoneNotification(DONE_SILENT_CHANNEL_ID))
                 sendBroadcast(Intent(BROADCAST_DONE))
-                // ③ イヤホン時は音の再生完了まで WakeLock/フォアグラウンドを保持（画面オフでも切れない）→完了でfinishService。
-                //    それ以外は即終了（OSの通知音が担当）。
-                if (ear) playAlarmSound() else finishService()
+                playAlarmSound()
             }
         }.start()
     }
