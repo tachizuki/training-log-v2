@@ -1327,6 +1327,7 @@ function setMeal(id,val){ document.getElementById(id).querySelector('.n').innerH
 function calcBMR(h,w,age,sex){ if(!h||!age) return null; const ww=w||63; return Math.round(sex==='female' ? (447.593+9.247*ww+3.098*h-4.330*age) : (88.362+13.397*ww+4.799*h-5.677*age)); }
 function getUserBMR(bw){ try{ const p=JSON.parse(localStorage.getItem('user_profile')||'{}'); return calcBMR(p.height,bw,p.age,p.sex); }catch(e){ return null; } }
 function dayCardioKcal(dateKey){ try{ const g=DB.gym()[dateKey]; if(!g||!g.exercises) return 0; return g.exercises.reduce((s,ex)=>{ const k=ex.cardio&&ex.cardio.kcal; return s+((cardioType(ex.name)&&k)?(+k||0):0); },0); }catch(e){ return 0; } }
+function dayWeightKcal(dateKey,bw){ try{ const g=DB.gym()[dateKey]; if(!g||!g.exercises) return 0; let sets=0; g.exercises.forEach(ex=>{ if(!cardioType(ex.name)) sets+=(ex.sets||[]).length; }); return sets>0?Math.round(5.0*(bw||63)*(sets*2.5/60)):0; }catch(e){ return 0; } }
 function renderTodayAnalysis(rec){
   const el=document.getElementById('today-analysis'); if(!el) return;
   const ng=DB.nutritionGoals();
@@ -1359,11 +1360,13 @@ function renderTodayAnalysis(rec){
         items.push(['👤','i', t('wa_need_profile')]);
       } else {
         const _cardio=(prevRec.cardioKcal||0)+dayCardioKcal(prevRec.date);
+        const _weight=dayWeightKcal(prevRec.date, _bw);
         const _stepsK=prevRec.steps?Math.round(_bw*prevRec.steps*0.000539):0;
-        const _bal=Math.round(pkc-(_bmr+_cardio+_stepsK)); const _bs=(_bal>0?'+':'')+_bal;
+        const _bal=Math.round(pkc-(_bmr+_cardio+_weight+_stepsK)); const _bs=(_bal>0?'+':'')+_bal;
         const _L=(LANG==='ja');
         const _parts=[(_L?'基礎代謝':'BMR ')+_bmr];
         if(_cardio>0) _parts.push((_L?'有酸素':'cardio ')+_cardio);
+        if(_weight>0) _parts.push((_L?'筋トレ':'weights ')+_weight);
         if(_stepsK>0) _parts.push((_L?'歩行':'steps ')+_stepsK);
         const _bd=_parts.join('+');
         const _jk=_bal<-500?'wa_balance_good':(_bal<0?'wa_balance_ok':'wa_balance_over');
