@@ -67,11 +67,10 @@ class TimerService : Service() {
     @Suppress("OVERRIDE_DEPRECATION")
     override fun onTimeout(startId: Int) {
         countDownTimer?.cancel()
-        try { vibrate() } catch (_: Exception) {}
         // onTimeout は3分超(SHORT_SERVICE上限)のみ＝レストタイマー(≤180s)では発生しない稀ケース。
         notificationManager.notify(DONE_NOTIF_ID, buildDoneNotification(DONE_SILENT_CHANNEL_ID))
         sendBroadcast(Intent(BROADCAST_DONE))
-        playAlarmSound()
+        fireAlarm()
         // super を呼ばない — デフォルト実装はクラッシュする
     }
 
@@ -90,6 +89,7 @@ class TimerService : Service() {
         countDownTimer?.cancel()
         releaseWakeLock()
         acquireWakeLock()
+        prepareAlarm()   // 完了音を事前prepare。完了時のズレ（バイブ→音の遅延）をなくす
         val notif = buildNotification(seconds, seconds)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             startForeground(NOTIF_ID, notif, ServiceInfo.FOREGROUND_SERVICE_TYPE_SHORT_SERVICE)
@@ -103,18 +103,18 @@ class TimerService : Service() {
                 notificationManager.notify(NOTIF_ID, buildNotification(remaining, totalSeconds))
             }
             override fun onFinish() {
-                try { vibrate() } catch (_: Exception) {}
-                // 通知システムに依存せず、常に自前のMediaPlayer(USAGE_MEDIA＋音声フォーカス)で鳴らす。
-                // → 通知OFF/マナー/DND でも、イヤホン・スピーカー両方で確実に鳴る（再生完了で finishService）。
+                // 事前prepare済みの音を即start＋バイブを同時発火＝ズレなし。通知非依存で常に鳴る。
                 notificationManager.notify(DONE_NOTIF_ID, buildDoneNotification(DONE_SILENT_CHANNEL_ID))
                 sendBroadcast(Intent(BROADCAST_DONE))
-                playAlarmSound()
+                fireAlarm()
             }
         }.start()
     }
 
     private fun stopTimer() {
         countDownTimer?.cancel()
+        releaseAlarmPlayer()
+        abandonFocus()
         releaseWakeLock()
         // 完了通知は残しておく（ユーザーが閉じるまで）
         stopForeground(STOP_FOREGROUND_REMOVE)
@@ -158,7 +158,64 @@ class TimerService : Service() {
         } catch (_: Exception) { false }
     }
 
-    // 完了音を自前で再生（USAGE_MEDIA＝イヤホンに確実にルーティング、音楽はダッキング）。再生完了で stopSelf。
+    // タイマー開始時に音源を事前ロード(prepare)。完了時のprepare遅延を消し、バイブと同時に鳴らす
+    private fun prepareAlarm() {
+        try {
+            releaseAlarmPlayer()
+            val attrs = AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_MEDIA)
+                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                .build()
+            val uri = Uri.parse("android.resource://" + packageName + "/raw/timer_done")
+            mediaPlayer = MediaPlayer().apply {
+                setAudioAttributes(attrs)
+                setDataSource(this@TimerService, uri)
+                setOnCompletionListener {
+                    releaseAlarmPlayer(); abandonFocus(); finishService()
+                }
+                prepare()
+            }
+        } catch (_: Exception) { mediaPlayer = null }
+    }
+
+    private fun releaseAlarmPlayer() {
+        try { mediaPlayer?.release() } catch (_: Exception) {}
+        mediaPlayer = null
+    }
+
+    private fun requestFocus() {
+        try {
+            val am = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+            val attrs = AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_MEDIA)
+                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                .build()
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                val req = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT)
+                    .setAudioAttributes(attrs).build()
+                audioFocusReq = req
+                am.requestAudioFocus(req)
+            } else {
+                @Suppress("DEPRECATION")
+                am.requestAudioFocus(null, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN_TRANSIENT)
+            }
+        } catch (_: Exception) {}
+    }
+
+    // 完了時：事前prepare済みなら即start＋バイブを同時発火（ズレなし）。準備失敗時のみフォールバック。
+    private fun fireAlarm() {
+        val mp = mediaPlayer
+        if (mp != null) {
+            requestFocus()
+            try { mp.start() } catch (_: Exception) {}
+            try { vibrate() } catch (_: Exception) {}
+        } else {
+            try { vibrate() } catch (_: Exception) {}
+            playAlarmSound()
+        }
+    }
+
+    // 完了音を自前で再生（フォールバック：事前prepareに失敗した場合のみ）。再生完了で finishService。
     private fun playAlarmSound() {
         try {
             val am = getSystemService(Context.AUDIO_SERVICE) as AudioManager
