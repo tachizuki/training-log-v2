@@ -143,6 +143,8 @@ body{background:#000;color:var(--text);font-family:'Noto Sans JP',sans-serif;}
 .pad-head .prev{background:var(--surface2);border:1px solid var(--line);color:var(--sub);border-radius:9px;padding:7px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:'Noto Sans JP';}
 .pad-head .prev:active{color:var(--acc);border-color:var(--acc);}
 .pad-head .prev.hide{display:none;}
+.pad-head #pad-bw{background:var(--acc-dim);border-color:var(--acc);color:var(--acc);}
+.pad-head #pad-bw:active{background:var(--acc);border-color:var(--acc);color:#0d0f10;}
 .pad-head .val{font-family:'Inter';font-size:30px;font-weight:800;color:var(--acc);margin-left:auto;}
 .pad-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
 .pad-grid button{height:58px;background:var(--surface);border:1px solid var(--line);border-radius:14px;color:var(--text);font-family:'Inter';font-size:22px;font-weight:700;cursor:pointer;}
@@ -805,13 +807,13 @@ textarea.cf-in{resize:none;line-height:1.5;}
 
 <script>
 /* アプリのバージョン表記（日付ベースで一意・修正のたびに更新）。お問い合わせ等のメタに使用。 */
-const APP_VERSION = 'v20260623a';
+const APP_VERSION = 'v20260623b';
 /* ===== i18n（自動判定＋設定で手動切替。未翻訳キーは日本語フォールバック） ===== */
 const I18N = {
   ja: {
     nav_today:'今日', nav_gym:'筋トレ', nav_data:'データ', nav_set:'設定',
     today:'今日', today_btn:'今日', contest_unset:'大会未設定', tap_part:'タップして部位を選択', menu_unset:'メニュー未選択', start:'開始',
-    weight:'体重', sleep:'睡眠', meal:'食事', water:'水分', gym:'筋トレ', steps:'歩数', salon:'日サロ', salon_unit:'分', bodyweight:'自重',
+    weight:'体重', sleep:'睡眠', meal:'食事', water:'水分', gym:'筋トレ', steps:'歩数', salon:'日サロ', salon_unit:'分', bodyweight:'💪 自重',
     kcal_auto:'kcal 自動計算', analysis_title:'🔍 体重変動分析', analysis_sub:'体重変動分析', analysis_empty:'記録を入力すると分析が表示されます。',
     seg_week:'週間', seg_month:'月間', seg_all:'全期間', data_title:'データ', data_empty:'データを蓄積すると傾向が表示されます。',
     weight_trend:'体重の推移', training:'トレーニング', nutrition:'栄養', this_week:'今週', last_week:'先週', all_period:'全期間',
@@ -868,7 +870,7 @@ const I18N = {
   en: {
     nav_today:'Today', nav_gym:'Workout', nav_data:'Data', nav_set:'Settings',
     today:'Today', today_btn:'Today', contest_unset:'No contest', tap_part:'Tap to pick muscle group', menu_unset:'No menu', start:'Start',
-    weight:'Weight', sleep:'Sleep', meal:'Meal', water:'Water', gym:'Workout', steps:'Steps', salon:'Tanning', salon_unit:'min', bodyweight:'BW',
+    weight:'Weight', sleep:'Sleep', meal:'Meal', water:'Water', gym:'Workout', steps:'Steps', salon:'Tanning', salon_unit:'min', bodyweight:'💪 BW',
     kcal_auto:'kcal auto', analysis_title:'🔍 Weight change', analysis_sub:'Weight change', analysis_empty:'Log data to see your analysis.',
     seg_week:'Week', seg_month:'Month', seg_all:'All', data_title:'Data', data_empty:'Trends appear as you log data.',
     weight_trend:'Weight trend', training:'Training', nutrition:'Nutrition', this_week:'This week', last_week:'Last week', all_period:'All time',
