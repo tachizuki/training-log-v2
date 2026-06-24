@@ -134,6 +134,13 @@ class MainActivity : AppCompatActivity() {
 
     inner class AndroidBridge {
 
+        // レストタイマー完了時に音を鳴らさずバイブのみにするか（JS設定から受け取る）
+        @Volatile private var timerVibeOnly = false
+
+        // 完了アラームをバイブのみにする設定を更新（startTimerの引数は互換のため変えず別メソッドで受ける）
+        @JavascriptInterface
+        fun setTimerVibeOnly(on: Boolean) { timerVibeOnly = on }
+
         @JavascriptInterface
         fun signInWithGoogle() {
             runOnUiThread {
@@ -286,6 +293,7 @@ class MainActivity : AppCompatActivity() {
                     val intent = Intent(this@MainActivity, TimerService::class.java).apply {
                         action = TimerService.ACTION_START
                         putExtra(TimerService.EXTRA_SECONDS, seconds)
+                        putExtra(TimerService.EXTRA_VIBE_ONLY, timerVibeOnly)
                     }
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                         startForegroundService(intent)

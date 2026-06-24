@@ -31,6 +31,7 @@ class TimerService : Service() {
     private var wakeLock: PowerManager.WakeLock? = null
     private var mediaPlayer: MediaPlayer? = null
     private var audioFocusReq: AudioFocusRequest? = null
+    private var vibeOnly: Boolean = false   // true: 完了時に音を鳴らさずバイブのみ
 
     companion object {
         const val CHANNEL_ID      = "timer_channel"
@@ -41,6 +42,7 @@ class TimerService : Service() {
         const val ACTION_START    = "com.traininglog.app.TIMER_START"
         const val ACTION_STOP     = "com.traininglog.app.TIMER_STOP"
         const val EXTRA_SECONDS   = "seconds"
+        const val EXTRA_VIBE_ONLY = "vibe_only"
         const val BROADCAST_DONE  = "com.traininglog.app.TIMER_DONE"
     }
 
@@ -55,6 +57,7 @@ class TimerService : Service() {
             ACTION_STOP -> stopTimer()
             else -> {
                 totalSeconds = intent?.getIntExtra(EXTRA_SECONDS, 90) ?: 90
+                vibeOnly = intent?.getBooleanExtra(EXTRA_VIBE_ONLY, false) ?: false
                 startTimer(totalSeconds)
             }
         }
@@ -160,6 +163,7 @@ class TimerService : Service() {
 
     // タイマー開始時に音源を事前ロード(prepare)。完了時のprepare遅延を消し、バイブと同時に鳴らす
     private fun prepareAlarm() {
+        if (vibeOnly) { releaseAlarmPlayer(); return }   // バイブのみ設定時は音源を用意しない
         try {
             releaseAlarmPlayer()
             val attrs = AudioAttributes.Builder()
@@ -191,19 +195,24 @@ class TimerService : Service() {
                 .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
                 .build()
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                val req = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT)
+                val req = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK)
                     .setAudioAttributes(attrs).build()
                 audioFocusReq = req
                 am.requestAudioFocus(req)
             } else {
                 @Suppress("DEPRECATION")
-                am.requestAudioFocus(null, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN_TRANSIENT)
+                am.requestAudioFocus(null, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK)
             }
         } catch (_: Exception) {}
     }
 
     // 完了時：事前prepare済みなら即start＋バイブを同時発火（ズレなし）。準備失敗時のみフォールバック。
     private fun fireAlarm() {
+        if (vibeOnly) {   // バイブのみ：音もフォーカス取得もせず、振動だけ実行して終了
+            try { vibrate() } catch (_: Exception) {}
+            finishService()
+            return
+        }
         val mp = mediaPlayer
         if (mp != null) {
             requestFocus()
@@ -224,13 +233,13 @@ class TimerService : Service() {
                 .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
                 .build()
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                val req = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT)
+                val req = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK)
                     .setAudioAttributes(attrs).build()
                 audioFocusReq = req
                 am.requestAudioFocus(req)
             } else {
                 @Suppress("DEPRECATION")
-                am.requestAudioFocus(null, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN_TRANSIENT)
+                am.requestAudioFocus(null, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK)
             }
             val soundUri = Uri.parse("android.resource://" + packageName + "/raw/timer_done")
             mediaPlayer = MediaPlayer().apply {
