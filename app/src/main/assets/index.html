@@ -235,6 +235,7 @@ textarea.cf-in{resize:none;line-height:1.5;}
 .wtable .dl{text-align:right;font-family:'Inter';font-weight:700;width:74px;}
 .wtable .dl.down{color:var(--good);} .wtable .dl.up{color:var(--bad);} .wtable .dl.flat{color:var(--faint);}
 .wtable .empty{color:var(--faint);font-size:11px;text-align:center;padding:14px;}
+.dt-note{color:var(--faint);font-size:10px;margin-bottom:8px;}
 /* プレミアム ロックカード */
 .prem-lock{text-align:center;padding:8px 6px 4px;}
 .prem-lock .ic{font-size:24px;}
@@ -529,6 +530,10 @@ textarea.cf-in{resize:none;line-height:1.5;}
         <h3 id="week-table-title" data-i18n="week_table_title">週平均の推移</h3>
         <div id="week-table"></div>
       </div>
+      <div class="card chart-card" id="daytable-card">
+        <h3 data-i18n="day_table_title">日ごとの体重（前日比）</h3>
+        <div id="day-table"></div>
+      </div>
       <div class="card chart-card">
         <h3><span data-i18n="training">トレーニング</span> <span id="train-range"></span></h3>
         <div class="kpis" id="train-kpis" style="border-top:none;margin-top:0;padding-top:0;"></div>
@@ -811,7 +816,7 @@ textarea.cf-in{resize:none;line-height:1.5;}
 
 <script>
 /* アプリのバージョン表記（日付ベースで一意・修正のたびに更新）。お問い合わせ等のメタに使用。 */
-const APP_VERSION = 'v20260623d';
+const APP_VERSION = 'v20260623e';
 /* ===== i18n（自動判定＋設定で手動切替。未翻訳キーは日本語フォールバック） ===== */
 const I18N = {
   ja: {
@@ -853,7 +858,7 @@ const I18N = {
     gym_empty:'この日の種目はまだありません。<br>下の「＋ 種目を追加」から始めましょう。', insufficient:'体重記録が2日分以上で推移を表示',
     w_avg_week:'週平均', w_avg_month:'月平均', w_avg_all:'平均体重', w_losing:'減量中', w_gaining:'増加', w_keeping:'維持',
     w_no_period:'この期間の体重記録はありません（最新 {0} {1}kg）', w_no_data:'体重の記録がありません',
-    week_table_title:'週平均の推移',
+    week_table_title:'週平均の推移', day_table_title:'日ごとの体重（前日比）', day_table_note:'最新{0}日分を表示',
     rm_title:'大会ロードマップ', rm_lock:'仕上がり体重と大会日から逆算した目標ペースと進捗を表示します。', rm_setup:'大会日と仕上がり体重を設定すると進捗が表示されます。', rm_setup_btn:'大会設定へ', rm_gap:'目標まで', rm_req:'必要(kg/週)', rm_cur:'現在(kg/週)', rm_ok:'順調', rm_behind:'遅れ', rm_done:'達成', rm_nopace:'記録待ち', rm_goal:'目標', rm_teaser:'大会までの週次目標体重・ロードマップ', rm_weekly_title:'週次目標体重（目標までを按分）', rm_monthly_title:'月次目標体重（目標までを按分）', rm_col_week:'週', rm_col_month:'月', rm_col_target:'目標', rm_col_actual:'実績(差)', rm_days_to:'大会まで{0}日', rm_days_past:'大会から{0}日経過', rm_days_short:'残り{0}日', month_table_title:'月平均の推移',
     an_title:'筋トレ分析', an_sub:'推定1RM・停滞検知', an_lock:'種目ごとの推定1RM推移と停滞を自動で検知します。', an_empty:'筋トレを記録すると分析が表示されます。', an_pr:'更新', an_plateau:'停滞', an_down:'低下',
     rep_title:'レポート', rep_lock:'期間ごとの体重・トレーニング・栄養・水分をまとめて表示します。', rep_avgw:'平均体重', rep_vs:'前期間比', rep_trained:'トレーニング', rep_times:'回', rep_kcal:'平均摂取', rep_water:'平均水分',
@@ -910,7 +915,7 @@ const I18N = {
     gym_empty:'No exercises for this day yet.<br>Start from “＋ Add exercise” below.', insufficient:'Trend shows with 2+ weight logs',
     w_avg_week:'Weekly avg', w_avg_month:'Monthly avg', w_avg_all:'Average', w_losing:'losing', w_gaining:'gaining', w_keeping:'stable',
     w_no_period:'No weight logged this period (latest {0} {1}kg)', w_no_data:'No weight records',
-    week_table_title:'Weekly average',
+    week_table_title:'Weekly average', day_table_title:'Daily weight (vs prev)', day_table_note:'Showing latest {0} days',
     rm_title:'Contest roadmap', rm_lock:'Target pace & progress back-calculated from your goal weight and contest date.', rm_setup:'Set contest date and goal weight to see progress.', rm_setup_btn:'Contest settings', rm_gap:'To goal', rm_req:'Need(kg/wk)', rm_cur:'Now(kg/wk)', rm_ok:'On track', rm_behind:'Behind', rm_done:'Reached', rm_nopace:'Need data', rm_goal:'Goal', rm_teaser:'Weekly target weights & roadmap to your contest', rm_weekly_title:'Weekly target weight (allocated to goal)', rm_monthly_title:'Monthly target weight (allocated to goal)', rm_col_week:'Week', rm_col_month:'Month', rm_col_target:'Target', rm_col_actual:'Actual(Δ)', rm_days_to:'{0} days to contest', rm_days_past:'{0} days since contest', rm_days_short:'{0}d left', month_table_title:'Monthly average',
     an_title:'Workout analytics', an_sub:'est. 1RM & plateau', an_lock:'Auto-detects estimated 1RM trend and plateaus per exercise.', an_empty:'Log workouts to see analytics.', an_pr:'PR', an_plateau:'Plateau', an_down:'Down',
     rep_title:'Report', rep_lock:'Digest of weight, training, nutrition and water per period.', rep_avgw:'Avg weight', rep_vs:'vs prev', rep_trained:'Training', rep_times:'×', rep_kcal:'Avg intake', rep_water:'Avg water',
@@ -1884,7 +1889,7 @@ function renderData(){
   const wAvg=rangeWaterAvg(start,end);
   document.getElementById('nutri-kpis').innerHTML=
     kpi(t('kpi_kcal'),avg(kcals))+kpi(t('kpi_p'),fmtU(trecs.map(r=>r.p).filter(x=>x),'g'))+kpi(t('kpi_salt'),fmtU(trecs.map(r=>r.salt).filter(x=>x),'g'))+kpi(t('kpi_water'),wAvg!=null?wAvg.toLocaleString()+'ml':'—');
-  renderWeekTable(); renderGymAnalytics(); renderWeeklyReport(start,end,label);
+  renderWeekTable(); renderDayTable(start,end); renderGymAnalytics(); renderWeeklyReport(start,end,label);
 }
 function kpi(k,v,good){ return `<div><div class="k">${k}</div><div class="v num${good?' g':''}">${v}</div></div>`; }
 function setWeightSummary(thisAvg, prevAvg, latest){
@@ -1919,6 +1924,25 @@ function renderWeekTable(){
     rows+='<tr><td class="wk">'+cur.label+'</td><td class="av">'+cur.avg.toFixed(1)+'<small>kg</small></td><td>'+dl+'</td></tr>';
   }
   el.innerHTML='<table class="wtable">'+rows+'</table>';
+}
+/* ===== 日ごとの体重テーブル（前日比を数字で表示・無料） ===== */
+function dowLbl(dateStr){ const w=new Date(dateStr+'T00:00:00').getDay(); return (LANG==='ja'?['日','月','火','水','木','金','土']:['Su','Mo','Tu','We','Th','Fr','Sa'])[w]; }
+function renderDayTable(start,end){
+  const card=document.getElementById('daytable-card'); const el=document.getElementById('day-table'); if(!el) return;
+  const all=DB.records().filter(r=>r.weight!=null).sort((a,b)=>a.date.localeCompare(b.date));
+  // 期間内の各記録に、直前の記録（期間外含む）との差＝前日比を付ける
+  let rows=[];
+  for(let i=0;i<all.length;i++){ const r=all[i]; if(r.date<start||r.date>end) continue; const prev=i>0?all[i-1]:null; rows.push({date:r.date, w:r.weight, d:prev?(r.weight-prev.weight):null}); }
+  if(card) card.style.display = rows.length? '' : 'none';
+  if(!rows.length){ el.innerHTML=''; return; }
+  rows.reverse(); // 新しい順
+  let note=''; const MAXR=62; if(rows.length>MAXR){ note='<div class="dt-note">'+t('day_table_note', MAXR)+'</div>'; rows=rows.slice(0,MAXR); }
+  let html='';
+  for(const r of rows){ let dl='<span class="dl flat">—</span>';
+    if(r.d!=null){ const cls=r.d<-0.05?'down':(r.d>0.05?'up':'flat'), ar=r.d<-0.05?'▼':(r.d>0.05?'▲':'→'); dl='<span class="dl '+cls+'">'+ar+Math.abs(r.d).toFixed(1)+'</span>'; }
+    html+='<tr><td class="wk">'+mmdd(r.date)+'('+dowLbl(r.date)+')</td><td class="av">'+r.w.toFixed(1)+'<small>kg</small></td><td>'+dl+'</td></tr>';
+  }
+  el.innerHTML=note+'<table class="wtable">'+html+'</table>';
 }
 /* ===== 大会ロードマップ：目標体重を週ごとに按分した週次目標を算出 ===== */
 // 開始(ピーク日/最初の記録)→大会日 で線形按分。startWeight/startDate/endWeight/endDate を返す
