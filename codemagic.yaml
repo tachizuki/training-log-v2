@@ -1,0 +1,49 @@
+# Codemagic ビルド設定（iOS・未署名ipa／Sideloadly用）
+# 目的: Mac無しでクラウドmacOS上で .ipa を生成し、Windowsの Sideloadly で
+#       無料Apple ID 署名して iPhone SE（iOS15）へサイドロードする。
+# 注意: 初回は調整が要る前提のドラフト。失敗ログを見て1〜2回直す想定。
+workflows:
+  ios-unsigned:
+    name: iOS unsigned (sideload)
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    environment:
+      xcode: latest
+      cocoapods: default
+    scripts:
+      - name: Firebase設定を環境変数から復元（公開リポジトリにplistを置かないため）
+        script: |
+          # Codemagicの暗号化環境変数 GOOGLE_SERVICE_INFO_PLIST に
+          # GoogleService-Info.plist をbase64エンコードした文字列を設定しておくこと。
+          echo "$GOOGLE_SERVICE_INFO_PLIST" | base64 --decode > ios/TrainingLog/Resources/GoogleService-Info.plist
+      - name: オフライン用HTMLを同梱（index-v3 を index.html として配置）
+        script: |
+          cp index-v3.html ios/TrainingLog/Resources/index.html
+      - name: XcodeGen で .xcodeproj 生成
+        script: |
+          brew install xcodegen
+          cd ios
+          xcodegen generate
+      - name: CocoaPods インストール
+        script: |
+          cd ios
+          pod install
+      - name: 未署名アーカイブをビルド
+        script: |
+          cd ios
+          xcodebuild \
+            -workspace TrainingLog.xcworkspace \
+            -scheme TrainingLog \
+            -configuration Release \
+            -sdk iphoneos \
+            -archivePath build/TrainingLog.xcarchive \
+            archive \
+            CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO
+      - name: 未署名 .ipa を作成
+        script: |
+          cd ios/build
+          mkdir -p Payload
+          cp -R TrainingLog.xcarchive/Products/Applications/TrainingLog.app Payload/
+          zip -r TrainingLog-unsigned.ipa Payload
+    artifacts:
+      - ios/build/*.ipa

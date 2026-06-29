@@ -15,3 +15,11 @@ app/release.keystore
 *.pem
 *.p12
 google-services-account.json
+
+# iOS Firebase 設定（APIキー含む。公開リポジトリには載せずCodemagicの環境変数で渡す）
+ios/TrainingLog/Resources/GoogleService-Info.plist
+GoogleService-Info.plist
+# Codemagic投入用のbase64ヘルパー（ローカルのみ）
+*.base64.txt
+
+.claude/settings.local.json

@@ -1,0 +1,42 @@
+# XcodeGen 設定：Mac/Xcode 無しで .xcodeproj を生成するための定義。
+# 生成: `cd ios && xcodegen generate` → その後 `pod install` で .xcworkspace 作成。
+# Codemagic（クラウドmacOS）上で実行する想定。手書きの .xcodeproj は持たない。
+name: TrainingLog
+options:
+  bundleIdPrefix: com.traininglog
+  deploymentTarget:
+    iOS: "15.0"
+  createIntermediateGroups: true
+
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    TARGETED_DEVICE_FAMILY: "1"      # iPhone のみ
+    MARKETING_VERSION: "1.0.0"
+    CURRENT_PROJECT_VERSION: "1"
+    DEVELOPMENT_LANGUAGE: ja
+
+targets:
+  TrainingLog:
+    type: application
+    platform: iOS
+    deploymentTarget: "15.0"
+    sources:
+      # Swift ソース一式。Info.plist は INFOPLIST_FILE で指定するため resources からは除外。
+      - path: TrainingLog
+        excludes:
+          - "Resources/Info.plist"
+      # オフライン用フォールバック HTML。CIで index-v3.html をここへコピーしてからgenerateする。
+      - path: TrainingLog/Resources/index.html
+        optional: true
+        buildPhase: resources
+      # Firebase 設定。オーナーがFirebase Consoleで取得して配置（未配置だと起動時クラッシュ）。
+      - path: TrainingLog/Resources/GoogleService-Info.plist
+        optional: true
+        buildPhase: resources
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.traininglog.app
+        PRODUCT_NAME: TrainingLog
+        INFOPLIST_FILE: TrainingLog/Resources/Info.plist
+        GENERATE_INFOPLIST_FILE: "NO"
