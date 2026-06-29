@@ -25,10 +25,15 @@ with sync_playwright() as p:
     sheet_scrolled=pg.evaluate("()=>window.__siv.includes('ex-q')")
     rec('SHEET_NO_SCROLL', not sheet_scrolled, f"siv={pg.evaluate('()=>window.__siv')}")
     pg.evaluate("closeExSheet()"); pg.wait_for_timeout(20)
-    # ページ内入力(srow-memo)は従来通りスクロールする
+    # ページ内入力(srow-memo)は内側コンテナ(#gym-scroll)をスクロールする。
+    # scrollIntoViewだとAndroidでビジュアルビューポートごと動き、メモを渡り歩くと固定ヘッダーが見切れるため(BK-004)
+    pg.evaluate("""()=>{window.__sc=[]; const sc=document.getElementById('gym-scroll'); const o=sc.scrollTo.bind(sc);
+      sc.scrollTo=function(){ window.__sc.push('gym-scroll'); return o.apply(sc,arguments); };}""")
     pg.evaluate("()=>{const m=document.querySelector('.srow-memo'); if(m) m.focus();}"); pg.wait_for_timeout(360)
-    page_scrolled=pg.evaluate("()=>window.__siv.some(x=>String(x).indexOf('srow-memo')>=0)")
-    rec('PAGE_SCROLL', page_scrolled, f"siv={pg.evaluate('()=>window.__siv')}")
+    container_scrolled=pg.evaluate("()=>window.__sc.includes('gym-scroll')")
+    memo_via_siv=pg.evaluate("()=>window.__siv.some(x=>String(x).indexOf('srow-memo')>=0)")
+    rec('CONTAINER_SCROLL', container_scrolled and not memo_via_siv,
+        f"sc={pg.evaluate('()=>window.__sc')} memo_scrollIntoView={memo_via_siv}")
     rec('NOERR', not pg._errs, f"{pg._errs[:2]}")
     pg.close(); b.close()
 passed=[k for k,v in results.items() if v[0]]; failed=[k for k,v in results.items() if not v[0]]
