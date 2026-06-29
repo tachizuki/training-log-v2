@@ -373,7 +373,10 @@ textarea.cf-in{resize:none;line-height:1.5;}
 .cal-dot{width:6px;height:6px;border-radius:50%;background:var(--sub);margin-top:2px;}
 .gym-sel-date{font-size:13px;font-weight:800;color:var(--acc);padding:2px 4px 8px;}
 /* 細い日付ナビ＋📅 */
-.gym-datebar{display:flex;align-items:center;gap:6px;padding:6px 2px 10px;position:sticky;top:0;z-index:20;background:var(--bg);}
+.gym-datebar{display:flex;align-items:center;gap:6px;padding:6px 2px 10px;flex-shrink:0;background:var(--bg);}
+/* 筋トレ：datebar(⏱📷📅)はスクロール外の固定ヘッダー。カードは内側 .gym-scroll でスクロール（BK-004） */
+.gym-scroll{flex:1;overflow-y:auto;scrollbar-width:none;}
+.gym-scroll::-webkit-scrollbar{display:none;}
 .gym-datebar .dn{display:flex;align-items:center;gap:4px;flex:1;min-width:0;justify-content:center;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:9px 8px;}
 .gym-datebar .dn .d{font-weight:800;font-size:15px;color:var(--text);flex:1;min-width:0;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .gym-datebar .dn button{width:28px;height:30px;flex-shrink:0;border:none;background:none;color:var(--sub);font-size:18px;cursor:pointer;}
@@ -485,9 +488,9 @@ textarea.cf-in{resize:none;line-height:1.5;}
     </div>
 
     <!-- ===== 筋トレ ===== -->
-    <div class="page scrollable" id="pg-gym">
+    <div class="page" id="pg-gym">
 
-      <!-- 細い日付ナビ＋📅（記録優先。履歴カレンダーはシートで開く） -->
+      <!-- 細い日付ナビ＋📅（記録優先。履歴カレンダーはシートで開く）。スクロール外の固定ヘッダー -->
       <div class="gym-datebar">
         <div class="dn">
           <button onclick="shiftGymDay(-1)">‹</button>
@@ -499,12 +502,15 @@ textarea.cf-in{resize:none;line-height:1.5;}
         <button class="cal-btn" onclick="openGymCal()" title="履歴">📅</button>
       </div>
 
-      <div class="gym-top">
-        <h1 onclick="openMenuSheet()"><span id="gym-title">メニュー未選択</span><span class="car">▾</span></h1>
-        <div class="sw-pill"><span class="t num" id="sw">00:00</span><button onclick="toggleSw()" id="sw-btn" data-i18n="start">開始</button></div>
+      <!-- カードはここだけスクロール（ヘッダーのボタンは巻き込まれない） -->
+      <div class="gym-scroll" id="gym-scroll">
+        <div class="gym-top">
+          <h1 onclick="openMenuSheet()"><span id="gym-title">メニュー未選択</span><span class="car">▾</span></h1>
+          <div class="sw-pill"><span class="t num" id="sw">00:00</span><button onclick="toggleSw()" id="sw-btn" data-i18n="start">開始</button></div>
+        </div>
+        <div id="gym-cards"></div>
+        <button class="big-add" onclick="openExSheet()" data-i18n="add_ex">＋ 種目を追加</button>
       </div>
-      <div id="gym-cards"></div>
-      <button class="big-add" onclick="openExSheet()" data-i18n="add_ex">＋ 種目を追加</button>
     </div>
 
     <!-- ===== データ ===== -->

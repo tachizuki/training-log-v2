@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# #4 gym-datebar固定(sticky)、#5 シート内入力でページが過剰スクロールしない、を検証。
+# #4 gym-datebarがスクロール外の固定ヘッダー(BK-004: sticky廃止)、#5 シート内入力でページが過剰スクロールしない、を検証。
 import pathlib, sys
 from playwright.sync_api import sync_playwright
 URI = pathlib.Path('index-v3.html').resolve().as_uri()
@@ -11,9 +11,10 @@ with sync_playwright() as p:
     pg.on('pageerror',lambda e:pg._errs.append(str(e)))
     pg.goto(URI,wait_until='load'); pg.evaluate('obFinish()')
     pg.evaluate("go('gym'); curDate=logicalToday();"); pg.wait_for_timeout(30)
-    # #4 sticky
-    pos=pg.evaluate("()=>getComputedStyle(document.querySelector('.gym-datebar')).position")
-    rec('STICKY', pos=='sticky', f"position={pos}")
+    # #4 datebarはスクロール外の固定ヘッダー（BK-004: sticky廃止。スクロールに巻き込まれず見切れない）
+    header_fixed=pg.evaluate("""()=>{const bar=document.querySelector('.gym-datebar');const sc=document.getElementById('gym-scroll');
+      return !!bar && !!sc && !sc.contains(bar) && ['auto','scroll'].includes(getComputedStyle(sc).overflowY);}""")
+    rec('HEADER_FIXED', header_fixed, "datebar outside #gym-scroll & inner scroll has overflow")
     # scrollIntoView スパイ
     pg.evaluate("""()=>{window.__siv=[]; const o=Element.prototype.scrollIntoView;
       Element.prototype.scrollIntoView=function(){ window.__siv.push(this.id||this.className||''); return o&&o.apply(this,arguments); };}""")
