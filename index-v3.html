@@ -409,12 +409,12 @@ textarea.cf-in{resize:none;line-height:1.5;}
 </style>
 </head>
 <body>
-<!-- ===== BK-004/iOS上部余白 一時診断バー（iOSのみ表示・確認後に撤去） ===== -->
+<!-- ===== 上部余白 一時診断バー（モバイルのみ表示・確認後に撤去） ===== -->
 <div id="diag-probe" style="position:fixed;top:0;left:0;width:1px;height:env(safe-area-inset-top,0px);pointer-events:none;"></div>
 <div id="diag-bar" style="display:none;position:fixed;top:0;left:0;right:0;z-index:99999;background:#e11;color:#fff;font:11px/1.4 monospace;padding:3px 6px;pointer-events:none;text-align:center;"></div>
 <script>
 (function(){ try{
-  if(!/iPhone|iPad|iPod/i.test(navigator.userAgent)) return;
+  if(!/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) return;
   var bar=document.getElementById('diag-bar'), probe=document.getElementById('diag-probe');
   bar.style.display='block';
   function upd(){ var env=Math.round(probe.getBoundingClientRect().height);
