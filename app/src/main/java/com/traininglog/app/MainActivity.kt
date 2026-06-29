@@ -678,9 +678,12 @@ class MainActivity : AppCompatActivity() {
             override fun onPageFinished(view: WebView, url: String) {
                 super.onPageFinished(view, url)
                 // システムバーの実際の高さをCSS変数として注入（env(safe-area-inset-top)がWebViewで0を返す場合の対策）
+                // getInsets()は物理ピクセルを返すため、CSS px(≒dp)に変換するには画面密度で割る必要がある。
+                // 割らないと高密度端末ほど--satが過大になり上部に余白が出る（BK-004 上部余白バグ）。
                 ViewCompat.getRootWindowInsets(window.decorView)?.let { insets ->
-                    val sat = insets.getInsets(WindowInsetsCompat.Type.statusBars()).top
-                    val sab = insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom
+                    val density = resources.displayMetrics.density
+                    val sat = insets.getInsets(WindowInsetsCompat.Type.statusBars()).top / density
+                    val sab = insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom / density
                     view.evaluateJavascript("""
                         document.documentElement.style.setProperty('--sat','${sat}px');
                         document.documentElement.style.setProperty('--sab','${sab}px');

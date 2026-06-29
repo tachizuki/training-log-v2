@@ -409,26 +409,6 @@ textarea.cf-in{resize:none;line-height:1.5;}
 </style>
 </head>
 <body>
-<!-- ===== 上部余白 一時診断バー（モバイルのみ表示・確認後に撤去） ===== -->
-<div id="diag-probe" style="position:fixed;top:0;left:0;width:1px;height:env(safe-area-inset-top,0px);pointer-events:none;"></div>
-<div id="diag-bar" style="display:none;position:fixed;top:0;left:0;right:0;z-index:99999;background:#e11;color:#fff;font:11px/1.4 monospace;padding:3px 6px;pointer-events:none;text-align:center;"></div>
-<script>
-(function(){ try{
-  if(!/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) return;
-  var bar=document.getElementById('diag-bar'), probe=document.getElementById('diag-probe');
-  bar.style.display='block';
-  function rt(sel,byId){ var e=byId?document.getElementById(sel):document.querySelector(sel); return e?Math.round(e.getBoundingClientRect().top):'-'; }
-  function rh(sel){ var e=document.querySelector(sel); return e?Math.round(e.getBoundingClientRect().height):'-'; }
-  function upd(){ var env=Math.round(probe.getBoundingClientRect().height);
-    var sat=getComputedStyle(document.documentElement).getPropertyValue('--sat').trim();
-    var vv=window.visualViewport;
-    bar.textContent='env='+env+' sat='+sat+' ih='+window.innerHeight+' sh='+screen.height
-      +' dpr='+window.devicePixelRatio+' | phT='+rt('.phone')+' tbH='+rh('.statusbar.topbar')+' daysT='+rt('ctx-days',true); }
-  window.addEventListener('load', function(){ setTimeout(upd,200); setTimeout(upd,900); });
-  setTimeout(upd,400);
-  window.addEventListener('resize',upd); if(window.visualViewport){ window.visualViewport.addEventListener('resize',upd); window.visualViewport.addEventListener('scroll',upd); }
-}catch(e){ var b=document.getElementById('diag-bar'); if(b){ b.style.display='block'; b.textContent='diag err '+e; } } })();
-</script>
 <div class="phone">
   <div class="statusbar topbar"><span class="days num" id="ctx-days">—</span><span id="ctx-contest" onclick="goContestSettings()" style="cursor:pointer;">大会未設定</span></div>
   <div class="viewport">
