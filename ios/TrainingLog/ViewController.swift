@@ -70,6 +70,8 @@ class ViewController: UIViewController {
 
         webView = WKWebView(frame: .zero, configuration: config)
         webView.navigationDelegate = self
+        // iOSには物理戻るが無いため、エッジスワイプで前画面へ戻れるようにする（BK-007）
+        webView.allowsBackForwardNavigationGestures = true
         webView.scrollView.contentInsetAdjustmentBehavior = .never
         webView.scrollView.bounces = false
         webView.translatesAutoresizingMaskIntoConstraints = false

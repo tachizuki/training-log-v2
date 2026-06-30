@@ -1,6 +1,7 @@
 import Foundation
 import UserNotifications
 import AudioToolbox
+import AVFoundation
 
 // Android の TimerService に相当。
 // フォアグラウンド: Timer でカウントダウン + バイブレーション
@@ -14,6 +15,7 @@ final class TimerManager: NSObject {
     private var timerEndDate: Date?
     private var foregroundTimer: Timer?
     private weak var viewController: ViewController?
+    private var audioPlayer: AVAudioPlayer?
 
     func configure(viewController: ViewController) {
         self.viewController = viewController
@@ -51,8 +53,28 @@ final class TimerManager: NSObject {
         // フォアグラウンドで完了した場合は pending notification を削除（二重通知を防ぐ）
         UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: [notifId])
         timerEndDate = nil
+        playAlertSound()   // BK-008: フォアグラウンド完了時は通知音が抑制されるため自前で鳴らす
         vibrate()
         viewController?.evaluateJS("if(typeof onTimerDone==='function')onTimerDone()")
+    }
+
+    // BK-008: サイレントスイッチONでも鳴らすため AVAudioSession を .playback にして再生する。
+    // 通知音(content.sound)はフォアグラウンドでは willPresent で抑制されるため、ここで補う。
+    private func playAlertSound() {
+        guard let url = Bundle.main.url(forResource: "timer_done", withExtension: "wav") else {
+            // フォールバック：ファイルが無ければシステムサウンド（サイレント時は鳴らない）
+            AudioServicesPlaySystemSound(1005)
+            return
+        }
+        do {
+            let session = AVAudioSession.sharedInstance()
+            try session.setCategory(.playback, options: [.duckOthers])
+            try session.setActive(true)
+            audioPlayer = try AVAudioPlayer(contentsOf: url)
+            audioPlayer?.play()
+        } catch {
+            AudioServicesPlaySystemSound(1005)
+        }
     }
 
     private func scheduleNotification(seconds: Int) {

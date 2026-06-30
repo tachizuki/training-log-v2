@@ -21,6 +21,10 @@
     <key>CFBundleVersion</key>
     <string>1</string>
 
+    <!-- GoogleSignIn SDK 用クライアントID（正方向）。未設定だと signIn 呼び出しで例外→クラッシュ。BK-006 -->
+    <key>GIDClientID</key>
+    <string>211414940177-6h262g317arnc9nqoulg9gohbg4hihqa.apps.googleusercontent.com</string>
+
     <!-- Google Sign-In コールバック用 URL スキーム（GoogleService-Info.plist の REVERSED_CLIENT_ID を設定済み・2026-06-26） -->
     <key>CFBundleURLTypes</key>
     <array>
