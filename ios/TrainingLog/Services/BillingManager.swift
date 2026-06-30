@@ -7,11 +7,13 @@ import StoreKit
 final class BillingManager {
     static let shared = BillingManager()
 
-    // TODO: App Store Connect で登録したプロダクトIDに変更する
-    private let productId = "com.traininglog.app.premium"
+    // App Store Connect の自動更新サブスク。Androidの premium_monthly と同一IDで揃える。
+    // ※ App Store Connect 側でこのIDの月額サブスク（無料トライアル付き）を作成すること。
+    private let productId = "premium_monthly"
 
     private var product: Product?
     private var onStatusChange: ((Bool) -> Void)?
+    var onPriceReady: ((String) -> Void)?   // ローカライズ価格をWebへ通知（Androidの onPriceReady 相当）
     private var transactionListenerTask: Task<Void, Never>?
 
     private(set) var isPremiumActive: Bool = false {
@@ -29,6 +31,9 @@ final class BillingManager {
     }
 
     func isPremium() -> Bool { isPremiumActive }
+
+    // 整形済みローカライズ価格（例: "¥600"）。未取得時は空。Webの getPremiumPrice 同期取得用。
+    func formattedPrice() -> String { product?.displayPrice ?? "" }
 
     func purchase() async -> Bool {
         guard let product else { return false }
@@ -55,6 +60,7 @@ final class BillingManager {
     private func loadProduct() async {
         guard let products = try? await Product.products(for: [productId]) else { return }
         product = products.first
+        if let price = product?.displayPrice { onPriceReady?(price) }
     }
 
     private func checkEntitlements() async {

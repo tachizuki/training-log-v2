@@ -108,6 +108,12 @@ class ViewController: UIViewController {
     // MARK: - Billing
 
     private func setupBilling() {
+        // ローカライズ価格が取れたらWebへ通知（Push）。Androidの billing.onPriceReady と同等。
+        BillingManager.shared.onPriceReady = { [weak self] price in
+            guard let self else { return }
+            self.evaluateJS("window.__setPremiumPrice('\(price.jsEscaped)');")
+            self.evaluateJS("if(typeof onPremiumPriceLoaded==='function')onPremiumPriceLoaded('\(price.jsEscaped)')")
+        }
         BillingManager.shared.configure { [weak self] isActive in
             guard let self else { return }
             let js = isActive
@@ -133,9 +139,11 @@ class ViewController: UIViewController {
         """
         (function() {
           var _isPremium = false;
+          var _premiumPrice = '';
           var _notifSettings = {"enabled":false,"hour":20,"minute":0};
 
           window.__setIsPremium    = function(v) { _isPremium = v; };
+          window.__setPremiumPrice = function(p) { _premiumPrice = p || ''; };
           window.__setNotifSettings = function(s) {
             _notifSettings = typeof s === 'string' ? JSON.parse(s) : s;
           };
@@ -157,6 +165,7 @@ class ViewController: UIViewController {
             stopTimer:               function()           { post('stopTimer'); },
             setTimerVibeOnly:        function(v)          { post('setTimerVibeOnly', {vibeOnly: !!v}); },
             isPremium:               function()           { return _isPremium; },
+            getPremiumPrice:         function()           { return _premiumPrice; },
             purchasePremium:         function()           { post('purchasePremium'); },
             restorePremium:          function()           { post('restorePremium'); },
             sendContactForm:         function(json)       { post('sendContactForm', {json: json}); },
@@ -199,6 +208,13 @@ extension ViewController: WKNavigationDelegate {
         // プレミアム状態をJSに同期
         let premium = BillingManager.shared.isPremium()
         evaluateJS("window.__setIsPremium(\(premium));")
+
+        // ローカライズ価格をJSに再同期（shimの_premiumPriceはページ読込でリセットされるため）
+        let price = BillingManager.shared.formattedPrice()
+        if !price.isEmpty {
+            evaluateJS("window.__setPremiumPrice('\(price.jsEscaped)');")
+            evaluateJS("if(typeof onPremiumPriceLoaded==='function')onPremiumPriceLoaded('\(price.jsEscaped)')")
+        }
     }
 }
 
