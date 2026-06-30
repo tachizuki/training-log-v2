@@ -16,11 +16,15 @@ final class TimerManager: NSObject {
     private var foregroundTimer: Timer?
     private weak var viewController: ViewController?
     private var audioPlayer: AVAudioPlayer?
+    private var vibeOnly = false   // 「アラーム音を鳴らさない（バイブのみ）」設定
 
     func configure(viewController: ViewController) {
         self.viewController = viewController
         UNUserNotificationCenter.current().delegate = self
     }
+
+    // Web側の rest_vibe_only 設定を反映（startTimer前に毎回同期される）
+    func setVibeOnly(_ v: Bool) { vibeOnly = v }
 
     func start(seconds: Int) {
         stop()
@@ -53,7 +57,9 @@ final class TimerManager: NSObject {
         // フォアグラウンドで完了した場合は pending notification を削除（二重通知を防ぐ）
         UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: [notifId])
         timerEndDate = nil
-        playAlertSound()   // BK-008: フォアグラウンド完了時は通知音が抑制されるため自前で鳴らす
+        if !vibeOnly {     // BK-008/BK-010: 「バイブのみ」設定ONのときは音を鳴らさない
+            playAlertSound()   // フォアグラウンド完了時は通知音が抑制されるため自前で鳴らす
+        }
         vibrate()
         viewController?.evaluateJS("if(typeof onTimerDone==='function')onTimerDone()")
     }
@@ -82,7 +88,7 @@ final class TimerManager: NSObject {
         let content = UNMutableNotificationContent()
         content.title = "⏱ REST TIMER"
         content.body  = "休憩終了！トレーニングを再開しましょう"
-        content.sound = .default
+        content.sound = vibeOnly ? nil : .default   // BK-010: バイブのみ設定時はバックグラウンド通知も無音
 
         let trigger = UNTimeIntervalNotificationTrigger(timeInterval: TimeInterval(seconds), repeats: false)
         let request = UNNotificationRequest(identifier: notifId, content: content, trigger: trigger)

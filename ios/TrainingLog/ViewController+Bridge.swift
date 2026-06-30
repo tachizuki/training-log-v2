@@ -20,6 +20,7 @@ extension ViewController: WKScriptMessageHandler {
         case "setNotification":      handleSetNotification(body)
         case "startTimer":           handleStartTimer(body)
         case "stopTimer":            TimerManager.shared.stop()
+        case "setTimerVibeOnly":     TimerManager.shared.setVibeOnly((body?["vibeOnly"] as? Bool) ?? false)
         case "isPremium":            break // JS shim 側で同期的に処理
         case "purchasePremium":      handlePurchasePremium()
         case "restorePremium":       handleRestorePremium()
