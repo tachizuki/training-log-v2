@@ -410,6 +410,56 @@ textarea.cf-in{resize:none;line-height:1.5;}
 .ob-btns{display:flex;gap:10px;width:100%;align-items:center;}
 .ob-back{background:none;border:none;color:var(--sub);font-weight:700;font-size:14px;cursor:pointer;padding:14px 10px;font-family:'Noto Sans JP';}
 .ob-next{flex:1;background:var(--acc);color:#101214;border:none;border-radius:14px;height:52px;font-size:15px;font-weight:900;cursor:pointer;font-family:'Noto Sans JP';}
+/* ===== 週間/月間サマリーカード（今日画面先頭） ===== */
+.sumcard{background:linear-gradient(160deg,#1b2410,#16191d 55%);border:1px solid #34401c;border-radius:16px;padding:14px 15px 13px;margin-bottom:10px;position:relative;overflow:hidden;flex-shrink:0;}
+.sumcard .su-glow{position:absolute;top:-40px;right:-30px;width:140px;height:140px;background:radial-gradient(circle,rgba(201,240,77,.18),transparent 70%);pointer-events:none;}
+.su-head{display:flex;align-items:center;gap:8px;margin-bottom:12px;position:relative;}
+.su-head .ic{font-size:15px;}
+.su-head .ttl{font-size:14px;font-weight:900;}
+.su-head .rng{font-size:11px;color:var(--sub);font-weight:600;}
+.su-head .seg{margin-left:auto;display:flex;gap:4px;}
+.su-head .seg button{font-size:10px;font-weight:800;color:var(--sub);background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:7px;padding:3px 10px;cursor:pointer;font-family:'Noto Sans JP';}
+.su-head .seg button.on{background:var(--acc-dim);border-color:var(--acc);color:var(--acc);}
+.su-head .x{color:var(--faint);font-size:17px;cursor:pointer;line-height:1;padding-left:2px;}
+.su-hero{display:flex;gap:12px;margin-bottom:13px;}
+.su-hero .wbox{flex:1;}
+.su-k{font-size:10px;color:var(--sub);font-weight:700;margin-bottom:3px;}
+.su-w{font-family:'Inter';font-weight:800;font-size:30px;line-height:1;display:flex;align-items:baseline;gap:6px;}
+.su-w small{font-size:13px;color:var(--sub);font-weight:600;}
+.su-w .arrow{font-size:15px;}
+.su-w .arrow.dn{color:var(--good);} .su-w .arrow.up{color:var(--bad);}
+.su-w .ph{color:var(--faint);}
+.su-wsub{font-size:11px;color:var(--faint);margin-top:4px;font-family:'Inter';}
+.su-spark{width:118px;flex-shrink:0;display:flex;align-items:flex-end;}
+.su-spark svg{width:100%;height:54px;}
+.su-cal{margin-bottom:13px;}
+.su-calh{display:flex;align-items:baseline;gap:8px;margin-bottom:7px;}
+.su-calh .lbl{font-size:11px;color:var(--sub);font-weight:700;}
+.su-calh .cnt{font-size:12px;color:var(--acc);font-weight:800;font-family:'Inter';}
+.su-calh .parts{font-size:10px;color:var(--faint);margin-left:auto;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:55%;}
+.su-dow{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:4px;}
+.su-dow span{font-size:9px;color:var(--faint);text-align:center;}
+.su-grid7{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
+.su-cell{height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:11px;font-family:'Inter';color:var(--sub);background:rgba(255,255,255,.03);}
+.su-cell.tr{background:var(--acc-dim);border:1px solid var(--acc);color:var(--acc);font-weight:800;}
+.su-cell.bl{background:none;}
+.su-mgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;}
+.su-m{background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:10px;padding:8px 9px;}
+.su-m .cl{font-size:10px;color:var(--sub);font-weight:700;margin-bottom:3px;}
+.su-m .cv{font-family:'Inter';font-weight:800;font-size:16px;}
+.su-m .cv small{font-size:10px;color:var(--sub);font-weight:500;font-family:'Noto Sans JP';margin-left:1px;}
+.su-m .cv .ph{color:var(--faint);}
+.su-contest{display:flex;align-items:center;gap:8px;background:rgba(201,240,77,.06);border:1px solid #34401c;border-radius:10px;padding:9px 11px;margin-bottom:13px;font-size:12px;}
+.su-contest .dday{font-family:'Inter';font-weight:800;color:var(--acc);}
+.su-contest .pace{margin-left:auto;font-size:11px;font-weight:700;}
+.su-contest .pace.ahead{color:var(--good);} .su-contest .pace.behind{color:var(--warn);}
+.su-contest.locked{background:rgba(255,255,255,.03);border-style:dashed;border-color:var(--line);color:var(--sub);cursor:pointer;}
+.su-contest.locked .up{margin-left:auto;color:var(--acc);font-weight:800;}
+.su-contest.locked b{color:var(--acc);}
+.su-actions{display:flex;gap:9px;}
+.su-actions button{flex:1;border-radius:11px;padding:11px;font-size:13px;font-weight:800;cursor:pointer;font-family:'Noto Sans JP';border:1px solid var(--line);}
+.su-share{background:var(--acc);color:#101214;border:none!important;}
+.su-detail{background:var(--surface2);color:var(--text);}
 </style>
 </head>
 <body>
@@ -424,6 +474,7 @@ textarea.cf-in{resize:none;line-height:1.5;}
         <input type="date" id="cal" style="position:absolute;opacity:0;width:1px;height:1px;pointer-events:none;left:0;" onchange="onCalChange(this.value)">
         <div class="date-nav"><button class="today-btn" id="btn-today" data-i18n="today_btn" onclick="goToday()">今日</button><button onclick="shiftDate(-1)">‹</button><button onclick="shiftDate(1)">›</button></div>
       </div>
+      <div id="summary-slot"></div>
       <div class="grid2">
         <div class="tile mini" onclick="openPad('','weight')">
           <div class="k"><span data-i18n="weight">体重</span> <span class="ok" id="ok-weight" style="display:none">✓</span></div>
@@ -1352,6 +1403,8 @@ function renderToday(){
   const _tm=document.getElementById('today-memo'); if(_tm && document.activeElement!==_tm) _tm.value=rec.memo||'';
   // 分析
   renderTodayAnalysis(rec);
+  // 週間/月間サマリーカード（今日表示時のみ）
+  renderSummaryCard();
 }
 function saveTodayMemo(v){ const rec=getRec(curDate)||blankRec(curDate); rec.memo=v; upsertRec(rec); }
 function setMini(valId,subId,okId,val,unit,subFn){
@@ -2034,6 +2087,110 @@ function renderGymAnalytics(){
   el.innerHTML='<h3>'+t('an_title')+' <span style="font-size:9px;color:var(--faint)">'+t('an_sub')+'</span></h3>'+rows;
 }
 /* ===== 週次レポート（プレミアム） ===== */
+/* ===== 週間/月間サマリー（今日画面先頭・無料/プレミアム棲み分け） ===== */
+let summaryPeriod='week', summaryHidden=false;
+function _suL(){ return LANG==='ja'
+  ? {wk:'今週のまとめ',mo:'今月のまとめ',week:'週',month:'月',wchg:'体重の変化',train:'トレーニング',times:'回',kcal:'平均カロリー',pfc:'PFC達成率',sleep:'平均睡眠',steps:'平均歩数',water:'平均水分',logged:'記録した日',days:'日',share:'📷 シェア',detail:'詳しく見る →',dday:'大会まで',ddleft:'残り',ahead:'先行',behind:'遅れ',onpace:'ほぼ予定通り',target:'目標ペース',lock:'大会ペース（目標体重との差）は',prem:'プレミアム',unlock:'解放 →',dow:['月','火','水','木','金','土','日']}
+  : {wk:'This week',mo:'This month',week:'W',month:'M',wchg:'Weight change',train:'Training',times:'×',kcal:'Avg calories',pfc:'PFC goal',sleep:'Avg sleep',steps:'Avg steps',water:'Avg water',logged:'Logged',days:'d',share:'📷 Share',detail:'Details →',dday:'Contest in',ddleft:'',ahead:'ahead',behind:'behind',onpace:'on track',target:'Target',lock:'Contest pace is ',prem:'Premium',unlock:'Unlock →',dow:['M','T','W','T','F','S','S']}; }
+function _suDays(s,e){ return Math.round((new Date(e+'T00:00:00')-new Date(s+'T00:00:00'))/86400000)+1; }
+function _suCells(start,end,trSet){ const s=new Date(start+'T00:00:00'), e=new Date(end+'T00:00:00'); const cells=[]; const lead=(s.getDay()+6)%7; for(let i=0;i<lead;i++) cells.push({blank:true}); for(let d=new Date(s); d<=e; d.setDate(d.getDate()+1)){ const ds=fmt(d); cells.push({d:d.getDate(), tr:trSet.has(ds)}); } return cells; }
+function computeSummary(period){
+  const [start,end] = period==='month'?monthRange(0):weekRange(0);
+  const all=DB.records(); const recs=all.filter(r=>r.date>=start&&r.date<=end);
+  const wr=recs.filter(r=>r.weight!=null).sort((a,b)=>a.date.localeCompare(b.date));
+  const spark=wr.map(r=>r.weight); const wStart=wr.length?wr[0].weight:null, wEnd=wr.length?wr[wr.length-1].weight:null;
+  const wDelta=(wStart!=null&&wEnd!=null)?Math.round((wEnd-wStart)*10)/10:null;
+  const trRecs=recs.filter(r=>r.trained);
+  const pc={}; trRecs.forEach(r=>(r.muscles||[]).forEach(m=>{pc[m]=(pc[m]||0)+1;}));
+  const parts=Object.keys(pc).sort((a,b)=>pc[b]-pc[a]).slice(0,4).map(m=>partLabel(m)+pc[m]).join(LANG==='ja'?'・':' ');
+  const kc=recs.map(r=>r.kcal!=null?r.kcal:calcKcal(r.p,r.f,r.c)).filter(x=>x); const kcal=kc.length?Math.round(kc.reduce((a,b)=>a+b,0)/kc.length):null;
+  const ng=DB.nutritionGoals(); let pfc=null;
+  if(ng&&(ng.p||ng.f||ng.c)){ const rs=[]; recs.forEach(r=>{ const ps=[]; ['p','f','c'].forEach(k=>{ if(ng[k]&&r[k]!=null) ps.push(Math.min(r[k]/ng[k],1)); }); if(ps.length) rs.push(ps.reduce((a,b)=>a+b,0)/ps.length); }); if(rs.length) pfc=Math.round(rs.reduce((a,b)=>a+b,0)/rs.length*100); }
+  const slA=recs.map(r=>r.sleep).filter(x=>x!=null); const sleep=slA.length?Math.round(slA.reduce((a,b)=>a+b,0)/slA.length*10)/10:null;
+  const stA=recs.map(r=>r.steps).filter(x=>x!=null); const steps=stA.length?Math.round(stA.reduce((a,b)=>a+b,0)/stA.length):null;
+  const water=rangeWaterAvg(start,end);
+  const logged=recs.filter(r=>r.weight!=null||r.sleep!=null||r.steps!=null||r.p!=null||r.trained).length;
+  const cells=_suCells(start,end,new Set(trRecs.map(r=>r.date)));
+  let contest=null; const cdd=DB.contestDate();
+  if(cdd){ const today=logicalToday(); const dday=Math.ceil((new Date(cdd+'T00:00:00')-new Date(today+'T00:00:00'))/86400000);
+    const plan=roadmapPlan(); const L=_suL(); let paceText=null,paceCls='ahead';
+    const tRec=all.find(r=>r.date===today); const curW=(tRec&&tRec.weight!=null)?tRec.weight:wEnd;
+    if(plan&&!plan.trivial&&curW!=null){ const gap=curW-targetAt(plan,today);
+      if(gap<=-0.05){ paceText=L.target+' +'+(-gap).toFixed(1)+'kg '+L.ahead; paceCls='ahead'; }
+      else if(gap>=0.05){ paceText=L.target+' '+gap.toFixed(1)+'kg '+L.behind; paceCls='behind'; }
+      else { paceText=L.target+' '+L.onpace; paceCls='ahead'; } }
+    contest={dday,paceText,paceCls}; }
+  const ms=new Date(start+'T00:00:00'), me=new Date(end+'T00:00:00'); const L=_suL();
+  const label = period==='month' ? (ms.getMonth()+1)+(LANG==='ja'?'月':'') : (ms.getMonth()+1)+'/'+ms.getDate()+'–'+(me.getMonth()+1)+'/'+me.getDate();
+  return {period,start,end,label,ttl:period==='month'?L.mo:L.wk,spark,wStart,wEnd,wDelta,trainCount:trRecs.length,parts,kcal,pfc,sleep,steps,water,logged,total:_suDays(start,end),cells,contest,hasData:recs.length>0};
+}
+function _suSpark(vals){ if(vals.length<2) return ''; const min=Math.min.apply(0,vals),max=Math.max.apply(0,vals),rng=(max-min)||1,W=118,H=54,pad=5; const pts=vals.map((v,i)=>[pad+i*(W-2*pad)/(vals.length-1), pad+(1-(v-min)/rng)*(H-2*pad)]); const line=pts.map(p=>p[0].toFixed(1)+','+p[1].toFixed(1)).join(' '); const area=pad+','+(H-pad)+' '+line+' '+(W-pad)+','+(H-pad); const last=pts[pts.length-1]; return '<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none"><polygon points="'+area+'" fill="rgba(201,240,77,.12)"/><polyline points="'+line+'" fill="none" stroke="#c9f04d" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/><circle cx="'+last[0].toFixed(1)+'" cy="'+last[1].toFixed(1)+'" r="3" fill="#c9f04d"/></svg>'; }
+function _suNum(v,unit){ const u=unit?'<small>'+unit+'</small>':''; return v==null?('<span class="ph">—</span>'+u):(v+u); }
+function summaryCardHTML(d,mode){
+  const L=_suL(); const prem=isPremiumReal();
+  const calCells=d.cells.map(c=>c.blank?'<div class="su-cell bl"></div>':'<div class="su-cell'+(c.tr?' tr':'')+'">'+c.d+'</div>').join('');
+  let headRight = mode==='share'
+    ? '<span style="margin-left:auto;font-size:11px;font-weight:800;color:var(--acc)">PhysiqueLog</span>'
+    : '<div class="seg"><button class="'+(summaryPeriod==='week'?'on':'')+'" onclick="setSummaryPeriod(\'week\')">'+L.week+'</button><button class="'+(summaryPeriod==='month'?'on':'')+'" onclick="setSummaryPeriod(\'month\')">'+L.month+'</button></div><span class="x" onclick="dismissSummary()">×</span>';
+  const arrow = d.wDelta==null?'':'<span class="arrow '+(d.wDelta<=0?'dn':'up')+'">'+(d.wDelta<=0?'↓':'↑')+'</span>';
+  const wval = d.wDelta==null?'<span class="ph">—</span>':((d.wDelta>0?'+':'')+d.wDelta);
+  const wsub = (d.wStart!=null&&d.wEnd!=null)?(d.wStart+' → '+d.wEnd+' kg'):'';
+  let contest='';
+  if(d.contest && d.contest.paceText!=null && prem){ contest='<div class="su-contest"><span>🏆 '+L.dday+' <span class="dday">'+L.ddleft+d.contest.dday+L.days+'</span></span><span class="pace '+d.contest.paceCls+'">'+d.contest.paceText+'</span></div>'; }
+  else if(d.contest && !prem && mode!=='share'){ contest='<div class="su-contest locked" onclick="openPaywall()"><span>🔒 '+L.lock+'<b>'+L.prem+'</b></span><span class="up">'+L.unlock+'</span></div>'; }
+  const actions = mode==='share'?'':'<div class="su-actions"><button class="su-share" onclick="summaryShare()">'+L.share+'</button><button class="su-detail" onclick="go(\'data\')">'+L.detail+'</button></div>';
+  const footer = mode==='share'?'<div style="margin-top:13px;font-size:10px;color:var(--faint);text-align:center;">#PhysiqueLog</div>':'';
+  return '<div class="sumcard"><div class="su-glow"></div>'
+    +'<div class="su-head"><span class="ic">📊</span><span class="ttl">'+d.ttl+'</span><span class="rng">'+d.label+'</span>'+headRight+'</div>'
+    +'<div class="su-hero"><div class="wbox"><div class="su-k">'+L.wchg+'</div><div class="su-w"><span>'+wval+'</span><small>kg</small>'+arrow+'</div><div class="su-wsub">'+wsub+'</div></div><div class="su-spark">'+_suSpark(d.spark)+'</div></div>'
+    +'<div class="su-cal"><div class="su-calh"><span class="lbl">'+L.train+'</span><span class="cnt">'+d.trainCount+L.times+'</span><span class="parts">'+(d.parts||'')+'</span></div>'
+      +'<div class="su-dow">'+L.dow.map(z=>'<span>'+z+'</span>').join('')+'</div><div class="su-grid7">'+calCells+'</div></div>'
+    +'<div class="su-mgrid">'
+      +'<div class="su-m"><div class="cl">'+L.kcal+'</div><div class="cv">'+_suNum(d.kcal!=null?d.kcal.toLocaleString():null,'kcal')+'</div></div>'
+      +'<div class="su-m"><div class="cl">'+L.pfc+'</div><div class="cv">'+_suNum(d.pfc,'%')+'</div></div>'
+      +'<div class="su-m"><div class="cl">'+L.sleep+'</div><div class="cv">'+_suNum(d.sleep,'h')+'</div></div>'
+      +'<div class="su-m"><div class="cl">'+L.steps+'</div><div class="cv">'+_suNum(d.steps!=null?d.steps.toLocaleString():null,'')+'</div></div>'
+      +'<div class="su-m"><div class="cl">'+L.water+'</div><div class="cv">'+_suNum(d.water!=null?(d.water/1000).toFixed(1):null,'L')+'</div></div>'
+      +'<div class="su-m"><div class="cl">'+L.logged+'</div><div class="cv">'+d.logged+'<small>/'+d.total+L.days+'</small></div></div>'
+    +'</div>'+contest+actions+footer+'</div>';
+}
+function renderSummaryCard(){ const slot=document.getElementById('summary-slot'); if(!slot) return; if(summaryHidden || curDate!==logicalToday()){ slot.innerHTML=''; return; } const d=computeSummary(summaryPeriod); if(!d.hasData){ slot.innerHTML=''; return; } slot.innerHTML=summaryCardHTML(d,'card'); }
+function setSummaryPeriod(p){ summaryPeriod=p; renderSummaryCard(); }
+function dismissSummary(){ summaryHidden=true; renderSummaryCard(); }
+function _suRR(x,bx,by,w,h,r){ x.beginPath(); x.moveTo(bx+r,by); x.arcTo(bx+w,by,bx+w,by+h,r); x.arcTo(bx+w,by+h,bx,by+h,r); x.arcTo(bx,by+h,bx,by,r); x.arcTo(bx,by,bx+w,by,r); x.closePath(); }
+function summaryShare(){
+  const d=computeSummary(summaryPeriod); const L=_suL(); const prem=isPremiumReal();
+  const W=1080, PADX=80, gap=14; const cell=(W-2*PADX-6*gap)/7; const calRows=Math.ceil(d.cells.length/7);
+  const calBlockH = 44 + calRows*((cell-14)+gap);
+  const showPace = !!(prem && d.contest && d.contest.paceText);
+  const H = Math.round(400 + calBlockH + 40 + 5*64 + (showPace?70:0) + 90);
+  const c=document.createElement('canvas'); c.width=W; c.height=H; const x=c.getContext('2d');
+  x.fillStyle='#101214'; x.fillRect(0,0,W,H);
+  x.fillStyle='#c9f04d'; x.fillRect(0,0,W,10);
+  x.textAlign='left';
+  x.fillStyle='#c9f04d'; x.font='800 40px Inter, sans-serif'; x.fillText('PhysiqueLog', PADX, 98);
+  x.fillStyle='#8b939b'; x.font='700 34px "Noto Sans JP", sans-serif'; x.fillText(d.ttl+' ・ '+d.label, PADX, 152);
+  const wtxt=(d.wDelta==null?'—':((d.wDelta>0?'+':'')+d.wDelta));
+  x.fillStyle='#edf0f2'; x.font='900 116px Inter, sans-serif'; x.fillText(wtxt, PADX, 286);
+  const wW=x.measureText(wtxt).width; x.fillStyle='#8b939b'; x.font='700 44px Inter, sans-serif'; x.fillText('kg', PADX+wW+20, 286);
+  if(d.wDelta!=null){ x.fillStyle=d.wDelta<=0?'#4ade80':'#f87171'; x.font='900 60px Inter, sans-serif'; x.fillText(d.wDelta<=0?'↓':'↑', PADX+wW+118, 286); }
+  x.fillStyle='#545c64'; x.font='600 32px Inter, "Noto Sans JP", sans-serif'; x.fillText(L.wchg+(d.wStart!=null?('    '+d.wStart+' → '+d.wEnd+' kg'):''), PADX, 340);
+  let cy=410; x.fillStyle='#8b939b'; x.font='700 30px "Noto Sans JP", sans-serif'; x.fillText(L.train+'  '+d.trainCount+L.times+(d.parts?('    '+d.parts):''), PADX, cy); cy+=44;
+  const ch=cell-14;
+  d.cells.forEach((c2,i)=>{ const col=i%7,row=Math.floor(i/7); const bx=PADX+col*(cell+gap), by=cy+row*(cell+gap); if(c2.blank) return;
+    x.fillStyle=c2.tr?'rgba(201,240,77,.16)':'rgba(255,255,255,.04)'; _suRR(x,bx,by,cell,ch,12); x.fill();
+    if(c2.tr){ x.strokeStyle='#c9f04d'; x.lineWidth=2; _suRR(x,bx,by,cell,ch,12); x.stroke(); }
+    x.fillStyle=c2.tr?'#c9f04d':'#8b939b'; x.font='700 26px Inter, sans-serif'; x.textAlign='center'; x.fillText(c2.d, bx+cell/2, by+ch/2+9); x.textAlign='left'; });
+  cy += calRows*(ch+gap) + 36;
+  const metrics=[[L.kcal,d.kcal!=null?d.kcal.toLocaleString()+' kcal':'—'],[L.pfc,d.pfc!=null?d.pfc+'%':'—'],[L.sleep,d.sleep!=null?d.sleep+' h':'—'],[L.steps,d.steps!=null?d.steps.toLocaleString():'—'],[L.water,d.water!=null?(d.water/1000).toFixed(1)+' L':'—']];
+  metrics.forEach(m=>{ x.strokeStyle='rgba(255,255,255,.07)'; x.lineWidth=1; x.beginPath(); x.moveTo(PADX,cy-34); x.lineTo(W-PADX,cy-34); x.stroke(); x.fillStyle='#8b939b'; x.font='600 34px "Noto Sans JP", sans-serif'; x.textAlign='left'; x.fillText(m[0], PADX, cy); x.fillStyle='#edf0f2'; x.font='800 38px Inter, "Noto Sans JP", sans-serif'; x.textAlign='right'; x.fillText(m[1], W-PADX, cy); cy+=64; });
+  x.textAlign='left';
+  if(showPace){ x.fillStyle='#c9f04d'; x.font='700 32px "Noto Sans JP", sans-serif'; x.fillText('🏆 '+L.dday+' '+L.ddleft+d.contest.dday+L.days+'   '+d.contest.paceText, PADX, cy); cy+=64; }
+  x.fillStyle='#3f4750'; x.font='700 30px Inter, sans-serif'; x.fillText('#PhysiqueLog', PADX, H-40);
+  const dataUrl=c.toDataURL('image/jpeg',0.9); const b64=(dataUrl.split(',')[1]||'');
+  if(typeof AndroidBridge!=='undefined' && AndroidBridge.saveStart){ try{ const CS=60000,n=Math.ceil(b64.length/CS); AndroidBridge.saveStart('summary_'+d.start+'.jpg',n); for(let i=0;i<n;i++) AndroidBridge.saveChunk(i,b64.slice(i*CS,(i+1)*CS)); AndroidBridge.saveDone(); toast(t('t_share_open')); }catch(e){ toast(t('t_share_fail')); } }
+  else { try{ const a=document.createElement('a'); a.href=dataUrl; a.download='summary_'+d.start+'.jpg'; document.body.appendChild(a); a.click(); a.remove(); }catch(e){ toast(t('t_share_fail')); } }
+}
 function renderWeeklyReport(start,end,label){
   const el=document.getElementById('report-card'); if(!el) return;
   if(!isPremiumReal()){ el.innerHTML='<h3><span>'+t('rep_title')+'</span> <span class="prem-badge">PREMIUM</span></h3>'+premLock('📋','rep_title','rep_lock'); return; }
