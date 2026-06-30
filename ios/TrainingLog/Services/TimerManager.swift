@@ -71,6 +71,7 @@ final class TimerManager: NSObject {
             try session.setCategory(.playback, options: [.duckOthers])
             try session.setActive(true)
             audioPlayer = try AVAudioPlayer(contentsOf: url)
+            audioPlayer?.delegate = self
             audioPlayer?.play()
         } catch {
             AudioServicesPlaySystemSound(1005)
@@ -89,13 +90,22 @@ final class TimerManager: NSObject {
     }
 
     // Android の vibrate(pattern) に相当する連続バイブレーション
+    // iOSは短間隔の連続バイブを間引くため、十分に間隔を空けてサウンド長(約1.4秒)に合わせる（BK-008）
     private func vibrate() {
-        let delays: [Double] = [0.00, 0.55, 0.70, 0.85, 1.00]
+        let delays: [Double] = [0.0, 0.8, 1.6]
         for delay in delays {
             DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
                 AudioServicesPlaySystemSound(kSystemSoundID_Vibrate)
             }
         }
+    }
+}
+
+// MARK: - AVAudioPlayerDelegate（再生終了で他アプリの音のダッキングを解除）
+
+extension TimerManager: AVAudioPlayerDelegate {
+    func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
+        try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
     }
 }
 
