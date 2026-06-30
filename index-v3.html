@@ -421,6 +421,10 @@ textarea.cf-in{resize:none;line-height:1.5;}
 .su-head .seg button{font-size:10px;font-weight:800;color:var(--sub);background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:7px;padding:3px 10px;cursor:pointer;font-family:'Noto Sans JP';}
 .su-head .seg button.on{background:var(--acc-dim);border-color:var(--acc);color:var(--acc);}
 .su-head .x{color:var(--faint);font-size:17px;cursor:pointer;line-height:1;padding-left:2px;}
+.su-head .su-ctrl{margin-left:auto;display:flex;align-items:center;gap:3px;}
+.su-head .su-ctrl .seg{margin-left:0;}
+.su-nav{font-family:'Inter';font-size:13px;font-weight:800;color:var(--sub);background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:7px;width:22px;height:24px;line-height:1;padding:0;cursor:pointer;}
+.su-nav:disabled{opacity:.3;cursor:default;}
 .su-hero{display:flex;gap:12px;margin-bottom:13px;}
 .su-hero .wbox{flex:1;}
 .su-k{font-size:10px;color:var(--sub);font-weight:700;margin-bottom:3px;}
@@ -2088,14 +2092,17 @@ function renderGymAnalytics(){
 }
 /* ===== 週次レポート（プレミアム） ===== */
 /* ===== 週間/月間サマリー（今日画面先頭・無料/プレミアム棲み分け） ===== */
-let summaryPeriod='week', summaryHidden=false;
+let summaryPeriod='week', summaryHidden=false, summaryOffset=null;
+// 週の頭(月/火)は先週の完了済みサマリーを既定表示（月曜の週次通知＝先週のまとめと整合）。水曜以降は今週。月は今月。
+function _suDefaultOff(period){ if(period==='month') return 0; const dow=(new Date(logicalToday()+'T00:00:00').getDay()+6)%7; return dow<=1?-1:0; }
 function _suL(){ return LANG==='ja'
-  ? {wk:'今週のまとめ',mo:'今月のまとめ',week:'週',month:'月',wchg:'体重の変化',train:'トレーニング',times:'回',kcal:'平均カロリー',pfc:'PFC達成率',sleep:'平均睡眠',steps:'平均歩数',water:'平均水分',logged:'記録した日',days:'日',share:'📷 シェア',detail:'詳しく見る →',dday:'大会まで',ddleft:'残り',ahead:'先行',behind:'遅れ',onpace:'ほぼ予定通り',target:'目標ペース',lock:'大会ペース（目標体重との差）は',prem:'プレミアム',unlock:'解放 →',dow:['月','火','水','木','金','土','日']}
-  : {wk:'This week',mo:'This month',week:'W',month:'M',wchg:'Weight change',train:'Training',times:'×',kcal:'Avg calories',pfc:'PFC goal',sleep:'Avg sleep',steps:'Avg steps',water:'Avg water',logged:'Logged',days:'d',share:'📷 Share',detail:'Details →',dday:'Contest in',ddleft:'',ahead:'ahead',behind:'behind',onpace:'on track',target:'Target',lock:'Contest pace is ',prem:'Premium',unlock:'Unlock →',dow:['M','T','W','T','F','S','S']}; }
+  ? {wk:'今週のまとめ',mo:'今月のまとめ',lwk:'先週のまとめ',lmo:'先月のまとめ',week:'週',month:'月',wchg:'体重の変化',train:'トレーニング',times:'回',kcal:'平均カロリー',pfc:'PFC達成率',sleep:'平均睡眠',steps:'平均歩数',water:'平均水分',logged:'記録した日',days:'日',share:'📷 シェア',detail:'詳しく見る →',dday:'大会まで',ddleft:'残り',ahead:'先行',behind:'遅れ',onpace:'ほぼ予定通り',target:'目標ペース',lock:'大会ペース（目標体重との差）は',prem:'プレミアム',unlock:'解放 →',dow:['月','火','水','木','金','土','日']}
+  : {wk:'This week',mo:'This month',lwk:'Last week',lmo:'Last month',week:'W',month:'M',wchg:'Weight change',train:'Training',times:'×',kcal:'Avg calories',pfc:'PFC goal',sleep:'Avg sleep',steps:'Avg steps',water:'Avg water',logged:'Logged',days:'d',share:'📷 Share',detail:'Details →',dday:'Contest in',ddleft:'',ahead:'ahead',behind:'behind',onpace:'on track',target:'Target',lock:'Contest pace is ',prem:'Premium',unlock:'Unlock →',dow:['M','T','W','T','F','S','S']}; }
 function _suDays(s,e){ return Math.round((new Date(e+'T00:00:00')-new Date(s+'T00:00:00'))/86400000)+1; }
 function _suCells(start,end,trSet){ const s=new Date(start+'T00:00:00'), e=new Date(end+'T00:00:00'); const cells=[]; const lead=(s.getDay()+6)%7; for(let i=0;i<lead;i++) cells.push({blank:true}); for(let d=new Date(s); d<=e; d.setDate(d.getDate()+1)){ const ds=fmt(d); cells.push({d:d.getDate(), tr:trSet.has(ds)}); } return cells; }
-function computeSummary(period){
-  const [start,end] = period==='month'?monthRange(0):weekRange(0);
+function computeSummary(period,off){
+  off=off||0;
+  const [start,end] = period==='month'?monthRange(off):weekRange(off);
   const all=DB.records(); const recs=all.filter(r=>r.date>=start&&r.date<=end);
   const wr=recs.filter(r=>r.weight!=null).sort((a,b)=>a.date.localeCompare(b.date));
   const spark=wr.map(r=>r.weight); const wStart=wr.length?wr[0].weight:null, wEnd=wr.length?wr[wr.length-1].weight:null;
@@ -2122,16 +2129,19 @@ function computeSummary(period){
     contest={dday,paceText,paceCls}; }
   const ms=new Date(start+'T00:00:00'), me=new Date(end+'T00:00:00'); const L=_suL();
   const label = period==='month' ? (ms.getMonth()+1)+(LANG==='ja'?'月':'') : (ms.getMonth()+1)+'/'+ms.getDate()+'–'+(me.getMonth()+1)+'/'+me.getDate();
-  return {period,start,end,label,ttl:period==='month'?L.mo:L.wk,spark,wStart,wEnd,wDelta,trainCount:trRecs.length,parts,kcal,pfc,sleep,steps,water,logged,total:_suDays(start,end),cells,contest,hasData:recs.length>0};
+  let ttl;
+  if(period==='month'){ ttl = off===0?L.mo : off===-1?L.lmo : (LANG==='ja'?(-off)+'ヶ月前のまとめ':(-off)+' months ago'); }
+  else { ttl = off===0?L.wk : off===-1?L.lwk : (LANG==='ja'?(-off)+'週間前のまとめ':(-off)+' weeks ago'); }
+  return {period,off,start,end,label,ttl,spark,wStart,wEnd,wDelta,trainCount:trRecs.length,parts,kcal,pfc,sleep,steps,water,logged,total:_suDays(start,end),cells,contest,hasData:recs.length>0};
 }
 function _suSpark(vals){ if(vals.length<2) return ''; const min=Math.min.apply(0,vals),max=Math.max.apply(0,vals),rng=(max-min)||1,W=118,H=54,pad=5; const pts=vals.map((v,i)=>[pad+i*(W-2*pad)/(vals.length-1), pad+(1-(v-min)/rng)*(H-2*pad)]); const line=pts.map(p=>p[0].toFixed(1)+','+p[1].toFixed(1)).join(' '); const area=pad+','+(H-pad)+' '+line+' '+(W-pad)+','+(H-pad); const last=pts[pts.length-1]; return '<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none"><polygon points="'+area+'" fill="rgba(201,240,77,.12)"/><polyline points="'+line+'" fill="none" stroke="#c9f04d" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/><circle cx="'+last[0].toFixed(1)+'" cy="'+last[1].toFixed(1)+'" r="3" fill="#c9f04d"/></svg>'; }
 function _suNum(v,unit){ const u=unit?'<small>'+unit+'</small>':''; return v==null?('<span class="ph">—</span>'+u):(v+u); }
-function summaryCardHTML(d,mode){
+function summaryCardHTML(d,mode,off){
   const L=_suL(); const prem=isPremiumReal();
   const calCells=d.cells.map(c=>c.blank?'<div class="su-cell bl"></div>':'<div class="su-cell'+(c.tr?' tr':'')+'">'+c.d+'</div>').join('');
   let headRight = mode==='share'
     ? '<span style="margin-left:auto;font-size:11px;font-weight:800;color:var(--acc)">PhysiqueLog</span>'
-    : '<div class="seg"><button class="'+(summaryPeriod==='week'?'on':'')+'" onclick="setSummaryPeriod(\'week\')">'+L.week+'</button><button class="'+(summaryPeriod==='month'?'on':'')+'" onclick="setSummaryPeriod(\'month\')">'+L.month+'</button></div><span class="x" onclick="dismissSummary()">×</span>';
+    : '<div class="su-ctrl"><button class="su-nav" onclick="summaryNav(-1)">‹</button><button class="su-nav" onclick="summaryNav(1)"'+(((off||0)>=0)?' disabled':'')+'>›</button><div class="seg"><button class="'+(summaryPeriod==='week'?'on':'')+'" onclick="setSummaryPeriod(\'week\')">'+L.week+'</button><button class="'+(summaryPeriod==='month'?'on':'')+'" onclick="setSummaryPeriod(\'month\')">'+L.month+'</button></div><span class="x" onclick="dismissSummary()">×</span></div>';
   const arrow = d.wDelta==null?'':'<span class="arrow '+(d.wDelta<=0?'dn':'up')+'">'+(d.wDelta<=0?'↓':'↑')+'</span>';
   const wval = d.wDelta==null?'<span class="ph">—</span>':((d.wDelta>0?'+':'')+d.wDelta);
   const wsub = (d.wStart!=null&&d.wEnd!=null)?(d.wStart+' → '+d.wEnd+' kg'):'';
@@ -2154,12 +2164,19 @@ function summaryCardHTML(d,mode){
       +'<div class="su-m"><div class="cl">'+L.logged+'</div><div class="cv">'+d.logged+'<small>/'+d.total+L.days+'</small></div></div>'
     +'</div>'+contest+actions+footer+'</div>';
 }
-function renderSummaryCard(){ const slot=document.getElementById('summary-slot'); if(!slot) return; if(summaryHidden || curDate!==logicalToday()){ slot.innerHTML=''; return; } const d=computeSummary(summaryPeriod); if(!d.hasData){ slot.innerHTML=''; return; } slot.innerHTML=summaryCardHTML(d,'card'); }
-function setSummaryPeriod(p){ summaryPeriod=p; renderSummaryCard(); }
+function renderSummaryCard(){ const slot=document.getElementById('summary-slot'); if(!slot) return; if(summaryHidden || curDate!==logicalToday()){ slot.innerHTML=''; return; }
+  let off=(summaryOffset==null)?_suDefaultOff(summaryPeriod):summaryOffset;
+  let d=computeSummary(summaryPeriod,off);
+  if(!d.hasData && summaryOffset==null && off!==0){ off=0; d=computeSummary(summaryPeriod,0); } // 既定(先週)が空なら今週にフォールバック
+  if(!d.hasData){ slot.innerHTML=''; return; }
+  slot.innerHTML=summaryCardHTML(d,'card',off); }
+function setSummaryPeriod(p){ summaryPeriod=p; summaryOffset=null; renderSummaryCard(); }
+function summaryNav(dir){ let cur=(summaryOffset==null)?_suDefaultOff(summaryPeriod):summaryOffset; cur=Math.min(0,cur+dir); summaryOffset=cur; renderSummaryCard(); }
 function dismissSummary(){ summaryHidden=true; renderSummaryCard(); }
 function _suRR(x,bx,by,w,h,r){ x.beginPath(); x.moveTo(bx+r,by); x.arcTo(bx+w,by,bx+w,by+h,r); x.arcTo(bx+w,by+h,bx,by+h,r); x.arcTo(bx,by+h,bx,by,r); x.arcTo(bx,by,bx+w,by,r); x.closePath(); }
 function summaryShare(){
-  const d=computeSummary(summaryPeriod); const L=_suL(); const prem=isPremiumReal();
+  const off=(summaryOffset==null)?_suDefaultOff(summaryPeriod):summaryOffset;
+  const d=computeSummary(summaryPeriod,off); const L=_suL(); const prem=isPremiumReal();
   const W=1080, PADX=80, gap=14; const cell=(W-2*PADX-6*gap)/7; const calRows=Math.ceil(d.cells.length/7);
   const calBlockH = 44 + calRows*((cell-14)+gap);
   const showPace = !!(prem && d.contest && d.contest.paceText);

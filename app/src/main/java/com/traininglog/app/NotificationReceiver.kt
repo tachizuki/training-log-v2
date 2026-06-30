@@ -155,7 +155,7 @@ class NotificationReceiver : BroadcastReceiver() {
             )
             val notif = NotificationCompat.Builder(context, CHANNEL_WEEKLY)
                 .setSmallIcon(R.mipmap.ic_launcher)
-                .setContentTitle("今週のまとめができました 📊")
+                .setContentTitle("先週のまとめができました 📊")
                 .setContentText("先週のがんばりを振り返ろう")
                 .setStyle(NotificationCompat.BigTextStyle()
                     .bigText("体重の変化・トレーニング・栄養のまとめをチェックして、今週のモチベーションにしましょう！"))
