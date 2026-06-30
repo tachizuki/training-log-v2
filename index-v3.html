@@ -305,6 +305,10 @@ textarea.cf-in{resize:none;line-height:1.5;}
 .nav button{flex:1;background:none;border:none;cursor:pointer;color:var(--faint);font-size:10px;font-weight:700;font-family:'Noto Sans JP';display:flex;flex-direction:column;align-items:center;gap:4px;}
 .nav button svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;}
 .nav button.on{color:var(--acc);}
+/* iOS用 戻る/閉じるボタン（モーダル表示中のみ・BK-007） */
+.ios-back{position:absolute;top:calc(var(--sat) + 10px);left:14px;z-index:60;display:none;align-items:center;gap:3px;background:rgba(21,24,28,0.94);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:12px;padding:8px 14px 8px 10px;color:var(--acc);font-size:13px;font-weight:700;font-family:'Noto Sans JP';cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,0.35);}
+.ios-back.show{display:flex;}
+.ios-back svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;}
 .v3-badge{position:absolute;top:calc(var(--sat) + 2px);left:50%;transform:translateX(-50%);font-size:9px;color:var(--faint);font-weight:700;letter-spacing:.1em;}
 /* 設定 */
 .set-sec{font-size:11px;font-weight:700;color:var(--sub);margin:14px 4px 6px;display:flex;align-items:center;}
@@ -777,6 +781,11 @@ textarea.cf-in{resize:none;line-height:1.5;}
     <button id="nv-set" onclick="go('set')"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 00-.1-1.2l2-1.5-2-3.5-2.4 1a7 7 0 00-2-1.2L14 3h-4l-.5 2.6a7 7 0 00-2 1.2l-2.4-1-2 3.5 2 1.5A7 7 0 005 12a7 7 0 00.1 1.2l-2 1.5 2 3.5 2.4-1a7 7 0 002 1.2L10 21h4l.5-2.6a7 7 0 002-1.2l2.4 1 2-3.5-2-1.5A7 7 0 0019 12z"/></svg><span data-i18n="nav_set">設定</span></button>
   </nav>
 
+  <!-- iOS用 戻る/閉じる（モーダル表示中のみ。Androidの物理戻る相当・BK-007） -->
+  <button class="ios-back" id="ios-back" onclick="iosBack()" aria-label="戻る">
+    <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg><span data-i18n="back_btn">戻る</span>
+  </button>
+
   <!-- ===== 初回オンボーディング ===== -->
   <div class="ob hidden" id="ob">
     <button class="ob-skip" onclick="obFinish()" data-i18n="ob_skip">スキップ</button>
@@ -826,7 +835,7 @@ const APP_VERSION = 'v20260623e';
 /* ===== i18n（自動判定＋設定で手動切替。未翻訳キーは日本語フォールバック） ===== */
 const I18N = {
   ja: {
-    nav_today:'今日', nav_gym:'筋トレ', nav_data:'データ', nav_set:'設定',
+    nav_today:'今日', nav_gym:'筋トレ', nav_data:'データ', nav_set:'設定', back_btn:'戻る',
     today:'今日', today_btn:'今日', contest_unset:'大会未設定', tap_part:'タップして部位を選択', menu_unset:'メニュー未選択', start:'開始',
     weight:'体重', sleep:'睡眠', meal:'食事', water:'水分', gym:'筋トレ', steps:'歩数', salon:'日サロ', salon_unit:'分', bodyweight:'💪 自重',
     kcal_auto:'kcal 自動計算', analysis_title:'🔍 体重変動分析', analysis_sub:'体重変動分析', analysis_empty:'記録を入力すると分析が表示されます。',
@@ -883,7 +892,7 @@ const I18N = {
     back_to_today:'↩ 今日へ', a_pdiff:' / P あと{0}g', a_salt_missing:'塩分が未記録です。', a_prevdiff:'前日比', a_in_pace:' — 減量ペース内 ✓', a_increase:' — 増加',
   },
   en: {
-    nav_today:'Today', nav_gym:'Workout', nav_data:'Data', nav_set:'Settings',
+    nav_today:'Today', nav_gym:'Workout', nav_data:'Data', nav_set:'Settings', back_btn:'Back',
     today:'Today', today_btn:'Today', contest_unset:'No contest', tap_part:'Tap to pick muscle group', menu_unset:'No menu', start:'Start',
     weight:'Weight', sleep:'Sleep', meal:'Meal', water:'Water', gym:'Workout', steps:'Steps', salon:'Tanning', salon_unit:'min', bodyweight:'💪 BW',
     kcal_auto:'kcal auto', analysis_title:'🔍 Weight change', analysis_sub:'Weight change', analysis_empty:'Log data to see your analysis.',
@@ -2120,6 +2129,24 @@ if(typeof AndroidBridge!=='undefined'){ var _sn=document.getElementById('support
 wireSettingsAutoSave();
 renderToday();
 checkOnboarding();
+
+/* BK-007: iOSは物理戻るが無いため、モーダル/シート表示中だけ左上に戻るボタンを出す。
+   タップで開いている全シート/パッドを閉じる。Androidには出さない（__platform未設定）。 */
+(function(){
+  if(window.__platform !== 'ios') return;
+  var btn=document.getElementById('ios-back');
+  window.syncIosBack=function(){
+    var open=document.querySelector('.sheet.open, .pad.open');
+    btn.classList.toggle('show', !!open);
+  };
+  window.iosBack=function(){
+    if(typeof closeAllOverlays==='function') closeAllOverlays();
+    syncIosBack();
+  };
+  new MutationObserver(function(){ syncIosBack(); })
+    .observe(document.body,{attributes:true,subtree:true,attributeFilter:['class']});
+  syncIosBack();
+})();
 </script>
 </body>
 </html>
