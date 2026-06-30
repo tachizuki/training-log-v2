@@ -260,6 +260,7 @@ class MainActivity : AppCompatActivity() {
                 .apply()
             if (enabled) {
                 NotificationReceiver.scheduleNotification(this@MainActivity, hour, minute)
+                NotificationReceiver.scheduleWeeklySummary(this@MainActivity) // 週間まとめ（毎週月曜9時）も連動
                 webView.post {
                     webView.evaluateJavascript(
                         "showToast('通知を設定しました（毎日 ${hour}:${minute.toString().padStart(2,'0')}）✓', false)", null
@@ -267,6 +268,7 @@ class MainActivity : AppCompatActivity() {
                 }
             } else {
                 NotificationReceiver.cancelNotification(this@MainActivity)
+                NotificationReceiver.cancelWeeklySummary(this@MainActivity)
                 webView.post {
                     webView.evaluateJavascript("showToast('通知をオフにしました', false)", null)
                 }

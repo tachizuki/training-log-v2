@@ -34,6 +34,7 @@
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
                 <action android:name="com.traininglog.app.DAILY_NOTIFICATION" />
+                <action android:name="com.traininglog.app.WEEKLY_SUMMARY" />
             </intent-filter>
         </receiver>
         <service
