@@ -146,6 +146,11 @@ body{background:#000;color:var(--text);font-family:'Noto Sans JP',sans-serif;}
 .pad-head #pad-bw{background:var(--surface2);border:1px dashed var(--acc);color:var(--text);}
 .pad-head #pad-bw:active{background:var(--acc-dim);}
 .pad-head #pad-bw.on{background:var(--acc);border:1px solid var(--acc);color:#0d0f10;}
+/* アシスト（マシン補助）: 有酸素タグと同じ水色系で荷重と区別 */
+.pad-head #pad-assist{background:var(--surface2);border:1px dashed #7fd4ff;color:var(--text);}
+.pad-head #pad-assist:active{background:rgba(127,212,255,.12);}
+.pad-head #pad-assist.on{background:#7fd4ff;border:1px solid #7fd4ff;color:#0d0f10;}
+.cell .asw{color:#7fd4ff;}
 .pad-head .val{font-family:'Inter';font-size:30px;font-weight:800;color:var(--acc);margin-left:auto;}
 .pad-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
 .pad-grid button{height:58px;background:var(--surface);border:1px solid var(--line);border-radius:14px;color:var(--text);font-family:'Inter';font-size:22px;font-weight:700;cursor:pointer;}
@@ -723,6 +728,7 @@ textarea.cf-in{resize:none;line-height:1.5;}
       <div class="pad-head">
         <span class="lbl" id="pad-lbl">体重 (kg)</span>
         <button class="prev hide" id="pad-bw" onclick="padBodyweight()" data-i18n="bodyweight">自重</button>
+        <button class="prev hide" id="pad-assist" onclick="padAssist()" data-i18n="assist">アシスト</button>
         <button class="prev" id="pad-prev" onclick="padPrev()">前回 —</button>
         <span class="val num" id="pad-val">0</span>
       </div>
@@ -898,7 +904,7 @@ const I18N = {
   ja: {
     nav_today:'今日', nav_gym:'筋トレ', nav_data:'データ', nav_set:'設定', back_btn:'戻る',
     today:'今日', today_btn:'今日', contest_unset:'大会未設定', tap_part:'タップして部位を選択', menu_unset:'メニュー未選択', start:'開始',
-    weight:'体重', sleep:'睡眠', meal:'食事', water:'水分', gym:'筋トレ', steps:'歩数', salon:'日サロ', salon_unit:'分', bodyweight:'💪 自重',
+    weight:'体重', sleep:'睡眠', meal:'食事', water:'水分', gym:'筋トレ', steps:'歩数', salon:'日サロ', salon_unit:'分', bodyweight:'💪 自重', assist:'🦾 アシスト', assist_w:'アシスト', t_assist_num:'先に補助の重さを入力してください',
     kcal_auto:'kcal 自動計算', analysis_title:'🔍 体重変動分析', analysis_sub:'体重変動分析', analysis_empty:'記録を入力すると分析が表示されます。',
     seg_week:'週間', seg_month:'月間', seg_all:'全期間', data_title:'データ', data_empty:'データを蓄積すると傾向が表示されます。',
     weight_trend:'体重の推移', training:'トレーニング', nutrition:'栄養', this_week:'今週', last_week:'先週', all_period:'全期間',
@@ -955,7 +961,7 @@ const I18N = {
   en: {
     nav_today:'Today', nav_gym:'Workout', nav_data:'Data', nav_set:'Settings', back_btn:'Back',
     today:'Today', today_btn:'Today', contest_unset:'No contest', tap_part:'Tap to pick muscle group', menu_unset:'No menu', start:'Start',
-    weight:'Weight', sleep:'Sleep', meal:'Meal', water:'Water', gym:'Workout', steps:'Steps', salon:'Tanning', salon_unit:'min', bodyweight:'💪 BW',
+    weight:'Weight', sleep:'Sleep', meal:'Meal', water:'Water', gym:'Workout', steps:'Steps', salon:'Tanning', salon_unit:'min', bodyweight:'💪 BW', assist:'🦾 Assist', assist_w:'Assist ', t_assist_num:'Enter the assist weight first',
     kcal_auto:'kcal auto', analysis_title:'🔍 Weight change', analysis_sub:'Weight change', analysis_empty:'Log data to see your analysis.',
     seg_week:'Week', seg_month:'Month', seg_all:'All', data_title:'Data', data_empty:'Trends appear as you log data.',
     weight_trend:'Weight trend', training:'Training', nutrition:'Nutrition', this_week:'This week', last_week:'Last week', all_period:'All time',
@@ -1551,6 +1557,7 @@ function openPad(label,target){
   const pb=document.getElementById('pad-prev');
   if(pv!=null){ pb.classList.remove('hide'); pb.textContent=t('prev')+' '+pv; } else pb.classList.add('hide');
   document.getElementById('pad-bw').classList.add('hide');
+  document.getElementById('pad-assist').classList.add('hide');
   document.getElementById('pad').classList.add('open'); document.getElementById('pad-ov').classList.add('open');
 }
 function closePad(){ document.getElementById('pad').classList.remove('open'); document.getElementById('pad-ov').classList.remove('open'); }
@@ -1561,6 +1568,7 @@ function openSetPad(id,label){
   document.getElementById('pad-val').textContent=cur;
   document.getElementById('pad-prev').classList.add('hide');
   document.getElementById('pad-bw').classList.add('hide');
+  document.getElementById('pad-assist').classList.add('hide');
   document.getElementById('pad').classList.add('open'); document.getElementById('pad-ov').classList.add('open');
 }
 function padKey(k){
@@ -1576,6 +1584,9 @@ function padKey(k){
 function padPrev(){ if(padPrev_!=null) document.getElementById('pad-val').textContent=String(padPrev_).replace(/,/g,''); }
 // 自重（重量0として保存し、表示は「自重」）。gym重量入力時のみ
 function padBodyweight(){ if(!padTarget.startsWith('gym:')) return; const pr=padTarget.split(':'); if(pr[3]!=='w') return; const ei=+pr[1],si=+pr[2]; if(gymWork[ei]&&gymWork[ei].sets[si]){ gymWork[ei].sets[si].weight=0; saveGymData(); } closePad(); renderGym(); toast(t('t_saved')); }
+// アシスト（チンニング/ディップス等のマシン補助）。正味負荷=自重−n なので負数で保存。表示は水色の -n kg。
+// 打った数字→アシストで -n 保存（自重ボタンが0即保存するのと同じ流儀）。決定はこれまで通り荷重(+n)。
+function padAssist(){ if(!padTarget||!padTarget.startsWith('gym:')) return; const pr=padTarget.split(':'); if(pr[3]!=='w') return; const n=parseFloat(document.getElementById('pad-val').textContent); if(isNaN(n)||Math.abs(n)===0){ toast(t('t_assist_num')); return; } const ei=+pr[1],si=+pr[2]; if(gymWork[ei]&&gymWork[ei].sets[si]){ gymWork[ei].sets[si].weight=-Math.abs(n); saveGymData(); } closePad(); renderGym(); toast(t('t_saved')); }
 function padDone(){
   const v=document.getElementById('pad-val').textContent; const n=parseFloat(v);
   if(padTarget.startsWith('gymc:')){ const pr=padTarget.split(':'); const ei=+pr[1], key=pr[2]; gymWork[ei].cardio=gymWork[ei].cardio||{}; gymWork[ei].cardio[key]=isNaN(n)?null:n; saveGymData(); closePad(); renderGym(); toast(t('t_saved')); return; }
@@ -1727,7 +1738,8 @@ function renderGymCards(){
     }
     const sets=(ex.sets||[]).map((s,si)=>{
       const _bw=(s.weight===0);
-      const w=_bw?t('bodyweight'):((s.weight===''||s.weight==null)?'<span class="ph">—</span>':esc(s.weight));
+      const _as=(s.weight!=null && s.weight!=='' && +s.weight<0); // 負数=アシスト
+      const w=_bw?t('bodyweight'):(_as?('<span class="asw">-'+esc(-s.weight)+'</span>'):((s.weight===''||s.weight==null)?'<span class="ph">—</span>':esc(s.weight)));
       const r=(s.reps==null||s.reps==='')?'<span class="ph">—</span>':esc(s.reps);
       const mv=String(s.memo||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
       return `<div class="sset"><div class="srow"><span class="n">${esc(si+1)}</span>`+
@@ -1756,7 +1768,7 @@ const CARDIO_FIELDS={
 };
 const CARDIO_LABEL={time:'cf_time',distance:'cf_dist',speed:'cf_speed',incline:'cf_incline',kcal:'cf_kcal'};
 function cardioType(name){ if(!name) return null; if(CARDIO_TYPE_MAP[name]) return CARDIO_TYPE_MAP[name]; try{ if(!gymPresets) loadGymPresets(); if(gymPresets && gymPresets['有酸素'] && gymPresets['有酸素'].indexOf(name)>=0) return 'other'; }catch(e){} return null; }
-function openGymCardioPad(ei,key){ padTarget='gymc:'+ei+':'+key; padFresh=true; padPrev_=null; const cd=gymWork[ei].cardio||{}; const cur=(cd[key]!=null&&cd[key]!=='')?String(cd[key]):'0'; document.getElementById('pad-lbl').textContent=t(CARDIO_LABEL[key]||key); document.getElementById('pad-val').textContent=cur; document.getElementById('pad-prev').classList.add('hide'); document.getElementById('pad-bw').classList.add('hide'); document.getElementById('pad').classList.add('open'); document.getElementById('pad-ov').classList.add('open'); }
+function openGymCardioPad(ei,key){ padTarget='gymc:'+ei+':'+key; padFresh=true; padPrev_=null; const cd=gymWork[ei].cardio||{}; const cur=(cd[key]!=null&&cd[key]!=='')?String(cd[key]):'0'; document.getElementById('pad-lbl').textContent=t(CARDIO_LABEL[key]||key); document.getElementById('pad-val').textContent=cur; document.getElementById('pad-prev').classList.add('hide'); document.getElementById('pad-bw').classList.add('hide'); document.getElementById('pad-assist').classList.add('hide'); document.getElementById('pad').classList.add('open'); document.getElementById('pad-ov').classList.add('open'); }
 /* ===== 筋トレのシェア画像（Canvas → ネイティブ共有 saveStart/Chunk/Done。ブラウザはDL） ===== */
 function gymShare(){
   const exs=loadGymExercises(curDate)||[];
@@ -1764,7 +1776,7 @@ function gymShare(){
   const rec=getRec(curDate); const parts=(rec&&rec.muscles?rec.muscles:[]).map(partLabel).join(' / ');
   const blocks=exs.map(ex=>{ const ct=cardioType(ex.name);
     if(ct){ const f=CARDIO_FIELDS[ct]||CARDIO_FIELDS.other; const cd=ex.cardio||{}; const lines=f.filter(x=>cd[x.key]!=null&&cd[x.key]!=='').map(x=>t(x.label)+'  '+cd[x.key]+x.unit); return {name:ex.name, cardio:true, lines: lines.length?lines:['—']}; }
-    const lines=(ex.sets||[]).map((s,i)=>{ const w=(s.weight===0)?t('bodyweight'):((s.weight==null||s.weight==='')?'—':s.weight+'kg'); const r=(s.reps==null||s.reps==='')?'—':s.reps+'rep'; return (i+1)+'.   '+w+'   ×   '+r; }); return {name:ex.name, lines: lines.length?lines:['—']}; });
+    const lines=(ex.sets||[]).map((s,i)=>{ const w=(s.weight==null||s.weight==='')?'—':((s.weight===0)?t('bodyweight'):((+s.weight<0)?(t('assist_w')+(-s.weight)+'kg'):(s.weight+'kg'))); const r=(s.reps==null||s.reps==='')?'—':s.reps+'rep'; return (i+1)+'.   '+w+'   ×   '+r; }); return {name:ex.name, lines: lines.length?lines:['—']}; });
   const W=1080, PADX=72, NAME_H=66, LINE_H=46, GAP=30, FOOT_H=120;
   const TITLE_H = parts ? 322 : 268;
   let H=TITLE_H; blocks.forEach(b=>{ H+=NAME_H + b.lines.length*LINE_H + GAP; }); H+=FOOT_H; H=Math.max(H,720);
@@ -1888,6 +1900,7 @@ function openGymPad(ei,si,which){
   document.getElementById('pad-val').textContent=(cur===''||cur==null)?'0':String(cur);
   const pb=document.getElementById('pad-prev'); if(pv!=null){pb.classList.remove('hide');pb.textContent=t('prev')+' '+pv;}else pb.classList.add('hide');
   const _bw=document.getElementById('pad-bw'); if(_bw){ if(which==='w'){ _bw.classList.remove('hide'); _bw.classList.toggle('on', s.weight===0); } else { _bw.classList.add('hide'); _bw.classList.remove('on'); } }
+  const _asb=document.getElementById('pad-assist'); if(_asb){ if(which==='w'){ _asb.classList.remove('hide'); _asb.classList.toggle('on', typeof s.weight==='number'&&s.weight<0); } else { _asb.classList.add('hide'); _asb.classList.remove('on'); } }
   document.getElementById('pad').classList.add('open'); document.getElementById('pad-ov').classList.add('open');
 }
 
