@@ -1103,6 +1103,20 @@ function upsertRec(rec){
   recs.sort((a,b)=>b.date.localeCompare(a.date));
   DB.saveRecords(recs);
   if(typeof AndroidBridge!=='undefined'){ try{ if(window.currentUser && typeof syncToCloud==='function') syncToCloud(currentUser.uid);}catch(e){} }
+  maybeRequestReview();
+}
+// レビュー促進: 記録が累計7日に達した「良い瞬間」に一度だけ Google Play In-App Review を要求。
+// 表示するか否かはGoogle側のクォータが制御（必ず出るとは限らない＝しつこくならない）。
+// 発火は生涯1回（review_asked）。ブラウザ/ブリッジ無し環境ではフラグを消費せずスキップ（実機で後日発火できる）。
+let _revTimer=null;
+function maybeRequestReview(){
+  try{
+    if(localStorage.getItem('review_asked')==='1' || _revTimer) return;
+    if(typeof AndroidBridge==='undefined' || typeof AndroidBridge.requestReview!=='function') return;
+    const n=DB.records().filter(r=>r.weight!=null||r.sleep!=null||r.steps!=null||r.p!=null||r.trained).length;
+    if(n<7) return;
+    _revTimer=setTimeout(function(){ if(bridge('requestReview')) localStorage.setItem('review_asked','1'); _revTimer=null; }, 1200); // 保存トーストと被らないよう少し遅らせる
+  }catch(e){}
 }
 function blankRec(date){ return {date,weight:null,sleep:null,bedtime:null,waketime:null,p:null,f:null,c:null,kcal:null,salt:null,steps:null,activities:[],cardioKcal:null,salon:null,trained:false,muscles:[],memo:''}; }
 function calcKcal(p,f,c){ return Math.round((p||0)*4+(f||0)*9+(c||0)*4); }
